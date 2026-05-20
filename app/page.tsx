@@ -1,65 +1,102 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const features = [
+  {
+    title: "확률 시뮬레이터",
+    description: "동전, 주사위, 베르누이 시행을 직접 실험하고 이론값과 비교합니다.",
+  },
+  {
+    title: "학생 응답 저장",
+    description: "학생의 실험 결과와 해석을 Supabase에 저장할 예정입니다.",
+  },
+  {
+    title: "교사용 대시보드",
+    description: "수업 세션별 학생 제출 현황과 응답 내용을 확인할 수 있게 됩니다.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
+        <header className="flex items-center justify-between border-b border-white/10 pb-5">
+          <div>
+            <p className="text-sm font-semibold text-cyan-300">MathLab</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+              수학 수업용 활동 웹앱
+            </h1>
+          </div>
+
+          <div className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm text-cyan-100">
+            MVP 개발 중
+          </div>
+        </header>
+
+        <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr]">
+          <section>
+            <p className="mb-4 inline-flex rounded-full bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-200">
+              Next.js + Supabase + Vercel 기반 새 프로젝트
+            </p>
+
+            <h2 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              학생이 직접 실험하고,
+              <br />
+              교사가 바로 확인하는
+              <br />
+              수학 수업 플랫폼
+            </h2>
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              기존 Streamlit 기반 수학 웹앱의 활동 구조를 바탕으로,
+              더 빠르고 안정적인 수업용 웹앱을 새로 구축하고 있습니다.
+              첫 번째 목표는 확률 시뮬레이터, 학생 응답 저장, 교사용
+              대시보드입니다.
+            </p>
+
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/join"
+                className="rounded-full bg-cyan-300 px-6 py-3 text-center text-base font-semibold text-slate-950 transition hover:bg-cyan-200"
+              >
+                학생으로 입장하기
+              </Link>
+
+              <Link
+                href="/teacher"
+                className="rounded-full border border-white/20 px-6 py-3 text-center text-base font-semibold text-white transition hover:bg-white/10"
+              >
+                교사용 대시보드
+              </Link>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-cyan-950/40">
+            <h3 className="text-xl font-bold">현재 개발 중인 기능</h3>
+
+            <div className="mt-6 space-y-4">
+              {features.map((feature, index) => (
+                <article
+                  key={feature.title}
+                  className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"
+                >
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-cyan-300 text-sm font-bold text-slate-950">
+                    {index + 1}
+                  </div>
+                  <h4 className="text-lg font-semibold">{feature.title}</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    {feature.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        <footer className="border-t border-white/10 pt-5 text-sm text-slate-400">
+          기존 repository `dskim-git/math`를 참고하여 새 repository
+          `dskim-git/mathlab`에서 개발 중입니다.
+        </footer>
+      </section>
+    </main>
   );
 }
