@@ -62,7 +62,7 @@ export default async function TeacherPage() {
     .limit(20);
 
   const activityList = (activities ?? []) as Activity[];
-  const sessionList = (sessions ?? []) as Session[];
+  const sessionList = (sessions ?? []) as unknown as Session[];
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
