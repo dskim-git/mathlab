@@ -1,6 +1,9 @@
 import Link from "next/link";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
-import { getActivityBlocksForSlug } from "@/lib/activities/activityBlocks";
+import {
+  ContentBlock,
+  getActivityBlocksForSlug,
+} from "@/lib/activities/activityBlocks";
 import { supabase } from "@/lib/supabase/client";
 
 type StudentSessionPageProps = {
@@ -25,8 +28,23 @@ type SessionWithActivity = {
     slug: string;
     subject: string | null;
     activity_type: string | null;
+    content_blocks: ContentBlock[] | null;
   } | null;
 };
+
+function getBlocksFromActivity(
+  activity: SessionWithActivity["activities"]
+): ContentBlock[] {
+  if (
+    activity?.content_blocks &&
+    Array.isArray(activity.content_blocks) &&
+    activity.content_blocks.length > 0
+  ) {
+    return activity.content_blocks;
+  }
+
+  return getActivityBlocksForSlug(activity?.slug ?? "unknown");
+}
 
 export default async function StudentSessionPage({
   params,
@@ -51,7 +69,8 @@ export default async function StudentSessionPage({
         description,
         slug,
         subject,
-        activity_type
+        activity_type,
+        content_blocks
       )
     `
     )
@@ -60,8 +79,7 @@ export default async function StudentSessionPage({
     .single();
 
   const sessionData = session as unknown as SessionWithActivity | null;
-  const activitySlug = sessionData?.activities?.slug ?? "unknown";
-  const activityBlocks = getActivityBlocksForSlug(activitySlug);
+  const activityBlocks = getBlocksFromActivity(sessionData?.activities ?? null);
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -128,6 +146,13 @@ export default async function StudentSessionPage({
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1">
                   blocks: {activityBlocks.length}
+                </span>
+                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">
+                  source:{" "}
+                  {sessionData.activities?.content_blocks &&
+                  sessionData.activities.content_blocks.length > 0
+                    ? "DB"
+                    : "fallback"}
                 </span>
               </div>
             </section>
