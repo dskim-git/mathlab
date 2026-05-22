@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { formatKoreanDateTime } from "@/lib/dateTime";
 import SessionCreateForm from "@/components/teacher/SessionCreateForm";
+import SessionDeleteButton from "@/components/teacher/SessionDeleteButton";
 import SessionStatusButton from "@/components/teacher/SessionStatusButton";
 
 type Activity = {
@@ -29,6 +30,27 @@ type Session = {
     slug: string;
   } | null;
 };
+
+type SessionWithResponseCount = Session & {
+  responseCount: number;
+};
+
+type ResponseSessionIdRow = {
+  session_id: string;
+};
+
+function createResponseCountMap(rows: ResponseSessionIdRow[]) {
+  const responseCountMap = new Map<string, number>();
+
+  rows.forEach((row) => {
+    responseCountMap.set(
+      row.session_id,
+      (responseCountMap.get(row.session_id) ?? 0) + 1
+    );
+  });
+
+  return responseCountMap;
+}
 
 export default async function TeacherPage() {
   const { data: activities, error: activitiesError } = await supabase
@@ -55,8 +77,27 @@ export default async function TeacherPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  const activityList = (activities ?? []) as Activity[];
   const sessionList = (sessions ?? []) as unknown as Session[];
+  const sessionIds = sessionList.map((session) => session.id);
+
+  const { data: responseSessionRows, error: responseCountError } =
+    sessionIds.length > 0
+      ? await supabase
+          .from("responses")
+          .select("session_id")
+          .in("session_id", sessionIds)
+      : { data: [], error: null };
+
+  const responseCountMap = createResponseCountMap(
+    (responseSessionRows ?? []) as ResponseSessionIdRow[]
+  );
+
+  const activityList = (activities ?? []) as Activity[];
+  const sessionListWithResponseCount: SessionWithResponseCount[] =
+    sessionList.map((session) => ({
+      ...session,
+      responseCount: responseCountMap.get(session.id) ?? 0,
+    }));
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -97,6 +138,15 @@ export default async function TeacherPage() {
               </span>
             </p>
           )}
+
+          {responseCountError ? (
+            <div className="mt-4 rounded-xl border border-yellow-400/30 bg-yellow-950/30 p-4 text-yellow-100">
+              <p className="font-semibold">
+                응답 수 정보를 불러오지 못했습니다.
+              </p>
+              <p className="mt-2 text-sm">{responseCountError.message}</p>
+            </div>
+          ) : null}
         </section>
 
         {activityList.length > 0 ? (
@@ -112,8 +162,8 @@ export default async function TeacherPage() {
             <div>
               <h2 className="text-xl font-bold">최근 수업 세션</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                생성된 세션의 입장 코드와 학생 응답을 확인하고, 수업이 끝난
-                세션을 종료할 수 있습니다.
+                생성된 세션의 입장 코드와 학생 응답 수를 확인하고, 수업이
+                끝난 세션을 종료하거나 삭제할 수 있습니다.
               </p>
             </div>
           </div>
@@ -123,13 +173,13 @@ export default async function TeacherPage() {
               <p className="font-semibold">세션 목록을 불러오지 못했습니다.</p>
               <p className="mt-2 text-sm">{sessionsError.message}</p>
             </div>
-          ) : sessionList.length === 0 ? (
+          ) : sessionListWithResponseCount.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
               아직 생성된 수업 세션이 없습니다.
             </div>
           ) : (
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[900px] border-collapse text-sm">
+              <table className="w-full min-w-[980px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-left text-slate-300">
                     <th className="py-3 pr-4">수업 세션</th>
@@ -138,12 +188,13 @@ export default async function TeacherPage() {
                     <th className="py-3 pr-4">교사</th>
                     <th className="py-3 pr-4">생성 시각</th>
                     <th className="py-3 pr-4">상태</th>
+                    <th className="py-3 pr-4">응답 수</th>
                     <th className="py-3 pr-4">응답</th>
                     <th className="py-3 pr-4">관리</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sessionList.map((session) => (
+                  {sessionListWithResponseCount.map((session) => (
                     <tr
                       key={session.id}
                       className="border-b border-white/5 text-slate-300"
@@ -183,6 +234,18 @@ export default async function TeacherPage() {
                       </td>
 
                       <td className="py-4 pr-4">
+                        <span
+                          className={
+                            session.responseCount > 0
+                              ? "rounded-full bg-yellow-300/10 px-3 py-1 font-bold text-yellow-200"
+                              : "rounded-full bg-white/10 px-3 py-1 font-semibold text-slate-300"
+                          }
+                        >
+                          {session.responseCount}개
+                        </span>
+                      </td>
+
+                      <td className="py-4 pr-4">
                         <Link
                           href={`/teacher/sessions/${session.id}`}
                           className="rounded-full border border-cyan-300/40 px-4 py-2 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
@@ -192,10 +255,19 @@ export default async function TeacherPage() {
                       </td>
 
                       <td className="py-4 pr-4">
-                        <SessionStatusButton
-                          sessionId={session.id}
-                          isActive={session.is_active}
-                        />
+                        <div className="flex flex-col gap-2">
+                          <SessionStatusButton
+                            sessionId={session.id}
+                            isActive={session.is_active}
+                          />
+
+                          <SessionDeleteButton
+                            sessionId={session.id}
+                            sessionTitle={session.title}
+                            joinCode={session.join_code}
+                            responseCount={session.responseCount}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
