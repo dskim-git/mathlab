@@ -48,6 +48,13 @@ type StudentResponse = {
   created_at: string | null;
 };
 
+type EnhancedStudentResponse = StudentResponse & {
+  studentKey: string;
+  submissionCount: number;
+  submissionOrder: number;
+  isLatestSubmission: boolean;
+};
+
 function formatDateTime(value: string | null) {
   if (!value) {
     return "-";
@@ -89,6 +96,54 @@ function getInterpretationTypeLabel(value: string | undefined) {
   return "-";
 }
 
+function getStudentKey(response: StudentResponse) {
+  const normalizedName = response.student_name.trim();
+  const normalizedNumber = response.student_number?.trim() || "no-number";
+
+  return `${normalizedName}__${normalizedNumber}`;
+}
+
+function createEnhancedResponses(
+  responses: StudentResponse[]
+): EnhancedStudentResponse[] {
+  const counts = new Map<string, number>();
+  const currentOrder = new Map<string, number>();
+
+  responses.forEach((response) => {
+    const key = getStudentKey(response);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  });
+
+  return responses.map((response) => {
+    const key = getStudentKey(response);
+    const nextOrder = (currentOrder.get(key) ?? 0) + 1;
+    currentOrder.set(key, nextOrder);
+
+    return {
+      ...response,
+      studentKey: key,
+      submissionCount: counts.get(key) ?? 1,
+      submissionOrder: nextOrder,
+      isLatestSubmission: nextOrder === 1,
+    };
+  });
+}
+
+function countUniqueStudents(responses: StudentResponse[]) {
+  const keys = new Set(responses.map((response) => getStudentKey(response)));
+  return keys.size;
+}
+
+function countStudentsWithResubmissions(responses: EnhancedStudentResponse[]) {
+  const keys = new Set(
+    responses
+      .filter((response) => response.submissionCount > 1)
+      .map((response) => response.studentKey)
+  );
+
+  return keys.size;
+}
+
 export default async function TeacherSessionResponsesPage({
   params,
 }: TeacherSessionResponsesPageProps) {
@@ -122,6 +177,11 @@ export default async function TeacherSessionResponsesPage({
 
   const sessionData = session as unknown as SessionDetail | null;
   const responseList = (responses ?? []) as unknown as StudentResponse[];
+  const enhancedResponseList = createEnhancedResponses(responseList);
+
+  const uniqueStudentCount = countUniqueStudents(responseList);
+  const resubmissionStudentCount =
+    countStudentsWithResubmissions(enhancedResponseList);
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -165,7 +225,13 @@ export default async function TeacherSessionResponsesPage({
                   상태: {sessionData.is_active ? "진행 중" : "종료"}
                 </span>
                 <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-semibold text-cyan-200">
-                  제출 수: {responseList.length}
+                  전체 제출 수: {responseList.length}
+                </span>
+                <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-semibold text-cyan-200">
+                  참여 학생 수: {uniqueStudentCount}
+                </span>
+                <span className="rounded-full bg-yellow-300/10 px-3 py-1 font-semibold text-yellow-200">
+                  재제출 학생 수: {resubmissionStudentCount}
                 </span>
               </div>
             </header>
@@ -174,8 +240,9 @@ export default async function TeacherSessionResponsesPage({
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-2xl font-bold">제출 응답 목록</h2>
-                  <p className="mt-2 text-sm text-slate-400">
-                    학생 응답을 확인하거나 CSV 파일로 내려받을 수 있습니다.
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    같은 학생이 여러 번 제출한 경우 최신 제출과 이전 제출을
+                    구분해서 표시합니다. CSV에는 전체 제출 기록이 포함됩니다.
                   </p>
                 </div>
 
@@ -193,25 +260,54 @@ export default async function TeacherSessionResponsesPage({
                   </p>
                   <p className="mt-2 text-sm">{responsesError.message}</p>
                 </div>
-              ) : responseList.length === 0 ? (
+              ) : enhancedResponseList.length === 0 ? (
                 <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-900 p-6 text-slate-300">
                   아직 제출된 응답이 없습니다.
                 </div>
               ) : (
                 <div className="mt-5 space-y-5">
-                  {responseList.map((response) => (
+                  {enhancedResponseList.map((response) => (
                     <article
                       key={response.id}
-                      className="rounded-2xl border border-white/10 bg-slate-900 p-6"
+                      className={
+                        response.isLatestSubmission
+                          ? "rounded-2xl border border-white/10 bg-slate-900 p-6"
+                          : "rounded-2xl border border-yellow-300/20 bg-slate-900/60 p-6 opacity-80"
+                      }
                     >
                       <div className="flex flex-col gap-3 border-b border-white/10 pb-5 md:flex-row md:items-start md:justify-between">
                         <div>
-                          <h3 className="text-xl font-bold">
-                            {response.student_name}
-                            {response.student_number
-                              ? ` (${response.student_number})`
-                              : ""}
-                          </h3>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-xl font-bold">
+                              {response.student_name}
+                              {response.student_number
+                                ? ` (${response.student_number})`
+                                : ""}
+                            </h3>
+
+                            {response.submissionCount > 1 ? (
+                              response.isLatestSubmission ? (
+                                <span className="rounded-full bg-green-300/10 px-3 py-1 text-xs font-semibold text-green-200">
+                                  최신 제출
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-yellow-300/10 px-3 py-1 text-xs font-semibold text-yellow-200">
+                                  이전 제출 {response.submissionOrder}
+                                </span>
+                              )
+                            ) : (
+                              <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-200">
+                                단일 제출
+                              </span>
+                            )}
+
+                            {response.submissionCount > 1 ? (
+                              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-300">
+                                총 {response.submissionCount}회 제출
+                              </span>
+                            ) : null}
+                          </div>
+
                           <p className="mt-2 text-sm text-slate-400">
                             제출 시각: {formatDateTime(response.created_at)}
                           </p>
@@ -223,6 +319,15 @@ export default async function TeacherSessionResponsesPage({
                           )}
                         </span>
                       </div>
+
+                      {!response.isLatestSubmission &&
+                      response.submissionCount > 1 ? (
+                        <div className="mt-5 rounded-xl border border-yellow-300/20 bg-yellow-950/20 p-4 text-sm leading-6 text-yellow-100">
+                          이 응답은 같은 학생의 이전 제출입니다. 학생 대표
+                          응답으로는 가장 위에 표시되는 최신 제출을 우선
+                          참고하세요.
+                        </div>
+                      ) : null}
 
                       <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div className="rounded-xl bg-slate-950 p-4">
