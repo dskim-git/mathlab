@@ -1,6 +1,7 @@
 # 활동 콘텐츠 블록 설계 메모
 
 작성일: 2026-05-22  
+최근 업데이트: 2026-05-22  
 관련 프로젝트: MathLab 수학 웹앱 리뉴얼  
 관련 문서: `docs/mathlab_renewal_development_plan_v1.md`
 
@@ -40,8 +41,9 @@
 - 안내 텍스트 블록
 - Canva PPT 임베딩 블록
 - YouTube 설명 영상 블록
+- Google Drive PDF 활동지 블록
+- 외부 사이트 임베딩 블록
 - 확률 시뮬레이터 미니활동 블록
-- 성찰 입력 블록
 ```
 
 이 구조를 사용하면 수업 하나를 단순한 앱 기능이 아니라 수업 흐름 전체로 구성할 수 있다.
@@ -50,7 +52,30 @@
 
 ## 3. 콘텐츠 블록 유형
 
-### 3.1 Canva PPT 블록
+### 3.1 안내 텍스트 블록
+
+목적:
+
+```text
+학생에게 활동 목적, 진행 순서, 주의 사항을 안내한다.
+```
+
+필요한 데이터:
+
+```ts
+{
+  type: "text_instruction",
+  title: "활동 안내",
+  description: "이 활동의 전체 흐름입니다.",
+  content: {
+    body: "학생에게 보여줄 안내 문장"
+  }
+}
+```
+
+---
+
+### 3.2 Canva PPT 블록
 
 목적:
 
@@ -73,8 +98,12 @@
 {
   type: "canva_embed",
   title: "활동 안내 PPT",
-  embedUrl: "https://www.canva.com/design/.../view?embed",
-  height: 600
+  description: "Canva 수업 자료입니다.",
+  content: {
+    embedUrl: "https://www.canva.com/design/.../view?embed",
+    externalUrl: "https://www.canva.com/design/.../view?embed",
+    height: 650
+  }
 }
 ```
 
@@ -86,7 +115,7 @@ Canva 공유 설정이 임베딩 가능하도록 열려 있어야 한다.
 
 ---
 
-### 3.2 미니활동 블록
+### 3.3 미니활동 블록
 
 목적:
 
@@ -109,8 +138,12 @@ Canva 공유 설정이 임베딩 가능하도록 열려 있어야 한다.
 ```ts
 {
   type: "interactive_activity",
-  activitySlug: "probability-simulator",
-  reflectionType: "simple"
+  title: "확률 시뮬레이터",
+  description: "이항분포를 탐구합니다.",
+  content: {
+    activitySlug: "probability-simulator",
+    reflectionType: "simple"
+  }
 }
 ```
 
@@ -123,7 +156,7 @@ Canva 공유 설정이 임베딩 가능하도록 열려 있어야 한다.
 
 ---
 
-### 3.3 동영상 블록
+### 3.4 동영상 블록
 
 목적:
 
@@ -145,21 +178,26 @@ YouTube 등 외부 동영상을 수업 화면 안에 보여준다.
 ```ts
 {
   type: "youtube_embed",
-  title: "이항분포 개념 영상",
-  videoUrl: "https://www.youtube.com/watch?v=...",
-  embedUrl: "https://www.youtube.com/embed/..."
+  title: "개념 설명 영상",
+  description: "관련 개념을 설명하는 영상입니다.",
+  content: {
+    videoUrl: "https://www.youtube.com/watch?v=...",
+    embedUrl: "https://www.youtube.com/embed/...",
+    height: 420
+  }
 }
 ```
 
 주의:
 
 ```text
-YouTube watch URL을 iframe용 embed URL로 변환하는 유틸 함수가 필요할 수 있다.
+YouTube는 영상 비율이 중요하므로 16:9 비율을 유지한다.
+다른 임베딩처럼 전체 폭 고정 높이로 처리하면 화면이 지나치게 가로로 길어질 수 있다.
 ```
 
 ---
 
-### 3.4 외부 사이트 임베딩 블록
+### 3.5 외부 사이트 임베딩 블록
 
 목적:
 
@@ -182,8 +220,11 @@ GeoGebra, Desmos, 외부 시뮬레이터, 학교 자료 사이트 등을 iframe�
 {
   type: "external_embed",
   title: "GeoGebra 탐구 자료",
-  url: "https://www.geogebra.org/...",
-  height: 600
+  description: "외부 사이트 자료입니다.",
+  content: {
+    url: "https://www.geogebra.org/...",
+    height: 700
+  }
 }
 ```
 
@@ -197,7 +238,7 @@ X-Frame-Options 또는 Content-Security-Policy 때문에 임베딩이 막힐 수
 
 ---
 
-### 3.5 Google Drive 파일 임베딩 블록
+### 3.6 Google Drive 파일 임베딩 블록
 
 목적:
 
@@ -220,9 +261,12 @@ Google Drive에 올린 PDF, 학습지, 참고자료를 앱 안에 보여준다.
 {
   type: "google_drive_file",
   title: "활동 학습지 PDF",
-  fileUrl: "https://drive.google.com/file/d/.../view?usp=sharing",
-  embedUrl: "https://drive.google.com/file/d/.../preview",
-  height: 700
+  description: "Google Drive PDF 자료입니다.",
+  content: {
+    fileUrl: "https://drive.google.com/file/d/.../view?usp=sharing",
+    embedUrl: "https://drive.google.com/file/d/.../preview",
+    height: 720
+  }
 }
 ```
 
@@ -235,59 +279,108 @@ PDF는 보통 /preview URL을 iframe에 넣으면 임베딩 가능하다.
 
 ---
 
-## 4. 활동 데이터 구조 후보
+## 4. 현재 구현 상태
 
-장기적으로 activities 테이블 또는 별도 activity_content_blocks 테이블에 콘텐츠 블록 정보를 저장할 수 있다.
+현재는 `activities` 테이블에 `content_blocks` JSONB 컬럼을 추가하여 활동별 콘텐츠 블록을 DB에서 관리하는 1차 구조를 적용했다.
 
-### 4.1 activities 테이블에 JSONB로 저장하는 방식
+```sql
+alter table public.activities
+add column if not exists content_blocks jsonb;
+```
 
-간단한 구조:
+학생 활동 화면은 다음 순서로 블록을 결정한다.
+
+```text
+1. activities.content_blocks 값이 있고 배열 길이가 1 이상이면 DB 블록 사용
+2. content_blocks가 비어 있으면 getActivityBlocksForSlug(activitySlug) fallback 사용
+```
+
+현재 `probability-simulator` 활동에는 다음 블록을 DB에 저장해 테스트했다.
+
+```text
+1. 활동 안내
+2. Canva PPT
+3. YouTube 영상
+4. Google Drive PDF
+5. 외부 사이트
+6. 확률 시뮬레이터
+```
+
+테스트 결과:
+
+```text
+- 로컬 개발 서버에서 정상 작동
+- Vercel 배포 웹앱에서 정상 작동
+- Canva PPT 정상 표시
+- YouTube 영상 정상 표시
+- Google Drive PDF 정상 표시
+- 외부 사이트 정상 표시
+- 확률 시뮬레이터 실행 및 성찰 제출 정상 작동
+```
+
+---
+
+## 5. 활동 데이터 구조
+
+현재 적용한 방식은 `activities.content_blocks`에 배열 형태의 JSONB를 저장하는 방식이다.
+
+예시:
 
 ```json
-{
-  "blocks": [
-    {
-      "type": "canva_embed",
-      "title": "수업 안내 PPT",
+[
+  {
+    "id": "probability-intro",
+    "type": "text_instruction",
+    "title": "활동 안내",
+    "description": "이항분포 시뮬레이션 활동의 전체 흐름입니다.",
+    "content": {
+      "body": "학생에게 보여줄 안내 문장"
+    }
+  },
+  {
+    "id": "probability-canva-ppt",
+    "type": "canva_embed",
+    "title": "수업 진행용 Canva PPT",
+    "description": "Canva로 제작한 수업 진행 자료입니다.",
+    "content": {
       "embedUrl": "https://www.canva.com/design/.../view?embed",
-      "height": 600
-    },
-    {
-      "type": "youtube_embed",
-      "title": "개념 설명 영상",
-      "embedUrl": "https://www.youtube.com/embed/...",
-      "height": 420
-    },
-    {
-      "type": "interactive_activity",
+      "externalUrl": "https://www.canva.com/design/.../view?embed",
+      "height": 650
+    }
+  },
+  {
+    "id": "probability-simulator",
+    "type": "interactive_activity",
+    "title": "확률 시뮬레이터",
+    "description": "동전, 주사위, 직접 설정한 성공확률로 이항분포를 탐구합니다.",
+    "content": {
       "activitySlug": "probability-simulator",
       "reflectionType": "simple"
-    },
-    {
-      "type": "google_drive_file",
-      "title": "활동지 PDF",
-      "embedUrl": "https://drive.google.com/file/d/.../preview",
-      "height": 700
     }
-  ]
-}
+  }
+]
 ```
 
 장점:
 
 ```text
 - 구조가 단순하다.
-- MVP 이후 빠르게 확장하기 좋다.
 - 활동별 콘텐츠 순서를 배열로 관리하기 쉽다.
+- 코드 수정 없이 Supabase에서 수업 자료 URL과 블록 구성을 바꿀 수 있다.
+- MVP 이후 빠르게 활동을 늘리기 좋다.
 ```
 
 단점:
 
 ```text
+- Supabase Table Editor에서 JSON을 직접 수정해야 하므로 실수 가능성이 있다.
 - 블록별 검색이나 통계 분석은 어렵다.
+- 교사용 편집 화면이 없으면 실제 운영 편의성이 떨어진다.
 ```
 
-### 4.2 별도 테이블로 분리하는 방식
+---
+
+## 6. 별도 테이블 분리 후보
 
 후속 단계에서 다음 테이블을 검토할 수 있다.
 
@@ -297,6 +390,7 @@ create table activity_content_blocks (
   activity_id uuid references activities(id) on delete cascade,
   block_type text not null,
   title text,
+  description text,
   content jsonb,
   sort_order integer default 0,
   created_at timestamptz default now()
@@ -309,49 +403,44 @@ create table activity_content_blocks (
 - 블록별 관리가 쉽다.
 - 활동 편집기 기능을 만들기 좋다.
 - 콘텐츠 순서 변경, 블록 추가/삭제가 자연스럽다.
+- 특정 유형의 블록만 검색하거나 집계하기 쉽다.
 ```
 
 단점:
 
 ```text
 - 초기 구현이 조금 복잡해진다.
+- 현재 MVP에서는 JSONB 방식으로도 충분하다.
 ```
 
----
-
-## 5. 현재 추천 방식
-
-현재 단계에서는 바로 DB 구조를 크게 바꾸기보다, 코드 레벨에서 먼저 콘텐츠 블록 컴포넌트를 만든다.
-
-추천 순서:
+현재 결론:
 
 ```text
-1. 공통 EmbedFrame 컴포넌트 만들기
-2. YouTubeEmbed 컴포넌트 만들기
-3. GoogleDriveEmbed 컴포넌트 만들기
-4. ExternalEmbed 컴포넌트 만들기
-5. CanvaEmbed 컴포넌트 만들기
-6. 활동 slug별 interactive activity router 만들기
-7. 이후 DB에 activity content blocks 구조 도입 검토
+MVP 및 초기 운영: activities.content_blocks JSONB 방식 사용
+활동 편집 기능이 복잡해지면 activity_content_blocks 테이블 분리 검토
 ```
 
 ---
 
-## 6. 활동 렌더링 구조 후보
+## 7. 활동 렌더링 구조
 
-나중에는 다음과 같은 구조를 목표로 한다.
+학생 화면에서는 다음 구조로 렌더링한다.
 
 ```tsx
 <ActivityRenderer
-  activity={activity}
-  session={session}
-  student={student}
+  blocks={activityBlocks}
+  sessionId={sessionData.id}
+  studentName={name}
+  studentNumber={number}
 />
 ```
 
-내부에서는 활동 slug 또는 block type에 따라 적절한 컴포넌트를 표시한다.
+내부에서는 block type에 따라 적절한 컴포넌트를 표시한다.
 
 ```text
+block.type = "text_instruction"
+→ 안내 텍스트 블록
+
 block.type = "canva_embed"
 → CanvaEmbed
 
@@ -370,7 +459,67 @@ block.type = "interactive_activity"
 
 ---
 
-## 7. 현재 결론
+## 8. 현재 추천 방식
+
+현재 단계에서는 다음 방향을 유지한다.
+
+```text
+1. 활동별 자료 구성은 activities.content_blocks JSONB에 저장한다.
+2. 학생 화면은 DB의 content_blocks를 우선 사용한다.
+3. DB에 content_blocks가 없으면 코드 fallback을 사용한다.
+4. 교사는 당분간 Supabase에서 JSON을 수정할 수 있다.
+5. 운영 편의성이 필요해지면 교사용 활동 편집 화면을 만든다.
+```
+
+---
+
+## 9. 후속 개발 후보: 교사용 활동 편집 화면
+
+교사가 Supabase Table Editor를 직접 사용하지 않고 웹 화면에서 활동 블록을 편집할 수 있도록 하는 기능을 후속 후보로 둔다.
+
+예상 화면:
+
+```text
+/teacher/activities
+- 활동 목록 보기
+
+/teacher/activities/[activityId]/blocks
+- 특정 활동의 콘텐츠 블록 목록 보기
+- 블록 추가
+- 블록 수정
+- 블록 삭제
+- 블록 순서 변경
+```
+
+블록 편집 예시:
+
+```text
+블록 유형 선택:
+- 안내 텍스트
+- Canva PPT
+- YouTube 영상
+- Google Drive PDF
+- 외부 사이트
+- 미니활동
+
+공통 입력:
+- 제목
+- 설명
+- 높이
+
+유형별 입력:
+- Canva: embedUrl, externalUrl
+- YouTube: videoUrl 또는 embedUrl
+- Google Drive: fileUrl, embedUrl
+- External: url
+- MiniActivity: activitySlug, reflectionType
+```
+
+초기 버전은 JSONB 전체를 한 번에 수정하는 방식으로 구현할 수 있다. 이후 필요하면 블록별 row를 관리하는 별도 테이블 방식으로 전환한다.
+
+---
+
+## 10. 현재 결론
 
 기존 Streamlit 앱의 활동 구성 요소는 단순한 미니활동만이 아니라, 수업 진행 자료와 외부 자료 임베딩이 함께 결합된 구조였다.
 
@@ -388,4 +537,4 @@ block.type = "interactive_activity"
 
 으로 설계한다.
 
-이렇게 해야 Canva PPT, YouTube, 외부 사이트, Google Drive PDF, 학생 참여형 미니활동을 하나의 수업 흐름 안에서 자연스럽게 배치할 수 있다.
+현재는 이 구조를 `activities.content_blocks` JSONB로 구현해 1차 테스트를 완료했다. 이렇게 하면 Canva PPT, YouTube, 외부 사이트, Google Drive PDF, 학생 참여형 미니활동을 하나의 수업 흐름 안에서 자연스럽게 배치할 수 있다.
