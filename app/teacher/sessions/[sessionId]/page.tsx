@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import ResponseCsvDownloadButton from "@/components/teacher/ResponseCsvDownloadButton";
 
 type TeacherSessionResponsesPageProps = {
   params: Promise<{
@@ -116,8 +117,8 @@ export default async function TeacherSessionResponsesPage({
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false });
 
-  const sessionData = session as SessionDetail | null;
-  const responseList = (responses ?? []) as StudentResponse[];
+  const sessionData = session as unknown as SessionDetail | null;
+  const responseList = (responses ?? []) as unknown as StudentResponse[];
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -167,7 +168,20 @@ export default async function TeacherSessionResponsesPage({
             </header>
 
             <section className="mt-8">
-              <h2 className="text-2xl font-bold">제출 응답 목록</h2>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">제출 응답 목록</h2>
+                  <p className="mt-2 text-sm text-slate-400">
+                    학생 응답을 확인하거나 CSV 파일로 내려받을 수 있습니다.
+                  </p>
+                </div>
+
+                <ResponseCsvDownloadButton
+                  sessionTitle={sessionData.title}
+                  joinCode={sessionData.join_code}
+                  responses={responseList}
+                />
+              </div>
 
               {responsesError ? (
                 <div className="mt-5 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-red-200">
