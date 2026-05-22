@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 import {
   getDefaultProbability,
   getModeLabel,
@@ -10,6 +11,8 @@ import {
 } from "@/lib/activities/probability";
 
 type ProbabilitySimulatorProps = {
+  sessionId: string;
+  activitySlug?: string;
   studentName?: string;
   studentNumber?: string;
 };
@@ -27,6 +30,8 @@ function formatPercent(value: number) {
 }
 
 export default function ProbabilitySimulator({
+  sessionId,
+  activitySlug = "probability-simulator",
   studentName,
   studentNumber,
 }: ProbabilitySimulatorProps) {
@@ -35,6 +40,14 @@ export default function ProbabilitySimulator({
   const [repeats, setRepeats] = useState(1000);
   const [p, setP] = useState(0.5);
   const [result, setResult] = useState<SimulationResult | null>(null);
+
+  const [reflection, setReflection] = useState("");
+  const [interpretationType, setInterpretationType] = useState(
+    "theory_comparison"
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const modeDescription = useMemo(() => {
     if (mode === "coin") {
@@ -53,6 +66,8 @@ export default function ProbabilitySimulator({
     const nextP = getDefaultProbability(nextMode);
     setP(nextP);
     setResult(null);
+    setSubmitMessage("");
+    setSubmitError("");
   }
 
   function handleRunSimulation() {
@@ -64,15 +79,68 @@ export default function ProbabilitySimulator({
     });
 
     setResult(simulationResult);
+    setSubmitMessage("");
+    setSubmitError("");
+  }
+
+  async function handleSubmitResponse() {
+    if (!result) {
+      setSubmitError("먼저 시뮬레이션을 실행해 주세요.");
+      return;
+    }
+
+    if (!studentName?.trim()) {
+      setSubmitError("학생 이름이 없어 응답을 저장할 수 없습니다.");
+      return;
+    }
+
+    if (!reflection.trim()) {
+      setSubmitError("결과 해석 또는 느낀 점을 입력해 주세요.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitMessage("");
+    setSubmitError("");
+
+    const resultPayload = {
+      activitySlug,
+      mode: result.input.mode,
+      modeLabel: getModeLabel(result.input.mode),
+      n: result.input.n,
+      repeats: result.input.repeats,
+      p: result.input.p,
+      observedMean: result.observedMean,
+      expectedMean: result.expectedMean,
+      observedVariance: result.observedVariance,
+      expectedVariance: result.expectedVariance,
+      interpretationType,
+      distribution: result.distribution,
+    };
+
+    const { error } = await supabase.from("responses").insert({
+      session_id: sessionId,
+      student_name: studentName.trim(),
+      student_number: studentNumber?.trim() || null,
+      result: resultPayload,
+      reflection: reflection.trim(),
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setSubmitError(error.message);
+      return;
+    }
+
+    setSubmitMessage("응답이 저장되었습니다.");
   }
 
   return (
     <section className="mt-8 rounded-2xl border border-cyan-300/40 bg-slate-900 p-6">
       <div className="flex flex-col gap-2 border-b border-white/10 pb-5">
         <p className="text-sm font-semibold text-cyan-300">확률 시뮬레이터</p>
-        <h2 className="text-2xl font-bold">
-          이항분포 시뮬레이션 활동
-        </h2>
+        <h2 className="text-2xl font-bold">이항분포 시뮬레이션 활동</h2>
         <p className="leading-7 text-slate-300">
           같은 시행을 여러 번 반복했을 때 성공 횟수가 어떻게 분포하는지
           실험하고, 이론적인 이항분포와 비교해 봅니다.
@@ -127,6 +195,8 @@ export default function ProbabilitySimulator({
             onChange={(event) => {
               setN(Number(event.target.value));
               setResult(null);
+              setSubmitMessage("");
+              setSubmitError("");
             }}
             className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
           />
@@ -151,6 +221,8 @@ export default function ProbabilitySimulator({
             onChange={(event) => {
               setRepeats(Number(event.target.value));
               setResult(null);
+              setSubmitMessage("");
+              setSubmitError("");
             }}
             className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
           />
@@ -177,6 +249,8 @@ export default function ProbabilitySimulator({
             onChange={(event) => {
               setP(Number(event.target.value));
               setResult(null);
+              setSubmitMessage("");
+              setSubmitError("");
             }}
             className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           />
@@ -261,6 +335,80 @@ export default function ProbabilitySimulator({
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-300/30 bg-slate-950 p-5">
+            <h3 className="text-lg font-bold">결과 해석 제출</h3>
+
+            <div className="mt-5">
+              <label
+                htmlFor="interpretation-type"
+                className="block text-sm font-semibold text-slate-200"
+              >
+                해석 관점
+              </label>
+              <select
+                id="interpretation-type"
+                value={interpretationType}
+                onChange={(event) => setInterpretationType(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              >
+                <option value="theory_comparison">
+                  시뮬레이션 결과와 이론값 비교
+                </option>
+                <option value="large_number_law">
+                  반복 횟수와 큰 수의 법칙 관점
+                </option>
+                <option value="distribution_shape">
+                  성공 횟수 분포 모양 관찰
+                </option>
+                <option value="personal_question">
+                  스스로 생긴 궁금증
+                </option>
+              </select>
+            </div>
+
+            <div className="mt-5">
+              <label
+                htmlFor="reflection"
+                className="block text-sm font-semibold text-slate-200"
+              >
+                결과 해석 또는 느낀 점
+              </label>
+              <textarea
+                id="reflection"
+                value={reflection}
+                onChange={(event) => {
+                  setReflection(event.target.value);
+                  setSubmitMessage("");
+                  setSubmitError("");
+                }}
+                rows={6}
+                className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-slate-900 px-4 py-3 leading-7 text-white outline-none transition focus:border-cyan-300"
+                placeholder="예: 반복 횟수를 늘릴수록 시뮬레이션 평균이 이론 평균 np에 가까워지는 것을 확인했다..."
+              />
+            </div>
+
+            {submitError ? (
+              <div className="mt-4 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
+                {submitError}
+              </div>
+            ) : null}
+
+            {submitMessage ? (
+              <div className="mt-4 rounded-xl border border-green-400/30 bg-green-950/40 p-4 text-sm text-green-200">
+                {submitMessage}
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleSubmitResponse}
+              disabled={isSubmitting}
+              className="mt-5 rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? "제출 중..." : "결과와 성찰 제출하기"}
+            </button>
           </div>
         </section>
       ) : (

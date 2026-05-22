@@ -129,6 +129,8 @@ export default async function StudentSessionPage({
             </section>
 
             <ProbabilitySimulator
+                sessionId={sessionData.id}
+                activitySlug={sessionData.activities?.slug}
                 studentName={name}
                 studentNumber={number}
             />
