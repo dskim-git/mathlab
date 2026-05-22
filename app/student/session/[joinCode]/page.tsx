@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import ProbabilitySimulator from "@/components/activities/ProbabilitySimulator";
 
 type StudentSessionPageProps = {
   params: Promise<{
@@ -127,16 +128,10 @@ export default async function StudentSessionPage({
               </div>
             </section>
 
-            <section className="mt-8 rounded-2xl border border-dashed border-cyan-300/40 bg-slate-900 p-6">
-              <h2 className="text-xl font-bold">
-                확률 시뮬레이터 준비 중
-              </h2>
-
-              <p className="mt-3 leading-7 text-slate-300">
-                다음 단계에서 이 영역에 동전 던지기, 주사위 실험,
-                베르누이 시행 시뮬레이터를 연결합니다.
-              </p>
-            </section>
+            <ProbabilitySimulator
+                studentName={name}
+                studentNumber={number}
+            />
 
             <Link
               href="/"
