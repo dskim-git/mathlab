@@ -18,6 +18,7 @@
 3. Google Sheets를 메인 데이터베이스처럼 쓰는 구조에서 벗어나야 한다.
 4. 활동을 모듈 단위로 추가할 수 있어야 한다.
 5. 장기적으로 학생 활동 기록을 피드백과 생활기록부 참고자료로 활용할 수 있어야 한다.
+6. 최종적으로 각 미니활동에서 수집한 학생 성찰 자료와 활동 결과를 바탕으로 생성형 AI가 세특 참고 문구 초안을 작성하고, 교사가 검토·수정해 활용할 수 있는 구조를 만든다.
 
 ---
 
@@ -37,6 +38,8 @@
 ```
 
 MVP 단계에서는 Python 서버를 따로 두지 않는다. 확률 시뮬레이션 정도는 TypeScript로 구현한다. 나중에 SymPy, 복잡한 수치 계산, 기존 Python 코드 재사용이 꼭 필요한 활동이 생기면 FastAPI 서버를 별도로 검토한다.
+
+AI 세특 문구 생성 기능은 MVP 이후 단계에서 구현한다. 이 기능은 학생 응답 데이터가 일정량 누적되고, 교사용 대시보드에서 응답을 안정적으로 조회할 수 있게 된 뒤에 붙인다. 초기에는 생성형 AI API를 바로 연결하지 않고, 학생 활동 기록을 잘 구조화해 저장하는 것부터 우선한다.
 
 ---
 
@@ -61,6 +64,7 @@ MVP 단계에서는 Python 서버를 따로 두지 않는다. 확률 시뮬레�
 - 학생 성찰 기록
 - 그래프와 시뮬레이션 중심 수업
 - 교사용 응답 확인 화면
+- 학생 활동 기록을 피드백과 생활기록부 참고자료로 발전시키는 방향
 
 기존 구조에서 새 앱으로 그대로 가져오지 않을 것은 다음과 같다.
 
@@ -88,6 +92,19 @@ MVP 단계에서는 Python 서버를 따로 두지 않는다. 확률 시뮬레�
 ```
 
 이 흐름이 안정적으로 작동하면 기존 Streamlit 앱의 여러 활동을 하나씩 이식한다.
+
+장기적으로는 아래 흐름까지 확장한다.
+
+```text
+미니활동별 학생 성찰 기록 누적
+→ 학생별·활동별 학습 흔적 조회
+→ 교사가 필요한 활동 기록 선택
+→ 생성형 AI가 세특 참고 문구 초안 생성
+→ 교사가 사실 여부와 표현을 검토·수정
+→ 최종 문구를 학교 기록 업무에 참고
+```
+
+이때 AI가 생성한 문장은 자동 확정 결과가 아니라, 반드시 교사가 검토하고 수정하는 초안으로 취급한다.
 
 ---
 
@@ -136,7 +153,7 @@ Next.js + Supabase + Vercel 구조에서 학생 40~50명이 동시에 접속해
 - 교사별 시트 라우팅
 - 전체 기존 활동 일괄 이식
 - AI 피드백 자동 생성
-- 생기부 문장 자동 생성
+- 세특 문구 자동 생성
 
 ---
 
@@ -151,10 +168,12 @@ Next.js + Supabase + Vercel 구조에서 학생 40~50명이 동시에 접속해
 | 5 | 계산기 | 저장 필요가 적으므로 후순위 |
 | 6 | 확률과통계 미니 활동 | 수업 활용도 높은 것부터 선별 이식 |
 | 7 | 공통수학 미니 활동 | 단원별로 선별 이식 |
-| 8 | 로그인 / 회원가입 전체 | Supabase Auth 또는 교사 로그인으로 나중에 재설계 |
-| 9 | Google Sheets 권한 관리 | MVP에서는 제외 |
-| 10 | 설문 연구 기능 | 연구 단계에서 별도 모듈로 이식 |
-| 11 | 교사별 성찰 시트 라우팅 | 초기에는 Supabase 조회 + CSV 다운로드로 대체 |
+| 8 | 학생별 활동 기록 누적 | responses 데이터를 학생별·활동별로 조회할 수 있게 확장 |
+| 9 | 로그인 / 회원가입 전체 | Supabase Auth 또는 교사 로그인으로 나중에 재설계 |
+| 10 | Google Sheets 권한 관리 | MVP에서는 제외 |
+| 11 | 설문 연구 기능 | 연구 단계에서 별도 모듈로 이식 |
+| 12 | 교사별 성찰 시트 라우팅 | 초기에는 Supabase 조회 + CSV 다운로드로 대체 |
+| 13 | AI 기반 세특 참고 문구 생성 | 충분한 활동 기록과 교사용 검토 화면이 갖춰진 뒤 구현 |
 
 ---
 
@@ -216,6 +235,47 @@ create table responses (
 }
 ```
 
+### 7.4 장기 확장: AI 세특 문구 생성을 위한 데이터 구조
+
+MVP에서는 `responses` 테이블만 사용한다. 다만 장기적으로는 학생별 활동 기록과 AI 생성 결과를 분리해 관리하는 것이 좋다.
+
+후속 단계에서 고려할 테이블은 다음과 같다.
+
+```sql
+-- 학생별 활동 기록을 요약하거나 교사가 선택한 기록을 모아두는 테이블 후보
+create table student_activity_summaries (
+  id uuid primary key default gen_random_uuid(),
+  student_name text not null,
+  student_number text,
+  subject text,
+  summary jsonb,
+  teacher_note text,
+  created_at timestamptz default now()
+);
+
+-- AI가 생성한 세특 참고 문구 초안과 교사 수정본을 저장하는 테이블 후보
+create table ai_record_drafts (
+  id uuid primary key default gen_random_uuid(),
+  student_name text not null,
+  student_number text,
+  subject text,
+  source_response_ids uuid[],
+  ai_draft text,
+  teacher_revision text,
+  status text default 'draft',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+```
+
+중요 원칙:
+
+- AI 생성 문구는 최종 기록이 아니라 교사용 초안이다.
+- 학생 활동 데이터에 근거한 문장만 생성하도록 한다.
+- 교사가 source response를 확인할 수 있어야 한다.
+- 생성 문구에는 과장, 추정, 확인되지 않은 태도가 들어가지 않도록 한다.
+- 최종 사용 여부는 교사가 판단한다.
+
 ---
 
 ## 8. 추천 파일 구조
@@ -224,41 +284,40 @@ create table responses (
 mathlab/
   docs/
     mathlab_renewal_development_plan_v1.md
-  src/
-    app/
+  app/
+    page.tsx
+    join/
       page.tsx
-      join/
+    student/
+      session/[joinCode]/
         page.tsx
-      student/
-        session/[joinCode]/
-          page.tsx
-      teacher/
+    teacher/
+      page.tsx
+      sessions/
         page.tsx
-        sessions/
-          page.tsx
-        sessions/[sessionId]/
-          page.tsx
-    components/
-      layout/
-        Header.tsx
-        PageContainer.tsx
-      activities/
-        ProbabilitySimulator.tsx
-      teacher/
-        ResponseTable.tsx
-        SessionCreateForm.tsx
-    lib/
-      supabase/
-        client.ts
-        server.ts
-      activities/
-        probability.ts
-      utils/
-        joinCode.ts
-    types/
-      activity.ts
-      session.ts
-      response.ts
+      sessions/[sessionId]/
+        page.tsx
+  components/
+    layout/
+      Header.tsx
+      PageContainer.tsx
+    activities/
+      ProbabilitySimulator.tsx
+    teacher/
+      ResponseTable.tsx
+      SessionCreateForm.tsx
+  lib/
+    supabase/
+      client.ts
+      server.ts
+    activities/
+      probability.ts
+    utils/
+      joinCode.ts
+  types/
+    activity.ts
+    session.ts
+    response.ts
   supabase/
     schema.sql
   .env.local.example
@@ -297,7 +356,73 @@ mathlab/
 
 ---
 
-## 10. 개발 단계별 계획
+## 10. AI 세특 참고 문구 생성 기능 설계 방향
+
+이 기능은 장기 목표이며, MVP 이후 단계에서 구현한다. 목적은 학생이 각 미니활동에서 남긴 결과와 성찰 기록을 바탕으로 교사가 생활기록부 세부능력 및 특기사항 참고 문구를 작성할 때 활용할 수 있는 초안을 생성하는 것이다.
+
+### 10.1 기본 흐름
+
+```text
+학생이 미니활동 수행
+→ 결과와 성찰 기록 제출
+→ responses 테이블에 저장
+→ 교사가 학생별 활동 기록 조회
+→ 교사가 특정 활동 기록 선택
+→ AI가 근거 기반 세특 참고 문구 초안 생성
+→ 교사가 수정·삭제·보완
+→ 최종 참고 문구로 활용
+```
+
+### 10.2 화면 설계 후보
+
+```text
+/teacher/students
+- 학생별 활동 기록 목록
+
+/teacher/students/[studentId]
+- 특정 학생의 활동 기록 모아보기
+- 활동별 결과, 성찰, 제출 시각 확인
+- 세특 후보로 사용할 기록 선택
+
+/teacher/records/new
+- 선택한 활동 기록을 바탕으로 AI 문구 생성
+- 생성된 초안 확인
+- 교사 수정본 저장
+```
+
+### 10.3 AI 문구 생성 원칙
+
+- 학생이 실제로 제출한 활동 결과와 성찰 내용을 근거로 한다.
+- 근거가 없는 태도, 인성, 역량을 임의로 만들어내지 않는다.
+- 과장된 표현보다 구체적인 활동과 관찰 가능한 학습 행동을 중심으로 작성한다.
+- AI 결과는 최종 문구가 아니라 교사용 초안이다.
+- 교사가 반드시 검토하고 수정해야 한다.
+- 학생 개인정보와 민감정보를 다룰 수 있으므로 API 키, 접근 권한, 데이터 보관 정책을 신중하게 설계한다.
+
+### 10.4 지금 단계에서 미리 반영할 점
+
+지금 당장 AI 기능을 구현하지는 않는다. 대신 앞으로 AI 문구 생성을 쉽게 붙일 수 있도록 학생 응답 데이터를 구조화해서 저장한다.
+
+따라서 `responses.result`에는 단순 계산 결과만 넣지 말고, 활동별 핵심 값과 학생 선택 값을 가능한 한 명확한 JSON 구조로 저장한다. `responses.reflection`에는 자유 서술형 성찰을 저장한다.
+
+예시:
+
+```json
+{
+  "activitySlug": "probability-simulator",
+  "mode": "coin",
+  "n": 30,
+  "repeats": 3000,
+  "p": 0.5,
+  "observedMean": 15.1,
+  "expectedMean": 15,
+  "studentInterpretationType": "theory_comparison"
+}
+```
+
+---
+
+## 11. 개발 단계별 계획
 
 ### Phase 1. 새 프로젝트 기본 틀 만들기
 
@@ -343,8 +468,8 @@ Import alias: 기본값 사용
 산출물:
 
 - `supabase/schema.sql`
-- `src/lib/supabase/client.ts`
-- `src/lib/supabase/server.ts`
+- `lib/supabase/client.ts`
+- `lib/supabase/server.ts`
 
 ---
 
@@ -358,7 +483,7 @@ Import alias: 기본값 사용
 구현 화면:
 
 ```text
-/teacher/sessions
+/teacher
 ```
 
 기능:
@@ -402,8 +527,8 @@ Import alias: 기본값 사용
 구현 파일 후보:
 
 ```text
-src/components/activities/ProbabilitySimulator.tsx
-src/lib/activities/probability.ts
+components/activities/ProbabilitySimulator.tsx
+lib/activities/probability.ts
 ```
 
 기능:
@@ -432,6 +557,8 @@ responses.result
 responses.reflection
 ```
 
+이때 장기적인 AI 세특 문구 생성을 고려해 `responses.result`에는 활동별 핵심 변수와 학생 선택값을 구조화된 JSON으로 저장한다.
+
 ---
 
 ### Phase 7. 교사용 응답 대시보드
@@ -456,7 +583,44 @@ responses.reflection
 
 ---
 
-## 11. AI 코딩 도구 사용 원칙
+### Phase 8. 학생별 활동 기록 모아보기
+
+목표:
+
+- 교사가 특정 학생의 여러 미니활동 성찰 기록을 모아서 볼 수 있게 한다.
+
+기능:
+
+- 학생 이름 / 학번 기준 검색
+- 활동별 제출 기록 모아보기
+- 활동 제목, 제출 시각, 결과 요약, 성찰 내용 확인
+- 세특 참고 문구 생성에 사용할 기록 선택
+
+---
+
+### Phase 9. AI 세특 참고 문구 초안 생성
+
+목표:
+
+- 학생별 활동 기록을 바탕으로 생성형 AI가 세특 참고 문구 초안을 만든다.
+
+기능:
+
+- 교사가 사용할 활동 기록 선택
+- AI 문구 생성 요청
+- 초안 표시
+- 교사 수정본 저장
+- 원본 활동 기록과 생성 문구 연결
+
+구현 시점:
+
+- 여러 미니활동 이식 후
+- responses 데이터가 충분히 쌓인 후
+- 교사용 응답 대시보드가 안정화된 후
+
+---
+
+## 12. AI 코딩 도구 사용 원칙
 
 VS Code에서 Copilot, Claude Code, Codex류 도구를 사용할 때는 작업을 작게 나누어 지시한다.
 
@@ -486,25 +650,25 @@ Supabase의 sessions 테이블에서 수업 세션 목록을 불러와
 6. 확률 시뮬레이터 component 작성
 7. responses insert 작성
 8. teacher dashboard 작성
+9. 학생별 활동 기록 모아보기
+10. AI 세특 참고 문구 생성
 ```
 
 ---
 
-## 12. 바로 다음 작업
+## 13. 바로 다음 작업
 
-현재 가장 먼저 할 작업은 다음이다.
+현재 구현 흐름상 다음 작업은 확률 시뮬레이터를 학생 세션 페이지에 연결하는 것이다.
 
-1. GitHub repo `dskim-git/mathlab`을 VS Code로 clone한다.
-2. 로컬에서 Next.js 프로젝트를 생성한다.
-3. 첫 화면을 실행한다.
-4. 첫 commit을 만든다.
-5. Vercel에 연결한다.
-6. Supabase 프로젝트를 만든다.
-7. DB schema를 적용한다.
+1. `lib/activities/probability.ts` 생성
+2. `components/activities/ProbabilitySimulator.tsx` 생성
+3. `/student/session/[joinCode]` 페이지에 시뮬레이터 삽입
+4. 학생 reflection 입력 영역 추가
+5. `responses` 테이블에 제출 저장
 
 ---
 
-## 13. 현재 결론
+## 14. 현재 결론
 
 새 앱 개발은 `dskim-git/mathlab`에서 진행한다.
 
@@ -518,6 +682,8 @@ Supabase의 sessions 테이블에서 수업 세션 목록을 불러와
 → 확률 시뮬레이터 MVP 구현 O
 → Supabase 응답 저장 O
 → 교사용 대시보드 O
+→ 학생별 활동 기록 누적 O
+→ AI 세특 참고 문구 초안 생성 O
 → 안정화 후 활동별 순차 이식 O
 ```
 
