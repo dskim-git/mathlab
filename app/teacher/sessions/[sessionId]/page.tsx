@@ -4,6 +4,7 @@ export const revalidate = 0;
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import ResponseCsvDownloadButton from "@/components/teacher/ResponseCsvDownloadButton";
+import ResponseDeleteButton from "@/components/teacher/ResponseDeleteButton";
 
 type TeacherSessionResponsesPageProps = {
   params: Promise<{
@@ -313,11 +314,19 @@ export default async function TeacherSessionResponsesPage({
                           </p>
                         </div>
 
-                        <span className="rounded-full bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-200">
-                          {getInterpretationTypeLabel(
-                            response.result?.interpretationType
-                          )}
-                        </span>
+                        <div className="flex flex-col items-start gap-3 md:items-end">
+                          <span className="rounded-full bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+                            {getInterpretationTypeLabel(
+                              response.result?.interpretationType
+                            )}
+                          </span>
+
+                          <ResponseDeleteButton
+                            responseId={response.id}
+                            studentName={response.student_name}
+                            studentNumber={response.student_number}
+                          />
+                        </div>
                       </div>
 
                       {!response.isLatestSubmission &&
