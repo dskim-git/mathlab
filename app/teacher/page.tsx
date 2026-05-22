@@ -8,6 +8,12 @@ import SessionCreateForm from "@/components/teacher/SessionCreateForm";
 import SessionDeleteButton from "@/components/teacher/SessionDeleteButton";
 import SessionStatusButton from "@/components/teacher/SessionStatusButton";
 
+type TeacherPageProps = {
+  searchParams: Promise<{
+    filter?: string;
+  }>;
+};
+
 type Activity = {
   id: string;
   slug: string;
@@ -39,6 +45,13 @@ type ResponseSessionIdRow = {
   session_id: string;
 };
 
+type SessionFilter =
+  | "all"
+  | "active"
+  | "closed"
+  | "has-responses"
+  | "no-responses";
+
 function createResponseCountMap(rows: ResponseSessionIdRow[]) {
   const responseCountMap = new Map<string, number>();
 
@@ -52,7 +65,92 @@ function createResponseCountMap(rows: ResponseSessionIdRow[]) {
   return responseCountMap;
 }
 
-export default async function TeacherPage() {
+function normalizeSessionFilter(value: string | undefined): SessionFilter {
+  if (value === "active") {
+    return "active";
+  }
+
+  if (value === "closed") {
+    return "closed";
+  }
+
+  if (value === "has-responses") {
+    return "has-responses";
+  }
+
+  if (value === "no-responses") {
+    return "no-responses";
+  }
+
+  return "all";
+}
+
+function filterSessions(
+  sessions: SessionWithResponseCount[],
+  filter: SessionFilter
+) {
+  if (filter === "active") {
+    return sessions.filter((session) => session.is_active);
+  }
+
+  if (filter === "closed") {
+    return sessions.filter((session) => !session.is_active);
+  }
+
+  if (filter === "has-responses") {
+    return sessions.filter((session) => session.responseCount > 0);
+  }
+
+  if (filter === "no-responses") {
+    return sessions.filter((session) => session.responseCount === 0);
+  }
+
+  return sessions;
+}
+
+function countSessions(
+  sessions: SessionWithResponseCount[],
+  filter: SessionFilter
+) {
+  return filterSessions(sessions, filter).length;
+}
+
+const filterOptions: {
+  value: SessionFilter;
+  label: string;
+  href: string;
+}[] = [
+  {
+    value: "all",
+    label: "전체",
+    href: "/teacher",
+  },
+  {
+    value: "active",
+    label: "진행 중",
+    href: "/teacher?filter=active",
+  },
+  {
+    value: "closed",
+    label: "종료",
+    href: "/teacher?filter=closed",
+  },
+  {
+    value: "has-responses",
+    label: "응답 있음",
+    href: "/teacher?filter=has-responses",
+  },
+  {
+    value: "no-responses",
+    label: "응답 없음",
+    href: "/teacher?filter=no-responses",
+  },
+];
+
+export default async function TeacherPage({ searchParams }: TeacherPageProps) {
+  const { filter } = await searchParams;
+  const selectedFilter = normalizeSessionFilter(filter);
+
   const { data: activities, error: activitiesError } = await supabase
     .from("activities")
     .select("*")
@@ -98,6 +196,11 @@ export default async function TeacherPage() {
       ...session,
       responseCount: responseCountMap.get(session.id) ?? 0,
     }));
+
+  const filteredSessionList = filterSessions(
+    sessionListWithResponseCount,
+    selectedFilter
+  );
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -158,7 +261,7 @@ export default async function TeacherPage() {
         )}
 
         <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-xl font-bold">최근 수업 세션</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -166,6 +269,52 @@ export default async function TeacherPage() {
                 끝난 세션을 종료하거나 삭제할 수 있습니다.
               </p>
             </div>
+
+            <div className="text-sm text-slate-400">
+              표시 중:{" "}
+              <span className="font-bold text-cyan-300">
+                {filteredSessionList.length}
+              </span>
+              개 / 전체{" "}
+              <span className="font-bold text-white">
+                {sessionListWithResponseCount.length}
+              </span>
+              개
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {filterOptions.map((option) => {
+              const isSelected = option.value === selectedFilter;
+              const count = countSessions(
+                sessionListWithResponseCount,
+                option.value
+              );
+
+              return (
+                <Link
+                  key={option.value}
+                  href={option.href}
+                  scroll={false}
+                  className={
+                    isSelected
+                      ? "rounded-full border border-cyan-300/60 bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950"
+                      : "rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10"
+                  }
+                >
+                  {option.label}{" "}
+                  <span
+                    className={
+                      isSelected
+                        ? "text-slate-800"
+                        : "text-slate-500"
+                    }
+                  >
+                    {count}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
 
           {sessionsError ? (
@@ -176,6 +325,10 @@ export default async function TeacherPage() {
           ) : sessionListWithResponseCount.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
               아직 생성된 수업 세션이 없습니다.
+            </div>
+          ) : filteredSessionList.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
+              현재 필터 조건에 맞는 수업 세션이 없습니다.
             </div>
           ) : (
             <div className="mt-5 overflow-x-auto">
@@ -193,8 +346,9 @@ export default async function TeacherPage() {
                     <th className="py-3 pr-4">관리</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {sessionListWithResponseCount.map((session) => (
+                  {filteredSessionList.map((session) => (
                     <tr
                       key={session.id}
                       className="border-b border-white/5 text-slate-300"
