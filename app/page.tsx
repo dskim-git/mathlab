@@ -55,10 +55,17 @@ export default function Home() {
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/join"
+                href="/student/login"
                 className="rounded-full bg-cyan-300 px-6 py-3 text-center text-base font-semibold text-slate-950 transition hover:bg-cyan-200"
               >
-                학생으로 입장하기
+                학생 로그인
+              </Link>
+
+              <Link
+                href="/join"
+                className="rounded-full border border-cyan-300/40 px-6 py-3 text-center text-base font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+              >
+                입장 코드로 참여
               </Link>
 
               <Link
