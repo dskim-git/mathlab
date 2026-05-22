@@ -1,6 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { supabase } from "@/lib/supabase/client";
 import {
   getDefaultProbability,
@@ -27,6 +38,18 @@ function formatPercent(value: number) {
   return `${(value * 100).toLocaleString("ko-KR", {
     maximumFractionDigits: 2,
   })}%`;
+}
+
+function formatDecimal(value: number, digits = 4) {
+  return Number(value.toFixed(digits));
+}
+
+function createChartData(result: SimulationResult) {
+  return result.distribution.map((row) => ({
+    successCount: row.successCount,
+    relativeFrequency: formatDecimal(row.relativeFrequency),
+    theoreticalProbability: formatDecimal(row.theoreticalProbability),
+  }));
 }
 
 export default function ProbabilitySimulator({
@@ -60,6 +83,14 @@ export default function ProbabilitySimulator({
 
     return "성공확률을 직접 정해서 베르누이 시행을 반복합니다.";
   }, [mode]);
+
+  const chartData = useMemo(() => {
+    if (!result) {
+      return [];
+    }
+
+    return createChartData(result);
+  }, [result]);
 
   function handleModeChange(nextMode: ProbabilityMode) {
     setMode(nextMode);
@@ -298,6 +329,86 @@ export default function ProbabilitySimulator({
               <p className="mt-2 text-2xl font-bold text-cyan-300">
                 {formatNumber(result.expectedVariance)}
               </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-slate-950 p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h3 className="text-lg font-bold">성공 횟수 분포 그래프</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  막대는 시뮬레이션 상대도수, 선은 이론적인 이항분포
+                  확률입니다.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="successCount"
+                    tick={{ fill: "#cbd5e1", fontSize: 12 }}
+                    label={{
+                      value: "성공 횟수",
+                      position: "insideBottom",
+                      offset: -5,
+                      fill: "#cbd5e1",
+                    }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#cbd5e1", fontSize: 12 }}
+                    tickFormatter={(value) => `${Number(value) * 100}%`}
+                    label={{
+                      value: "비율",
+                      angle: -90,
+                      position: "insideLeft",
+                      fill: "#cbd5e1",
+                    }}
+                  />
+                  <Tooltip
+                    formatter={(value, name) => {
+                      const numericValue =
+                        typeof value === "number" ? value : Number(value ?? 0);
+
+                      const dataKey = String(name);
+
+                      const label =
+                        dataKey === "relativeFrequency"
+                          ? "시뮬레이션 상대도수"
+                          : "이론확률";
+
+                      return [formatPercent(numericValue), label];
+                    }}
+                    labelFormatter={(label) => `성공 횟수: ${label}`}
+                    contentStyle={{
+                      backgroundColor: "#020617",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                    }}
+                  />
+                  <Legend
+                    formatter={(value) =>
+                      value === "relativeFrequency"
+                        ? "시뮬레이션 상대도수"
+                        : "이론확률"
+                    }
+                  />
+                  <Bar
+                    dataKey="relativeFrequency"
+                    name="시뮬레이션 상대도수"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="theoreticalProbability"
+                    name="이론확률"
+                    strokeWidth={3}
+                    dot={false}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
