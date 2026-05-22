@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import SessionCreateForm from "@/components/teacher/SessionCreateForm";
+import SessionStatusButton from "@/components/teacher/SessionStatusButton";
 
 type Activity = {
   id: string;
@@ -109,7 +110,8 @@ export default async function TeacherPage() {
             <div>
               <h2 className="text-xl font-bold">최근 수업 세션</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                생성된 세션의 입장 코드와 학생 응답을 확인합니다.
+                생성된 세션의 입장 코드와 학생 응답을 확인하고, 수업이 끝난
+                세션을 종료할 수 있습니다.
               </p>
             </div>
           </div>
@@ -125,7 +127,7 @@ export default async function TeacherPage() {
             </div>
           ) : (
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[760px] border-collapse text-sm">
+              <table className="w-full min-w-[900px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-left text-slate-300">
                     <th className="py-3 pr-4">수업 세션</th>
@@ -135,6 +137,7 @@ export default async function TeacherPage() {
                     <th className="py-3 pr-4">생성 시각</th>
                     <th className="py-3 pr-4">상태</th>
                     <th className="py-3 pr-4">응답</th>
+                    <th className="py-3 pr-4">관리</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,23 +149,37 @@ export default async function TeacherPage() {
                       <td className="py-4 pr-4 font-semibold text-white">
                         {session.title}
                       </td>
+
                       <td className="py-4 pr-4">
                         {session.activities?.title ?? "-"}
                       </td>
+
                       <td className="py-4 pr-4">
                         <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-bold tracking-[0.15em] text-cyan-300">
                           {session.join_code}
                         </span>
                       </td>
+
                       <td className="py-4 pr-4">
                         {session.teacher_name ?? "-"}
                       </td>
+
                       <td className="py-4 pr-4">
                         {formatDateTime(session.created_at)}
                       </td>
+
                       <td className="py-4 pr-4">
-                        {session.is_active ? "진행 중" : "종료"}
+                        {session.is_active ? (
+                          <span className="rounded-full bg-green-300/10 px-3 py-1 font-semibold text-green-200">
+                            진행 중
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-300">
+                            종료
+                          </span>
+                        )}
                       </td>
+
                       <td className="py-4 pr-4">
                         <Link
                           href={`/teacher/sessions/${session.id}`}
@@ -170,6 +187,13 @@ export default async function TeacherPage() {
                         >
                           응답 보기
                         </Link>
+                      </td>
+
+                      <td className="py-4 pr-4">
+                        <SessionStatusButton
+                          sessionId={session.id}
+                          isActive={session.is_active}
+                        />
                       </td>
                     </tr>
                   ))}
