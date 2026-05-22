@@ -1,8 +1,10 @@
 # MathLab 수학 웹앱 리뉴얼 개발 문서 v1
 
 작성일: 2026-05-20  
+최근 업데이트: 2026-05-22  
 새 레포지토리: `dskim-git/mathlab`  
 기존 참고 레포지토리: `dskim-git/math`  
+배포 주소: `https://mathelab.vercel.app/`  
 개발 방향: 기존 Streamlit 기반 수학 수업 웹앱을 Next.js + Supabase + Vercel 기반으로 새로 구축
 
 ---
@@ -18,19 +20,68 @@
 3. Google Sheets를 메인 데이터베이스처럼 쓰는 구조에서 벗어나야 한다.
 4. 활동을 모듈 단위로 추가할 수 있어야 한다.
 5. 장기적으로 학생 활동 기록을 피드백과 생활기록부 참고자료로 활용할 수 있어야 한다.
-6. 최종적으로 각 미니활동에서 수집한 학생 성찰 자료와 활동 결과를 바탕으로 생성형 AI가 세특 참고 문구 초안을 작성하고, 교사가 검토·수정해 활용할 수 있는 구조를 만든다.
+6. 최종적으로 각 미니활동에서 수집한 학생 성찰 자료와 활동 결과를 바탕으로 생성형 AI가 세특 문구 초안을 작성하고, 교사가 검토·수정해 활용할 수 있는 구조를 만든다.
 
 ---
 
-## 2. 기술 스택
+## 2. 현재 구현 상태
+
+2026-05-22 기준으로 MVP 1차 흐름은 다음까지 구현되었다.
+
+```text
+교사가 수업 세션 생성
+→ 입장 코드 발급
+→ 학생이 입장 코드로 참여
+→ 확률 시뮬레이터 활동 수행
+→ 결과 해석 및 성찰 제출
+→ Supabase responses 테이블 저장
+→ 교사가 세션별 학생 응답 확인
+→ CSV 다운로드
+```
+
+### 2.1 구현 완료 기능
+
+#### 교사용
+
+- `/teacher` 교사용 대시보드
+- Supabase `activities` 테이블 조회
+- 수업 세션 생성
+- 입장 코드 자동 발급
+- 최근 수업 세션 목록 확인
+- `/teacher/sessions/[sessionId]` 세션별 학생 응답 확인
+- 학생 응답 CSV 다운로드
+
+#### 학생용
+
+- `/join` 입장 코드 입력
+- 학생 이름 / 학번 또는 번호 입력
+- `/student/session/[joinCode]` 활동 페이지 입장
+- 확률 시뮬레이터 실행
+- 평균, 분산, 성공 횟수 분포표 확인
+- Recharts 기반 성공 횟수 분포 그래프 확인
+- 결과 해석 관점 선택
+- 성찰 작성 및 제출
+
+#### 데이터베이스
+
+- `activities` 테이블 사용
+- `sessions` 테이블 사용
+- `responses` 테이블 사용
+- 확률 시뮬레이터 결과를 `responses.result` JSONB에 구조화하여 저장
+- 학생 성찰을 `responses.reflection`에 저장
+
+---
+
+## 3. 기술 스택
 
 새 앱은 다음 기술 스택을 기준으로 개발한다.
 
 ```text
-프론트엔드 / 풀스택 프레임워크: Next.js
+프론트엔드 / 풀스택 프레임워크: Next.js App Router
 언어: TypeScript
 스타일링: Tailwind CSS
 데이터베이스: Supabase Postgres
+차트: Recharts
 백엔드 기능: Supabase API / Next.js Server Actions 또는 Route Handlers
 배포: Vercel
 개발 환경: VS Code
@@ -43,7 +94,7 @@ AI 세특 문구 생성 기능은 MVP 이후 단계에서 구현한다. 이 기�
 
 ---
 
-## 3. 기존 앱 분석 요약
+## 4. 기존 앱 분석 요약
 
 기존 앱은 `home.py`를 중심으로 작동하는 Streamlit 기반 수학 수업 플랫폼이다.
 
@@ -76,7 +127,7 @@ AI 세특 문구 생성 기능은 MVP 이후 단계에서 구현한다. 이 기�
 
 ---
 
-## 4. 새 앱의 핵심 수업 흐름
+## 5. 새 앱의 핵심 수업 흐름
 
 새 앱의 기본 수업 흐름은 다음과 같다.
 
@@ -108,7 +159,7 @@ AI 세특 문구 생성 기능은 MVP 이후 단계에서 구현한다. 이 기�
 
 ---
 
-## 5. MVP 범위
+## 6. MVP 범위
 
 MVP의 목표는 다음 질문에 답하는 것이다.
 
@@ -119,7 +170,7 @@ Next.js + Supabase + Vercel 구조에서 학생 40~50명이 동시에 접속해
 교사가 대시보드에서 확인할 수 있는가?
 ```
 
-### MVP에 포함할 기능
+### MVP에 포함한 기능
 
 #### 학생 화면
 
@@ -128,7 +179,7 @@ Next.js + Supabase + Vercel 구조에서 학생 40~50명이 동시에 접속해
 - 확률 시뮬레이터 활동 수행
 - 시뮬레이션 결과 그래프 확인
 - 결과 해석 또는 느낀 점 입력
-- 제출 완료 화면
+- 응답 제출
 
 #### 교사 화면
 
@@ -144,9 +195,10 @@ Next.js + Supabase + Vercel 구조에서 학생 40~50명이 동시에 접속해
 - `sessions`
 - `responses`
 
-### MVP에서 제외할 기능
+### MVP에서 아직 제외한 기능
 
 - 학생 회원가입
+- 교사 로그인
 - 관리자 승인
 - 과목별 상세 권한
 - Google Sheets 자동 연동
@@ -154,32 +206,37 @@ Next.js + Supabase + Vercel 구조에서 학생 40~50명이 동시에 접속해
 - 전체 기존 활동 일괄 이식
 - AI 피드백 자동 생성
 - 세특 문구 자동 생성
+- 세션 종료 기능
+- 중복 제출 제한
+- 응답 삭제 기능
 
 ---
 
-## 6. 기능별 이식 우선순위
+## 7. 기능별 이식 우선순위
 
 | 우선순위 | 기능 | 새 앱 이식 판단 |
 |---|---|---|
-| 1 | 확률 시뮬레이터 | MVP 첫 활동으로 구현 |
-| 2 | 학생 응답 저장 | Supabase `responses` 테이블로 구현 |
-| 3 | 교사용 응답 확인 | 새 대시보드로 구현 |
-| 4 | 입장 코드 기반 참여 | 새 앱의 핵심 진입 방식 |
-| 5 | 계산기 | 저장 필요가 적으므로 후순위 |
-| 6 | 확률과통계 미니 활동 | 수업 활용도 높은 것부터 선별 이식 |
-| 7 | 공통수학 미니 활동 | 단원별로 선별 이식 |
-| 8 | 학생별 활동 기록 누적 | responses 데이터를 학생별·활동별로 조회할 수 있게 확장 |
-| 9 | 로그인 / 회원가입 전체 | Supabase Auth 또는 교사 로그인으로 나중에 재설계 |
-| 10 | Google Sheets 권한 관리 | MVP에서는 제외 |
-| 11 | 설문 연구 기능 | 연구 단계에서 별도 모듈로 이식 |
-| 12 | 교사별 성찰 시트 라우팅 | 초기에는 Supabase 조회 + CSV 다운로드로 대체 |
-| 13 | AI 기반 세특 참고 문구 생성 | 충분한 활동 기록과 교사용 검토 화면이 갖춰진 뒤 구현 |
+| 1 | 확률 시뮬레이터 | MVP 첫 활동으로 구현 완료 |
+| 2 | 학생 응답 저장 | Supabase `responses` 테이블로 구현 완료 |
+| 3 | 교사용 응답 확인 | 새 대시보드로 구현 완료 |
+| 4 | CSV 다운로드 | 세션별 응답 다운로드 구현 완료 |
+| 5 | 입장 코드 기반 참여 | 새 앱의 핵심 진입 방식으로 구현 완료 |
+| 6 | 세션 종료 기능 | 다음 개발 후보 |
+| 7 | 중복 제출 방지 / 재제출 정책 | 다음 개발 후보 |
+| 8 | 계산기 | 저장 필요가 적으므로 후순위 |
+| 9 | 확률과통계 미니 활동 | 수업 활용도 높은 것부터 선별 이식 |
+| 10 | 공통수학 미니 활동 | 단원별로 선별 이식 |
+| 11 | 학생별 활동 기록 누적 | responses 데이터를 학생별·활동별로 조회할 수 있게 확장 |
+| 12 | 로그인 / 회원가입 전체 | Supabase Auth 또는 교사 로그인으로 나중에 재설계 |
+| 13 | Google Sheets 권한 관리 | MVP에서는 제외 |
+| 14 | 설문 연구 기능 | 연구 단계에서 별도 모듈로 이식 |
+| 15 | AI 기반 세특 참고 문구 생성 | 충분한 활동 기록과 교사용 검토 화면이 갖춰진 뒤 구현 |
 
 ---
 
-## 7. Supabase 데이터베이스 초안
+## 8. Supabase 데이터베이스 초안
 
-### 7.1 activities 테이블
+### 8.1 activities 테이블
 
 ```sql
 create table activities (
@@ -193,7 +250,7 @@ create table activities (
 );
 ```
 
-### 7.2 sessions 테이블
+### 8.2 sessions 테이블
 
 ```sql
 create table sessions (
@@ -207,7 +264,7 @@ create table sessions (
 );
 ```
 
-### 7.3 responses 테이블
+### 8.3 responses 테이블
 
 ```sql
 create table responses (
@@ -225,17 +282,43 @@ create table responses (
 
 ```json
 {
+  "activitySlug": "probability-simulator",
   "mode": "coin",
+  "modeLabel": "동전 던지기",
   "n": 30,
   "repeats": 3000,
   "p": 0.5,
   "observedMean": 15.1,
   "expectedMean": 15,
-  "distribution": [0, 0, 1, 3, 7]
+  "observedVariance": 7.4,
+  "expectedVariance": 7.5,
+  "interpretationType": "theory_comparison",
+  "distribution": []
 }
 ```
 
-### 7.4 장기 확장: AI 세특 문구 생성을 위한 데이터 구조
+### 8.4 현재 RLS 정책 메모
+
+현재 MVP 테스트 단계에서는 학생이 별도 로그인 없이 응답을 제출할 수 있어야 하므로 `responses` 테이블에 anon insert/select 정책을 허용했다.
+
+현재 정책의 목적:
+
+```text
+학생이 입장 코드 기반으로 응답 제출 가능
+교사용 화면에서 응답 조회 가능
+빠른 MVP 검증 가능
+```
+
+주의:
+
+```text
+운영 단계에서는 이 정책을 그대로 두면 안 된다.
+교사 로그인, 세션 권한, 응답 조회 권한을 도입한 뒤 RLS를 강화해야 한다.
+```
+
+---
+
+## 9. 장기 확장: AI 세특 문구 생성을 위한 데이터 구조
 
 MVP에서는 `responses` 테이블만 사용한다. 다만 장기적으로는 학생별 활동 기록과 AI 생성 결과를 분리해 관리하는 것이 좋다.
 
@@ -278,12 +361,13 @@ create table ai_record_drafts (
 
 ---
 
-## 8. 추천 파일 구조
+## 10. 추천 파일 구조
 
 ```text
 mathlab/
   docs/
     mathlab_renewal_development_plan_v1.md
+    activity_reflection_design_memo.md
   app/
     page.tsx
     join/
@@ -293,40 +377,27 @@ mathlab/
         page.tsx
     teacher/
       page.tsx
-      sessions/
-        page.tsx
       sessions/[sessionId]/
         page.tsx
   components/
-    layout/
-      Header.tsx
-      PageContainer.tsx
     activities/
       ProbabilitySimulator.tsx
     teacher/
-      ResponseTable.tsx
+      ResponseCsvDownloadButton.tsx
       SessionCreateForm.tsx
   lib/
     supabase/
       client.ts
-      server.ts
     activities/
       probability.ts
     utils/
       joinCode.ts
-  types/
-    activity.ts
-    session.ts
-    response.ts
-  supabase/
-    schema.sql
-  .env.local.example
   README.md
 ```
 
 ---
 
-## 9. 확률 시뮬레이터 MVP 설계
+## 11. 확률 시뮬레이터 MVP 설계
 
 기존 Streamlit 앱의 `binomial_simulator.py` 기능을 참고하되, 새 앱에서는 TypeScript 기반 React 컴포넌트로 다시 만든다.
 
@@ -343,24 +414,53 @@ mathlab/
 ### 출력값
 
 - 성공 횟수 분포 그래프
+- 성공 횟수 분포표
 - 시뮬레이션 평균
 - 이론 평균 `np`
+- 시뮬레이션 분산
+- 이론 분산 `np(1-p)`
 - 학생의 결과 해석 또는 느낀 점
 
 ### 구현 방식
 
 - 난수 시뮬레이션은 TypeScript 함수로 구현한다.
 - 이항분포 이론값도 TypeScript 함수로 구현한다.
-- 그래프는 Recharts 또는 Plotly.js 중 하나를 사용한다.
-- MVP에서는 구현이 단순한 Recharts를 우선 검토한다.
+- 그래프는 Recharts의 `ComposedChart`를 사용한다.
+- 막대그래프는 시뮬레이션 상대도수를 나타낸다.
+- 선그래프는 이론적인 이항분포 확률을 나타낸다.
 
 ---
 
-## 10. AI 세특 참고 문구 생성 기능 설계 방향
+## 12. 활동 성찰 유형 설계 방향
+
+앞으로 미니활동은 성찰 입력 방식에 따라 두 유형으로 설계한다.
+
+```text
+간단 성찰형
+- 해석 관점 1개 선택
+- 성찰 1개 작성
+- 짧은 수업 활동용
+
+심화 성찰형
+- 여러 성찰 문항에 각각 답변
+- 탐구형 활동 / 세특 참고자료용
+```
+
+현재 확률 시뮬레이터는 간단 성찰형으로 구현되어 있다.
+
+상세 설계는 아래 문서를 따른다.
+
+```text
+docs/activity_reflection_design_memo.md
+```
+
+---
+
+## 13. AI 세특 참고 문구 생성 기능 설계 방향
 
 이 기능은 장기 목표이며, MVP 이후 단계에서 구현한다. 목적은 학생이 각 미니활동에서 남긴 결과와 성찰 기록을 바탕으로 교사가 생활기록부 세부능력 및 특기사항 참고 문구를 작성할 때 활용할 수 있는 초안을 생성하는 것이다.
 
-### 10.1 기본 흐름
+### 13.1 기본 흐름
 
 ```text
 학생이 미니활동 수행
@@ -373,7 +473,7 @@ mathlab/
 → 최종 참고 문구로 활용
 ```
 
-### 10.2 화면 설계 후보
+### 13.2 화면 설계 후보
 
 ```text
 /teacher/students
@@ -390,7 +490,7 @@ mathlab/
 - 교사 수정본 저장
 ```
 
-### 10.3 AI 문구 생성 원칙
+### 13.3 AI 문구 생성 원칙
 
 - 학생이 실제로 제출한 활동 결과와 성찰 내용을 근거로 한다.
 - 근거가 없는 태도, 인성, 역량을 임의로 만들어내지 않는다.
@@ -399,86 +499,40 @@ mathlab/
 - 교사가 반드시 검토하고 수정해야 한다.
 - 학생 개인정보와 민감정보를 다룰 수 있으므로 API 키, 접근 권한, 데이터 보관 정책을 신중하게 설계한다.
 
-### 10.4 지금 단계에서 미리 반영할 점
+### 13.4 지금 단계에서 미리 반영할 점
 
 지금 당장 AI 기능을 구현하지는 않는다. 대신 앞으로 AI 문구 생성을 쉽게 붙일 수 있도록 학생 응답 데이터를 구조화해서 저장한다.
 
 따라서 `responses.result`에는 단순 계산 결과만 넣지 말고, 활동별 핵심 값과 학생 선택 값을 가능한 한 명확한 JSON 구조로 저장한다. `responses.reflection`에는 자유 서술형 성찰을 저장한다.
 
-예시:
-
-```json
-{
-  "activitySlug": "probability-simulator",
-  "mode": "coin",
-  "n": 30,
-  "repeats": 3000,
-  "p": 0.5,
-  "observedMean": 15.1,
-  "expectedMean": 15,
-  "studentInterpretationType": "theory_comparison"
-}
-```
-
 ---
 
-## 11. 개발 단계별 계획
+## 14. 개발 단계별 계획
 
 ### Phase 1. 새 프로젝트 기본 틀 만들기
 
-목표:
+상태: 완료
 
 - 새 GitHub repo 사용
 - Next.js 프로젝트 생성
-- 첫 실행 확인
-
-명령어:
-
-```bash
-npx create-next-app@latest mathlab
-cd mathlab
-npm run dev
-```
-
-권장 선택:
-
-```text
-TypeScript: Yes
-ESLint: Yes
-Tailwind CSS: Yes
-src directory: Yes
-App Router: Yes
-Turbopack: Yes 또는 기본값
-Import alias: 기본값 사용
-```
-
-주의: 이미 GitHub에서 `mathlab` repo를 만들었으므로, 실제 작업은 clone 후 현재 폴더에 Next.js를 생성하는 방식으로 진행한다.
+- Vercel 배포 확인
 
 ---
 
 ### Phase 2. Supabase 프로젝트 연결
 
-목표:
+상태: 완료
 
 - Supabase 프로젝트 생성
 - DB 테이블 생성
 - `.env.local` 연결
 - Next.js에서 Supabase client 사용
 
-산출물:
-
-- `supabase/schema.sql`
-- `lib/supabase/client.ts`
-- `lib/supabase/server.ts`
-
 ---
 
 ### Phase 3. 교사용 세션 생성
 
-목표:
-
-- 교사가 활동 세션을 생성한다.
-- 입장 코드가 자동 생성된다.
+상태: 완료
 
 구현 화면:
 
@@ -498,9 +552,7 @@ Import alias: 기본값 사용
 
 ### Phase 4. 학생 입장
 
-목표:
-
-- 학생이 입장 코드로 활동에 들어간다.
+상태: 완료
 
 구현 화면:
 
@@ -520,11 +572,9 @@ Import alias: 기본값 사용
 
 ### Phase 5. 확률 시뮬레이터 구현
 
-목표:
+상태: 완료
 
-- 학생이 확률 시뮬레이션을 실행하고 결과를 확인한다.
-
-구현 파일 후보:
+구현 파일:
 
 ```text
 components/activities/ProbabilitySimulator.tsx
@@ -543,9 +593,7 @@ lib/activities/probability.ts
 
 ### Phase 6. 응답 제출
 
-목표:
-
-- 학생 결과와 성찰을 Supabase에 저장한다.
+상태: 완료
 
 저장 대상:
 
@@ -557,15 +605,13 @@ responses.result
 responses.reflection
 ```
 
-이때 장기적인 AI 세특 문구 생성을 고려해 `responses.result`에는 활동별 핵심 변수와 학생 선택값을 구조화된 JSON으로 저장한다.
+장기적인 AI 세특 문구 생성을 고려해 `responses.result`에는 활동별 핵심 변수와 학생 선택값을 구조화된 JSON으로 저장한다.
 
 ---
 
 ### Phase 7. 교사용 응답 대시보드
 
-목표:
-
-- 교사가 학생 응답을 확인한다.
+상태: 완료
 
 구현 화면:
 
@@ -583,7 +629,37 @@ responses.reflection
 
 ---
 
-### Phase 8. 학생별 활동 기록 모아보기
+### Phase 8. 세션 관리 안정화
+
+상태: 다음 개발 후보
+
+목표:
+
+- 교사가 세션을 종료할 수 있게 한다.
+- 종료된 세션은 학생이 더 이상 입장하지 못하게 한다.
+- 교사용 세션 목록에서 진행 중 / 종료 상태를 명확하게 표시한다.
+
+---
+
+### Phase 9. 중복 제출 방지 또는 재제출 정책
+
+상태: 다음 개발 후보
+
+검토할 정책:
+
+```text
+1. 같은 세션에서 같은 이름/학번은 한 번만 제출 가능
+2. 여러 번 제출 가능하되 가장 최근 응답을 대표 응답으로 표시
+3. 교사가 세션별로 제출 정책을 선택
+```
+
+MVP 이후에는 실제 수업 운영 방식을 고려해 결정한다.
+
+---
+
+### Phase 10. 학생별 활동 기록 모아보기
+
+상태: 후속 개발
 
 목표:
 
@@ -598,7 +674,9 @@ responses.reflection
 
 ---
 
-### Phase 9. AI 세특 참고 문구 초안 생성
+### Phase 11. AI 세특 참고 문구 초안 생성
+
+상태: 장기 개발
 
 목표:
 
@@ -620,7 +698,7 @@ responses.reflection
 
 ---
 
-## 12. AI 코딩 도구 사용 원칙
+## 15. AI 코딩 도구 사용 원칙
 
 VS Code에서 Copilot, Claude Code, Codex류 도구를 사용할 때는 작업을 작게 나누어 지시한다.
 
@@ -654,21 +732,37 @@ Supabase의 sessions 테이블에서 수업 세션 목록을 불러와
 10. AI 세특 참고 문구 생성
 ```
 
+코드를 수정할 때는 가능하면 부분 코드보다 전체 파일 단위로 교체하는 방식이 초보 개발자에게 안전하다. 수정 후에는 항상 아래 순서로 확인한다.
+
+```bash
+npm run dev
+npm run build
+git status
+git add .
+git commit -m "작업 내용"
+git push
+```
+
 ---
 
-## 13. 바로 다음 작업
+## 16. 바로 다음 작업 후보
 
-현재 구현 흐름상 다음 작업은 확률 시뮬레이터를 학생 세션 페이지에 연결하는 것이다.
+현재 기능을 정리한 뒤 다음 작업은 안정화 기능부터 진행한다.
 
-1. `lib/activities/probability.ts` 생성
-2. `components/activities/ProbabilitySimulator.tsx` 생성
-3. `/student/session/[joinCode]` 페이지에 시뮬레이터 삽입
-4. 학생 reflection 입력 영역 추가
-5. `responses` 테이블에 제출 저장
+추천 순서:
+
+```text
+1. 세션 종료 기능
+2. 종료된 세션 학생 입장 차단
+3. 중복 제출 방지 또는 재제출 정책 결정
+4. 교사용 세션 상세 화면 개선
+5. 응답 삭제 또는 관리 기능
+6. 기존 Streamlit 미니활동 순차 이식 준비
+```
 
 ---
 
-## 14. 현재 결론
+## 17. 현재 결론
 
 새 앱 개발은 `dskim-git/mathlab`에서 진행한다.
 
@@ -682,6 +776,7 @@ Supabase의 sessions 테이블에서 수업 세션 목록을 불러와
 → 확률 시뮬레이터 MVP 구현 O
 → Supabase 응답 저장 O
 → 교사용 대시보드 O
+→ CSV 다운로드 O
 → 학생별 활동 기록 누적 O
 → AI 세특 참고 문구 초안 생성 O
 → 안정화 후 활동별 순차 이식 O
