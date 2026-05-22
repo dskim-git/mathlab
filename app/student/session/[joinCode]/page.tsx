@@ -1,6 +1,7 @@
 import Link from "next/link";
+import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
+import { getActivityBlocksForSlug } from "@/lib/activities/activityBlocks";
 import { supabase } from "@/lib/supabase/client";
-import ProbabilitySimulator from "@/components/activities/ProbabilitySimulator";
 
 type StudentSessionPageProps = {
   params: Promise<{
@@ -58,11 +59,13 @@ export default async function StudentSessionPage({
     .eq("is_active", true)
     .single();
 
-  const sessionData = session as SessionWithActivity | null;
+  const sessionData = session as unknown as SessionWithActivity | null;
+  const activitySlug = sessionData?.activities?.slug ?? "unknown";
+  const activityBlocks = getActivityBlocksForSlug(activitySlug);
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/5 p-8">
+      <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 p-8">
         <p className="text-sm font-semibold text-cyan-300">학생 활동</p>
 
         {error || !sessionData ? (
@@ -105,9 +108,7 @@ export default async function StudentSessionPage({
             </div>
 
             <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
-              <p className="text-sm font-semibold text-cyan-300">
-                활동 정보
-              </p>
+              <p className="text-sm font-semibold text-cyan-300">활동 정보</p>
 
               <h2 className="mt-3 text-2xl font-bold">
                 {sessionData.activities?.title ?? "활동 정보 없음"}
@@ -125,14 +126,17 @@ export default async function StudentSessionPage({
                 <span className="rounded-full bg-white/10 px-3 py-1">
                   type: {sessionData.activities?.activity_type ?? "-"}
                 </span>
+                <span className="rounded-full bg-white/10 px-3 py-1">
+                  blocks: {activityBlocks.length}
+                </span>
               </div>
             </section>
 
-            <ProbabilitySimulator
-                sessionId={sessionData.id}
-                activitySlug={sessionData.activities?.slug}
-                studentName={name}
-                studentNumber={number}
+            <ActivityRenderer
+              blocks={activityBlocks}
+              sessionId={sessionData.id}
+              studentName={name}
+              studentNumber={number}
             />
 
             <Link
