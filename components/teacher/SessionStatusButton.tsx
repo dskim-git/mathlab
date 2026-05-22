@@ -33,17 +33,26 @@ export default function SessionStatusButton({
     setIsUpdating(true);
     setErrorMessage("");
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .update({
         is_active: nextStatus,
       })
-      .eq("id", sessionId);
+      .eq("id", sessionId)
+      .select("id, is_active")
+      .single();
 
     setIsUpdating(false);
 
     if (error) {
       setErrorMessage(error.message);
+      return;
+    }
+
+    if (!data) {
+      setErrorMessage(
+        "세션 상태가 변경되지 않았습니다. Supabase 정책이나 환경 변수를 확인해 주세요."
+      );
       return;
     }
 
