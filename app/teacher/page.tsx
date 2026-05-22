@@ -80,6 +80,15 @@ export default async function TeacherPage() {
           확인하는 대시보드입니다.
         </p>
 
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/teacher/activities"
+            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+          >
+            활동 콘텐츠 블록 관리
+          </Link>
+        </div>
+
         <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
           <h2 className="text-xl font-bold">Supabase 연결 상태</h2>
 
