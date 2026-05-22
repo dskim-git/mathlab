@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { formatKoreanDateTime } from "@/lib/dateTime";
 import ResponseCsvDownloadButton from "@/components/teacher/ResponseCsvDownloadButton";
 import ResponseDeleteButton from "@/components/teacher/ResponseDeleteButton";
 
@@ -55,17 +56,6 @@ type EnhancedStudentResponse = StudentResponse & {
   submissionOrder: number;
   isLatestSubmission: boolean;
 };
-
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function formatNumber(value: number | undefined, digits = 4) {
   if (typeof value !== "number") {
@@ -220,7 +210,7 @@ export default async function TeacherSessionResponsesPage({
                   교사: {sessionData.teacher_name ?? "-"}
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1">
-                  생성: {formatDateTime(sessionData.created_at)}
+                  생성: {formatKoreanDateTime(sessionData.created_at)}
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1">
                   상태: {sessionData.is_active ? "진행 중" : "종료"}
@@ -310,7 +300,8 @@ export default async function TeacherSessionResponsesPage({
                           </div>
 
                           <p className="mt-2 text-sm text-slate-400">
-                            제출 시각: {formatDateTime(response.created_at)}
+                            제출 시각:{" "}
+                            {formatKoreanDateTime(response.created_at)}
                           </p>
                         </div>
 

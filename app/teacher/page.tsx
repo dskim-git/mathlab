@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { formatKoreanDateTime } from "@/lib/dateTime";
 import SessionCreateForm from "@/components/teacher/SessionCreateForm";
 import SessionStatusButton from "@/components/teacher/SessionStatusButton";
 
@@ -28,17 +29,6 @@ type Session = {
     slug: string;
   } | null;
 };
-
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default async function TeacherPage() {
   const { data: activities, error: activitiesError } = await supabase
@@ -177,7 +167,7 @@ export default async function TeacherPage() {
                       </td>
 
                       <td className="py-4 pr-4">
-                        {formatDateTime(session.created_at)}
+                        {formatKoreanDateTime(session.created_at)}
                       </td>
 
                       <td className="py-4 pr-4">

@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { formatKoreanDateTime } from "@/lib/dateTime";
 
 type Activity = {
   id: string;
@@ -14,17 +15,6 @@ type Activity = {
   content_blocks: unknown[] | null;
   created_at: string | null;
 };
-
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function countBlocks(contentBlocks: unknown[] | null) {
   if (!Array.isArray(contentBlocks)) {
@@ -119,7 +109,7 @@ export default async function TeacherActivitiesPage() {
                     </td>
 
                     <td className="py-4 pr-4">
-                      {formatDateTime(activity.created_at)}
+                      {formatKoreanDateTime(activity.created_at)}
                     </td>
 
                     <td className="py-4 pr-4">

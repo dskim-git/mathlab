@@ -1,5 +1,7 @@
 "use client";
 
+import { formatKoreanDateTime } from "@/lib/dateTime";
+
 type ResponseResult = {
   activitySlug?: string;
   mode?: string;
@@ -28,17 +30,6 @@ type ResponseCsvDownloadButtonProps = {
   joinCode: string;
   responses: StudentResponse[];
 };
-
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function getInterpretationTypeLabel(value: string | undefined) {
   if (value === "theory_comparison") {
@@ -89,7 +80,7 @@ function createCsvContent(responses: StudentResponse[]) {
   ];
 
   const rows = responses.map((response) => [
-    formatDateTime(response.created_at),
+    formatKoreanDateTime(response.created_at, ""),
     response.student_name,
     response.student_number ?? "",
     response.result?.modeLabel ?? "",
