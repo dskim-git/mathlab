@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import TeacherRecordRow, {
   TeacherRecordRowData,
 } from "@/components/teacher/TeacherRecordRow";
+import TeacherClassPicker from "@/components/teacher/TeacherClassPicker";
 
 type TeacherRecordsPageProps = {
   searchParams: Promise<{
@@ -14,9 +15,6 @@ type TeacherRecordsPageProps = {
     subject?: string;
   }>;
 };
-
-const GRADE_OPTIONS = [1, 2, 3];
-const CLASS_OPTIONS = Array.from({ length: 15 }, (_, index) => index + 1);
 
 function toPositiveInt(value: string | undefined): number | null {
   if (!value || value.trim() === "") {
@@ -81,88 +79,15 @@ export default async function TeacherRecordsPage({
           )을 학생 로그인 기반으로 모아 봅니다. (세션과 무관하게 누적됩니다)
         </p>
 
-        <form
-          method="get"
-          action="/teacher/records"
-          className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6"
-        >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label
-                htmlFor="grade"
-                className="block text-sm font-semibold text-slate-200"
-              >
-                학년
-              </label>
-              <select
-                id="grade"
-                name="grade"
-                defaultValue={gradeValue ?? ""}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              >
-                <option value="">선택</option>
-                {GRADE_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}학년
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="classNumber"
-                className="block text-sm font-semibold text-slate-200"
-              >
-                반
-              </label>
-              <select
-                id="classNumber"
-                name="classNumber"
-                defaultValue={classValue ?? ""}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              >
-                <option value="">선택</option>
-                {CLASS_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}반
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="subject"
-                className="block text-sm font-semibold text-slate-200"
-              >
-                과목 (선택)
-              </label>
-              <input
-                id="subject"
-                name="subject"
-                defaultValue={subjectValue}
-                placeholder="예: 확률과 통계"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              />
-            </div>
-
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="w-full rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
-              >
-                조회하기
-              </button>
-            </div>
-          </div>
-        </form>
+        <TeacherClassPicker
+          selectedGrade={gradeValue}
+          selectedClassNumber={classValue}
+        />
 
         <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
           {!hasFilter ? (
             <div className="rounded-xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
-              학년과 반을 선택한 뒤 조회하기를 누르면 해당 학급의 활동 기록이
-              표시됩니다.
+              위에서 담당 학급을 선택하면 해당 학급의 활동 기록이 표시됩니다.
             </div>
           ) : loadError ? (
             <div className="rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
