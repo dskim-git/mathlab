@@ -11,8 +11,13 @@ type StudentSessionPageProps = {
     joinCode: string;
   }>;
   searchParams: Promise<{
+    studentId?: string;
+    loginId?: string;
     name?: string;
     number?: string;
+    grade?: string;
+    classNumber?: string;
+    studentCode?: string;
   }>;
 };
 
@@ -23,6 +28,7 @@ type SessionWithActivity = {
   teacher_name: string | null;
   is_active: boolean;
   activities: {
+    id: string;
     title: string;
     description: string | null;
     slug: string;
@@ -30,6 +36,16 @@ type SessionWithActivity = {
     activity_type: string | null;
     content_blocks: ContentBlock[] | null;
   } | null;
+};
+
+type StudentQueryInfo = {
+  studentId?: string;
+  loginId?: string;
+  name?: string;
+  number?: string;
+  grade?: string;
+  classNumber?: string;
+  studentCode?: string;
 };
 
 function getBlocksFromActivity(
@@ -46,12 +62,40 @@ function getBlocksFromActivity(
   return getActivityBlocksForSlug(activity?.slug ?? "unknown");
 }
 
+function createStudentLabel(student: StudentQueryInfo) {
+  const hasClassInfo = student.grade && student.classNumber && student.number;
+
+  if (!hasClassInfo) {
+    return student.number ? `번호: ${student.number}` : "";
+  }
+
+  return `${student.grade}학년 ${student.classNumber}반 ${student.number}번`;
+}
+
 export default async function StudentSessionPage({
   params,
   searchParams,
 }: StudentSessionPageProps) {
   const { joinCode } = await params;
-  const { name, number } = await searchParams;
+  const {
+    studentId,
+    loginId,
+    name,
+    number,
+    grade,
+    classNumber,
+    studentCode,
+  } = await searchParams;
+
+  const studentInfo: StudentQueryInfo = {
+    studentId,
+    loginId,
+    name,
+    number,
+    grade,
+    classNumber,
+    studentCode,
+  };
 
   const normalizedCode = joinCode.toUpperCase();
 
@@ -65,6 +109,7 @@ export default async function StudentSessionPage({
       teacher_name,
       is_active,
       activities (
+        id,
         title,
         description,
         slug,
@@ -80,6 +125,7 @@ export default async function StudentSessionPage({
 
   const sessionData = session as unknown as SessionWithActivity | null;
   const activityBlocks = getBlocksFromActivity(sessionData?.activities ?? null);
+  const studentLabel = createStudentLabel(studentInfo);
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -111,10 +157,33 @@ export default async function StudentSessionPage({
                   {sessionData.title}
                 </h1>
 
-                <p className="mt-4 leading-7 text-slate-300">
-                  {name ? `${name} 학생` : "학생"}이 입장했습니다.
-                  {number ? ` 번호: ${number}` : ""}
-                </p>
+                <section className="mt-5 rounded-2xl border border-green-400/30 bg-green-950/30 p-5 text-sm text-green-100">
+                  <p className="font-semibold">
+                    {name ? `${name} 학생이 입장했습니다.` : "학생이 입장했습니다."}
+                  </p>
+
+                  {studentLabel ? (
+                    <p className="mt-2">학번: {studentLabel}</p>
+                  ) : null}
+
+                  {loginId ? (
+                    <p className="mt-1">로그인 ID: {loginId}</p>
+                  ) : null}
+
+                  {studentCode ? (
+                    <p className="mt-1">학생 코드: {studentCode}</p>
+                  ) : null}
+
+                  {studentId ? (
+                    <p className="mt-1 text-green-200/80">
+                      student_id 연결됨
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-yellow-200">
+                      student_id가 전달되지 않았습니다.
+                    </p>
+                  )}
+                </section>
               </div>
 
               <div className="rounded-2xl border border-cyan-300/40 bg-cyan-300/10 px-5 py-4 text-center">
@@ -139,18 +208,25 @@ export default async function StudentSessionPage({
 
               <div className="mt-5 flex flex-wrap gap-2 text-xs text-slate-400">
                 <span className="rounded-full bg-white/10 px-3 py-1">
+                  activity_id: {sessionData.activities?.id ?? "-"}
+                </span>
+
+                <span className="rounded-full bg-white/10 px-3 py-1">
                   subject: {sessionData.activities?.subject ?? "-"}
                 </span>
+
                 <span className="rounded-full bg-white/10 px-3 py-1">
                   type: {sessionData.activities?.activity_type ?? "-"}
                 </span>
+
                 <span className="rounded-full bg-white/10 px-3 py-1">
                   blocks: {activityBlocks.length}
                 </span>
+
                 <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">
                   source:{" "}
                   {sessionData.activities?.content_blocks &&
-                  sessionData.activities.content_blocks.length > 0
+                    sessionData.activities.content_blocks.length > 0
                     ? "DB"
                     : "fallback"}
                 </span>
@@ -160,8 +236,16 @@ export default async function StudentSessionPage({
             <ActivityRenderer
               blocks={activityBlocks}
               sessionId={sessionData.id}
+              activityId={sessionData.activities?.id}
+              activitySlug={sessionData.activities?.slug}
+              activitySubject={sessionData.activities?.subject}
+              studentId={studentId}
+              studentLoginId={loginId}
               studentName={name}
               studentNumber={number}
+              studentGrade={grade}
+              studentClassNumber={classNumber}
+              studentCode={studentCode}
             />
 
             <Link

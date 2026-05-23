@@ -20,13 +20,56 @@ import {
   SimulationResult,
   simulateBinomial,
 } from "@/lib/activities/probability";
+import { parseStudentLoginId } from "@/lib/students/parseStudentLoginId";
+
+const DEFAULT_SCHOOL_YEAR = 2026;
 
 type ProbabilitySimulatorProps = {
   sessionId: string;
+
+  activityId?: string;
   activitySlug?: string;
+  activitySubject?: string | null;
+
+  studentId?: string;
+  studentLoginId?: string;
   studentName?: string;
   studentNumber?: string;
+  studentGrade?: string;
+  studentClassNumber?: string;
+  studentCode?: string;
 };
+
+function toPositiveInt(value?: string): number | null {
+  if (value === undefined || value.trim() === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function resolveSchoolYear(
+  studentLoginId?: string,
+  studentCode?: string
+): number {
+  for (const candidate of [studentLoginId, studentCode]) {
+    if (candidate && candidate.trim()) {
+      const parsed = parseStudentLoginId(candidate, DEFAULT_SCHOOL_YEAR);
+
+      if (parsed.ok) {
+        return parsed.data.schoolYear ?? DEFAULT_SCHOOL_YEAR;
+      }
+    }
+  }
+
+  return DEFAULT_SCHOOL_YEAR;
+}
 
 function formatNumber(value: number, digits = 4) {
   return value.toLocaleString("ko-KR", {
@@ -54,9 +97,16 @@ function createChartData(result: SimulationResult) {
 
 export default function ProbabilitySimulator({
   sessionId,
+  activityId,
   activitySlug = "probability-simulator",
+  activitySubject,
+  studentId,
+  studentLoginId,
   studentName,
   studentNumber,
+  studentGrade,
+  studentClassNumber,
+  studentCode,
 }: ProbabilitySimulatorProps) {
   const [mode, setMode] = useState<ProbabilityMode>("coin");
   const [n, setN] = useState(30);
@@ -71,6 +121,15 @@ export default function ProbabilitySimulator({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [activitySaveMessage, setActivitySaveMessage] = useState("");
+  const [activitySaveError, setActivitySaveError] = useState("");
+
+  function resetSubmitFeedback() {
+    setSubmitMessage("");
+    setSubmitError("");
+    setActivitySaveMessage("");
+    setActivitySaveError("");
+  }
 
   const modeDescription = useMemo(() => {
     if (mode === "coin") {
@@ -97,8 +156,7 @@ export default function ProbabilitySimulator({
     const nextP = getDefaultProbability(nextMode);
     setP(nextP);
     setResult(null);
-    setSubmitMessage("");
-    setSubmitError("");
+    resetSubmitFeedback();
   }
 
   function handleRunSimulation() {
@@ -110,8 +168,7 @@ export default function ProbabilitySimulator({
     });
 
     setResult(simulationResult);
-    setSubmitMessage("");
-    setSubmitError("");
+    resetSubmitFeedback();
   }
 
   async function handleSubmitResponse() {
@@ -131,8 +188,7 @@ export default function ProbabilitySimulator({
     }
 
     setIsSubmitting(true);
-    setSubmitMessage("");
-    setSubmitError("");
+    resetSubmitFeedback();
 
     const resultPayload = {
       activitySlug,
@@ -149,22 +205,96 @@ export default function ProbabilitySimulator({
       distribution: result.distribution,
     };
 
-    const { error } = await supabase.from("responses").insert({
+    const reflectionData = {
+      interpretationType,
+      reflection: reflection.trim(),
+    };
+
+    // 1. 기존 responses 테이블 저장 (유지)
+    // 식별 편의를 위해 출석번호 대신 전체 학번(예: 20202)을 저장한다.
+    // 로그인 학생은 studentCode가 있으므로 그것을, 없으면 기존 출석번호로 폴백한다.
+    const { error: legacyError } = await supabase.from("responses").insert({
       session_id: sessionId,
       student_name: studentName.trim(),
-      student_number: studentNumber?.trim() || null,
+      student_number: studentCode?.trim() || studentNumber?.trim() || null,
       result: resultPayload,
       reflection: reflection.trim(),
     });
 
-    setIsSubmitting(false);
+    if (legacyError) {
+      setSubmitError(`기존 응답(responses) 저장 실패: ${legacyError.message}`);
+    } else {
+      setSubmitMessage("기존 응답(responses)이 저장되었습니다.");
+    }
 
-    if (error) {
-      setSubmitError(error.message);
+    // 2. 새 activity_responses 테이블 병행 저장
+    const grade = toPositiveInt(studentGrade);
+    const classNumber = toPositiveInt(studentClassNumber);
+    const studentNumberValue = toPositiveInt(studentNumber);
+
+    if (
+      !activityId ||
+      !studentId ||
+      grade === null ||
+      classNumber === null ||
+      studentNumberValue === null
+    ) {
+      const missing: string[] = [];
+
+      if (!activityId) missing.push("활동 ID(activity_id)");
+      if (!studentId) missing.push("학생 ID(student_id)");
+      if (grade === null) missing.push("학년");
+      if (classNumber === null) missing.push("반");
+      if (studentNumberValue === null) missing.push("번호");
+
+      setActivitySaveError(
+        `새 활동 기록(activity_responses) 저장에 필요한 정보가 부족하여 저장하지 못했습니다: ${missing.join(
+          ", "
+        )}. 학생 로그인 후 다시 시도해 주세요.`
+      );
+      setIsSubmitting(false);
       return;
     }
 
-    setSubmitMessage("응답이 저장되었습니다.");
+    const schoolYear = resolveSchoolYear(studentLoginId, studentCode);
+
+    // 식별 편의를 위해 전체 학번(예: 20202)을 한 칸에 같이 저장한다.
+    // 로그인 정보의 studentCode를 우선 쓰되, 없으면 학년/반/번호로 조합한다.
+    const resolvedStudentCode =
+      studentCode?.trim() ||
+      `${grade}${String(classNumber).padStart(2, "0")}${String(
+        studentNumberValue
+      ).padStart(2, "0")}`;
+
+    const { error: activityError } = await supabase
+      .from("activity_responses")
+      .insert({
+        activity_id: activityId,
+        student_id: studentId,
+        session_id: sessionId || null,
+        school_year: schoolYear,
+        grade,
+        class_number: classNumber,
+        student_number: studentNumberValue,
+        student_code: resolvedStudentCode,
+        subject: activitySubject ?? null,
+        activity_slug: activitySlug,
+        response_data: resultPayload,
+        reflection_data: reflectionData,
+      });
+
+    setIsSubmitting(false);
+
+    if (activityError) {
+      setActivitySaveError(
+        `새 활동 기록(activity_responses) 저장 실패: ${activityError.message}`
+      );
+      return;
+    }
+
+    setActivitySaveMessage(
+      "새 활동 기록(activity_responses)도 함께 저장되었습니다."
+    );
   }
 
   return (
@@ -177,11 +307,41 @@ export default function ProbabilitySimulator({
           실험하고, 이론적인 이항분포와 비교해 봅니다.
         </p>
 
-        {(studentName || studentNumber) && (
-          <p className="mt-2 text-sm text-slate-400">
-            참여 학생: {studentName || "이름 없음"}
-            {studentNumber ? ` / ${studentNumber}` : ""}
-          </p>
+        {(studentName || studentNumber || studentId) && (
+          <div className="mt-3 rounded-xl border border-white/10 bg-slate-950 p-4 text-sm text-slate-300">
+            <p>
+              참여 학생: {studentName || "이름 없음"}
+              {studentGrade && studentClassNumber && studentNumber
+                ? ` / ${studentGrade}학년 ${studentClassNumber}반 ${studentNumber}번`
+                : studentNumber
+                  ? ` / ${studentNumber}번`
+                  : ""}
+            </p>
+
+            {studentLoginId ? (
+              <p className="mt-1 text-slate-400">로그인 ID: {studentLoginId}</p>
+            ) : null}
+
+            {studentCode ? (
+              <p className="mt-1 text-slate-400">학생 코드: {studentCode}</p>
+            ) : null}
+
+            {studentId ? (
+              <p className="mt-1 text-green-300">student_id 연결됨</p>
+            ) : (
+              <p className="mt-1 text-yellow-300">student_id 없음</p>
+            )}
+
+            {activityId ? (
+              <p className="mt-1 text-green-300">activity_id 연결됨</p>
+            ) : (
+              <p className="mt-1 text-yellow-300">activity_id 없음</p>
+            )}
+
+            {activitySubject ? (
+              <p className="mt-1 text-slate-400">과목: {activitySubject}</p>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -226,8 +386,7 @@ export default function ProbabilitySimulator({
             onChange={(event) => {
               setN(Number(event.target.value));
               setResult(null);
-              setSubmitMessage("");
-              setSubmitError("");
+              resetSubmitFeedback();
             }}
             className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
           />
@@ -252,8 +411,7 @@ export default function ProbabilitySimulator({
             onChange={(event) => {
               setRepeats(Number(event.target.value));
               setResult(null);
-              setSubmitMessage("");
-              setSubmitError("");
+              resetSubmitFeedback();
             }}
             className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
           />
@@ -280,8 +438,7 @@ export default function ProbabilitySimulator({
             onChange={(event) => {
               setP(Number(event.target.value));
               setResult(null);
-              setSubmitMessage("");
-              setSubmitError("");
+              resetSubmitFeedback();
             }}
             className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           />
@@ -491,8 +648,7 @@ export default function ProbabilitySimulator({
                 value={reflection}
                 onChange={(event) => {
                   setReflection(event.target.value);
-                  setSubmitMessage("");
-                  setSubmitError("");
+                  resetSubmitFeedback();
                 }}
                 rows={6}
                 className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-slate-900 px-4 py-3 leading-7 text-white outline-none transition focus:border-cyan-300"
@@ -509,6 +665,18 @@ export default function ProbabilitySimulator({
             {submitMessage ? (
               <div className="mt-4 rounded-xl border border-green-400/30 bg-green-950/40 p-4 text-sm text-green-200">
                 {submitMessage}
+              </div>
+            ) : null}
+
+            {activitySaveError ? (
+              <div className="mt-4 rounded-xl border border-yellow-400/30 bg-yellow-950/40 p-4 text-sm text-yellow-200">
+                {activitySaveError}
+              </div>
+            ) : null}
+
+            {activitySaveMessage ? (
+              <div className="mt-4 rounded-xl border border-green-400/30 bg-green-950/40 p-4 text-sm text-green-200">
+                {activitySaveMessage}
               </div>
             ) : null}
 

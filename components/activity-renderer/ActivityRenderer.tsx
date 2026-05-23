@@ -11,8 +11,18 @@ import { ContentBlock } from "@/lib/activities/activityBlocks";
 type ActivityRendererProps = {
   blocks: ContentBlock[];
   sessionId: string;
+
+  activityId?: string;
+  activitySlug?: string;
+  activitySubject?: string | null;
+
+  studentId?: string;
+  studentLoginId?: string;
   studentName?: string;
   studentNumber?: string;
+  studentGrade?: string;
+  studentClassNumber?: string;
+  studentCode?: string;
 };
 
 function getBlockTypeLabel(type: ContentBlock["type"]) {
@@ -68,8 +78,16 @@ function renderTextInstruction(
 export default function ActivityRenderer({
   blocks,
   sessionId,
+  activityId,
+  activitySlug,
+  activitySubject,
+  studentId,
+  studentLoginId,
   studentName,
   studentNumber,
+  studentGrade,
+  studentClassNumber,
+  studentCode,
 }: ActivityRendererProps) {
   const [selectedBlockId, setSelectedBlockId] = useState(blocks[0]?.id ?? "");
 
@@ -179,17 +197,24 @@ export default function ActivityRenderer({
         ) : null}
 
         {selectedBlock.type === "interactive_activity" &&
-        selectedBlock.content.activitySlug === "probability-simulator" ? (
+          selectedBlock.content.activitySlug === "probability-simulator" ? (
           <ProbabilitySimulator
             sessionId={sessionId}
-            activitySlug={selectedBlock.content.activitySlug}
+            activityId={activityId}
+            activitySlug={activitySlug ?? selectedBlock.content.activitySlug}
+            activitySubject={activitySubject}
+            studentId={studentId}
+            studentLoginId={studentLoginId}
             studentName={studentName}
             studentNumber={studentNumber}
+            studentGrade={studentGrade}
+            studentClassNumber={studentClassNumber}
+            studentCode={studentCode}
           />
         ) : null}
 
         {selectedBlock.type === "interactive_activity" &&
-        selectedBlock.content.activitySlug !== "probability-simulator" ? (
+          selectedBlock.content.activitySlug !== "probability-simulator" ? (
           <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
             <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
             <p className="mt-3 leading-7">

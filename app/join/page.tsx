@@ -2,14 +2,80 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/lib/supabase/client";
+
+type StoredMathLabStudent = {
+  studentId: string;
+  profileId: string;
+  loginId: string;
+  name: string;
+  schoolYear: number;
+  studentCode: string;
+  grade: number;
+  classNumber: number;
+  studentNumber: number;
+};
+
+const STUDENT_STORAGE_KEY = "mathlab_student";
+const STUDENT_STORAGE_EVENT = "mathlab-student-change";
+
+function getStudentSnapshot() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return localStorage.getItem(STUDENT_STORAGE_KEY) ?? "";
+}
+
+function getServerStudentSnapshot() {
+  return "";
+}
+
+function subscribeStudentStorage(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", callback);
+  window.addEventListener(STUDENT_STORAGE_EVENT, callback);
+
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(STUDENT_STORAGE_EVENT, callback);
+  };
+}
+
+function parseStoredStudent(rawStudent: string): StoredMathLabStudent | null {
+  if (!rawStudent) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawStudent) as StoredMathLabStudent;
+  } catch {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STUDENT_STORAGE_KEY);
+    }
+
+    return null;
+  }
+}
 
 export default function JoinPage() {
   const router = useRouter();
+
+  const rawStudent = useSyncExternalStore(
+    subscribeStudentStorage,
+    getStudentSnapshot,
+    getServerStudentSnapshot
+  );
+
+  const student = useMemo(() => {
+    return parseStoredStudent(rawStudent);
+  }, [rawStudent]);
+
   const [joinCode, setJoinCode] = useState("");
-  const [studentName, setStudentName] = useState("");
-  const [studentNumber, setStudentNumber] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isChecking, setIsChecking] = useState(false);
 
@@ -18,13 +84,13 @@ export default function JoinPage() {
 
     const normalizedCode = joinCode.trim().toUpperCase();
 
-    if (!normalizedCode) {
-      setErrorMessage("입장 코드를 입력해 주세요.");
+    if (!student) {
+      setErrorMessage("학생 로그인 후 입장 코드로 참여할 수 있습니다.");
       return;
     }
 
-    if (!studentName.trim()) {
-      setErrorMessage("이름을 입력해 주세요.");
+    if (!normalizedCode) {
+      setErrorMessage("입장 코드를 입력해 주세요.");
       return;
     }
 
@@ -46,8 +112,13 @@ export default function JoinPage() {
     }
 
     const params = new URLSearchParams({
-      name: studentName.trim(),
-      number: studentNumber.trim(),
+      studentId: student.studentId,
+      loginId: student.loginId,
+      name: student.name,
+      number: String(student.studentNumber),
+      grade: String(student.grade),
+      classNumber: String(student.classNumber),
+      studentCode: student.studentCode,
     });
 
     router.push(`/student/session/${normalizedCode}?${params.toString()}`);
@@ -64,6 +135,32 @@ export default function JoinPage() {
           선생님이 알려준 입장 코드를 입력하고 수업 활동에 참여하세요.
         </p>
 
+        {student ? (
+          <section className="mt-6 rounded-2xl border border-green-400/30 bg-green-950/30 p-5 text-sm text-green-100">
+            <p className="font-semibold">로그인된 학생 정보</p>
+            <p className="mt-2">이름: {student.name}</p>
+            <p className="mt-1">
+              학번: {student.grade}학년 {student.classNumber}반{" "}
+              {student.studentNumber}번
+            </p>
+            <p className="mt-1">로그인 ID: {student.loginId}</p>
+          </section>
+        ) : (
+          <section className="mt-6 rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-5 text-sm text-yellow-100">
+            <p className="font-semibold">학생 로그인이 필요합니다</p>
+            <p className="mt-2 leading-6">
+              입장 코드로 활동에 참여하려면 먼저 학생 ID로 로그인해 주세요.
+            </p>
+
+            <Link
+              href="/student/login"
+              className="mt-4 inline-flex rounded-full bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
+            >
+              학생 로그인하러 가기
+            </Link>
+          </section>
+        )}
+
         <form onSubmit={handleJoin} className="mt-8 space-y-5">
           <div>
             <label
@@ -75,41 +172,12 @@ export default function JoinPage() {
             <input
               id="join-code"
               value={joinCode}
-              onChange={(event) => setJoinCode(event.target.value)}
+              onChange={(event) => {
+                setJoinCode(event.target.value);
+                setErrorMessage("");
+              }}
               className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-lg font-bold uppercase tracking-[0.2em] text-white outline-none transition focus:border-cyan-300"
               placeholder="예: ABC123"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="student-name"
-              className="block text-sm font-semibold text-slate-200"
-            >
-              이름
-            </label>
-            <input
-              id="student-name"
-              value={studentName}
-              onChange={(event) => setStudentName(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="예: 김민준"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="student-number"
-              className="block text-sm font-semibold text-slate-200"
-            >
-              학번 또는 번호
-            </label>
-            <input
-              id="student-number"
-              value={studentNumber}
-              onChange={(event) => setStudentNumber(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="예: 20512"
             />
           </div>
 
@@ -121,19 +189,28 @@ export default function JoinPage() {
 
           <button
             type="submit"
-            disabled={isChecking}
+            disabled={isChecking || !student}
             className="w-full rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isChecking ? "입장 코드 확인 중..." : "활동 입장하기"}
           </button>
         </form>
 
-        <Link
-          href="/"
-          className="mt-8 inline-flex rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-        >
-          홈으로 돌아가기
-        </Link>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href="/student/home"
+            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+          >
+            학생 홈으로 가기
+          </Link>
+
+          <Link
+            href="/"
+            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
+          >
+            홈으로 돌아가기
+          </Link>
+        </div>
       </section>
     </main>
   );
