@@ -76,6 +76,9 @@ type ActivityResponseRow = {
     reflection?: string;
   } | null;
   created_at: string;
+  activities: {
+    title: string | null;
+  } | null;
 };
 
 function formatDateTime(value: string) {
@@ -117,7 +120,9 @@ export default function StudentHomePage() {
 
     const { data, error } = await supabase
       .from("activity_responses")
-      .select("id, subject, activity_slug, reflection_data, created_at")
+      .select(
+        "id, subject, activity_slug, reflection_data, created_at, activities ( title )"
+      )
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
 
@@ -125,7 +130,7 @@ export default function StudentHomePage() {
       setLoadError(error.message);
       setResponses([]);
     } else {
-      setResponses((data ?? []) as ActivityResponseRow[]);
+      setResponses((data ?? []) as unknown as ActivityResponseRow[]);
     }
 
     setIsLoadingResponses(false);
@@ -264,16 +269,21 @@ export default function StudentHomePage() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold text-white">
-                      {row.activity_slug ?? "활동"}
+                      {row.activities?.title ?? row.activity_slug ?? "활동"}
                     </p>
                     <p className="text-xs text-slate-400">
                       {formatDateTime(row.created_at)}
                     </p>
                   </div>
 
-                  {row.subject ? (
-                    <p className="mt-1 text-xs text-cyan-300">{row.subject}</p>
-                  ) : null}
+                  <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                    {row.subject ? (
+                      <span className="text-cyan-300">{row.subject}</span>
+                    ) : null}
+                    {row.activity_slug ? (
+                      <span className="text-slate-500">{row.activity_slug}</span>
+                    ) : null}
+                  </div>
 
                   {row.reflection_data?.reflection ? (
                     <p className="mt-3 text-sm leading-6 text-slate-300">
