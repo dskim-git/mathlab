@@ -309,8 +309,8 @@ profiles                    -- 원본 "학생" + "일반인" 통합
 teacher_permissions (기존)   -- 원본 교사 "과목설정"
 - (teacher_id, subject, grade, class_number)
 
-grade_subject_permissions   -- 원본 "학년권한" (학생 학년별 과목 접근)
-- school_year(또는 grade) → subject 허용
+grade_subject_permissions   -- 원본 "학년권한" (학생 학년별 과목 접근, 관리자 설정)
+- (school_year, grade, subject) → 허용  / 관리자 화면에서 편집
 
 groups / group_members / group_permissions   -- 원본 "그룹권한"/"그룹수업권한"
 - 13.3에서 (나) 채택 시 도입 (그룹 → 허용과목/허용단원)
@@ -345,4 +345,22 @@ Phase 3 이후: RLS 점진 강화 (9장과 동일)
 공통: 비밀번호 본인변경/관리자 재설정 화면
 ```
 
-> 참고: 기존 Streamlit 구현의 정확한 테이블/해시/그룹 구조까지 1:1로 맞추려면 원본 레포(`dskim-git/math`)의 해당 코드를 함께 확인해 세부를 보강한다.
+> 참고: 위 13.1은 원본 레포(`dskim-git/math`)의 `auth_utils.py`/`pages/97_회원관리.py`를 직접 확인해 작성했다.
+
+### 13.8 확정 역할 모델 (2026-05-24 확인)
+
+최종 합의된 역할/접근 모델:
+
+| 역할 | 접근 범위 | 메커니즘 |
+|---|---|---|
+| **교사** | 담당 교과목 + 담당 학급의 활동·기록 | `teacher_permissions(subject, grade, class_number)` — 관리자 설정 |
+| **학생** | 배정 교과목 활동 열람·성찰 제출 + **본인 기록만** 조회 | (1) 학년 단위 교과목 허용(관리자 설정) + (2) RLS: `activity_responses.student_id = 본인` |
+| **일반인** | 그룹별 허용 교과목/활동 (추후) | `groups`/`group_permissions` (나중 도입) |
+| **관리자** | 전체 회원·승인·권한·명렬표 관리 | `role = admin` |
+
+**학생 교과목 접근 = 학년 단위 + 관리자 설정 (확정)**
+- 원본 `학년권한`(학년 → 허용과목)을 계승하되, **관리자가 각 학년에서 접근 가능한 교과목을 설정·수정**할 수 있게 한다.
+- 테이블: `grade_subject_permissions(school_year, grade, subject)` — 관리자 화면에서 편집.
+- 선택과목별 학생 개인 차이는 추후 **학생 개인 단위(B)** 로 확장 가능.
+
+→ 이로써 H 설계의 역할/접근 모델 확정. 다음은 **Phase 1**부터 구현 착수.
