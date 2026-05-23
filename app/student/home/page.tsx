@@ -75,6 +75,16 @@ type ActivityResponseRow = {
     interpretationType?: string;
     reflection?: string;
   } | null;
+  response_data: {
+    modeLabel?: string;
+    n?: number;
+    repeats?: number;
+    p?: number;
+    observedMean?: number;
+    expectedMean?: number;
+    observedVariance?: number;
+    expectedVariance?: number;
+  } | null;
   created_at: string;
   activities: {
     title: string | null;
@@ -93,6 +103,29 @@ function previewText(text: string, max = 120) {
   return trimmed.length > max ? `${trimmed.slice(0, max)}…` : trimmed;
 }
 
+function getInterpretationLabel(value?: string) {
+  switch (value) {
+    case "theory_comparison":
+      return "시뮬레이션 결과와 이론값 비교";
+    case "large_number_law":
+      return "반복 횟수와 큰 수의 법칙 관점";
+    case "distribution_shape":
+      return "성공 횟수 분포 모양 관찰";
+    case "personal_question":
+      return "스스로 생긴 궁금증";
+    default:
+      return value ?? "-";
+  }
+}
+
+function formatNumber(value?: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "-";
+  }
+
+  return value.toLocaleString("ko-KR", { maximumFractionDigits: 4 });
+}
+
 export default function StudentHomePage() {
   const rawStudent = useSyncExternalStore(
     subscribeStudentStorage,
@@ -108,6 +141,7 @@ export default function StudentHomePage() {
   const [responses, setResponses] = useState<ActivityResponseRow[]>([]);
   const [isLoadingResponses, setIsLoadingResponses] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadResponses = useCallback(async () => {
     if (!studentId) {
@@ -121,7 +155,7 @@ export default function StudentHomePage() {
     const { data, error } = await supabase
       .from("activity_responses")
       .select(
-        "id, subject, activity_slug, reflection_data, created_at, activities ( title )"
+        "id, subject, activity_slug, reflection_data, response_data, created_at, activities ( title )"
       )
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
@@ -262,38 +296,127 @@ export default function StudentHomePage() {
 
           {responses.length > 0 ? (
             <ul className="mt-5 space-y-4">
-              {responses.map((row) => (
-                <li
-                  key={row.id}
-                  className="rounded-xl border border-white/10 bg-slate-950 p-5"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold text-white">
-                      {row.activities?.title ?? row.activity_slug ?? "활동"}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {formatDateTime(row.created_at)}
-                    </p>
-                  </div>
+              {responses.map((row) => {
+                const isExpanded = expandedId === row.id;
+                const data = row.response_data;
+                const reflection = row.reflection_data?.reflection?.trim() ?? "";
+                const hasResultData =
+                  data != null && Object.keys(data).length > 0;
 
-                  <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                    {row.subject ? (
-                      <span className="text-cyan-300">{row.subject}</span>
-                    ) : null}
-                    {row.activity_slug ? (
-                      <span className="text-slate-500">{row.activity_slug}</span>
-                    ) : null}
-                  </div>
+                const stats = [
+                  { label: "실험 종류", value: data?.modeLabel ?? "-" },
+                  { label: "시행 수 n", value: formatNumber(data?.n) },
+                  { label: "반복 횟수", value: formatNumber(data?.repeats) },
+                  { label: "성공확률 p", value: formatNumber(data?.p) },
+                  {
+                    label: "시뮬레이션 평균",
+                    value: formatNumber(data?.observedMean),
+                  },
+                  {
+                    label: "이론 평균 np",
+                    value: formatNumber(data?.expectedMean),
+                  },
+                  {
+                    label: "시뮬레이션 분산",
+                    value: formatNumber(data?.observedVariance),
+                  },
+                  {
+                    label: "이론 분산",
+                    value: formatNumber(data?.expectedVariance),
+                  },
+                ];
 
-                  {row.reflection_data?.reflection ? (
-                    <p className="mt-3 text-sm leading-6 text-slate-300">
-                      {previewText(row.reflection_data.reflection)}
-                    </p>
-                  ) : (
-                    <p className="mt-3 text-sm text-slate-500">성찰 내용 없음</p>
-                  )}
-                </li>
-              ))}
+                return (
+                  <li
+                    key={row.id}
+                    className="rounded-xl border border-white/10 bg-slate-950 p-5"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold text-white">
+                        {row.activities?.title ?? row.activity_slug ?? "활동"}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {formatDateTime(row.created_at)}
+                      </p>
+                    </div>
+
+                    <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                      {row.subject ? (
+                        <span className="text-cyan-300">{row.subject}</span>
+                      ) : null}
+                      {row.activity_slug ? (
+                        <span className="text-slate-500">
+                          {row.activity_slug}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {reflection ? (
+                      <p className="mt-3 text-sm leading-6 text-slate-300">
+                        {isExpanded ? reflection : previewText(reflection)}
+                      </p>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-500">
+                        성찰 내용 없음
+                      </p>
+                    )}
+
+                    {isExpanded ? (
+                      <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400">
+                            해석 관점
+                          </p>
+                          <p className="mt-1 text-sm text-slate-200">
+                            {getInterpretationLabel(
+                              row.reflection_data?.interpretationType
+                            )}
+                          </p>
+                        </div>
+
+                        {hasResultData ? (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-400">
+                              결과 요약
+                            </p>
+                            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                              {stats.map((stat) => (
+                                <div
+                                  key={stat.label}
+                                  className="rounded-lg border border-white/10 bg-slate-900 p-3"
+                                >
+                                  <p className="text-[11px] text-slate-400">
+                                    {stat.label}
+                                  </p>
+                                  <p className="mt-1 text-sm font-semibold text-cyan-200">
+                                    {stat.value}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500">
+                            저장된 결과 데이터가 없습니다.
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedId((current) =>
+                          current === row.id ? null : row.id
+                        )
+                      }
+                      className="mt-4 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+                    >
+                      {isExpanded ? "접기" : "자세히 보기"}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </section>
