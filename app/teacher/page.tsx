@@ -221,6 +221,13 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
           >
             활동 콘텐츠 블록 관리
           </Link>
+
+          <Link
+            href="/teacher/records"
+            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+          >
+            학급별 활동 기록 조회
+          </Link>
         </div>
 
         <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
