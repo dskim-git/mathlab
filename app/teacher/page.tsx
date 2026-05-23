@@ -181,7 +181,7 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
   const { data: responseSessionRows, error: responseCountError } =
     sessionIds.length > 0
       ? await supabase
-          .from("responses")
+          .from("activity_responses")
           .select("session_id")
           .in("session_id", sessionIds)
       : { data: [], error: null };

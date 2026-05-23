@@ -4,7 +4,9 @@ export const revalidate = 0;
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { formatKoreanDateTime } from "@/lib/dateTime";
-import ResponseCsvDownloadButton from "@/components/teacher/ResponseCsvDownloadButton";
+import ResponseCsvDownloadButton, {
+  SessionResponseRow,
+} from "@/components/teacher/ResponseCsvDownloadButton";
 import ResponseDeleteButton from "@/components/teacher/ResponseDeleteButton";
 
 type TeacherSessionResponsesPageProps = {
@@ -160,14 +162,30 @@ export default async function TeacherSessionResponsesPage({
     .eq("id", sessionId)
     .single();
 
-  const { data: responses, error: responsesError } = await supabase
-    .from("responses")
-    .select("id, student_name, student_number, result, reflection, created_at")
+  const { data: activityResponses, error: responsesError } = await supabase
+    .from("activity_responses")
+    .select(
+      "id, student_code, student_number, grade, class_number, response_data, reflection_data, created_at, students ( profiles ( name ) )"
+    )
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false });
 
   const sessionData = session as unknown as SessionDetail | null;
-  const responseList = (responses ?? []) as unknown as StudentResponse[];
+
+  const activityRows =
+    (activityResponses ?? []) as unknown as SessionResponseRow[];
+
+  // activity_responses 행을 기존 표시/CSV 구조(StudentResponse)로 매핑한다.
+  const responseList: StudentResponse[] = activityRows.map((row) => ({
+    id: row.id,
+    student_name: row.students?.profiles?.name ?? "(이름 없음)",
+    student_number:
+      row.student_code ??
+      (row.student_number != null ? String(row.student_number) : null),
+    result: row.response_data,
+    reflection: row.reflection_data?.reflection ?? null,
+    created_at: row.created_at,
+  }));
   const enhancedResponseList = createEnhancedResponses(responseList);
 
   const uniqueStudentCount = countUniqueStudents(responseList);
@@ -240,7 +258,7 @@ export default async function TeacherSessionResponsesPage({
                 <ResponseCsvDownloadButton
                   sessionTitle={sessionData.title}
                   joinCode={sessionData.join_code}
-                  responses={responseList}
+                  responses={activityRows}
                 />
               </div>
 
@@ -316,6 +334,7 @@ export default async function TeacherSessionResponsesPage({
                             responseId={response.id}
                             studentName={response.student_name}
                             studentNumber={response.student_number}
+                            table="activity_responses"
                           />
                         </div>
                       </div>

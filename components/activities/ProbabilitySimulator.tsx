@@ -121,14 +121,10 @@ export default function ProbabilitySimulator({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
-  const [activitySaveMessage, setActivitySaveMessage] = useState("");
-  const [activitySaveError, setActivitySaveError] = useState("");
 
   function resetSubmitFeedback() {
     setSubmitMessage("");
     setSubmitError("");
-    setActivitySaveMessage("");
-    setActivitySaveError("");
   }
 
   const modeDescription = useMemo(() => {
@@ -210,24 +206,7 @@ export default function ProbabilitySimulator({
       reflection: reflection.trim(),
     };
 
-    // 1. 기존 responses 테이블 저장 (유지)
-    // 식별 편의를 위해 출석번호 대신 전체 학번(예: 20202)을 저장한다.
-    // 로그인 학생은 studentCode가 있으므로 그것을, 없으면 기존 출석번호로 폴백한다.
-    const { error: legacyError } = await supabase.from("responses").insert({
-      session_id: sessionId,
-      student_name: studentName.trim(),
-      student_number: studentCode?.trim() || studentNumber?.trim() || null,
-      result: resultPayload,
-      reflection: reflection.trim(),
-    });
-
-    if (legacyError) {
-      setSubmitError(`기존 응답(responses) 저장 실패: ${legacyError.message}`);
-    } else {
-      setSubmitMessage("기존 응답(responses)이 저장되었습니다.");
-    }
-
-    // 2. 새 activity_responses 테이블 병행 저장
+    // activity_responses에 저장한다. (기존 responses 병행 저장은 G-4에서 제거)
     const grade = toPositiveInt(studentGrade);
     const classNumber = toPositiveInt(studentClassNumber);
     const studentNumberValue = toPositiveInt(studentNumber);
@@ -247,8 +226,8 @@ export default function ProbabilitySimulator({
       if (classNumber === null) missing.push("반");
       if (studentNumberValue === null) missing.push("번호");
 
-      setActivitySaveError(
-        `새 활동 기록(activity_responses) 저장에 필요한 정보가 부족하여 저장하지 못했습니다: ${missing.join(
+      setSubmitError(
+        `응답 저장에 필요한 정보가 부족합니다: ${missing.join(
           ", "
         )}. 학생 로그인 후 다시 시도해 주세요.`
       );
@@ -286,15 +265,11 @@ export default function ProbabilitySimulator({
     setIsSubmitting(false);
 
     if (activityError) {
-      setActivitySaveError(
-        `새 활동 기록(activity_responses) 저장 실패: ${activityError.message}`
-      );
+      setSubmitError(`응답 저장에 실패했습니다: ${activityError.message}`);
       return;
     }
 
-    setActivitySaveMessage(
-      "새 활동 기록(activity_responses)도 함께 저장되었습니다."
-    );
+    setSubmitMessage("응답이 저장되었습니다.");
   }
 
   return (
@@ -665,18 +640,6 @@ export default function ProbabilitySimulator({
             {submitMessage ? (
               <div className="mt-4 rounded-xl border border-green-400/30 bg-green-950/40 p-4 text-sm text-green-200">
                 {submitMessage}
-              </div>
-            ) : null}
-
-            {activitySaveError ? (
-              <div className="mt-4 rounded-xl border border-yellow-400/30 bg-yellow-950/40 p-4 text-sm text-yellow-200">
-                {activitySaveError}
-              </div>
-            ) : null}
-
-            {activitySaveMessage ? (
-              <div className="mt-4 rounded-xl border border-green-400/30 bg-green-950/40 p-4 text-sm text-green-200">
-                {activitySaveMessage}
               </div>
             ) : null}
 

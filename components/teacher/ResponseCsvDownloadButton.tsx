@@ -16,19 +16,28 @@ type ResponseResult = {
   interpretationType?: string;
 };
 
-type StudentResponse = {
+export type SessionResponseRow = {
   id: string;
-  student_name: string;
-  student_number: string | null;
-  result: ResponseResult | null;
-  reflection: string | null;
   created_at: string | null;
+  student_code: string | null;
+  student_number: number | null;
+  grade: number | null;
+  class_number: number | null;
+  response_data: ResponseResult | null;
+  reflection_data: {
+    reflection?: string;
+  } | null;
+  students: {
+    profiles: {
+      name: string | null;
+    } | null;
+  } | null;
 };
 
 type ResponseCsvDownloadButtonProps = {
   sessionTitle: string;
   joinCode: string;
-  responses: StudentResponse[];
+  responses: SessionResponseRow[];
 };
 
 function getInterpretationTypeLabel(value: string | undefined) {
@@ -62,11 +71,14 @@ function escapeCsvCell(value: string | number | null | undefined) {
   return `"${escapedValue}"`;
 }
 
-function createCsvContent(responses: StudentResponse[]) {
+function createCsvContent(responses: SessionResponseRow[]) {
   const headers = [
     "제출시각",
-    "학생이름",
+    "이름",
     "학번",
+    "학년",
+    "반",
+    "번호",
     "실험종류",
     "시행수 n",
     "반복횟수",
@@ -81,18 +93,21 @@ function createCsvContent(responses: StudentResponse[]) {
 
   const rows = responses.map((response) => [
     formatKoreanDateTime(response.created_at, ""),
-    response.student_name,
+    response.students?.profiles?.name ?? "",
+    response.student_code ?? "",
+    response.grade ?? "",
+    response.class_number ?? "",
     response.student_number ?? "",
-    response.result?.modeLabel ?? "",
-    response.result?.n ?? "",
-    response.result?.repeats ?? "",
-    response.result?.p ?? "",
-    response.result?.observedMean ?? "",
-    response.result?.expectedMean ?? "",
-    response.result?.observedVariance ?? "",
-    response.result?.expectedVariance ?? "",
-    getInterpretationTypeLabel(response.result?.interpretationType),
-    response.reflection ?? "",
+    response.response_data?.modeLabel ?? "",
+    response.response_data?.n ?? "",
+    response.response_data?.repeats ?? "",
+    response.response_data?.p ?? "",
+    response.response_data?.observedMean ?? "",
+    response.response_data?.expectedMean ?? "",
+    response.response_data?.observedVariance ?? "",
+    response.response_data?.expectedVariance ?? "",
+    getInterpretationTypeLabel(response.response_data?.interpretationType),
+    response.reflection_data?.reflection ?? "",
   ]);
 
   return [headers, ...rows]
@@ -117,7 +132,7 @@ export default function ResponseCsvDownloadButton({
     const csvContent = createCsvContent(responses);
 
     // Excel에서 한글이 깨지지 않도록 UTF-8 BOM 추가
-    const blob = new Blob([`\uFEFF${csvContent}`], {
+    const blob = new Blob([`﻿${csvContent}`], {
       type: "text/csv;charset=utf-8;",
     });
 
