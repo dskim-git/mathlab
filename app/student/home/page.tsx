@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { supabase } from "@/lib/supabase/client";
 
 type StoredMathLabStudent = {
   studentId: string;
@@ -60,6 +67,29 @@ function parseStoredStudent(rawStudent: string): StoredMathLabStudent | null {
   }
 }
 
+type ActivityResponseRow = {
+  id: string;
+  subject: string | null;
+  activity_slug: string | null;
+  reflection_data: {
+    interpretationType?: string;
+    reflection?: string;
+  } | null;
+  created_at: string;
+};
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("ko-KR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function previewText(text: string, max = 120) {
+  const trimmed = text.trim();
+  return trimmed.length > max ? `${trimmed.slice(0, max)}…` : trimmed;
+}
+
 export default function StudentHomePage() {
   const rawStudent = useSyncExternalStore(
     subscribeStudentStorage,
@@ -70,6 +100,40 @@ export default function StudentHomePage() {
   const student = useMemo(() => {
     return parseStoredStudent(rawStudent);
   }, [rawStudent]);
+
+  const studentId = student?.studentId;
+  const [responses, setResponses] = useState<ActivityResponseRow[]>([]);
+  const [isLoadingResponses, setIsLoadingResponses] = useState(false);
+  const [loadError, setLoadError] = useState("");
+
+  const loadResponses = useCallback(async () => {
+    if (!studentId) {
+      setResponses([]);
+      return;
+    }
+
+    setIsLoadingResponses(true);
+    setLoadError("");
+
+    const { data, error } = await supabase
+      .from("activity_responses")
+      .select("id, subject, activity_slug, reflection_data, created_at")
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setLoadError(error.message);
+      setResponses([]);
+    } else {
+      setResponses((data ?? []) as ActivityResponseRow[]);
+    }
+
+    setIsLoadingResponses(false);
+  }, [studentId]);
+
+  useEffect(() => {
+    loadResponses();
+  }, [loadResponses]);
 
   function handleLogout() {
     localStorage.removeItem(STUDENT_STORAGE_KEY);
@@ -150,16 +214,78 @@ export default function StudentHomePage() {
         </section>
 
         <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
-          <h2 className="text-xl font-bold">다음 단계 예정</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-bold">
+              내 활동 기록{" "}
+              <span className="text-base font-semibold text-slate-400">
+                ({responses.length}개)
+              </span>
+            </h2>
 
-          <p className="mt-4 leading-7 text-slate-300">
-            다음 단계에서는 이 학생 정보로 활동 응답과 성찰을 저장하도록
-            연결할 예정입니다.
+            <button
+              type="button"
+              onClick={loadResponses}
+              disabled={isLoadingResponses}
+              className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoadingResponses ? "불러오는 중..." : "새로고침"}
+            </button>
+          </div>
+
+          <p className="mt-2 text-sm text-slate-400">
+            로그인한 학생 계정으로 저장된 활동·성찰 기록입니다. (최신순)
           </p>
 
-          <div className="mt-5 rounded-xl border border-dashed border-white/20 bg-slate-950 p-5 text-slate-400">
-            아직 학생별 활동 목록은 연결하지 않았습니다.
-          </div>
+          {loadError ? (
+            <div className="mt-5 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
+              기록을 불러오지 못했습니다: {loadError}
+            </div>
+          ) : null}
+
+          {isLoadingResponses && responses.length === 0 ? (
+            <div className="mt-5 rounded-xl border border-dashed border-white/20 bg-slate-950 p-5 text-slate-400">
+              활동 기록을 불러오는 중입니다...
+            </div>
+          ) : null}
+
+          {!isLoadingResponses && !loadError && responses.length === 0 ? (
+            <div className="mt-5 rounded-xl border border-dashed border-white/20 bg-slate-950 p-5 text-slate-400">
+              아직 제출한 활동 기록이 없습니다. 활동에 참여해 결과와 성찰을
+              제출하면 여기에 쌓입니다.
+            </div>
+          ) : null}
+
+          {responses.length > 0 ? (
+            <ul className="mt-5 space-y-4">
+              {responses.map((row) => (
+                <li
+                  key={row.id}
+                  className="rounded-xl border border-white/10 bg-slate-950 p-5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold text-white">
+                      {row.activity_slug ?? "활동"}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {formatDateTime(row.created_at)}
+                    </p>
+                  </div>
+
+                  {row.subject ? (
+                    <p className="mt-1 text-xs text-cyan-300">{row.subject}</p>
+                  ) : null}
+
+                  {row.reflection_data?.reflection ? (
+                    <p className="mt-3 text-sm leading-6 text-slate-300">
+                      {previewText(row.reflection_data.reflection)}
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-sm text-slate-500">성찰 내용 없음</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </section>
 
         <div className="mt-8 flex flex-wrap gap-3">
