@@ -3,7 +3,9 @@ export const revalidate = 0;
 
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
-import { formatKoreanDateTime } from "@/lib/dateTime";
+import TeacherRecordRow, {
+  TeacherRecordRowData,
+} from "@/components/teacher/TeacherRecordRow";
 
 type TeacherRecordsPageProps = {
   searchParams: Promise<{
@@ -11,24 +13,6 @@ type TeacherRecordsPageProps = {
     classNumber?: string;
     subject?: string;
   }>;
-};
-
-type RecordRow = {
-  id: string;
-  student_code: string | null;
-  student_number: number | null;
-  grade: number | null;
-  class_number: number | null;
-  subject: string | null;
-  activity_slug: string | null;
-  reflection_data: {
-    interpretationType?: string;
-    reflection?: string;
-  } | null;
-  created_at: string | null;
-  activities: {
-    title: string | null;
-  } | null;
 };
 
 const GRADE_OPTIONS = [1, 2, 3];
@@ -48,15 +32,6 @@ function toPositiveInt(value: string | undefined): number | null {
   return parsed;
 }
 
-function previewText(text: string | undefined, max = 90) {
-  if (!text) {
-    return "";
-  }
-
-  const trimmed = text.trim();
-  return trimmed.length > max ? `${trimmed.slice(0, max)}…` : trimmed;
-}
-
 export default async function TeacherRecordsPage({
   searchParams,
 }: TeacherRecordsPageProps) {
@@ -67,14 +42,14 @@ export default async function TeacherRecordsPage({
   const subjectValue = subject?.trim() ?? "";
   const hasFilter = gradeValue !== null && classValue !== null;
 
-  let records: RecordRow[] = [];
+  let records: TeacherRecordRowData[] = [];
   let loadError = "";
 
   if (hasFilter) {
     let query = supabase
       .from("activity_responses")
       .select(
-        "id, student_code, student_number, grade, class_number, subject, activity_slug, reflection_data, created_at, activities ( title )"
+        "id, student_code, student_number, grade, class_number, subject, activity_slug, reflection_data, response_data, created_at, activities ( title ), students ( profiles ( name ) )"
       )
       .eq("grade", gradeValue)
       .eq("class_number", classValue)
@@ -89,7 +64,7 @@ export default async function TeacherRecordsPage({
     if (error) {
       loadError = error.message;
     } else {
-      records = (data ?? []) as unknown as RecordRow[];
+      records = (data ?? []) as unknown as TeacherRecordRowData[];
     }
   }
 
@@ -211,9 +186,10 @@ export default async function TeacherRecordsPage({
                 </div>
               ) : (
                 <div className="mt-5 overflow-x-auto">
-                  <table className="w-full min-w-[820px] border-collapse text-sm">
+                  <table className="w-full min-w-[920px] border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-white/10 text-left text-slate-300">
+                        <th className="py-3 pr-4">이름</th>
                         <th className="py-3 pr-4">학번</th>
                         <th className="py-3 pr-4">활동</th>
                         <th className="py-3 pr-4">과목</th>
@@ -224,28 +200,7 @@ export default async function TeacherRecordsPage({
 
                     <tbody>
                       {records.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-white/5 align-top text-slate-300"
-                        >
-                          <td className="py-4 pr-4 font-semibold text-white">
-                            {row.student_code ?? row.student_number ?? "-"}
-                          </td>
-
-                          <td className="py-4 pr-4">
-                            {row.activities?.title ?? row.activity_slug ?? "-"}
-                          </td>
-
-                          <td className="py-4 pr-4">{row.subject ?? "-"}</td>
-
-                          <td className="py-4 pr-4 whitespace-nowrap">
-                            {formatKoreanDateTime(row.created_at)}
-                          </td>
-
-                          <td className="py-4 pr-4 text-slate-400">
-                            {previewText(row.reflection_data?.reflection) || "-"}
-                          </td>
-                        </tr>
+                        <TeacherRecordRow key={row.id} row={row} />
                       ))}
                     </tbody>
                   </table>
