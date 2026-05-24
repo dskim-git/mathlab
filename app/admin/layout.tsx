@@ -126,8 +126,29 @@ export default function AdminLayout({
 
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/teacher"
+              href="/admin"
               className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+            >
+              승인 대기
+            </Link>
+
+            <Link
+              href="/admin/teachers"
+              className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+            >
+              교사 권한
+            </Link>
+
+            <Link
+              href="/admin/settings"
+              className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+            >
+              과목·학급
+            </Link>
+
+            <Link
+              href="/teacher"
+              className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
               교사 대시보드
             </Link>
