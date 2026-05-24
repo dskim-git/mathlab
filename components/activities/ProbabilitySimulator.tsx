@@ -20,9 +20,6 @@ import {
   SimulationResult,
   simulateBinomial,
 } from "@/lib/activities/probability";
-import { parseStudentLoginId } from "@/lib/students/parseStudentLoginId";
-
-const DEFAULT_SCHOOL_YEAR = 2026;
 
 type ProbabilitySimulatorProps = {
   sessionId: string;
@@ -39,37 +36,6 @@ type ProbabilitySimulatorProps = {
   studentClassNumber?: string;
   studentCode?: string;
 };
-
-function toPositiveInt(value?: string): number | null {
-  if (value === undefined || value.trim() === "") {
-    return null;
-  }
-
-  const parsed = Number(value);
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null;
-  }
-
-  return parsed;
-}
-
-function resolveSchoolYear(
-  studentLoginId?: string,
-  studentCode?: string
-): number {
-  for (const candidate of [studentLoginId, studentCode]) {
-    if (candidate && candidate.trim()) {
-      const parsed = parseStudentLoginId(candidate, DEFAULT_SCHOOL_YEAR);
-
-      if (parsed.ok) {
-        return parsed.data.schoolYear ?? DEFAULT_SCHOOL_YEAR;
-      }
-    }
-  }
-
-  return DEFAULT_SCHOOL_YEAR;
-}
 
 function formatNumber(value: number, digits = 4) {
   return value.toLocaleString("ko-KR", {
@@ -173,11 +139,6 @@ export default function ProbabilitySimulator({
       return;
     }
 
-    if (!studentName?.trim()) {
-      setSubmitError("학생 이름이 없어 응답을 저장할 수 없습니다.");
-      return;
-    }
-
     if (!reflection.trim()) {
       setSubmitError("결과 해석 또는 느낀 점을 입력해 주세요.");
       return;
@@ -206,56 +167,63 @@ export default function ProbabilitySimulator({
       reflection: reflection.trim(),
     };
 
-    // activity_responses에 저장한다. (기존 responses 병행 저장은 G-4에서 제거)
-    const grade = toPositiveInt(studentGrade);
-    const classNumber = toPositiveInt(studentClassNumber);
-    const studentNumberValue = toPositiveInt(studentNumber);
+    // Phase 3b: 저장되는 신원(student_id·학년·반·번호·코드·학년도)은 URL 파라미터가
+    // 아니라 로그인 세션에서 본인 students 행을 다시 조회해 채운다. URL 파라미터는
+    // 화면 표시용으로만 둔다(변조·세션 불일치 차단 → 3c RLS와 정합).
+    if (!activityId) {
+      setSubmitError("활동 정보(activity_id)가 없어 응답을 저장할 수 없습니다.");
+      setIsSubmitting(false);
+      return;
+    }
 
-    if (
-      !activityId ||
-      !studentId ||
-      grade === null ||
-      classNumber === null ||
-      studentNumberValue === null
-    ) {
-      const missing: string[] = [];
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!activityId) missing.push("활동 ID(activity_id)");
-      if (!studentId) missing.push("학생 ID(student_id)");
-      if (grade === null) missing.push("학년");
-      if (classNumber === null) missing.push("반");
-      if (studentNumberValue === null) missing.push("번호");
-
+    if (!user) {
       setSubmitError(
-        `응답 저장에 필요한 정보가 부족합니다: ${missing.join(
-          ", "
-        )}. 학생 로그인 후 다시 시도해 주세요.`
+        "로그인이 필요합니다. 학생 계정으로 다시 로그인한 뒤 제출해 주세요."
       );
       setIsSubmitting(false);
       return;
     }
 
-    const schoolYear = resolveSchoolYear(studentLoginId, studentCode);
+    const { data: me, error: meError } = await supabase
+      .from("students")
+      .select(
+        "id, school_year, grade, class_number, student_number, student_code"
+      )
+      .eq("profile_id", user.id)
+      .maybeSingle();
 
-    // 식별 편의를 위해 전체 학번(예: 20202)을 한 칸에 같이 저장한다.
-    // 로그인 정보의 studentCode를 우선 쓰되, 없으면 학년/반/번호로 조합한다.
-    const resolvedStudentCode =
-      studentCode?.trim() ||
-      `${grade}${String(classNumber).padStart(2, "0")}${String(
-        studentNumberValue
-      ).padStart(2, "0")}`;
+    const meRow = me as {
+      id: string;
+      school_year: number;
+      grade: number;
+      class_number: number;
+      student_number: number;
+      student_code: string;
+    } | null;
+
+    if (meError || !meRow) {
+      setSubmitError(
+        "학생 정보를 찾을 수 없습니다. 학생 계정으로 로그인했는지 확인해 주세요."
+      );
+      setIsSubmitting(false);
+      return;
+    }
 
     const { error: activityError } = await supabase
       .from("activity_responses")
       .insert({
         activity_id: activityId,
-        student_id: studentId,
+        student_id: meRow.id,
         session_id: sessionId || null,
-        school_year: schoolYear,
-        grade,
-        class_number: classNumber,
-        student_number: studentNumberValue,
-        student_code: resolvedStudentCode,
+        school_year: meRow.school_year,
+        grade: meRow.grade,
+        class_number: meRow.class_number,
+        student_number: meRow.student_number,
+        student_code: meRow.student_code,
         subject: activitySubject ?? null,
         activity_slug: activitySlug,
         response_data: resultPayload,
