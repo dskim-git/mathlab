@@ -27,16 +27,25 @@ export default function AdminSettingsPage() {
   const [classError, setClassError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
+  const [currentYear, setCurrentYear] = useState("");
+  const [yearMessage, setYearMessage] = useState("");
+  const [yearError, setYearError] = useState("");
+
   const loadAll = useCallback(async () => {
     setIsLoading(true);
 
-    const [subjectResult, classResult] = await Promise.all([
+    const [subjectResult, classResult, yearResult] = await Promise.all([
       supabase.from("subjects").select("id, name").order("name"),
       supabase
         .from("school_classes")
         .select("id, grade, class_number")
         .order("grade")
         .order("class_number"),
+      supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "current_school_year")
+        .maybeSingle(),
     ]);
 
     if (subjectResult.error) {
@@ -51,12 +60,42 @@ export default function AdminSettingsPage() {
       setClasses((classResult.data ?? []) as SchoolClass[]);
     }
 
+    if (!yearResult.error && yearResult.data) {
+      setCurrentYear((yearResult.data as { value: string }).value);
+    }
+
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  async function handleSaveYear(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setYearMessage("");
+    setYearError("");
+
+    const year = Number(currentYear);
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      setYearError("학년도를 올바르게 입력해 주세요. (예: 2026)");
+      return;
+    }
+
+    setIsBusy(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ value: String(year), updated_at: new Date().toISOString() })
+      .eq("key", "current_school_year");
+    setIsBusy(false);
+
+    if (error) {
+      setYearError(`저장 중 오류: ${error.message}`);
+      return;
+    }
+
+    setYearMessage(`현재 학년도를 ${year}로 저장했습니다.`);
+  }
 
   async function handleAddSubject(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -164,6 +203,52 @@ export default function AdminSettingsPage() {
           여기서 등록한 과목과 학급이 교사 담당 학급(권한) 부여 화면의 드롭다운
           선택지가 됩니다.
         </p>
+
+        <section className="mt-6 rounded-2xl border border-cyan-300/30 bg-cyan-950/20 p-6">
+          <h2 className="text-xl font-bold">현재 학년도</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
+            학생 회원가입 시 학번 앞에 붙는 연도이자, 명렬표 업로드의 기본
+            학년도입니다. 예: 2026 → 학번 20602는 로그인 ID{" "}
+            <span className="font-semibold text-cyan-200">202620602</span>가 됩니다.
+          </p>
+
+          <form onSubmit={handleSaveYear} className="mt-4 flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300">
+                학년도
+              </label>
+              <input
+                type="number"
+                value={currentYear}
+                onChange={(event) => {
+                  setCurrentYear(event.target.value);
+                  setYearMessage("");
+                  setYearError("");
+                }}
+                className="mt-1 w-32 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+                placeholder="2026"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isBusy}
+              className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              저장
+            </button>
+          </form>
+
+          {yearMessage ? (
+            <div className="mt-3 rounded-xl border border-green-400/30 bg-green-950/30 p-3 text-sm text-green-200">
+              {yearMessage}
+            </div>
+          ) : null}
+          {yearError ? (
+            <div className="mt-3 rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-200">
+              {yearError}
+            </div>
+          ) : null}
+        </section>
 
         {isLoading ? (
           <p className="mt-6 text-slate-300">불러오는 중...</p>
