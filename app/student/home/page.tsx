@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -127,6 +128,8 @@ function formatNumber(value?: number) {
 }
 
 export default function StudentHomePage() {
+  const router = useRouter();
+
   const rawStudent = useSyncExternalStore(
     subscribeStudentStorage,
     getStudentSnapshot,
@@ -174,9 +177,11 @@ export default function StudentHomePage() {
     loadResponses();
   }, [loadResponses]);
 
-  function handleLogout() {
+  async function handleLogout() {
+    await supabase.auth.signOut();
     localStorage.removeItem(STUDENT_STORAGE_KEY);
     window.dispatchEvent(new Event(STUDENT_STORAGE_EVENT));
+    router.push("/student/login");
   }
 
   if (!student) {

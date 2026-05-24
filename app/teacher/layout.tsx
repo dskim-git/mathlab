@@ -3,27 +3,19 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 const TEACHER_STORAGE_KEY = "mathlab_teacher";
 
-type StoredTeacher = {
-  teacherId: string;
-  profileId: string;
-  loginId: string;
+type TeacherProfile = {
+  id: string;
+  login_id: string;
   name: string;
+  role: string;
+  status: string;
 };
 
-function parseStoredTeacher(raw: string | null): StoredTeacher | null {
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw) as StoredTeacher;
-  } catch {
-    return null;
-  }
-}
+type GateState = "loading" | "denied" | "ok";
 
 export default function TeacherLayout({
   children,
@@ -33,29 +25,92 @@ export default function TeacherLayout({
   const pathname = usePathname();
   const router = useRouter();
 
-  const [teacher, setTeacher] = useState<StoredTeacher | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  // 로그인·회원가입 페이지는 게이트 없이 항상 통과시킨다.
+  const isPublicPage =
+    pathname === "/teacher/login" || pathname === "/teacher/signup";
 
-  const isLoginPage = pathname === "/teacher/login";
+  const [gateState, setGateState] = useState<GateState>("loading");
+  const [teacherName, setTeacherName] = useState("");
 
-  // 경로가 바뀔 때마다 다시 읽어, 로그인/로그아웃 직후 상태를 반영한다.
+  // 경로가 바뀔 때마다 Auth 세션을 다시 확인해, 로그인/로그아웃 직후 상태를 반영한다.
   useEffect(() => {
-    setTeacher(parseStoredTeacher(localStorage.getItem(TEACHER_STORAGE_KEY)));
-    setIsReady(true);
-  }, [pathname]);
+    if (isPublicPage) {
+      return;
+    }
 
-  function handleLogout() {
+    let active = true;
+    setGateState("loading");
+
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        if (active) setGateState("denied");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, login_id, name, role, status")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (!active) return;
+
+      const profileData = profile as TeacherProfile | null;
+
+      if (
+        !profileData ||
+        profileData.status !== "approved" ||
+        (profileData.role !== "teacher" && profileData.role !== "admin")
+      ) {
+        setGateState("denied");
+        return;
+      }
+
+      // teacherId 캐시: TeacherClassPicker 등이 localStorage에서 읽는다(관리자는 null).
+      // 접근 판단은 위 세션 검사로 끝났고, 이 blob은 편의 캐시일 뿐이다.
+      const { data: teacher } = await supabase
+        .from("teachers")
+        .select("id")
+        .eq("profile_id", profileData.id)
+        .maybeSingle();
+
+      if (!active) return;
+
+      localStorage.setItem(
+        TEACHER_STORAGE_KEY,
+        JSON.stringify({
+          teacherId: teacher?.id ?? null,
+          profileId: profileData.id,
+          loginId: profileData.login_id,
+          name: profileData.name,
+          role: profileData.role,
+        })
+      );
+
+      setTeacherName(profileData.name);
+      setGateState("ok");
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [pathname, isPublicPage]);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
     localStorage.removeItem(TEACHER_STORAGE_KEY);
-    setTeacher(null);
     router.push("/teacher/login");
   }
 
-  // 로그인 페이지는 게이트 없이 항상 통과시킨다.
-  if (isLoginPage) {
+  if (isPublicPage) {
     return <>{children}</>;
   }
 
-  if (!isReady) {
+  if (gateState === "loading") {
     return (
       <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
         <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300">
@@ -65,20 +120,17 @@ export default function TeacherLayout({
     );
   }
 
-  if (!teacher) {
+  if (gateState === "denied") {
     return (
       <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
         <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8">
-          <p className="text-sm font-semibold text-cyan-300">
-            교사용 대시보드
-          </p>
+          <p className="text-sm font-semibold text-cyan-300">교사용 대시보드</p>
 
-          <h1 className="mt-3 text-3xl font-bold">
-            교사 로그인이 필요합니다
-          </h1>
+          <h1 className="mt-3 text-3xl font-bold">교사 로그인이 필요합니다</h1>
 
           <p className="mt-4 leading-7 text-slate-300">
-            교사용 페이지는 교사 로그인 후에 이용할 수 있습니다.
+            교사용 페이지는 승인된 교사·관리자 계정으로 로그인한 후에 이용할 수
+            있습니다.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -106,10 +158,8 @@ export default function TeacherLayout({
       <div className="bg-slate-950 px-6 pt-6 text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
           <p className="text-sm text-slate-300">
-            <span className="font-semibold text-cyan-200">
-              {teacher.name}
-            </span>{" "}
-            선생님으로 로그인됨
+            <span className="font-semibold text-cyan-200">{teacherName}</span>{" "}
+            님으로 로그인됨
           </p>
 
           <button
@@ -117,7 +167,7 @@ export default function TeacherLayout({
             onClick={handleLogout}
             className="rounded-full border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-300/10"
           >
-            교사 로그아웃
+            로그아웃
           </button>
         </div>
       </div>
