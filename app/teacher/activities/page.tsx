@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import Link from "next/link";
-import { supabase } from "@/lib/supabase/client";
+import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { formatKoreanDateTime } from "@/lib/dateTime";
 
 type Activity = {
@@ -25,6 +25,9 @@ function countBlocks(contentBlocks: unknown[] | null) {
 }
 
 export default async function TeacherActivitiesPage() {
+  // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
+  const { supabase } = await requireTeacher();
+
   const { data: activities, error } = await supabase
     .from("activities")
     .select(
