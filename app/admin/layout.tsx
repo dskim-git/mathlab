@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 type AdminProfile = {
   id: string;
@@ -72,18 +74,18 @@ export default function AdminLayout({
 
   if (gateState === "loading") {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-        <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300">
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-3xl p-6 text-slate-300 sm:p-8">
           확인 중...
-        </section>
+        </Card>
       </main>
     );
   }
 
   if (gateState === "denied") {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-        <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8">
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-3xl p-6 sm:p-8">
           <p className="text-sm font-semibold text-cyan-300">관리자 페이지</p>
 
           <h1 className="mt-3 text-3xl font-bold">관리자 로그인이 필요합니다</h1>
@@ -93,21 +95,15 @@ export default function AdminLayout({
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/teacher/login"
-              className="rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
-            >
+            <Link href="/teacher/login" className={buttonClasses("primary")}>
               로그인하러 가기
             </Link>
 
-            <Link
-              href="/"
-              className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-            >
+            <Link href="/" className={buttonClasses("neutral")}>
               홈으로 돌아가기
             </Link>
           </div>
-        </section>
+        </Card>
       </main>
     );
   }
@@ -122,48 +118,38 @@ export default function AdminLayout({
           </p>
 
           <div className="flex flex-wrap gap-2">
-            <Link
-              href="/admin"
-              className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-            >
+            <Link href="/admin" className={buttonClasses("secondary", { size: "sm" })}>
               승인 대기
             </Link>
 
             <Link
               href="/admin/teachers"
-              className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+              className={buttonClasses("secondary", { size: "sm" })}
             >
               교사 권한
             </Link>
 
             <Link
               href="/admin/settings"
-              className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+              className={buttonClasses("secondary", { size: "sm" })}
             >
               과목·학급
             </Link>
 
             <Link
               href="/admin/roster"
-              className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+              className={buttonClasses("secondary", { size: "sm" })}
             >
               명렬표
             </Link>
 
-            <Link
-              href="/teacher"
-              className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
-            >
+            <Link href="/teacher" className={buttonClasses("neutral", { size: "sm" })}>
               교사 대시보드
             </Link>
 
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-full border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-300/10"
-            >
+            <Button variant="danger" size="sm" onClick={handleLogout}>
               로그아웃
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type Permission = {
   id: string;
@@ -243,20 +246,16 @@ function TeacherCard({
             </select>
           </div>
 
-          <button
-            type="submit"
-            disabled={isBusy}
-            className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="submit" size="sm" disabled={isBusy}>
             담당 학급 추가
-          </button>
+          </Button>
         </form>
       )}
 
       {errorMessage ? (
-        <div className="mt-3 rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-200">
+        <Alert tone="error" className="mt-3">
           {errorMessage}
-        </div>
+        </Alert>
       ) : null}
     </div>
   );
@@ -314,8 +313,8 @@ export default function AdminTeachersPage() {
   }, [loadData]);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-5xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">관리자 대시보드</p>
 
         <h1 className="mt-3 text-3xl font-bold">교사 담당 학급(권한)</h1>
@@ -327,13 +326,9 @@ export default function AdminTeachersPage() {
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={loadData}
-            className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Button variant="secondary" size="sm" onClick={loadData}>
             새로고침
-          </button>
+          </Button>
 
           <span className="text-sm text-slate-400">
             승인된 교사:{" "}
@@ -342,9 +337,9 @@ export default function AdminTeachersPage() {
         </div>
 
         {errorMessage ? (
-          <div className="mt-5 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
+          <Alert tone="error" className="mt-5">
             {errorMessage}
-          </div>
+          </Alert>
         ) : null}
 
         <section className="mt-6 space-y-4">
@@ -366,7 +361,7 @@ export default function AdminTeachersPage() {
             ))
           )}
         </section>
-      </section>
+      </Card>
     </main>
   );
 }
