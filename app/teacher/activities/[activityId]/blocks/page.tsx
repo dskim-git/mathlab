@@ -4,6 +4,9 @@ export const revalidate = 0;
 import Link from "next/link";
 import ActivityBlocksJsonEditor from "@/components/teacher/ActivityBlocksJsonEditor";
 import { requireTeacher } from "@/lib/auth/requireTeacher";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type TeacherActivityBlocksPageProps = {
   params: Promise<{
@@ -41,29 +44,26 @@ export default async function TeacherActivityBlocksPage({
   const activityData = activity as unknown as Activity | null;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-6xl p-6 sm:p-8">
         <div className="flex flex-wrap gap-2">
           <Link
             href="/teacher/activities"
-            className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
+            className={buttonClasses("neutral", { size: "sm" })}
           >
             ← 활동 목록으로 돌아가기
           </Link>
 
-          <Link
-            href="/teacher"
-            className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/teacher" className={buttonClasses("neutral", { size: "sm" })}>
             교사용 대시보드
           </Link>
         </div>
 
         {error || !activityData ? (
-          <div className="mt-8 rounded-2xl border border-red-400/30 bg-red-950/40 p-6 text-red-200">
+          <Alert tone="error" className="mt-8">
             <h1 className="text-2xl font-bold">활동을 불러오지 못했습니다.</h1>
-            <p className="mt-3 text-sm">{error?.message}</p>
-          </div>
+            <p className="mt-3">{error?.message}</p>
+          </Alert>
         ) : (
           <>
             <header className="mt-8 border-b border-white/10 pb-8">
@@ -102,7 +102,7 @@ export default async function TeacherActivityBlocksPage({
             />
           </>
         )}
-      </section>
+      </Card>
     </main>
   );
 }
