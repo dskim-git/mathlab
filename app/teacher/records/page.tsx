@@ -7,6 +7,10 @@ import TeacherRecordRow, {
   TeacherRecordRowData,
 } from "@/components/teacher/TeacherRecordRow";
 import TeacherClassPicker from "@/components/teacher/TeacherClassPicker";
+import TeacherRecordCard from "@/components/teacher/TeacherRecordCard";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type TeacherRecordsPageProps = {
   searchParams: Promise<{
@@ -83,8 +87,8 @@ export default async function TeacherRecordsPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-6xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">교사용 대시보드</p>
 
         <h1 className="mt-3 text-3xl font-bold">학급별 활동 기록 조회</h1>
@@ -108,9 +112,7 @@ export default async function TeacherRecordsPage({
               위에서 담당 학급을 선택하면 해당 학급의 활동 기록이 표시됩니다.
             </div>
           ) : loadError ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
-              기록을 불러오지 못했습니다: {loadError}
-            </div>
+            <Alert tone="error">기록을 불러오지 못했습니다: {loadError}</Alert>
           ) : (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -128,40 +130,45 @@ export default async function TeacherRecordsPage({
                   해당 조건으로 저장된 활동 기록이 없습니다.
                 </div>
               ) : (
-                <div className="mt-5 overflow-x-auto">
-                  <table className="w-full min-w-[920px] border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10 text-left text-slate-300">
-                        <th className="py-3 pr-4">이름</th>
-                        <th className="py-3 pr-4">학번</th>
-                        <th className="py-3 pr-4">활동</th>
-                        <th className="py-3 pr-4">과목</th>
-                        <th className="py-3 pr-4">제출 시각</th>
-                        <th className="py-3 pr-4">성찰 미리보기</th>
-                      </tr>
-                    </thead>
+                <>
+                  <div className="mt-5 hidden overflow-x-auto lg:block">
+                    <table className="w-full min-w-[920px] border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-left text-slate-300">
+                          <th className="py-3 pr-4">이름</th>
+                          <th className="py-3 pr-4">학번</th>
+                          <th className="py-3 pr-4">활동</th>
+                          <th className="py-3 pr-4">과목</th>
+                          <th className="py-3 pr-4">제출 시각</th>
+                          <th className="py-3 pr-4">성찰 미리보기</th>
+                        </tr>
+                      </thead>
 
-                    <tbody>
-                      {records.map((row) => (
-                        <TeacherRecordRow key={row.id} row={row} />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      <tbody>
+                        {records.map((row) => (
+                          <TeacherRecordRow key={row.id} row={row} />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-5 space-y-4 lg:hidden">
+                    {records.map((row) => (
+                      <TeacherRecordCard key={row.id} row={row} />
+                    ))}
+                  </div>
+                </>
               )}
             </>
           )}
         </section>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/teacher"
-            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/teacher" className={buttonClasses("neutral")}>
             교사 대시보드로
           </Link>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }

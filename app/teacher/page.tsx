@@ -7,6 +7,8 @@ import { formatKoreanDateTime } from "@/lib/dateTime";
 import SessionCreateForm from "@/components/teacher/SessionCreateForm";
 import SessionDeleteButton from "@/components/teacher/SessionDeleteButton";
 import SessionStatusButton from "@/components/teacher/SessionStatusButton";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 type TeacherPageProps = {
   searchParams: Promise<{
@@ -206,8 +208,8 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
   );
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-6xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">교사용 대시보드</p>
 
         <h1 className="mt-3 text-3xl font-bold">수업 세션 관리</h1>
@@ -218,17 +220,11 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/teacher/activities"
-            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Link href="/teacher/activities" className={buttonClasses("secondary")}>
             활동 콘텐츠 블록 관리
           </Link>
 
-          <Link
-            href="/teacher/records"
-            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Link href="/teacher/records" className={buttonClasses("secondary")}>
             학급별 활동 기록 조회
           </Link>
         </div>
@@ -341,7 +337,8 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
               현재 필터 조건에 맞는 수업 세션이 없습니다.
             </div>
           ) : (
-            <div className="mt-5 overflow-x-auto">
+            <>
+              <div className="mt-5 hidden overflow-x-auto lg:block">
               <table className="w-full min-w-[980px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-left text-slate-300">
@@ -412,7 +409,7 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                       <td className="py-4 pr-4">
                         <Link
                           href={`/teacher/sessions/${session.id}`}
-                          className="rounded-full border border-cyan-300/40 px-4 py-2 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+                          className={buttonClasses("secondary", { size: "sm" })}
                         >
                           응답 보기
                         </Link>
@@ -437,17 +434,104 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+
+              <div className="mt-5 space-y-4 lg:hidden">
+                {filteredSessionList.map((session) => (
+                  <div
+                    key={session.id}
+                    className="rounded-2xl border border-white/10 bg-slate-950 p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-white">
+                          {session.title}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-400">
+                          {session.activities?.title ?? "-"}
+                        </p>
+                      </div>
+
+                      {session.is_active ? (
+                        <span className="shrink-0 rounded-full bg-green-300/10 px-3 py-1 text-xs font-semibold text-green-200">
+                          진행 중
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">
+                          종료
+                        </span>
+                      )}
+                    </div>
+
+                    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                      <div>
+                        <dt className="text-xs text-slate-400">입장 코드</dt>
+                        <dd className="mt-1">
+                          <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-bold tracking-[0.15em] text-cyan-300">
+                            {session.join_code}
+                          </span>
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="text-xs text-slate-400">응답 수</dt>
+                        <dd className="mt-1">
+                          <span
+                            className={
+                              session.responseCount > 0
+                                ? "rounded-full bg-yellow-300/10 px-3 py-1 font-bold text-yellow-200"
+                                : "rounded-full bg-white/10 px-3 py-1 font-semibold text-slate-300"
+                            }
+                          >
+                            {session.responseCount}개
+                          </span>
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="text-xs text-slate-400">교사</dt>
+                        <dd className="mt-1 text-slate-300">
+                          {session.teacher_name ?? "-"}
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="text-xs text-slate-400">생성 시각</dt>
+                        <dd className="mt-1 text-slate-300">
+                          {formatKoreanDateTime(session.created_at)}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/teacher/sessions/${session.id}`}
+                        className={buttonClasses("secondary", { size: "sm" })}
+                      >
+                        응답 보기
+                      </Link>
+                      <SessionStatusButton
+                        sessionId={session.id}
+                        isActive={session.is_active}
+                      />
+                      <SessionDeleteButton
+                        sessionId={session.id}
+                        sessionTitle={session.title}
+                        joinCode={session.join_code}
+                        responseCount={session.responseCount}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
 
-        <Link
-          href="/"
-          className="mt-8 inline-flex rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-        >
+        <Link href="/" className={buttonClasses("neutral", { className: "mt-8" })}>
           홈으로 돌아가기
         </Link>
-      </section>
+      </Card>
     </main>
   );
 }

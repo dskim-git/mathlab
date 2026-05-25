@@ -4,6 +4,9 @@ export const revalidate = 0;
 import Link from "next/link";
 import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { formatKoreanDateTime } from "@/lib/dateTime";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type Activity = {
   id: string;
@@ -38,11 +41,11 @@ export default async function TeacherActivitiesPage() {
   const activityList = (activities ?? []) as unknown as Activity[];
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-6xl p-6 sm:p-8">
         <Link
           href="/teacher"
-          className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
+          className={buttonClasses("neutral", { size: "sm" })}
         >
           ← 교사용 대시보드로 돌아가기
         </Link>
@@ -59,16 +62,17 @@ export default async function TeacherActivitiesPage() {
         </header>
 
         {error ? (
-          <div className="mt-8 rounded-2xl border border-red-400/30 bg-red-950/40 p-6 text-red-200">
+          <Alert tone="error" className="mt-8">
             <h2 className="text-xl font-bold">활동 목록을 불러오지 못했습니다.</h2>
-            <p className="mt-3 text-sm">{error.message}</p>
-          </div>
+            <p className="mt-3">{error.message}</p>
+          </Alert>
         ) : activityList.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-white/20 bg-slate-900 p-6 text-slate-300">
             등록된 활동이 없습니다.
           </div>
         ) : (
-          <div className="mt-8 overflow-x-auto">
+          <>
+            <div className="mt-8 hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[900px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-left text-slate-300">
@@ -118,7 +122,7 @@ export default async function TeacherActivitiesPage() {
                     <td className="py-4 pr-4">
                       <Link
                         href={`/teacher/activities/${activity.id}/blocks`}
-                        className="rounded-full border border-cyan-300/40 px-4 py-2 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+                        className={buttonClasses("secondary", { size: "sm" })}
                       >
                         블록 편집
                       </Link>
@@ -127,9 +131,71 @@ export default async function TeacherActivitiesPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            <div className="mt-8 space-y-4 lg:hidden">
+              {activityList.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="rounded-2xl border border-white/10 bg-slate-950 p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-white">
+                        {activity.title}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+                        {activity.description ?? "-"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-200">
+                      블록 {countBlocks(activity.content_blocks)}
+                    </span>
+                  </div>
+
+                  <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                    <div className="col-span-2">
+                      <dt className="text-xs text-slate-400">slug</dt>
+                      <dd className="mt-1">
+                        <span className="rounded-full bg-white/10 px-3 py-1 font-mono text-xs">
+                          {activity.slug}
+                        </span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-400">과목</dt>
+                      <dd className="mt-1 text-slate-300">
+                        {activity.subject ?? "-"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-400">유형</dt>
+                      <dd className="mt-1 text-slate-300">
+                        {activity.activity_type ?? "-"}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-xs text-slate-400">생성 시각</dt>
+                      <dd className="mt-1 text-slate-300">
+                        {formatKoreanDateTime(activity.created_at)}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-4">
+                    <Link
+                      href={`/teacher/activities/${activity.id}/blocks`}
+                      className={buttonClasses("secondary", { size: "sm" })}
+                    >
+                      블록 편집
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
-      </section>
+      </Card>
     </main>
   );
 }
