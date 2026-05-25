@@ -1,0 +1,49 @@
+-- 20260526_drop_responses_archive.sql
+-- 레거시 responses_archive 테이블 완전 폐기 (비가역).
+--
+-- 배경: 익명-세션 시절 MVP 응답(12행, 3세션)을 20260525_archive_legacy_responses.sql 에서
+--   responses → responses_archive 로 rename + session FK 제거하여 정적 스냅샷으로 보존했었음.
+--   이후 새 데이터는 전부 activity_responses 로 이관 완료, 코드 참조 0, 활성 기능과 무관.
+--
+-- 사전 audit (2026-05-26, SQL 에디터 읽기 전용 실행):
+--   to_regclass('public.responses_archive') = 'responses_archive'  (존재)
+--   row_count            = 12
+--   incoming_fk_count    = 0   (이 테이블을 참조하는 FK 없음)
+--   dependent_view_count = 0   (의존하는 뷰 없음)
+--   RLS 정책 2개: "staff deletes responses"(DELETE), "admin all responses"(ALL)
+--                 → DROP TABLE 시 정책도 함께 자동 삭제됨.
+--   코드 참조: 0 (grep "responses"/"responses_archive" 결과 없음, 아카이브 단계에서 제거 완료).
+--
+-- 데이터 백업(비가역 대비): 12행 전체를 아래 파일에 보존 후 폐기.
+--   supabase/backups/responses_archive_rows.csv  (헤더 + 12행)
+--
+-- CASCADE 미사용: 참조/의존이 0임을 확인했으므로 평범한 DROP 으로 충분하다.
+--   (예기치 못한 의존이 있으면 DROP 이 에러로 막아주는 편이 안전하다 — 안전망으로 남긴다.)
+
+drop table public.responses_archive;
+
+-- ── 검증용 (적용 후 실행) ─────────────────────────────────────
+-- select to_regclass('public.responses_archive') as should_be_null;  -- 기대: NULL(빈칸)
+
+-- ── ROLLBACK (되돌리기) ───────────────────────────────────────
+-- 주의: DROP 은 데이터를 영구 삭제한다. 아래는 '구조'만 재생성하며,
+--       12행 데이터는 supabase/backups/responses_archive_rows.csv 에서 복원해야 한다
+--       (대시보드 Table Editor → Import data from CSV).
+-- 컬럼/타입은 폐기 직전 관측 데이터 기준(정확한 default/제약은 보존 안 됨; 정적 스냅샷이라 무방).
+--
+-- create table public.responses_archive (
+--   id             uuid primary key default gen_random_uuid(),
+--   session_id     uuid,
+--   student_name   text,
+--   student_number text,
+--   result         jsonb,
+--   reflection     text,
+--   created_at     timestamptz default now()
+-- );
+-- -- (선택) 폐기 전과 동일하게 두려면 RLS 재적용:
+-- -- alter table public.responses_archive enable row level security;
+-- -- create policy "staff deletes responses" on public.responses_archive
+-- --   for delete to authenticated using (is_staff());
+-- -- create policy "admin all responses" on public.responses_archive
+-- --   for all to authenticated using (is_admin()) with check (is_admin());
+-- -- 이후 CSV import 로 12행 복원.
