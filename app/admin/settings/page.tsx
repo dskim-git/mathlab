@@ -232,7 +232,7 @@ export default function AdminSettingsPage() {
                   setYearMessage("");
                   setYearError("");
                 }}
-                className="mt-1 w-32 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+                className="mt-1 w-32 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                 placeholder="2026"
               />
             </div>
@@ -269,7 +269,7 @@ export default function AdminSettingsPage() {
                     setNewSubject(event.target.value);
                     setSubjectError("");
                   }}
-                  className="flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+                  className="flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                   placeholder="예: 확률과통계"
                 />
                 <Button type="submit" size="sm" disabled={isBusy}>
@@ -332,7 +332,7 @@ export default function AdminSettingsPage() {
                       setNewGrade(event.target.value);
                       setClassError("");
                     }}
-                    className="mt-1 w-20 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+                    className="mt-1 w-20 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                     placeholder="2"
                   />
                 </div>
@@ -352,7 +352,7 @@ export default function AdminSettingsPage() {
                       setNewClass(event.target.value);
                       setClassError("");
                     }}
-                    className="mt-1 w-20 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+                    className="mt-1 w-20 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                     placeholder="6"
                   />
                 </div>

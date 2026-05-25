@@ -97,7 +97,7 @@ export default function SessionCreateForm({
             id="session-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
             placeholder="예: 2학년 확률 시뮬레이터 활동"
           />
         </div>
@@ -113,7 +113,7 @@ export default function SessionCreateForm({
             id="teacher-name"
             value={teacherName}
             onChange={(event) => setTeacherName(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
             placeholder="예: 김선생"
           />
         </div>
@@ -129,7 +129,7 @@ export default function SessionCreateForm({
             id="activity"
             value={activityId}
             onChange={(event) => setActivityId(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
           >
             {activities.map((activity) => (
               <option key={activity.id} value={activity.id}>

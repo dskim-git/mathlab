@@ -363,7 +363,7 @@ export default function StudentHomePage() {
                         <span className="text-cyan-300">{row.subject}</span>
                       ) : null}
                       {row.activity_slug ? (
-                        <span className="text-slate-500">
+                        <span className="text-slate-400">
                           {row.activity_slug}
                         </span>
                       ) : null}
@@ -374,7 +374,7 @@ export default function StudentHomePage() {
                         {isExpanded ? reflection : previewText(reflection)}
                       </p>
                     ) : (
-                      <p className="mt-3 text-sm text-slate-500">
+                      <p className="mt-3 text-sm text-slate-400">
                         성찰 내용 없음
                       </p>
                     )}
@@ -414,7 +414,7 @@ export default function StudentHomePage() {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-400">
                             저장된 결과 데이터가 없습니다.
                           </p>
                         )}

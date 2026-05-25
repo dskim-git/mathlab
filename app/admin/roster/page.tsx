@@ -207,7 +207,7 @@ export default function AdminRosterPage() {
                 type="number"
                 value={schoolYear}
                 onChange={(event) => setSchoolYear(event.target.value)}
-                className="mt-1 w-28 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+                className="mt-1 w-28 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               />
             </div>
 

@@ -126,7 +126,7 @@ function TeacherCard({
   }
 
   const selectClassName =
-    "mt-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300";
+    "mt-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
