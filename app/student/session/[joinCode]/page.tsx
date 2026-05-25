@@ -200,32 +200,6 @@ export default async function StudentSessionPage({
                 {sessionData.activities?.description ??
                   "연결된 활동 정보를 불러오지 못했습니다."}
               </p>
-
-              <div className="mt-5 flex flex-wrap gap-2 text-xs text-slate-400">
-                <span className="rounded-full bg-white/10 px-3 py-1">
-                  activity_id: {sessionData.activities?.id ?? "-"}
-                </span>
-
-                <span className="rounded-full bg-white/10 px-3 py-1">
-                  subject: {sessionData.activities?.subject ?? "-"}
-                </span>
-
-                <span className="rounded-full bg-white/10 px-3 py-1">
-                  type: {sessionData.activities?.activity_type ?? "-"}
-                </span>
-
-                <span className="rounded-full bg-white/10 px-3 py-1">
-                  blocks: {activityBlocks.length}
-                </span>
-
-                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">
-                  source:{" "}
-                  {sessionData.activities?.content_blocks &&
-                    sessionData.activities.content_blocks.length > 0
-                    ? "DB"
-                    : "fallback"}
-                </span>
-              </div>
             </section>
 
             <ActivityRenderer
