@@ -41,7 +41,20 @@ export default async function TeacherRecordsPage({
   const hasFilter = gradeValue !== null && classValue !== null;
 
   // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  const { supabase, profile } = await requireTeacher();
+
+  // 담당 학급 권한을 RLS로 조회(교사=본인, 관리자=전체) → 픽커에 props로 전달.
+  const { data: permissionRows } = await supabase
+    .from("teacher_permissions")
+    .select("subject, grade, class_number")
+    .order("grade", { ascending: true })
+    .order("class_number", { ascending: true });
+
+  const permissions = (permissionRows ?? []) as {
+    subject: string | null;
+    grade: number;
+    class_number: number;
+  }[];
 
   let records: TeacherRecordRowData[] = [];
   let loadError = "";
@@ -83,6 +96,8 @@ export default async function TeacherRecordsPage({
         </p>
 
         <TeacherClassPicker
+          permissions={permissions}
+          teacherName={profile.name}
           selectedGrade={gradeValue}
           selectedClassNumber={classValue}
         />

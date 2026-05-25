@@ -6,8 +6,6 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { loginIdToEmail } from "@/lib/auth/credentials";
 
-const STUDENT_STORAGE_KEY = "mathlab_student";
-
 type StudentWithProfile = {
   id: string;
   profile_id: string;
@@ -96,22 +94,7 @@ export default function StudentLoginPage() {
 
     setIsChecking(false);
 
-    // 홈 화면이 읽는 localStorage 정보를 채운다(세션이 통과한 뒤에만 기록).
-    localStorage.setItem(
-      STUDENT_STORAGE_KEY,
-      JSON.stringify({
-        studentId: studentData.id,
-        profileId: studentData.profile_id,
-        loginId: studentData.student_login_id,
-        name: studentData.profiles?.name ?? "",
-        schoolYear: studentData.school_year,
-        studentCode: studentData.student_code,
-        grade: studentData.grade,
-        classNumber: studentData.class_number,
-        studentNumber: studentData.student_number,
-      })
-    );
-
+    // 홈/입장 화면은 모두 Auth 세션에서 학생 정보를 파생한다 — localStorage 저장 없음.
     router.push("/student/home");
   }
 
