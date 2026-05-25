@@ -8,14 +8,12 @@ type ResponseDeleteButtonProps = {
   responseId: string;
   studentName: string;
   studentNumber?: string | null;
-  table?: "responses" | "activity_responses";
 };
 
 export default function ResponseDeleteButton({
   responseId,
   studentName,
   studentNumber,
-  table = "responses",
 }: ResponseDeleteButtonProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -38,7 +36,7 @@ export default function ResponseDeleteButton({
     setErrorMessage("");
 
     const { error } = await supabase
-      .from(table)
+      .from("activity_responses")
       .delete()
       .eq("id", responseId);
 
