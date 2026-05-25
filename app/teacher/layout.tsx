@@ -5,8 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-const TEACHER_STORAGE_KEY = "mathlab_teacher";
-
 type TeacherProfile = {
   id: string;
   login_id: string;
@@ -31,6 +29,7 @@ export default function TeacherLayout({
 
   const [gateState, setGateState] = useState<GateState>("loading");
   const [teacherName, setTeacherName] = useState("");
+  const [teacherRole, setTeacherRole] = useState("");
 
   // 경로가 바뀔 때마다 Auth 세션을 다시 확인해, 로그인/로그아웃 직후 상태를 반영한다.
   useEffect(() => {
@@ -70,28 +69,8 @@ export default function TeacherLayout({
         return;
       }
 
-      // teacherId 캐시: TeacherClassPicker 등이 localStorage에서 읽는다(관리자는 null).
-      // 접근 판단은 위 세션 검사로 끝났고, 이 blob은 편의 캐시일 뿐이다.
-      const { data: teacher } = await supabase
-        .from("teachers")
-        .select("id")
-        .eq("profile_id", profileData.id)
-        .maybeSingle();
-
-      if (!active) return;
-
-      localStorage.setItem(
-        TEACHER_STORAGE_KEY,
-        JSON.stringify({
-          teacherId: teacher?.id ?? null,
-          profileId: profileData.id,
-          loginId: profileData.login_id,
-          name: profileData.name,
-          role: profileData.role,
-        })
-      );
-
       setTeacherName(profileData.name);
+      setTeacherRole(profileData.role);
       setGateState("ok");
     })();
 
@@ -102,7 +81,6 @@ export default function TeacherLayout({
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    localStorage.removeItem(TEACHER_STORAGE_KEY);
     router.push("/teacher/login");
   }
 
@@ -162,13 +140,24 @@ export default function TeacherLayout({
             님으로 로그인됨
           </p>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-full border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-300/10"
-          >
-            로그아웃
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {teacherRole === "admin" ? (
+              <Link
+                href="/admin"
+                className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+              >
+                관리자 대시보드
+              </Link>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-full border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-300/10"
+            >
+              로그아웃
+            </button>
+          </div>
         </div>
       </div>
 

@@ -2,82 +2,83 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-type StoredMathLabStudent = {
+// Phase 4: 학생 정보는 localStorage 블롭이 아니라 Auth 세션에서 파생한다.
+type StudentInfo = {
   studentId: string;
-  profileId: string;
   loginId: string;
   name: string;
-  schoolYear: number;
-  studentCode: string;
   grade: number;
   classNumber: number;
   studentNumber: number;
 };
 
-const STUDENT_STORAGE_KEY = "mathlab_student";
-const STUDENT_STORAGE_EVENT = "mathlab-student-change";
-
-function getStudentSnapshot() {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return localStorage.getItem(STUDENT_STORAGE_KEY) ?? "";
-}
-
-function getServerStudentSnapshot() {
-  return "";
-}
-
-function subscribeStudentStorage(callback: () => void) {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
-
-  window.addEventListener("storage", callback);
-  window.addEventListener(STUDENT_STORAGE_EVENT, callback);
-
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(STUDENT_STORAGE_EVENT, callback);
-  };
-}
-
-function parseStoredStudent(rawStudent: string): StoredMathLabStudent | null {
-  if (!rawStudent) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawStudent) as StoredMathLabStudent;
-  } catch {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(STUDENT_STORAGE_KEY);
-    }
-
-    return null;
-  }
-}
-
 export default function JoinPage() {
   const router = useRouter();
 
-  const rawStudent = useSyncExternalStore(
-    subscribeStudentStorage,
-    getStudentSnapshot,
-    getServerStudentSnapshot
-  );
-
-  const student = useMemo(() => {
-    return parseStoredStudent(rawStudent);
-  }, [rawStudent]);
+  const [student, setStudent] = useState<StudentInfo | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const [joinCode, setJoinCode] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isChecking, setIsChecking] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        if (active) {
+          setStudent(null);
+          setAuthChecked(true);
+        }
+        return;
+      }
+
+      const { data } = await supabase
+        .from("students")
+        .select(
+          "id, student_login_id, grade, class_number, student_number, profiles ( name )"
+        )
+        .eq("profile_id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+
+      const row = data as unknown as {
+        id: string;
+        student_login_id: string;
+        grade: number;
+        class_number: number;
+        student_number: number;
+        profiles: { name: string } | null;
+      } | null;
+
+      setStudent(
+        row
+          ? {
+              studentId: row.id,
+              loginId: row.student_login_id,
+              name: row.profiles?.name ?? "",
+              grade: row.grade,
+              classNumber: row.class_number,
+              studentNumber: row.student_number,
+            }
+          : null
+      );
+      setAuthChecked(true);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleJoin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,17 +112,8 @@ export default function JoinPage() {
       return;
     }
 
-    const params = new URLSearchParams({
-      studentId: student.studentId,
-      loginId: student.loginId,
-      name: student.name,
-      number: String(student.studentNumber),
-      grade: String(student.grade),
-      classNumber: String(student.classNumber),
-      studentCode: student.studentCode,
-    });
-
-    router.push(`/student/session/${normalizedCode}?${params.toString()}`);
+    // 신원은 세션 페이지가 Auth 세션에서 파생하므로 URL 파라미터 없이 이동한다.
+    router.push(`/student/session/${normalizedCode}`);
   }
 
   return (
@@ -135,7 +127,11 @@ export default function JoinPage() {
           선생님이 알려준 입장 코드를 입력하고 수업 활동에 참여하세요.
         </p>
 
-        {student ? (
+        {!authChecked ? (
+          <section className="mt-6 rounded-2xl border border-white/10 bg-slate-900 p-5 text-sm text-slate-300">
+            확인 중...
+          </section>
+        ) : student ? (
           <section className="mt-6 rounded-2xl border border-green-400/30 bg-green-950/30 p-5 text-sm text-green-100">
             <p className="font-semibold">로그인된 학생 정보</p>
             <p className="mt-2">이름: {student.name}</p>

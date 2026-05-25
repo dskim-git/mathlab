@@ -6,8 +6,6 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { loginIdToEmail } from "@/lib/auth/credentials";
 
-const TEACHER_STORAGE_KEY = "mathlab_teacher";
-
 type ProfileRow = {
   id: string;
   login_id: string;
@@ -92,29 +90,10 @@ export default function TeacherLoginPage() {
       return;
     }
 
-    // 5. teachers 행 조회 (관리자는 없을 수 있으므로 null 허용)
-    const { data: teacher } = await supabase
-      .from("teachers")
-      .select("id")
-      .eq("profile_id", profileData.id)
-      .maybeSingle();
-
     setIsChecking(false);
 
-    // 전환용: 기존 게이트(layout)가 읽는 localStorage 정보를 채운다.
-    // (다음 단계에서 게이트를 Auth 세션 기준으로 정리하면 이 저장은 제거 예정)
-    localStorage.setItem(
-      TEACHER_STORAGE_KEY,
-      JSON.stringify({
-        teacherId: teacher?.id ?? null,
-        profileId: profileData.id,
-        loginId: profileData.login_id,
-        name: profileData.name,
-        role: profileData.role,
-      })
-    );
-
     // 관리자는 승인 대시보드로, 교사는 교사 대시보드로 보낸다.
+    // (게이트/화면은 모두 Auth 세션에서 신원을 파생한다 — localStorage 저장 없음)
     router.push(profileData.role === "admin" ? "/admin" : "/teacher");
   }
 

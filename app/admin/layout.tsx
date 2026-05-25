@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-const TEACHER_STORAGE_KEY = "mathlab_teacher";
-
 type AdminProfile = {
   id: string;
   name: string;
@@ -69,7 +67,6 @@ export default function AdminLayout({
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    localStorage.removeItem(TEACHER_STORAGE_KEY);
     router.push("/teacher/login");
   }
 

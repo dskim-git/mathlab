@@ -2,18 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-type StoredMathLabStudent = {
+// Phase 4: 학생 정보는 localStorage 블롭이 아니라 Auth 세션에서 파생한다.
+type StudentInfo = {
   studentId: string;
-  profileId: string;
   loginId: string;
   name: string;
   schoolYear: number;
@@ -22,51 +16,6 @@ type StoredMathLabStudent = {
   classNumber: number;
   studentNumber: number;
 };
-
-const STUDENT_STORAGE_KEY = "mathlab_student";
-const STUDENT_STORAGE_EVENT = "mathlab-student-change";
-
-function getStudentSnapshot() {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return localStorage.getItem(STUDENT_STORAGE_KEY) ?? "";
-}
-
-function getServerStudentSnapshot() {
-  return "";
-}
-
-function subscribeStudentStorage(callback: () => void) {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
-
-  window.addEventListener("storage", callback);
-  window.addEventListener(STUDENT_STORAGE_EVENT, callback);
-
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(STUDENT_STORAGE_EVENT, callback);
-  };
-}
-
-function parseStoredStudent(rawStudent: string): StoredMathLabStudent | null {
-  if (!rawStudent) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawStudent) as StoredMathLabStudent;
-  } catch {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(STUDENT_STORAGE_KEY);
-    }
-
-    return null;
-  }
-}
 
 type ActivityResponseRow = {
   id: string;
@@ -130,21 +79,75 @@ function formatNumber(value?: number) {
 export default function StudentHomePage() {
   const router = useRouter();
 
-  const rawStudent = useSyncExternalStore(
-    subscribeStudentStorage,
-    getStudentSnapshot,
-    getServerStudentSnapshot
-  );
+  const [student, setStudent] = useState<StudentInfo | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
-  const student = useMemo(() => {
-    return parseStoredStudent(rawStudent);
-  }, [rawStudent]);
-
-  const studentId = student?.studentId;
   const [responses, setResponses] = useState<ActivityResponseRow[]>([]);
   const [isLoadingResponses, setIsLoadingResponses] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // 로그인 세션에서 본인 학생 정보를 가져온다(localStorage 블롭 제거).
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        if (active) {
+          setStudent(null);
+          setAuthChecked(true);
+        }
+        return;
+      }
+
+      const { data } = await supabase
+        .from("students")
+        .select(
+          "id, school_year, student_code, student_login_id, grade, class_number, student_number, profiles ( name )"
+        )
+        .eq("profile_id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+
+      const row = data as unknown as {
+        id: string;
+        school_year: number;
+        student_code: string;
+        student_login_id: string;
+        grade: number;
+        class_number: number;
+        student_number: number;
+        profiles: { name: string } | null;
+      } | null;
+
+      setStudent(
+        row
+          ? {
+              studentId: row.id,
+              loginId: row.student_login_id,
+              name: row.profiles?.name ?? "",
+              schoolYear: row.school_year,
+              studentCode: row.student_code,
+              grade: row.grade,
+              classNumber: row.class_number,
+              studentNumber: row.student_number,
+            }
+          : null
+      );
+      setAuthChecked(true);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const studentId = student?.studentId;
 
   const loadResponses = useCallback(async () => {
     if (!studentId) {
@@ -179,9 +182,17 @@ export default function StudentHomePage() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    localStorage.removeItem(STUDENT_STORAGE_KEY);
-    window.dispatchEvent(new Event(STUDENT_STORAGE_EVENT));
     router.push("/student/login");
+  }
+
+  if (!authChecked) {
+    return (
+      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+        <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300">
+          확인 중...
+        </section>
+      </main>
+    );
   }
 
   if (!student) {

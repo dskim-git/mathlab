@@ -1,23 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 import {
   ContentBlock,
   getActivityBlocksForSlug,
 } from "@/lib/activities/activityBlocks";
-import { supabase } from "@/lib/supabase/client";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type StudentSessionPageProps = {
   params: Promise<{
     joinCode: string;
-  }>;
-  searchParams: Promise<{
-    studentId?: string;
-    loginId?: string;
-    name?: string;
-    number?: string;
-    grade?: string;
-    classNumber?: string;
-    studentCode?: string;
   }>;
 };
 
@@ -38,14 +30,14 @@ type SessionWithActivity = {
   } | null;
 };
 
-type StudentQueryInfo = {
-  studentId?: string;
-  loginId?: string;
-  name?: string;
-  number?: string;
-  grade?: string;
-  classNumber?: string;
-  studentCode?: string;
+type CurrentStudent = {
+  id: string;
+  student_login_id: string;
+  student_code: string;
+  grade: number;
+  class_number: number;
+  student_number: number;
+  profiles: { name: string } | null;
 };
 
 function getBlocksFromActivity(
@@ -62,42 +54,33 @@ function getBlocksFromActivity(
   return getActivityBlocksForSlug(activity?.slug ?? "unknown");
 }
 
-function createStudentLabel(student: StudentQueryInfo) {
-  const hasClassInfo = student.grade && student.classNumber && student.number;
-
-  if (!hasClassInfo) {
-    return student.number ? `번호: ${student.number}` : "";
-  }
-
-  return `${student.grade}학년 ${student.classNumber}반 ${student.number}번`;
-}
-
 export default async function StudentSessionPage({
   params,
-  searchParams,
 }: StudentSessionPageProps) {
   const { joinCode } = await params;
-  const {
-    studentId,
-    loginId,
-    name,
-    number,
-    grade,
-    classNumber,
-    studentCode,
-  } = await searchParams;
-
-  const studentInfo: StudentQueryInfo = {
-    studentId,
-    loginId,
-    name,
-    number,
-    grade,
-    classNumber,
-    studentCode,
-  };
-
   const normalizedCode = joinCode.toUpperCase();
+
+  const supabase = await createServerSupabaseClient();
+
+  // Phase 4: 입장은 로그인 필수 + 신원은 Auth 세션에서 파생한다(URL 파라미터 제거).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/student/login");
+  }
+
+  // 본인 학생 정보(표시용). 제출 신원은 ProbabilitySimulator가 세션에서 다시 조회한다.
+  const { data: meData } = await supabase
+    .from("students")
+    .select(
+      "id, student_login_id, student_code, grade, class_number, student_number, profiles ( name )"
+    )
+    .eq("profile_id", user.id)
+    .maybeSingle();
+
+  const me = meData as unknown as CurrentStudent | null;
 
   const { data: session, error } = await supabase
     .from("sessions")
@@ -125,7 +108,17 @@ export default async function StudentSessionPage({
 
   const sessionData = session as unknown as SessionWithActivity | null;
   const activityBlocks = getBlocksFromActivity(sessionData?.activities ?? null);
-  const studentLabel = createStudentLabel(studentInfo);
+
+  const name = me?.profiles?.name ?? "";
+  const studentId = me?.id;
+  const loginId = me?.student_login_id;
+  const studentCode = me?.student_code;
+  const number = me ? String(me.student_number) : undefined;
+  const grade = me ? String(me.grade) : undefined;
+  const classNumber = me ? String(me.class_number) : undefined;
+  const studentLabel = me
+    ? `${me.grade}학년 ${me.class_number}반 ${me.student_number}번`
+    : "";
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -180,7 +173,7 @@ export default async function StudentSessionPage({
                     </p>
                   ) : (
                     <p className="mt-1 text-yellow-200">
-                      student_id가 전달되지 않았습니다.
+                      학생 계정이 아닙니다. (제출하려면 학생으로 로그인하세요.)
                     </p>
                   )}
                 </section>
@@ -248,12 +241,21 @@ export default async function StudentSessionPage({
               studentCode={studentCode}
             />
 
-            <Link
-              href="/"
-              className="mt-8 inline-flex rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-            >
-              홈으로 돌아가기
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/student/home"
+                className="inline-flex rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
+              >
+                학생 홈으로 가기
+              </Link>
+
+              <Link
+                href="/"
+                className="inline-flex rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
+              >
+                홈으로 돌아가기
+              </Link>
+            </div>
           </>
         )}
       </section>
