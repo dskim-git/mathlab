@@ -8,6 +8,9 @@ import ResponseCsvDownloadButton, {
   SessionResponseRow,
 } from "@/components/teacher/ResponseCsvDownloadButton";
 import ResponseDeleteButton from "@/components/teacher/ResponseDeleteButton";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type TeacherSessionResponsesPageProps = {
   params: Promise<{
@@ -196,20 +199,20 @@ export default async function TeacherSessionResponsesPage({
     countStudentsWithResubmissions(enhancedResponseList);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-6xl p-6 sm:p-8">
         <Link
           href="/teacher"
-          className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
+          className={buttonClasses("neutral", { size: "sm" })}
         >
           ← 교사용 대시보드로 돌아가기
         </Link>
 
         {sessionError || !sessionData ? (
-          <div className="mt-8 rounded-2xl border border-red-400/30 bg-red-950/40 p-6 text-red-200">
+          <Alert tone="error" className="mt-8">
             <h1 className="text-2xl font-bold">세션을 불러오지 못했습니다.</h1>
-            <p className="mt-3 text-sm">{sessionError?.message}</p>
-          </div>
+            <p className="mt-3">{sessionError?.message}</p>
+          </Alert>
         ) : (
           <>
             <header className="mt-8 border-b border-white/10 pb-8">
@@ -266,12 +269,12 @@ export default async function TeacherSessionResponsesPage({
               </div>
 
               {responsesError ? (
-                <div className="mt-5 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-red-200">
+                <Alert tone="error" className="mt-5">
                   <p className="font-semibold">
                     응답 목록을 불러오지 못했습니다.
                   </p>
-                  <p className="mt-2 text-sm">{responsesError.message}</p>
-                </div>
+                  <p className="mt-2">{responsesError.message}</p>
+                </Alert>
               ) : enhancedResponseList.length === 0 ? (
                 <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-900 p-6 text-slate-300">
                   아직 제출된 응답이 없습니다.
@@ -398,7 +401,7 @@ export default async function TeacherSessionResponsesPage({
             </section>
           </>
         )}
-      </section>
+      </Card>
     </main>
   );
 }
