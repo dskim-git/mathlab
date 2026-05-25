@@ -10,7 +10,9 @@ import { ContentBlock } from "@/lib/activities/activityBlocks";
 
 type ActivityRendererProps = {
   blocks: ContentBlock[];
-  sessionId: string;
+  /** student=학생 실제 활동(제출 가능) / teacher=교사 미리보기·수업 화면(미니활동 제출 없음). */
+  mode?: "student" | "teacher";
+  sessionId?: string;
 
   activityId?: string;
   activitySlug?: string;
@@ -53,6 +55,32 @@ function getBlockTypeLabel(type: ContentBlock["type"]) {
   return "블록";
 }
 
+// 교사 모드(미리보기·수업 화면)에서 미니활동은 실제 실행/제출 대신 안내 카드로 표시한다.
+function renderTeacherInteractivePlaceholder(
+  block: Extract<ContentBlock, { type: "interactive_activity" }>
+) {
+  return (
+    <section className="rounded-2xl border border-cyan-300/30 bg-cyan-300/5 p-6">
+      <p className="text-sm font-semibold text-cyan-300">미니활동</p>
+
+      <h3 className="mt-2 text-2xl font-bold">{block.title}</h3>
+
+      {block.description ? (
+        <p className="mt-3 leading-7 text-slate-300">{block.description}</p>
+      ) : null}
+
+      <p className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4 text-sm leading-6 text-slate-400">
+        학생이 직접 실행하고 결과·성찰을 제출하는 미니활동입니다. 교사 화면에서는
+        실행·제출되지 않습니다.
+      </p>
+
+      <p className="mt-2 text-xs text-slate-400">
+        activitySlug: {block.content.activitySlug}
+      </p>
+    </section>
+  );
+}
+
 function renderTextInstruction(
   block: Extract<ContentBlock, { type: "text_instruction" }>
 ) {
@@ -77,6 +105,7 @@ function renderTextInstruction(
 
 export default function ActivityRenderer({
   blocks,
+  mode = "student",
   sessionId,
   activityId,
   activitySlug,
@@ -196,31 +225,31 @@ export default function ActivityRenderer({
           />
         ) : null}
 
-        {selectedBlock.type === "interactive_activity" &&
-          selectedBlock.content.activitySlug === "probability-simulator" ? (
-          <ProbabilitySimulator
-            sessionId={sessionId}
-            activityId={activityId}
-            activitySlug={activitySlug ?? selectedBlock.content.activitySlug}
-            activitySubject={activitySubject}
-            studentId={studentId}
-            studentLoginId={studentLoginId}
-            studentName={studentName}
-            studentNumber={studentNumber}
-            studentGrade={studentGrade}
-            studentClassNumber={studentClassNumber}
-            studentCode={studentCode}
-          />
-        ) : null}
-
-        {selectedBlock.type === "interactive_activity" &&
-          selectedBlock.content.activitySlug !== "probability-simulator" ? (
-          <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
-            <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
-            <p className="mt-3 leading-7">
-              activitySlug: {selectedBlock.content.activitySlug}
-            </p>
-          </section>
+        {selectedBlock.type === "interactive_activity" ? (
+          mode === "teacher" ? (
+            renderTeacherInteractivePlaceholder(selectedBlock)
+          ) : selectedBlock.content.activitySlug === "probability-simulator" ? (
+            <ProbabilitySimulator
+              sessionId={sessionId ?? ""}
+              activityId={activityId}
+              activitySlug={activitySlug ?? selectedBlock.content.activitySlug}
+              activitySubject={activitySubject}
+              studentId={studentId}
+              studentLoginId={studentLoginId}
+              studentName={studentName}
+              studentNumber={studentNumber}
+              studentGrade={studentGrade}
+              studentClassNumber={studentClassNumber}
+              studentCode={studentCode}
+            />
+          ) : (
+            <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
+              <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
+              <p className="mt-3 leading-7">
+                activitySlug: {selectedBlock.content.activitySlug}
+              </p>
+            </section>
+          )
         ) : null}
       </div>
     </section>

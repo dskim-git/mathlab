@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
+import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 
 type ActivityBlocksEditorProps = {
   activityId: string;
@@ -42,6 +43,7 @@ export default function ActivityBlocksEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   function resetFeedback() {
     setMessage("");
@@ -303,10 +305,28 @@ export default function ActivityBlocksEditor({
           </p>
         </div>
 
-        <Button onClick={handleSave} disabled={isSaving} size="sm">
-          {isSaving ? "저장 중..." : "저장"}
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowPreview((value) => !value)}
+          >
+            {showPreview ? "미리보기 닫기" : "미리보기"}
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving} size="sm">
+            {isSaving ? "저장 중..." : "저장"}
+          </Button>
+        </div>
       </div>
+
+      {showPreview ? (
+        <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-slate-950 p-4 sm:p-5">
+          <p className="text-sm font-semibold text-cyan-300">
+            미리보기 · 학생 화면처럼 렌더 (저장 전 편집 내용 반영 · 미니활동은 실행되지 않음)
+          </p>
+          <ActivityRenderer mode="teacher" blocks={blocks} />
+        </div>
+      ) : null}
 
       {/* 블록 추가 */}
       <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900 p-5">
