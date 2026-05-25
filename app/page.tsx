@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 const features = [
   {
@@ -17,7 +19,7 @@ const features = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen">
       <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
         <header className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
@@ -54,30 +56,21 @@ export default function Home() {
             </p>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/student/login"
-                className="rounded-full bg-cyan-300 px-6 py-3 text-center text-base font-semibold text-slate-950 transition hover:bg-cyan-200"
-              >
+              <Link href="/student/login" className={buttonClasses("primary")}>
                 학생 로그인
               </Link>
 
-              <Link
-                href="/join"
-                className="rounded-full border border-cyan-300/40 px-6 py-3 text-center text-base font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-              >
+              <Link href="/join" className={buttonClasses("secondary")}>
                 입장 코드로 참여
               </Link>
 
-              <Link
-                href="/teacher"
-                className="rounded-full border border-white/20 px-6 py-3 text-center text-base font-semibold text-white transition hover:bg-white/10"
-              >
+              <Link href="/teacher" className={buttonClasses("neutral")}>
                 교사용 대시보드
               </Link>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-cyan-950/40">
+          <Card className="p-6 shadow-2xl shadow-cyan-950/40">
             <h3 className="text-xl font-bold">현재 개발 중인 기능</h3>
 
             <div className="mt-6 space-y-4">
@@ -96,7 +89,7 @@ export default function Home() {
                 </article>
               ))}
             </div>
-          </section>
+          </Card>
         </div>
 
         <footer className="border-t border-white/10 pt-5 text-sm text-slate-400">
