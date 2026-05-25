@@ -217,10 +217,14 @@ export default function AdminSettingsPage() {
 
           <form onSubmit={handleSaveYear} className="mt-4 flex flex-wrap items-end gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label
+                htmlFor="settings-school-year"
+                className="block text-xs font-semibold text-slate-300"
+              >
                 학년도
               </label>
               <input
+                id="settings-school-year"
                 type="number"
                 value={currentYear}
                 onChange={(event) => {
@@ -259,6 +263,7 @@ export default function AdminSettingsPage() {
 
               <form onSubmit={handleAddSubject} className="mt-4 flex gap-2">
                 <input
+                  aria-label="과목명"
                   value={newSubject}
                   onChange={(event) => {
                     setNewSubject(event.target.value);
@@ -312,10 +317,14 @@ export default function AdminSettingsPage() {
 
               <form onSubmit={handleAddClass} className="mt-4 flex flex-wrap items-end gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300">
+                  <label
+                    htmlFor="settings-new-grade"
+                    className="block text-xs font-semibold text-slate-300"
+                  >
                     학년
                   </label>
                   <input
+                    id="settings-new-grade"
                     type="number"
                     min={1}
                     value={newGrade}
@@ -328,10 +337,14 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300">
+                  <label
+                    htmlFor="settings-new-class"
+                    className="block text-xs font-semibold text-slate-300"
+                  >
                     반
                   </label>
                   <input
+                    id="settings-new-class"
                     type="number"
                     min={1}
                     value={newClass}
