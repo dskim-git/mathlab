@@ -193,10 +193,14 @@ export default function AdminRosterPage() {
         <section className="mt-6 rounded-2xl border border-white/10 bg-slate-900 p-6">
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label
+                htmlFor="roster-school-year"
+                className="block text-xs font-semibold text-slate-300"
+              >
                 학년도
               </label>
               <input
+                id="roster-school-year"
                 type="number"
                 value={schoolYear}
                 onChange={(event) => setSchoolYear(event.target.value)}
@@ -205,10 +209,14 @@ export default function AdminRosterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label
+                htmlFor="roster-csv-file"
+                className="block text-xs font-semibold text-slate-300"
+              >
                 CSV 파일 (학년, 반, 번호, 이름)
               </label>
               <input
+                id="roster-csv-file"
                 type="file"
                 accept=".csv,text/csv,text/plain"
                 onChange={handleFile}
