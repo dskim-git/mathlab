@@ -19,3 +19,19 @@
 html {
   background-color: #020617; /* = Tailwind slate-950 */
 }
+
+/*
+ * 키보드 포커스 베이스라인 (a11y).
+ * raw <a>/<button> 의 흐릿한 브라우저 기본 윤곽선을 브랜드 시안(cyan-300) 링으로 통일한다.
+ * @layer base 라서 utilities 레이어가 항상 이긴다 → outline-none 을 가진 요소
+ * (공용 <Button>·폼 컨트롤; 이미 box-shadow ring 보유)에는 적용되지 않아 링이 중복되지 않는다.
+ * 따라서 outline 유틸이 없는 raw 버튼/링크에만 깔끔하게 적용된다.
+ */
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid #67e8f9; /* = Tailwind cyan-300 */
+    outline-offset: 2px;
+  }
+}
