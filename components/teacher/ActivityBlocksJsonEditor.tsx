@@ -142,7 +142,7 @@ export default function ActivityBlocksJsonEditor({
                 }}
                 placeholder="content_blocks JSON 배열을 입력하세요."
                 spellCheck={false}
-                className="mt-3 min-h-[520px] w-full rounded-2xl border border-white/10 bg-slate-950 p-5 font-mono text-sm leading-6 text-slate-100 outline-none transition focus:border-cyan-300/60"
+                className="mt-3 min-h-[520px] w-full rounded-2xl border border-white/10 bg-slate-950 p-5 font-mono text-sm leading-6 text-slate-100 outline-none transition focus:border-cyan-300/60 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
             />
 
             {message ? (

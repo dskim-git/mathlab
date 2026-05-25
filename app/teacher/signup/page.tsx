@@ -137,7 +137,7 @@ export default function TeacherSignupPage() {
                 setName(event.target.value);
                 setErrorMessage("");
               }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               placeholder="예: 김선생"
             />
           </div>
@@ -153,7 +153,7 @@ export default function TeacherSignupPage() {
                 setLoginId(event.target.value);
                 setErrorMessage("");
               }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               placeholder="영문/숫자/밑줄 4~20자 (예: teacher02)"
               autoComplete="username"
             />
@@ -171,7 +171,7 @@ export default function TeacherSignupPage() {
                 setPassword(event.target.value);
                 setErrorMessage("");
               }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               placeholder="8자 이상, 숫자 1개 이상"
               autoComplete="new-password"
             />
@@ -192,7 +192,7 @@ export default function TeacherSignupPage() {
                 setPasswordConfirm(event.target.value);
                 setErrorMessage("");
               }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               placeholder="비밀번호를 한 번 더 입력"
               autoComplete="new-password"
             />

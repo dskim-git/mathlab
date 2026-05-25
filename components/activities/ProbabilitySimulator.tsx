@@ -302,7 +302,7 @@ export default function ProbabilitySimulator({
             onChange={(event) =>
               handleModeChange(event.target.value as ProbabilityMode)
             }
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
           >
             <option value="coin">동전 던지기</option>
             <option value="dice">주사위 특정 눈</option>
@@ -331,7 +331,7 @@ export default function ProbabilitySimulator({
               setResult(null);
               resetSubmitFeedback();
             }}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
           />
           <p className="mt-2 text-sm text-slate-400">
             예: 동전을 30번 던지는 실험
@@ -356,7 +356,7 @@ export default function ProbabilitySimulator({
               setResult(null);
               resetSubmitFeedback();
             }}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
           />
           <p className="mt-2 text-sm text-slate-400">
             예: 위 실험을 1000번 반복
@@ -383,7 +383,7 @@ export default function ProbabilitySimulator({
               setResult(null);
               resetSubmitFeedback();
             }}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40 disabled:cursor-not-allowed disabled:opacity-60"
           />
           <p className="mt-2 text-sm text-slate-400">
             현재 선택: {getModeLabel(mode)} / 성공확률 p ={" "}
@@ -562,7 +562,7 @@ export default function ProbabilitySimulator({
                 id="interpretation-type"
                 value={interpretationType}
                 onChange={(event) => setInterpretationType(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               >
                 <option value="theory_comparison">
                   시뮬레이션 결과와 이론값 비교
@@ -594,7 +594,7 @@ export default function ProbabilitySimulator({
                   resetSubmitFeedback();
                 }}
                 rows={6}
-                className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-slate-900 px-4 py-3 leading-7 text-white outline-none transition focus:border-cyan-300"
+                className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-slate-900 px-4 py-3 leading-7 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                 placeholder="예: 반복 횟수를 늘릴수록 시뮬레이션 평균이 이론 평균 np에 가까워지는 것을 확인했다..."
               />
             </div>

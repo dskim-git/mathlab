@@ -125,7 +125,7 @@ export default function TeacherLoginPage() {
                 setLoginId(event.target.value);
                 setErrorMessage("");
               }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               placeholder="예: teacher02"
               autoComplete="username"
             />
@@ -147,7 +147,7 @@ export default function TeacherLoginPage() {
                 setPassword(event.target.value);
                 setErrorMessage("");
               }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
               placeholder="비밀번호"
               autoComplete="current-password"
             />
