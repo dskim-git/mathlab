@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type RosterRow = {
   id: string;
@@ -179,8 +182,8 @@ export default function AdminRosterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-5xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">관리자 대시보드</p>
 
         <h1 className="mt-3 text-3xl font-bold">명렬표(재학생 명단) 관리</h1>
@@ -224,14 +227,13 @@ export default function AdminRosterPage() {
               />
             </div>
 
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={handleUpload}
               disabled={isBusy || parsed.length === 0}
-              className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isBusy ? "적재 중..." : `적재 (${parsed.length}건)`}
-            </button>
+            </Button>
           </div>
 
           <p className="mt-3 text-xs leading-5 text-slate-400">
@@ -262,15 +264,15 @@ export default function AdminRosterPage() {
           ) : null}
 
           {message ? (
-            <div className="mt-3 rounded-xl border border-green-400/30 bg-green-950/30 p-3 text-sm text-green-200">
+            <Alert tone="success" className="mt-3">
               {message}
-            </div>
+            </Alert>
           ) : null}
 
           {errorMessage ? (
-            <div className="mt-3 rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-200">
+            <Alert tone="error" className="mt-3">
               {errorMessage}
-            </div>
+            </Alert>
           ) : null}
         </section>
 
@@ -319,7 +321,7 @@ export default function AdminRosterPage() {
             </div>
           )}
         </section>
-      </section>
+      </Card>
     </main>
   );
 }

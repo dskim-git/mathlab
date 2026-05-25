@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 type Subject = {
   id: string;
@@ -193,8 +196,8 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-5xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">관리자 대시보드</p>
 
         <h1 className="mt-3 text-3xl font-bold">과목·학급 관리</h1>
@@ -229,24 +232,20 @@ export default function AdminSettingsPage() {
                 placeholder="2026"
               />
             </div>
-            <button
-              type="submit"
-              disabled={isBusy}
-              className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <Button type="submit" size="sm" disabled={isBusy}>
               저장
-            </button>
+            </Button>
           </form>
 
           {yearMessage ? (
-            <div className="mt-3 rounded-xl border border-green-400/30 bg-green-950/30 p-3 text-sm text-green-200">
+            <Alert tone="success" className="mt-3">
               {yearMessage}
-            </div>
+            </Alert>
           ) : null}
           {yearError ? (
-            <div className="mt-3 rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-200">
+            <Alert tone="error" className="mt-3">
               {yearError}
-            </div>
+            </Alert>
           ) : null}
         </section>
 
@@ -268,19 +267,15 @@ export default function AdminSettingsPage() {
                   className="flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
                   placeholder="예: 확률과통계"
                 />
-                <button
-                  type="submit"
-                  disabled={isBusy}
-                  className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+                <Button type="submit" size="sm" disabled={isBusy}>
                   추가
-                </button>
+                </Button>
               </form>
 
               {subjectError ? (
-                <div className="mt-3 rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-200">
+                <Alert tone="error" className="mt-3">
                   {subjectError}
-                </div>
+                </Alert>
               ) : null}
 
               {subjects.length === 0 ? (
@@ -348,19 +343,15 @@ export default function AdminSettingsPage() {
                     placeholder="6"
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={isBusy}
-                  className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+                <Button type="submit" size="sm" disabled={isBusy}>
                   추가
-                </button>
+                </Button>
               </form>
 
               {classError ? (
-                <div className="mt-3 rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-200">
+                <Alert tone="error" className="mt-3">
                   {classError}
-                </div>
+                </Alert>
               ) : null}
 
               {classes.length === 0 ? (
@@ -392,7 +383,7 @@ export default function AdminSettingsPage() {
             </section>
           </div>
         )}
-      </section>
+      </Card>
     </main>
   );
 }
