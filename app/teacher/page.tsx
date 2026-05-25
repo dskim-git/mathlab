@@ -313,7 +313,7 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                     className={
                       isSelected
                         ? "text-slate-800"
-                        : "text-slate-500"
+                        : "text-slate-400"
                     }
                   >
                     {count}

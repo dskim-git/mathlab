@@ -94,7 +94,7 @@ export default async function TeacherActivitiesPage() {
                   >
                     <td className="py-4 pr-4">
                       <p className="font-semibold text-white">{activity.title}</p>
-                      <p className="mt-1 line-clamp-2 max-w-md text-xs leading-5 text-slate-500">
+                      <p className="mt-1 line-clamp-2 max-w-md text-xs leading-5 text-slate-400">
                         {activity.description ?? "-"}
                       </p>
                     </td>
@@ -144,7 +144,7 @@ export default async function TeacherActivitiesPage() {
                       <p className="font-semibold text-white">
                         {activity.title}
                       </p>
-                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">
                         {activity.description ?? "-"}
                       </p>
                     </div>

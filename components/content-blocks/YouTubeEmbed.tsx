@@ -84,7 +84,7 @@ export default function YouTubeEmbed({
         </div>
       </div>
 
-      <p className="mt-3 text-xs leading-5 text-slate-500">
+      <p className="mt-3 text-xs leading-5 text-slate-400">
         영상이 보이지 않으면 공유 설정 또는 YouTube 임베딩 허용 여부를
         확인하세요.
       </p>

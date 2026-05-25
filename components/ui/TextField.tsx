@@ -9,7 +9,7 @@ type TextFieldProps = Omit<ComponentProps<"input">, "id"> & {
 
 const inputClasses =
   "mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition " +
-  "placeholder:text-slate-500 focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40";
+  "placeholder:text-slate-400 focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40";
 
 /** 라벨 + 인풋 (+ 선택적 힌트) 한 묶음. value/onChange/type 등은 input 으로 그대로 전달. */
 export function TextField({

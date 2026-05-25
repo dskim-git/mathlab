@@ -47,7 +47,7 @@ export default function EmbedFrame({
         />
       </div>
 
-      <p className="mt-3 text-xs leading-5 text-slate-500">
+      <p className="mt-3 text-xs leading-5 text-slate-400">
         임베딩이 보이지 않으면 공유 설정 또는 외부 사이트의 iframe 허용 여부를
         확인하세요.
       </p>
