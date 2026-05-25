@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "neutral";
+type ButtonVariant = "primary" | "secondary" | "neutral" | "danger";
 
 const baseClasses =
   "inline-flex items-center justify-center rounded-full px-5 py-3 font-semibold transition outline-none " +
@@ -11,6 +11,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-cyan-300 text-slate-950 hover:bg-cyan-200",
   secondary: "border border-cyan-300/40 text-cyan-200 hover:bg-cyan-300/10",
   neutral: "border border-white/20 text-white hover:bg-white/10",
+  danger: "border border-red-300/40 text-red-200 hover:bg-red-300/10",
 };
 
 /**

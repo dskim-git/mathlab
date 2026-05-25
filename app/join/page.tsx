@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { TextField } from "@/components/ui/TextField";
+import { Alert } from "@/components/ui/Alert";
 
 // Phase 4: 학생 정보는 localStorage 블롭이 아니라 Auth 세션에서 파생한다.
 type StudentInfo = {
@@ -117,8 +121,8 @@ export default function JoinPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">학생 입장</p>
 
         <h1 className="mt-3 text-3xl font-bold">입장 코드로 참여하기</h1>
@@ -150,7 +154,7 @@ export default function JoinPage() {
 
             <Link
               href="/student/login"
-              className="mt-4 inline-flex rounded-full bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
+              className={buttonClasses("primary", { className: "mt-4" })}
             >
               학생 로그인하러 가기
             </Link>
@@ -158,56 +162,35 @@ export default function JoinPage() {
         )}
 
         <form onSubmit={handleJoin} className="mt-8 space-y-5">
-          <div>
-            <label
-              htmlFor="join-code"
-              className="block text-sm font-semibold text-slate-200"
-            >
-              입장 코드
-            </label>
-            <input
-              id="join-code"
-              value={joinCode}
-              onChange={(event) => {
-                setJoinCode(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-lg font-bold uppercase tracking-[0.2em] text-white outline-none transition focus:border-cyan-300"
-              placeholder="예: ABC123"
-            />
-          </div>
+          <TextField
+            id="join-code"
+            label="입장 코드"
+            value={joinCode}
+            onChange={(event) => {
+              setJoinCode(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="예: ABC123"
+            className="text-lg font-bold uppercase tracking-[0.2em]"
+          />
 
-          {errorMessage ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
-              {errorMessage}
-            </div>
-          ) : null}
+          {errorMessage ? <Alert tone="error">{errorMessage}</Alert> : null}
 
-          <button
-            type="submit"
-            disabled={isChecking || !student}
-            className="w-full rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="submit" fullWidth disabled={isChecking || !student}>
             {isChecking ? "입장 코드 확인 중..." : "활동 입장하기"}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/student/home"
-            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Link href="/student/home" className={buttonClasses("secondary")}>
             학생 홈으로 가기
           </Link>
 
-          <Link
-            href="/"
-            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/" className={buttonClasses("neutral")}>
             홈으로 돌아가기
           </Link>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }

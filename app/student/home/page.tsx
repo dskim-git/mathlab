@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 // Phase 4: 학생 정보는 localStorage 블롭이 아니라 Auth 세션에서 파생한다.
 type StudentInfo = {
@@ -187,18 +190,18 @@ export default function StudentHomePage() {
 
   if (!authChecked) {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-        <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300">
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-3xl p-6 text-slate-300 sm:p-8">
           확인 중...
-        </section>
+        </Card>
       </main>
     );
   }
 
   if (!student) {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-        <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8">
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-3xl p-6 sm:p-8">
           <p className="text-sm font-semibold text-cyan-300">학생 홈</p>
 
           <h1 className="mt-3 text-3xl font-bold">
@@ -211,18 +214,18 @@ export default function StudentHomePage() {
 
           <Link
             href="/student/login"
-            className="mt-8 inline-flex rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
+            className={buttonClasses("primary", { className: "mt-8" })}
           >
             학생 로그인하러 가기
           </Link>
-        </section>
+        </Card>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-3xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">학생 홈</p>
 
         <h1 className="mt-3 text-3xl font-bold">
@@ -230,8 +233,7 @@ export default function StudentHomePage() {
         </h1>
 
         <p className="mt-4 leading-7 text-slate-300">
-          이 화면은 학생 로그인 정보가 브라우저에 저장되어 있는지 확인하는
-          임시 학생 홈 화면입니다.
+          로그인한 학생 계정에 쌓인 활동·성찰 기록을 한곳에서 확인하는 화면입니다.
         </p>
 
         <section className="mt-8 rounded-2xl border border-cyan-300/30 bg-cyan-950/30 p-6">
@@ -292,9 +294,9 @@ export default function StudentHomePage() {
           </p>
 
           {loadError ? (
-            <div className="mt-5 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
+            <Alert tone="error" className="mt-5">
               기록을 불러오지 못했습니다: {loadError}
-            </div>
+            </Alert>
           ) : null}
 
           {isLoadingResponses && responses.length === 0 ? (
@@ -438,29 +440,19 @@ export default function StudentHomePage() {
         </section>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/join"
-            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Link href="/join" className={buttonClasses("secondary")}>
             입장 코드로 활동 참여하기
           </Link>
 
-          <Link
-            href="/"
-            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/" className={buttonClasses("neutral")}>
             홈으로 돌아가기
           </Link>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-full border border-red-300/40 px-5 py-3 font-semibold text-red-200 transition hover:bg-red-300/10"
-          >
+          <Button variant="danger" onClick={handleLogout}>
             학생 로그아웃
-          </button>
+          </Button>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }
