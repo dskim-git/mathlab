@@ -337,7 +337,6 @@ export default async function TeacherSessionResponsesPage({
                             responseId={response.id}
                             studentName={response.student_name}
                             studentNumber={response.student_number}
-                            table="activity_responses"
                           />
                         </div>
                       </div>

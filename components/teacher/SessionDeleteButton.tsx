@@ -27,10 +27,11 @@ export default function SessionDeleteButton({
         `"${sessionTitle}" 세션을 삭제할까요?`,
         "",
         `입장 코드: ${joinCode}`,
-        `저장된 학생 응답 수: ${responseCount}개`,
+        `이 세션으로 제출된 학생 응답 수: ${responseCount}개`,
         "",
-        "이 세션에 저장된 학생 응답도 함께 삭제됩니다.",
-        "삭제한 세션과 응답은 되돌릴 수 없습니다.",
+        "세션만 삭제됩니다. 학생 응답 기록은 보존되며(세션 연결만 해제),",
+        "학생별 누적 기록에서 계속 확인할 수 있습니다.",
+        "삭제한 세션은 되돌릴 수 없습니다.",
       ].join("\n")
     );
 
@@ -38,30 +39,12 @@ export default function SessionDeleteButton({
       return;
     }
 
-    const doubleConfirmed = window.confirm(
-      responseCount > 0
-        ? `정말 삭제할까요? 학생 응답 ${responseCount}개가 함께 삭제됩니다.`
-        : "정말 삭제할까요? 이 작업은 되돌릴 수 없습니다."
-    );
-
-    if (!doubleConfirmed) {
-      return;
-    }
-
     setIsDeleting(true);
     setErrorMessage("");
 
-    const { error: responsesDeleteError } = await supabase
-      .from("responses")
-      .delete()
-      .eq("session_id", sessionId);
-
-    if (responsesDeleteError) {
-      setIsDeleting(false);
-      setErrorMessage(responsesDeleteError.message);
-      return;
-    }
-
+    // activity_responses.session_id 는 ON DELETE SET NULL → 세션을 지워도 학생 응답
+    // 기록은 보존되고 세션 연결만 해제된다(누적 기록 모델).
+    // (레거시 responses 테이블은 아카이브됨 — 더 이상 참조하지 않는다.)
     const { error: sessionDeleteError } = await supabase
       .from("sessions")
       .delete()
