@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { loginIdToEmail } from "@/lib/auth/credentials";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { TextField } from "@/components/ui/TextField";
+import { Alert } from "@/components/ui/Alert";
 
 type StudentWithProfile = {
   id: string;
@@ -99,8 +103,8 @@ export default function StudentLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">학생 로그인</p>
 
         <h1 className="mt-3 text-3xl font-bold">학번으로 로그인하기</h1>
@@ -113,86 +117,53 @@ export default function StudentLoginPage() {
         </p>
 
         <form onSubmit={handleLogin} className="mt-8 space-y-5">
-          <div>
-            <label
-              htmlFor="student-login-id"
-              className="block text-sm font-semibold text-slate-200"
-            >
-              로그인 ID (연도+학번)
-            </label>
-            <input
-              id="student-login-id"
-              value={loginId}
-              onChange={(event) => {
-                setLoginId(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="예: 202620602"
-              inputMode="numeric"
-              autoComplete="username"
-            />
-          </div>
+          <TextField
+            id="student-login-id"
+            label="로그인 ID (연도+학번)"
+            value={loginId}
+            onChange={(event) => {
+              setLoginId(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="예: 202620602"
+            inputMode="numeric"
+            autoComplete="username"
+          />
 
-          <div>
-            <label
-              htmlFor="student-password"
-              className="block text-sm font-semibold text-slate-200"
-            >
-              비밀번호
-            </label>
-            <input
-              id="student-password"
-              type="password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="비밀번호"
-              autoComplete="current-password"
-            />
-          </div>
+          <TextField
+            id="student-password"
+            label="비밀번호"
+            type="password"
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="비밀번호"
+            autoComplete="current-password"
+          />
 
-          {errorMessage ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
-              {errorMessage}
-            </div>
-          ) : null}
+          {errorMessage ? <Alert tone="error">{errorMessage}</Alert> : null}
 
-          <button
-            type="submit"
-            disabled={isChecking}
-            className="w-full rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="submit" fullWidth disabled={isChecking}>
             {isChecking ? "확인 중..." : "로그인"}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/student/signup"
-            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Link href="/student/signup" className={buttonClasses("secondary")}>
             학생 회원가입
           </Link>
 
-          <Link
-            href="/"
-            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/" className={buttonClasses("neutral")}>
             홈으로 돌아가기
           </Link>
 
-          <Link
-            href="/join"
-            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/join" className={buttonClasses("neutral")}>
             입장 코드로 참여하기
           </Link>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }

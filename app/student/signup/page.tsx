@@ -5,6 +5,10 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { checkPasswordPolicy, loginIdToEmail } from "@/lib/auth/credentials";
 import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { TextField } from "@/components/ui/TextField";
+import { Alert } from "@/components/ui/Alert";
 
 export default function StudentSignupPage() {
   const [studentCode, setStudentCode] = useState("");
@@ -107,8 +111,8 @@ export default function StudentSignupPage() {
 
   if (isDone) {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-        <section className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8">
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-xl p-6 sm:p-8">
           <p className="text-sm font-semibold text-cyan-300">학생 회원가입</p>
 
           <h1 className="mt-3 text-3xl font-bold">가입이 완료되었습니다</h1>
@@ -118,38 +122,32 @@ export default function StudentSignupPage() {
             할 수 있습니다. 아래 로그인 ID와 비밀번호로 로그인해 주세요.
           </p>
 
-          <div className="mt-5 rounded-xl border border-cyan-300/30 bg-cyan-950/30 p-4 text-cyan-100">
+          <Alert tone="info" className="mt-5">
             <p className="text-sm">내 로그인 ID</p>
             <p className="mt-1 text-2xl font-bold tracking-wider">{registeredId}</p>
             <p className="mt-2 text-xs leading-5 text-cyan-200/80">
               다음 로그인부터 이 ID(연도+학번)를 입력합니다. 잊지 않도록 기억해
               두세요.
             </p>
-          </div>
+          </Alert>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/student/login"
-              className="rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
-            >
+            <Link href="/student/login" className={buttonClasses("primary")}>
               학생 로그인으로
             </Link>
 
-            <Link
-              href="/"
-              className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-            >
+            <Link href="/" className={buttonClasses("neutral")}>
               홈으로 돌아가기
             </Link>
           </div>
-        </section>
+        </Card>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">학생 회원가입</p>
 
         <h1 className="mt-3 text-3xl font-bold">학생 계정 만들기</h1>
@@ -160,109 +158,72 @@ export default function StudentSignupPage() {
         </p>
 
         <form onSubmit={handleSignup} className="mt-8 space-y-5">
-          <div>
-            <label htmlFor="student-code" className="block text-sm font-semibold text-slate-200">
-              학번
-            </label>
-            <input
-              id="student-code"
-              value={studentCode}
-              onChange={(event) => {
-                setStudentCode(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="예: 20602 (2학년 6반 2번)"
-              inputMode="numeric"
-            />
-          </div>
+          <TextField
+            id="student-code"
+            label="학번"
+            value={studentCode}
+            onChange={(event) => {
+              setStudentCode(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="예: 20602 (2학년 6반 2번)"
+            inputMode="numeric"
+          />
 
-          <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-slate-200">
-              이름
-            </label>
-            <input
-              id="name"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="명렬표에 등록된 이름"
-            />
-          </div>
+          <TextField
+            id="name"
+            label="이름"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="명렬표에 등록된 이름"
+          />
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-200">
-              비밀번호
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="8자 이상, 숫자 1개 이상"
-              autoComplete="new-password"
-            />
-          </div>
+          <TextField
+            id="password"
+            label="비밀번호"
+            type="password"
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="8자 이상, 숫자 1개 이상"
+            autoComplete="new-password"
+          />
 
-          <div>
-            <label
-              htmlFor="password-confirm"
-              className="block text-sm font-semibold text-slate-200"
-            >
-              비밀번호 확인
-            </label>
-            <input
-              id="password-confirm"
-              type="password"
-              value={passwordConfirm}
-              onChange={(event) => {
-                setPasswordConfirm(event.target.value);
-                setErrorMessage("");
-              }}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-              placeholder="비밀번호를 한 번 더 입력"
-              autoComplete="new-password"
-            />
-          </div>
+          <TextField
+            id="password-confirm"
+            label="비밀번호 확인"
+            type="password"
+            value={passwordConfirm}
+            onChange={(event) => {
+              setPasswordConfirm(event.target.value);
+              setErrorMessage("");
+            }}
+            placeholder="비밀번호를 한 번 더 입력"
+            autoComplete="new-password"
+          />
 
-          {errorMessage ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-sm text-red-200">
-              {errorMessage}
-            </div>
-          ) : null}
+          {errorMessage ? <Alert tone="error">{errorMessage}</Alert> : null}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="submit" fullWidth disabled={isSubmitting}>
             {isSubmitting ? "가입 처리 중..." : "가입하기"}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/student/login"
-            className="rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-          >
+          <Link href="/student/login" className={buttonClasses("secondary")}>
             이미 계정이 있어요 (로그인)
           </Link>
 
-          <Link
-            href="/"
-            className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-          >
+          <Link href="/" className={buttonClasses("neutral")}>
             홈으로 돌아가기
           </Link>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }

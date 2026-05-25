@@ -1,26 +1,21 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/*
+ * MathLab 은 단일 다크 테마(라이트 모드 미지원 — 모든 화면이 slate-950 기반 다크).
+ * 배경/글자색/폰트는 layout 의 <body> 에 Tailwind 유틸(bg-slate-950 text-slate-100 font-sans)로 지정한다.
+ * 여기서는 그 베이스라인만 보강한다:
+ *  - color-scheme: dark → 네이티브 스크롤바/폼 컨트롤도 다크로.
+ *  - html 배경 → body 가 가리기 전(로드 중)이나 오버스크롤 영역에 흰 배경이 새지 않게.
+ */
+:root {
+  color-scheme: dark;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html {
+  background-color: #020617; /* = Tailwind slate-950 */
 }

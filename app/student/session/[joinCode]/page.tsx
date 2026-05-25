@@ -6,6 +6,8 @@ import {
   getActivityBlocksForSlug,
 } from "@/lib/activities/activityBlocks";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { buttonClasses } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 type StudentSessionPageProps = {
   params: Promise<{
@@ -121,8 +123,8 @@ export default async function StudentSessionPage({
     : "";
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 p-8">
+    <main className="min-h-screen px-6 py-10">
+      <Card className="mx-auto max-w-7xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-cyan-300">학생 활동</p>
 
         {error || !sessionData ? (
@@ -137,7 +139,7 @@ export default async function StudentSessionPage({
 
             <Link
               href="/join"
-              className="mt-8 inline-flex rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
+              className={buttonClasses("neutral", { className: "mt-8" })}
             >
               다시 입장하기
             </Link>
@@ -242,23 +244,17 @@ export default async function StudentSessionPage({
             />
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/student/home"
-                className="inline-flex rounded-full border border-cyan-300/40 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-300/10"
-              >
+              <Link href="/student/home" className={buttonClasses("secondary")}>
                 학생 홈으로 가기
               </Link>
 
-              <Link
-                href="/"
-                className="inline-flex rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
-              >
+              <Link href="/" className={buttonClasses("neutral")}>
                 홈으로 돌아가기
               </Link>
             </div>
           </>
         )}
-      </section>
+      </Card>
     </main>
   );
 }
