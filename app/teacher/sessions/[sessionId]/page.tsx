@@ -25,6 +25,7 @@ type SessionDetail = {
   teacher_name: string | null;
   created_at: string | null;
   is_active: boolean;
+  created_by: string | null;
   activities: {
     title: string;
     slug: string;
@@ -146,7 +147,7 @@ export default async function TeacherSessionResponsesPage({
   const { sessionId } = await params;
 
   // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  const { supabase, user, profile } = await requireTeacher();
 
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
@@ -158,6 +159,7 @@ export default async function TeacherSessionResponsesPage({
       teacher_name,
       created_at,
       is_active,
+      created_by,
       activities (
         title,
         slug,
@@ -177,6 +179,10 @@ export default async function TeacherSessionResponsesPage({
     .order("created_at", { ascending: false });
 
   const sessionData = session as unknown as SessionDetail | null;
+
+  // '수업 편집' 링크는 세션 소유자 + 관리자에게만(편집 페이지/RLS와 동일 기준).
+  const canEditSession =
+    profile.role === "admin" || sessionData?.created_by === user.id;
 
   const activityRows =
     (activityResponses ?? []) as unknown as SessionResponseRow[];
@@ -214,6 +220,14 @@ export default async function TeacherSessionResponsesPage({
           >
             수업 화면 보기
           </Link>
+          {canEditSession ? (
+            <Link
+              href={`/teacher/sessions/${sessionId}/edit`}
+              className={buttonClasses("secondary", { size: "sm" })}
+            >
+              수업 편집
+            </Link>
+          ) : null}
         </div>
 
         {sessionError || !sessionData ? (

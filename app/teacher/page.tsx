@@ -428,6 +428,12 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                           >
                             수업 화면
                           </Link>
+                          <Link
+                            href={`/teacher/sessions/${session.id}/edit`}
+                            className={buttonClasses("neutral", { size: "sm" })}
+                          >
+                            수업 편집
+                          </Link>
                         </div>
                       </td>
 
@@ -531,6 +537,12 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                         className={buttonClasses("neutral", { size: "sm" })}
                       >
                         수업 화면
+                      </Link>
+                      <Link
+                        href={`/teacher/sessions/${session.id}/edit`}
+                        className={buttonClasses("neutral", { size: "sm" })}
+                      >
+                        수업 편집
                       </Link>
                       <SessionStatusButton
                         sessionId={session.id}
