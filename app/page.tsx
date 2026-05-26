@@ -2,101 +2,79 @@ import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
-const features = [
+const roles = [
   {
-    title: "확률 시뮬레이터",
-    description: "동전, 주사위, 베르누이 시행을 직접 실험하고 이론값과 비교합니다.",
+    icon: "🎓",
+    title: "학생",
+    description: "수업 활동에 참여하고, 내 활동 기록과 성찰을 모아 봅니다.",
+    loginHref: "/student/login",
+    loginLabel: "학생 로그인",
+    signupHref: "/student/signup",
+    signupLabel: "학생 회원가입",
   },
   {
-    title: "학생 응답 저장",
-    description: "학생의 실험 결과와 해석을 Supabase에 저장할 예정입니다.",
-  },
-  {
-    title: "교사용 대시보드",
-    description: "수업 세션별 학생 제출 현황과 응답 내용을 확인할 수 있게 됩니다.",
+    icon: "🧑‍🏫",
+    title: "교사",
+    description: "수업 세션을 만들고 콘텐츠를 구성하며, 학생 응답을 확인합니다.",
+    loginHref: "/teacher/login",
+    loginLabel: "교사 로그인",
+    signupHref: "/teacher/signup",
+    signupLabel: "교사 회원가입",
   },
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
-        <header className="flex items-center justify-between border-b border-white/10 pb-5">
-          <div>
-            <p className="text-sm font-semibold text-cyan-300">MathLab</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
-              수학 수업용 활동 웹앱
-            </h1>
-          </div>
-
-          <div className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm text-cyan-100">
-            MVP 개발 중
-          </div>
+    <main className="min-h-screen px-6 py-10">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl flex-col">
+        <header className="pt-10 text-center sm:pt-16">
+          <p className="text-sm font-semibold tracking-[0.25em] text-cyan-300">
+            MATHLAB
+          </p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+            수학 수업 활동 플랫폼
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-lg leading-8 text-slate-300">
+            학생은 활동에 참여해 기록을 쌓고, 교사는 수업을 만들고 응답을
+            확인합니다.
+          </p>
         </header>
 
-        <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr]">
-          <section>
-            <p className="mb-4 inline-flex rounded-full bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-200">
-              Next.js + Supabase + Vercel 기반 새 프로젝트
-            </p>
+        <div className="mt-12 grid flex-1 content-start gap-6 sm:grid-cols-2">
+          {roles.map((role) => (
+            <Card key={role.title} className="flex flex-col p-7">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/15 text-2xl">
+                {role.icon}
+              </div>
 
-            <h2 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              학생이 직접 실험하고,
-              <br />
-              교사가 바로 확인하는
-              <br />
-              수학 수업 플랫폼
-            </h2>
+              <h2 className="mt-5 text-2xl font-bold">{role.title}</h2>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              기존 Streamlit 기반 수학 웹앱의 활동 구조를 바탕으로,
-              더 빠르고 안정적인 수업용 웹앱을 새로 구축하고 있습니다.
-              첫 번째 목표는 확률 시뮬레이터, 학생 응답 저장, 교사용
-              대시보드입니다.
-            </p>
+              <p className="mt-2 flex-1 leading-7 text-slate-300">
+                {role.description}
+              </p>
 
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link href="/student/login" className={buttonClasses("primary")}>
-                학생 로그인
-              </Link>
-
-              <Link href="/join" className={buttonClasses("secondary")}>
-                입장 코드로 참여
-              </Link>
-
-              <Link href="/teacher" className={buttonClasses("neutral")}>
-                교사용 대시보드
-              </Link>
-            </div>
-          </section>
-
-          <Card className="p-6 shadow-2xl shadow-cyan-950/40">
-            <h3 className="text-xl font-bold">현재 개발 중인 기능</h3>
-
-            <div className="mt-6 space-y-4">
-              {features.map((feature, index) => (
-                <article
-                  key={feature.title}
-                  className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"
+              <div className="mt-6 flex flex-col gap-3">
+                <Link
+                  href={role.loginHref}
+                  className={buttonClasses("primary", { fullWidth: true })}
                 >
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-cyan-300 text-sm font-bold text-slate-950">
-                    {index + 1}
-                  </div>
-                  <h4 className="text-lg font-semibold">{feature.title}</h4>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
-                    {feature.description}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </Card>
+                  {role.loginLabel}
+                </Link>
+                <Link
+                  href={role.signupHref}
+                  className={buttonClasses("secondary", { fullWidth: true })}
+                >
+                  {role.signupLabel}
+                </Link>
+              </div>
+            </Card>
+          ))}
         </div>
 
-        <footer className="border-t border-white/10 pt-5 text-sm text-slate-400">
-          기존 repository `dskim-git/math`를 참고하여 새 repository
-          `dskim-git/mathlab`에서 개발 중입니다.
+        <footer className="mt-12 pb-4 text-center text-sm text-slate-400">
+          MathLab · 수학 수업용 활동 웹앱
         </footer>
-      </section>
+      </div>
     </main>
   );
 }
