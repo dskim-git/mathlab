@@ -98,12 +98,101 @@ export default function ActivityRenderer({
     return blocks.find((block) => block.id === selectedBlockId) ?? blocks[0];
   }, [blocks, selectedBlockId]);
 
+  // 방문한 블록은 언마운트하지 않고 숨김 유지 → iframe(PPT/PDF) 상태가 보존된다.
+  // 처음 본 블록만 마운트(지연 로드)하고, 이후 전환 시엔 hidden 으로 숨겨 둔다.
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(
+    () => new Set(blocks[0]?.id ? [blocks[0].id] : [])
+  );
+
+  function selectBlock(id: string) {
+    setSelectedBlockId(id);
+    setVisitedIds((prev) => {
+      if (prev.has(id)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }
+
   if (!selectedBlock) {
     return (
       <section className="mt-8 rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
         이 활동에 연결된 콘텐츠 블록이 없습니다.
       </section>
     );
+  }
+
+  // 블록 1개의 콘텐츠 JSX. 본문에서 방문한 블록마다 호출해 숨김/표시로 유지한다.
+  function renderBlockContent(block: ContentBlock) {
+    switch (block.type) {
+      case "text_instruction":
+        return renderTextInstruction(block);
+      case "canva_embed":
+        return (
+          <CanvaEmbed
+            title={block.title}
+            description={block.description}
+            embedUrl={block.content.embedUrl}
+            externalUrl={block.content.externalUrl}
+            height={block.content.height}
+          />
+        );
+      case "youtube_embed":
+        return (
+          <YouTubeEmbed
+            title={block.title}
+            description={block.description}
+            videoUrl={block.content.videoUrl}
+            embedUrl={block.content.embedUrl}
+            height={block.content.height}
+          />
+        );
+      case "google_drive_file":
+        return (
+          <GoogleDriveEmbed
+            title={block.title}
+            description={block.description}
+            fileUrl={block.content.fileUrl}
+            embedUrl={block.content.embedUrl}
+            height={block.content.height}
+          />
+        );
+      case "external_embed":
+        return (
+          <ExternalEmbed
+            title={block.title}
+            description={block.description}
+            url={block.content.url}
+            height={block.content.height}
+          />
+        );
+      case "interactive_activity":
+        return block.content.activitySlug === "probability-simulator" ? (
+          <ProbabilitySimulator
+            allowSubmit={mode === "student"}
+            sessionId={sessionId ?? ""}
+            activityId={activityId}
+            activitySlug={activitySlug ?? block.content.activitySlug}
+            activitySubject={activitySubject}
+            studentId={studentId}
+            studentLoginId={studentLoginId}
+            studentName={studentName}
+            studentNumber={studentNumber}
+            studentGrade={studentGrade}
+            studentClassNumber={studentClassNumber}
+            studentCode={studentCode}
+          />
+        ) : (
+          <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
+            <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
+            <p className="mt-3 leading-7">
+              activitySlug: {block.content.activitySlug}
+            </p>
+          </section>
+        );
+    }
   }
 
   return (
@@ -134,7 +223,7 @@ export default function ActivityRenderer({
                 <button
                   key={block.id}
                   type="button"
-                  onClick={() => setSelectedBlockId(block.id)}
+                  onClick={() => selectBlock(block.id)}
                   className={
                     isSelected
                       ? "min-w-[170px] rounded-xl border border-cyan-300/50 bg-cyan-300/10 px-4 py-3 text-left text-sm font-semibold text-cyan-100"
@@ -156,74 +245,16 @@ export default function ActivityRenderer({
       </div>
 
       <div className="mt-5 min-w-0">
-        {selectedBlock.type === "text_instruction"
-          ? renderTextInstruction(selectedBlock)
-          : null}
-
-        {selectedBlock.type === "canva_embed" ? (
-          <CanvaEmbed
-            title={selectedBlock.title}
-            description={selectedBlock.description}
-            embedUrl={selectedBlock.content.embedUrl}
-            externalUrl={selectedBlock.content.externalUrl}
-            height={selectedBlock.content.height}
-          />
-        ) : null}
-
-        {selectedBlock.type === "youtube_embed" ? (
-          <YouTubeEmbed
-            title={selectedBlock.title}
-            description={selectedBlock.description}
-            videoUrl={selectedBlock.content.videoUrl}
-            embedUrl={selectedBlock.content.embedUrl}
-            height={selectedBlock.content.height}
-          />
-        ) : null}
-
-        {selectedBlock.type === "google_drive_file" ? (
-          <GoogleDriveEmbed
-            title={selectedBlock.title}
-            description={selectedBlock.description}
-            fileUrl={selectedBlock.content.fileUrl}
-            embedUrl={selectedBlock.content.embedUrl}
-            height={selectedBlock.content.height}
-          />
-        ) : null}
-
-        {selectedBlock.type === "external_embed" ? (
-          <ExternalEmbed
-            title={selectedBlock.title}
-            description={selectedBlock.description}
-            url={selectedBlock.content.url}
-            height={selectedBlock.content.height}
-          />
-        ) : null}
-
-        {selectedBlock.type === "interactive_activity" ? (
-          selectedBlock.content.activitySlug === "probability-simulator" ? (
-            <ProbabilitySimulator
-              allowSubmit={mode === "student"}
-              sessionId={sessionId ?? ""}
-              activityId={activityId}
-              activitySlug={activitySlug ?? selectedBlock.content.activitySlug}
-              activitySubject={activitySubject}
-              studentId={studentId}
-              studentLoginId={studentLoginId}
-              studentName={studentName}
-              studentNumber={studentNumber}
-              studentGrade={studentGrade}
-              studentClassNumber={studentClassNumber}
-              studentCode={studentCode}
-            />
-          ) : (
-            <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
-              <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
-              <p className="mt-3 leading-7">
-                activitySlug: {selectedBlock.content.activitySlug}
-              </p>
-            </section>
-          )
-        ) : null}
+        {blocks.map((block) =>
+          visitedIds.has(block.id) ? (
+            <div
+              key={block.id}
+              className={block.id === selectedBlock.id ? undefined : "hidden"}
+            >
+              {renderBlockContent(block)}
+            </div>
+          ) : null
+        )}
       </div>
     </section>
   );
