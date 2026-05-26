@@ -44,10 +44,52 @@ export default function ActivityBlocksEditor({
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [showJson, setShowJson] = useState(false);
+  const [jsonDraft, setJsonDraft] = useState("");
+  // jsonDirty=false면 textarea는 현재 blocks를 실시간 반영(폼 수정 즉시 보임).
+  // 사용자가 JSON을 직접 타이핑하면 true가 되어 그 초안을 유지한다.
+  const [jsonDirty, setJsonDirty] = useState(false);
+  const [jsonError, setJsonError] = useState("");
 
   function resetFeedback() {
     setMessage("");
     setErrorMessage("");
+  }
+
+  function toggleJson() {
+    if (!showJson) {
+      // 열 때는 현재 블록을 실시간 반영하도록 초안 상태를 비운다.
+      setJsonDirty(false);
+      setJsonError("");
+    }
+    setShowJson((value) => !value);
+  }
+
+  function reloadJson() {
+    // 직접 편집한 초안을 버리고 현재 블록 기준으로 되돌린다.
+    setJsonDirty(false);
+    setJsonError("");
+  }
+
+  function applyJson() {
+    const text = jsonDirty ? jsonDraft : JSON.stringify(blocks, null, 2);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      setJsonError("JSON 문법이 올바르지 않습니다. 따옴표·쉼표·괄호를 확인하세요.");
+      return;
+    }
+    if (!Array.isArray(parsed)) {
+      setJsonError("최상위는 블록 배열 [ ... ] 형태여야 합니다.");
+      return;
+    }
+    setBlocks(parsed as ContentBlock[]);
+    setJsonDirty(false);
+    setJsonError("");
+    setExpandedId(null);
+    setErrorMessage("");
+    setMessage("JSON을 편집기에 반영했습니다. 확인 후 저장 버튼을 눌러 DB에 반영하세요.");
   }
 
   function updateBlock(id: string, updater: (block: ContentBlock) => ContentBlock) {
@@ -460,6 +502,50 @@ export default function ActivityBlocksEditor({
           })}
         </div>
       )}
+
+      {/* 고급: JSON 직접 편집 (복사·일괄수정용 안전장치) */}
+      <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900 p-5">
+        <button
+          type="button"
+          onClick={toggleJson}
+          className="text-sm font-semibold text-slate-200 transition hover:text-cyan-200"
+        >
+          {showJson ? "▾ 고급: JSON 직접 편집" : "▸ 고급: JSON 직접 편집"}
+        </button>
+
+        {showJson ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-xs leading-5 text-slate-400">
+              위 폼 편집 내용이 실시간으로 반영됩니다. 직접 수정하면 &quot;JSON
+              적용&quot;을 눌러야 위 목록·미리보기에 반영되며(저장은 별도), 다른
+              활동에서 복사·붙여넣기에도 쓸 수 있습니다.
+            </p>
+            <textarea
+              aria-label="블록 JSON 직접 편집"
+              value={jsonDirty ? jsonDraft : JSON.stringify(blocks, null, 2)}
+              onChange={(event) => {
+                setJsonDraft(event.target.value);
+                setJsonDirty(true);
+                setJsonError("");
+              }}
+              rows={16}
+              spellCheck={false}
+              className={`${textareaClasses} font-mono text-xs`}
+            />
+            {jsonError ? <Alert tone="error">{jsonError}</Alert> : null}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="neutral" size="sm" onClick={applyJson}>
+                JSON 적용
+              </Button>
+              {jsonDirty ? (
+                <Button variant="secondary" size="sm" onClick={reloadJson}>
+                  현재 블록 다시 불러오기
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }
