@@ -158,10 +158,6 @@ export default function StudentLoginPage() {
           <Link href="/" className={buttonClasses("neutral")}>
             홈으로 돌아가기
           </Link>
-
-          <Link href="/join" className={buttonClasses("neutral")}>
-            입장 코드로 참여하기
-          </Link>
         </div>
       </Card>
     </main>
