@@ -154,14 +154,16 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
   const selectedFilter = normalizeSessionFilter(filter);
 
   // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  const { supabase, user, profile } = await requireTeacher();
+  const isAdmin = profile.role === "admin";
 
   const { data: activities, error: activitiesError } = await supabase
     .from("activities")
     .select("*")
     .order("created_at", { ascending: true });
 
-  const { data: sessions, error: sessionsError } = await supabase
+  // 교사는 자기가 만든 세션만, 관리자는 전체를 본다.
+  let sessionsQuery = supabase
     .from("sessions")
     .select(
       `
@@ -176,7 +178,13 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
         slug
       )
     `
-    )
+    );
+
+  if (!isAdmin) {
+    sessionsQuery = sessionsQuery.eq("created_by", user.id);
+  }
+
+  const { data: sessions, error: sessionsError } = await sessionsQuery
     .order("created_at", { ascending: false })
     .limit(20);
 

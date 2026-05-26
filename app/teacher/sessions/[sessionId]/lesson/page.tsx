@@ -23,6 +23,7 @@ type SessionLesson = {
   title: string;
   join_code: string;
   is_active: boolean;
+  created_by: string | null;
   content_blocks: ContentBlock[] | null;
   activities: {
     title: string | null;
@@ -38,7 +39,7 @@ export default async function TeacherSessionLessonPage({
   const { sessionId } = await params;
 
   // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  const { supabase, user, profile } = await requireTeacher();
 
   const { data: session, error } = await supabase
     .from("sessions")
@@ -48,6 +49,7 @@ export default async function TeacherSessionLessonPage({
       title,
       join_code,
       is_active,
+      created_by,
       content_blocks,
       activities (
         title,
@@ -69,6 +71,10 @@ export default async function TeacherSessionLessonPage({
     sessionData?.activities?.slug
   );
 
+  // '이 세션 수업 편집' 링크는 세션을 만든 교사 + 관리자에게만 노출.
+  const canEdit =
+    profile.role === "admin" || sessionData?.created_by === user.id;
+
   return (
     <main className="min-h-screen px-6 py-10">
       <Card className="mx-auto max-w-6xl p-6 sm:p-8">
@@ -82,12 +88,14 @@ export default async function TeacherSessionLessonPage({
           <Link href="/teacher" className={buttonClasses("neutral", { size: "sm" })}>
             교사용 대시보드
           </Link>
-          <Link
-            href={`/teacher/sessions/${sessionId}/edit`}
-            className={buttonClasses("secondary", { size: "sm" })}
-          >
-            이 세션 수업 편집
-          </Link>
+          {canEdit ? (
+            <Link
+              href={`/teacher/sessions/${sessionId}/edit`}
+              className={buttonClasses("secondary", { size: "sm" })}
+            >
+              이 세션 수업 편집
+            </Link>
+          ) : null}
         </div>
 
         {error || !sessionData ? (

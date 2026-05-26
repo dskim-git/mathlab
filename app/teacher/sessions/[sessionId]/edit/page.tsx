@@ -22,6 +22,7 @@ type SessionEdit = {
   id: string;
   title: string;
   join_code: string;
+  created_by: string | null;
   content_blocks: ContentBlock[] | null;
   activities: {
     title: string | null;
@@ -36,7 +37,7 @@ export default async function TeacherSessionEditPage({
   const { sessionId } = await params;
 
   // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  const { supabase, user, profile } = await requireTeacher();
 
   const { data: session, error } = await supabase
     .from("sessions")
@@ -45,6 +46,7 @@ export default async function TeacherSessionEditPage({
       id,
       title,
       join_code,
+      created_by,
       content_blocks,
       activities (
         title,
@@ -57,6 +59,32 @@ export default async function TeacherSessionEditPage({
     .single();
 
   const sessionData = session as unknown as SessionEdit | null;
+
+  // 이 세션 구성은 세션을 만든 교사 + 관리자만 편집 가능.
+  const canEdit =
+    profile.role === "admin" || sessionData?.created_by === user.id;
+
+  if (sessionData && !canEdit) {
+    return (
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-3xl p-6 sm:p-8">
+          <Link
+            href={`/teacher/sessions/${sessionId}/lesson`}
+            className={buttonClasses("neutral", { size: "sm" })}
+          >
+            ← 수업 화면으로
+          </Link>
+          <Alert tone="info" className="mt-8">
+            <h1 className="text-2xl font-bold">편집 권한이 없습니다</h1>
+            <p className="mt-3 leading-7">
+              이 세션의 수업 구성은 세션을 만든 교사와 관리자만 편집할 수
+              있습니다.
+            </p>
+          </Alert>
+        </Card>
+      </main>
+    );
+  }
 
   // 세션에 저장된 구성이 있으면 그걸, 없으면 활동 템플릿(없으면 코드 fallback)에서 시드한다.
   const initialBlocks =
