@@ -97,7 +97,8 @@ export default async function TeacherActivityBlocksPage({
             </header>
 
             <ActivityBlocksEditor
-              activityId={activityData.id}
+              targetTable="activities"
+              targetId={activityData.id}
               initialContentBlocks={activityData.content_blocks ?? []}
             />
           </>
