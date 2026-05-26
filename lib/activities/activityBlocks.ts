@@ -166,6 +166,17 @@ export function getActivityBlocksForSlug(activitySlug: string): ContentBlock[] {
   ];
 }
 
+// 학생/교사 화면 공통: DB content_blocks 가 있으면 그걸, 없으면 slug 코드 fallback 을 쓴다.
+export function resolveActivityBlocks(
+  contentBlocks: unknown,
+  slug: string | null | undefined
+): ContentBlock[] {
+  if (Array.isArray(contentBlocks) && contentBlocks.length > 0) {
+    return contentBlocks as ContentBlock[];
+  }
+  return getActivityBlocksForSlug(slug ?? "unknown");
+}
+
 // ─── 교사용 블록 편집기 지원 ──────────────────────────────────────
 // 블록 유형 선택 목록(추가 버튼·라벨 공용 출처).
 export const BLOCK_TYPE_OPTIONS: {

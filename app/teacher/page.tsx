@@ -407,12 +407,20 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                       </td>
 
                       <td className="py-4 pr-4">
-                        <Link
-                          href={`/teacher/sessions/${session.id}`}
-                          className={buttonClasses("secondary", { size: "sm" })}
-                        >
-                          응답 보기
-                        </Link>
+                        <div className="flex flex-col gap-2">
+                          <Link
+                            href={`/teacher/sessions/${session.id}`}
+                            className={buttonClasses("secondary", { size: "sm" })}
+                          >
+                            응답 보기
+                          </Link>
+                          <Link
+                            href={`/teacher/sessions/${session.id}/lesson`}
+                            className={buttonClasses("neutral", { size: "sm" })}
+                          >
+                            수업 화면
+                          </Link>
+                        </div>
                       </td>
 
                       <td className="py-4 pr-4">
@@ -509,6 +517,12 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
                         className={buttonClasses("secondary", { size: "sm" })}
                       >
                         응답 보기
+                      </Link>
+                      <Link
+                        href={`/teacher/sessions/${session.id}/lesson`}
+                        className={buttonClasses("neutral", { size: "sm" })}
+                      >
+                        수업 화면
                       </Link>
                       <SessionStatusButton
                         sessionId={session.id}
