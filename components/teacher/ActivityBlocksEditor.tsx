@@ -16,7 +16,9 @@ import { Alert } from "@/components/ui/Alert";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 
 type ActivityBlocksEditorProps = {
-  activityId: string;
+  /** 저장 대상 — activities=공유 템플릿, sessions=교사별 세션 구성. */
+  targetTable: "activities" | "sessions";
+  targetId: string;
   initialContentBlocks: unknown;
 };
 
@@ -31,7 +33,8 @@ function toBlocks(value: unknown): ContentBlock[] {
 }
 
 export default function ActivityBlocksEditor({
-  activityId,
+  targetTable,
+  targetId,
   initialContentBlocks,
 }: ActivityBlocksEditorProps) {
   const router = useRouter();
@@ -149,9 +152,9 @@ export default function ActivityBlocksEditor({
     resetFeedback();
 
     const { error } = await supabase
-      .from("activities")
+      .from(targetTable)
       .update({ content_blocks: blocks })
-      .eq("id", activityId);
+      .eq("id", targetId);
 
     setIsSaving(false);
 

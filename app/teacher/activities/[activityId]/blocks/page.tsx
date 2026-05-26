@@ -68,7 +68,7 @@ export default async function TeacherActivityBlocksPage({
           <>
             <header className="mt-8 border-b border-white/10 pb-8">
               <p className="text-sm font-semibold text-cyan-300">
-                활동 블록 편집
+                활동 블록 편집 (공유 템플릿)
               </p>
 
               <h1 className="mt-3 text-3xl font-bold">{activityData.title}</h1>
@@ -96,8 +96,16 @@ export default async function TeacherActivityBlocksPage({
               </div>
             </header>
 
+            <Alert tone="info" className="mt-6">
+              이 편집기는 <span className="font-semibold">공유 템플릿</span>입니다.
+              여기서 저장하면 이 활동을 사용하는 모든 교사·세션의 기본 구성이
+              바뀝니다. 특정 수업만 다르게 구성하려면 그 세션의 수업 화면에서
+              &quot;이 세션 수업 편집&quot;을 사용하세요.
+            </Alert>
+
             <ActivityBlocksEditor
-              activityId={activityData.id}
+              targetTable="activities"
+              targetId={activityData.id}
               initialContentBlocks={activityData.content_blocks ?? []}
             />
           </>

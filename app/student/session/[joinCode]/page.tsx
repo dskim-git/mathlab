@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 import {
   ContentBlock,
-  resolveActivityBlocks,
+  resolveSessionBlocks,
 } from "@/lib/activities/activityBlocks";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { buttonClasses } from "@/components/ui/Button";
@@ -21,6 +21,7 @@ type SessionWithActivity = {
   join_code: string;
   teacher_name: string | null;
   is_active: boolean;
+  content_blocks: ContentBlock[] | null;
   activities: {
     id: string;
     title: string;
@@ -41,12 +42,6 @@ type CurrentStudent = {
   student_number: number;
   profiles: { name: string } | null;
 };
-
-function getBlocksFromActivity(
-  activity: SessionWithActivity["activities"]
-): ContentBlock[] {
-  return resolveActivityBlocks(activity?.content_blocks, activity?.slug);
-}
 
 export default async function StudentSessionPage({
   params,
@@ -85,6 +80,7 @@ export default async function StudentSessionPage({
       join_code,
       teacher_name,
       is_active,
+      content_blocks,
       activities (
         id,
         title,
@@ -101,7 +97,11 @@ export default async function StudentSessionPage({
     .single();
 
   const sessionData = session as unknown as SessionWithActivity | null;
-  const activityBlocks = getBlocksFromActivity(sessionData?.activities ?? null);
+  const activityBlocks = resolveSessionBlocks(
+    sessionData?.content_blocks,
+    sessionData?.activities?.content_blocks,
+    sessionData?.activities?.slug
+  );
 
   const name = me?.profiles?.name ?? "";
   const studentId = me?.id;

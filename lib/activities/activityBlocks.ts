@@ -177,6 +177,18 @@ export function resolveActivityBlocks(
   return getActivityBlocksForSlug(slug ?? "unknown");
 }
 
+// 세션별 덮어쓰기 우선순위: 세션 블록 → 활동 블록(공유 템플릿) → 코드 fallback.
+export function resolveSessionBlocks(
+  sessionContentBlocks: unknown,
+  activityContentBlocks: unknown,
+  slug: string | null | undefined
+): ContentBlock[] {
+  if (Array.isArray(sessionContentBlocks) && sessionContentBlocks.length > 0) {
+    return sessionContentBlocks as ContentBlock[];
+  }
+  return resolveActivityBlocks(activityContentBlocks, slug);
+}
+
 // ─── 교사용 블록 편집기 지원 ──────────────────────────────────────
 // 블록 유형 선택 목록(추가 버튼·라벨 공용 출처).
 export const BLOCK_TYPE_OPTIONS: {
