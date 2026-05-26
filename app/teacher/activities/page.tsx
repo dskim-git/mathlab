@@ -29,7 +29,9 @@ function countBlocks(contentBlocks: unknown[] | null) {
 
 export default async function TeacherActivitiesPage() {
   // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  const { supabase, profile } = await requireTeacher();
+  // 활동 블록(공유 템플릿) 편집은 관리자 전용 — 편집 링크는 관리자에게만 노출.
+  const isAdmin = profile.role === "admin";
 
   const { data: activities, error } = await supabase
     .from("activities")
@@ -120,12 +122,16 @@ export default async function TeacherActivitiesPage() {
                     </td>
 
                     <td className="py-4 pr-4">
-                      <Link
-                        href={`/teacher/activities/${activity.id}/blocks`}
-                        className={buttonClasses("secondary", { size: "sm" })}
-                      >
-                        블록 편집
-                      </Link>
+                      {isAdmin ? (
+                        <Link
+                          href={`/teacher/activities/${activity.id}/blocks`}
+                          className={buttonClasses("secondary", { size: "sm" })}
+                        >
+                          블록 편집
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-slate-400">관리자 전용</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -183,12 +189,18 @@ export default async function TeacherActivitiesPage() {
                   </dl>
 
                   <div className="mt-4">
-                    <Link
-                      href={`/teacher/activities/${activity.id}/blocks`}
-                      className={buttonClasses("secondary", { size: "sm" })}
-                    >
-                      블록 편집
-                    </Link>
+                    {isAdmin ? (
+                      <Link
+                        href={`/teacher/activities/${activity.id}/blocks`}
+                        className={buttonClasses("secondary", { size: "sm" })}
+                      >
+                        블록 편집
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-slate-400">
+                        관리자 전용 (공유 템플릿)
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

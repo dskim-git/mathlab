@@ -30,8 +30,31 @@ export default async function TeacherActivityBlocksPage({
 }: TeacherActivityBlocksPageProps) {
   const { activityId } = await params;
 
-  // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
-  const { supabase } = await requireTeacher();
+  // 활동 블록(공유 템플릿) 편집은 관리자 전용.
+  const { supabase, profile } = await requireTeacher();
+
+  if (profile.role !== "admin") {
+    return (
+      <main className="min-h-screen px-6 py-10">
+        <Card className="mx-auto max-w-3xl p-6 sm:p-8">
+          <Link
+            href="/teacher/activities"
+            className={buttonClasses("neutral", { size: "sm" })}
+          >
+            ← 활동 목록으로
+          </Link>
+          <Alert tone="info" className="mt-8">
+            <h1 className="text-2xl font-bold">관리자 전용 화면입니다</h1>
+            <p className="mt-3 leading-7">
+              활동 블록(공유 템플릿) 편집은 관리자만 할 수 있습니다. 특정 수업만
+              다르게 구성하려면 그 세션의 수업 화면에서 &quot;이 세션 수업
+              편집&quot;을 사용하세요.
+            </p>
+          </Alert>
+        </Card>
+      </main>
+    );
+  }
 
   const { data: activity, error } = await supabase
     .from("activities")
