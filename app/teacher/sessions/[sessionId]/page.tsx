@@ -201,12 +201,20 @@ export default async function TeacherSessionResponsesPage({
   return (
     <main className="min-h-screen px-6 py-10">
       <Card className="mx-auto max-w-6xl p-6 sm:p-8">
-        <Link
-          href="/teacher"
-          className={buttonClasses("neutral", { size: "sm" })}
-        >
-          ← 교사용 대시보드로 돌아가기
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/teacher"
+            className={buttonClasses("neutral", { size: "sm" })}
+          >
+            ← 교사용 대시보드로 돌아가기
+          </Link>
+          <Link
+            href={`/teacher/sessions/${sessionId}/lesson`}
+            className={buttonClasses("secondary", { size: "sm" })}
+          >
+            수업 화면 보기
+          </Link>
+        </div>
 
         {sessionError || !sessionData ? (
           <Alert tone="error" className="mt-8">

@@ -35,6 +35,9 @@ type ProbabilitySimulatorProps = {
   studentGrade?: string;
   studentClassNumber?: string;
   studentCode?: string;
+
+  /** false면 결과 해석 '제출' 버튼을 숨긴다(교사 수업 화면·미리보기용). 기본 true. */
+  allowSubmit?: boolean;
 };
 
 function formatNumber(value: number, digits = 4) {
@@ -73,6 +76,7 @@ export default function ProbabilitySimulator({
   studentGrade,
   studentClassNumber,
   studentCode,
+  allowSubmit = true,
 }: ProbabilitySimulatorProps) {
   const [mode, setMode] = useState<ProbabilityMode>("coin");
   const [n, setN] = useState(30);
@@ -611,14 +615,21 @@ export default function ProbabilitySimulator({
               </div>
             ) : null}
 
-            <button
-              type="button"
-              onClick={handleSubmitResponse}
-              disabled={isSubmitting}
-              className="mt-5 rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? "제출 중..." : "결과와 성찰 제출하기"}
-            </button>
+            {allowSubmit ? (
+              <button
+                type="button"
+                onClick={handleSubmitResponse}
+                disabled={isSubmitting}
+                className="mt-5 rounded-full bg-cyan-300 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? "제출 중..." : "결과와 성찰 제출하기"}
+              </button>
+            ) : (
+              <p className="mt-5 rounded-xl border border-white/10 bg-slate-950 p-4 text-sm leading-6 text-slate-400">
+                교사 화면에서는 제출 버튼이 표시되지 않습니다. 학생 화면에서 학생이
+                직접 결과와 성찰을 제출합니다.
+              </p>
+            )}
           </div>
         </section>
       ) : (

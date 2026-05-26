@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import Link from "next/link";
-import ActivityBlocksJsonEditor from "@/components/teacher/ActivityBlocksJsonEditor";
+import ActivityBlocksEditor from "@/components/teacher/ActivityBlocksEditor";
 import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -96,7 +96,7 @@ export default async function TeacherActivityBlocksPage({
               </div>
             </header>
 
-            <ActivityBlocksJsonEditor
+            <ActivityBlocksEditor
               activityId={activityData.id}
               initialContentBlocks={activityData.content_blocks ?? []}
             />

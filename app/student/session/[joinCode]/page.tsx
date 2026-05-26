@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 import {
   ContentBlock,
-  getActivityBlocksForSlug,
+  resolveActivityBlocks,
 } from "@/lib/activities/activityBlocks";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { buttonClasses } from "@/components/ui/Button";
@@ -45,15 +45,7 @@ type CurrentStudent = {
 function getBlocksFromActivity(
   activity: SessionWithActivity["activities"]
 ): ContentBlock[] {
-  if (
-    activity?.content_blocks &&
-    Array.isArray(activity.content_blocks) &&
-    activity.content_blocks.length > 0
-  ) {
-    return activity.content_blocks;
-  }
-
-  return getActivityBlocksForSlug(activity?.slug ?? "unknown");
+  return resolveActivityBlocks(activity?.content_blocks, activity?.slug);
 }
 
 export default async function StudentSessionPage({

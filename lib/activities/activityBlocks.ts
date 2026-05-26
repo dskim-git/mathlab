@@ -165,3 +165,113 @@ export function getActivityBlocksForSlug(activitySlug: string): ContentBlock[] {
     },
   ];
 }
+
+// 학생/교사 화면 공통: DB content_blocks 가 있으면 그걸, 없으면 slug 코드 fallback 을 쓴다.
+export function resolveActivityBlocks(
+  contentBlocks: unknown,
+  slug: string | null | undefined
+): ContentBlock[] {
+  if (Array.isArray(contentBlocks) && contentBlocks.length > 0) {
+    return contentBlocks as ContentBlock[];
+  }
+  return getActivityBlocksForSlug(slug ?? "unknown");
+}
+
+// ─── 교사용 블록 편집기 지원 ──────────────────────────────────────
+// 블록 유형 선택 목록(추가 버튼·라벨 공용 출처).
+export const BLOCK_TYPE_OPTIONS: {
+  type: ContentBlock["type"];
+  label: string;
+  hint: string;
+}[] = [
+  { type: "text_instruction", label: "안내 텍스트", hint: "활동 목적·순서·주의사항 안내" },
+  { type: "canva_embed", label: "Canva PPT", hint: "Canva 수업 자료 임베딩" },
+  { type: "youtube_embed", label: "YouTube 영상", hint: "유튜브 영상 임베딩" },
+  { type: "google_drive_file", label: "Google Drive PDF/파일", hint: "Drive PDF·문서 임베딩" },
+  { type: "external_embed", label: "외부 사이트", hint: "GeoGebra·Desmos 등 iframe" },
+  { type: "interactive_activity", label: "미니활동", hint: "확률 시뮬레이터 등 참여형 활동" },
+];
+
+export function getBlockTypeLabel(type: ContentBlock["type"]): string {
+  return BLOCK_TYPE_OPTIONS.find((option) => option.type === type)?.label ?? "블록";
+}
+
+export function generateBlockId(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `block-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// 유형별 기본값으로 새 블록을 만든다(편집기에서 '추가' 시 사용).
+export function createEmptyBlock(type: ContentBlock["type"]): ContentBlock {
+  const id = generateBlockId();
+
+  switch (type) {
+    case "text_instruction":
+      return { id, type, title: "안내 텍스트", content: { body: "" } };
+    case "canva_embed":
+      return { id, type, title: "Canva PPT", content: { embedUrl: "" } };
+    case "youtube_embed":
+      return { id, type, title: "YouTube 영상", content: { videoUrl: "" } };
+    case "google_drive_file":
+      return { id, type, title: "Google Drive 자료", content: { embedUrl: "" } };
+    case "external_embed":
+      return { id, type, title: "외부 사이트", content: { url: "" } };
+    case "interactive_activity":
+      return {
+        id,
+        type,
+        title: "확률 시뮬레이터",
+        content: { activitySlug: "probability-simulator", reflectionType: "simple" },
+      };
+  }
+}
+
+// 저장 전 필수값 검증 — 사람이 읽는 오류 메시지 배열을 반환(빈 배열이면 통과).
+export function validateBlocks(blocks: ContentBlock[]): string[] {
+  const errors: string[] = [];
+
+  blocks.forEach((block, index) => {
+    const where = `${index + 1}번 블록(${getBlockTypeLabel(block.type)})`;
+
+    if (!block.title.trim()) {
+      errors.push(`${where}: 제목을 입력하세요.`);
+    }
+
+    switch (block.type) {
+      case "text_instruction":
+        if (!block.content.body.trim()) {
+          errors.push(`${where}: 안내 내용을 입력하세요.`);
+        }
+        break;
+      case "canva_embed":
+        if (!block.content.embedUrl.trim()) {
+          errors.push(`${where}: 임베드 주소(embedUrl)를 입력하세요.`);
+        }
+        break;
+      case "youtube_embed":
+        if (!block.content.videoUrl?.trim() && !block.content.embedUrl?.trim()) {
+          errors.push(`${where}: 영상 주소를 입력하세요.`);
+        }
+        break;
+      case "google_drive_file":
+        if (!block.content.embedUrl.trim()) {
+          errors.push(`${where}: 임베드 주소(preview URL)를 입력하세요.`);
+        }
+        break;
+      case "external_embed":
+        if (!block.content.url.trim()) {
+          errors.push(`${where}: 사이트 주소(url)를 입력하세요.`);
+        }
+        break;
+      case "interactive_activity":
+        if (!block.content.activitySlug.trim()) {
+          errors.push(`${where}: 미니활동 종류를 선택하세요.`);
+        }
+        break;
+    }
+  });
+
+  return errors;
+}

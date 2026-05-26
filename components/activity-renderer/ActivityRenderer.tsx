@@ -10,7 +10,9 @@ import { ContentBlock } from "@/lib/activities/activityBlocks";
 
 type ActivityRendererProps = {
   blocks: ContentBlock[];
-  sessionId: string;
+  /** student=학생 실제 활동(제출 가능) / teacher=교사 미리보기·수업 화면(미니활동 제출 없음). */
+  mode?: "student" | "teacher";
+  sessionId?: string;
 
   activityId?: string;
   activitySlug?: string;
@@ -77,6 +79,7 @@ function renderTextInstruction(
 
 export default function ActivityRenderer({
   blocks,
+  mode = "student",
   sessionId,
   activityId,
   activitySlug,
@@ -196,31 +199,30 @@ export default function ActivityRenderer({
           />
         ) : null}
 
-        {selectedBlock.type === "interactive_activity" &&
+        {selectedBlock.type === "interactive_activity" ? (
           selectedBlock.content.activitySlug === "probability-simulator" ? (
-          <ProbabilitySimulator
-            sessionId={sessionId}
-            activityId={activityId}
-            activitySlug={activitySlug ?? selectedBlock.content.activitySlug}
-            activitySubject={activitySubject}
-            studentId={studentId}
-            studentLoginId={studentLoginId}
-            studentName={studentName}
-            studentNumber={studentNumber}
-            studentGrade={studentGrade}
-            studentClassNumber={studentClassNumber}
-            studentCode={studentCode}
-          />
-        ) : null}
-
-        {selectedBlock.type === "interactive_activity" &&
-          selectedBlock.content.activitySlug !== "probability-simulator" ? (
-          <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
-            <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
-            <p className="mt-3 leading-7">
-              activitySlug: {selectedBlock.content.activitySlug}
-            </p>
-          </section>
+            <ProbabilitySimulator
+              allowSubmit={mode === "student"}
+              sessionId={sessionId ?? ""}
+              activityId={activityId}
+              activitySlug={activitySlug ?? selectedBlock.content.activitySlug}
+              activitySubject={activitySubject}
+              studentId={studentId}
+              studentLoginId={studentLoginId}
+              studentName={studentName}
+              studentNumber={studentNumber}
+              studentGrade={studentGrade}
+              studentClassNumber={studentClassNumber}
+              studentCode={studentCode}
+            />
+          ) : (
+            <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
+              <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
+              <p className="mt-3 leading-7">
+                activitySlug: {selectedBlock.content.activitySlug}
+              </p>
+            </section>
+          )
         ) : null}
       </div>
     </section>
