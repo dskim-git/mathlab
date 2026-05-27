@@ -428,9 +428,11 @@ export default function PascalTriangleProperties() {
             ) : null}
           </div>
 
-          {/* 삼각형 */}
+          {/* 삼각형 (가독성 위해 80% 폭으로 축소·가운데 정렬) */}
           <div className="overflow-hidden rounded-xl bg-slate-950 p-1">
-            <Triangle view={view} hlMap={hlMap} onCell={handleCell} />
+            <div className="mx-auto w-4/5">
+              <Triangle view={view} hlMap={hlMap} onCell={handleCell} />
+            </div>
           </div>
 
           {/* 결과 */}
