@@ -4,6 +4,8 @@ type EmbedFrameProps = {
   src: string;
   height?: number;
   externalUrl?: string;
+  /** true면 고정 높이 대신 16:9 반응형(Canva PPT 등 와이드 슬라이드용). */
+  aspectVideo?: boolean;
 };
 
 export default function EmbedFrame({
@@ -12,6 +14,7 @@ export default function EmbedFrame({
   src,
   height = 600,
   externalUrl,
+  aspectVideo = false,
 }: EmbedFrameProps) {
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-5">
@@ -36,16 +39,31 @@ export default function EmbedFrame({
         ) : null}
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black">
-        <iframe
-          title={title}
-          src={src}
-          width="100%"
-          height={height}
-          allowFullScreen
-          className="block w-full"
-        />
-      </div>
+      {aspectVideo ? (
+        <div className="mt-5 flex justify-center">
+          <div className="aspect-video w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-black">
+            <iframe
+              title={title}
+              src={src}
+              width="100%"
+              height="100%"
+              allowFullScreen
+              className="block h-full w-full"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <iframe
+            title={title}
+            src={src}
+            width="100%"
+            height={height}
+            allowFullScreen
+            className="block w-full"
+          />
+        </div>
+      )}
 
       <p className="mt-3 text-xs leading-5 text-slate-400">
         임베딩이 보이지 않으면 공유 설정 또는 외부 사이트의 iframe 허용 여부를

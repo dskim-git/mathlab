@@ -186,9 +186,16 @@ export default function ActivityRenderer({
           />
         ) : (
           <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
-            <h3 className="text-xl font-bold">아직 연결되지 않은 미니활동</h3>
-            <p className="mt-3 leading-7">
-              activitySlug: {block.content.activitySlug}
+            <p className="text-sm font-semibold text-yellow-300/80">
+              미니활동 · 준비 중
+            </p>
+            <h3 className="mt-2 text-xl font-bold">{block.title}</h3>
+            <p className="mt-3 leading-7 text-yellow-100/90">
+              이 미니활동은 아직 새 앱으로 옮기는 중입니다. 곧 여기에서 직접 활동할 수
+              있게 됩니다.
+            </p>
+            <p className="mt-2 text-xs text-yellow-200/50">
+              {block.content.activitySlug}
             </p>
           </section>
         );

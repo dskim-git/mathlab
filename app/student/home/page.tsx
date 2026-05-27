@@ -440,6 +440,10 @@ export default function StudentHomePage() {
         </section>
 
         <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/learn" className={buttonClasses("primary")}>
+            교과 학습
+          </Link>
+
           <Link href="/join" className={buttonClasses("secondary")}>
             입장 코드로 활동 참여하기
           </Link>
