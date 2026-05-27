@@ -28,6 +28,29 @@ type ActivityRendererProps = {
   studentCode?: string;
 };
 
+// 긴 미니활동 제목을 목차용 짧은 이름으로 대체(슬러그 기준). 없으면 "미니:" 접두어만 제거.
+// 블록 타입 배지(미니활동)가 이미 표시되므로 제목에 "미니:"는 중복이라 떼어 낸다.
+const SHORT_ACTIVITY_TITLE: Record<string, string> = {
+  "probability_new/mini/rep_perm_dice": "주사위와 중복순열",
+  "probability_new/mini/tricolor_flag_perm": "삼색기 순열",
+  "probability_new/mini/cube_path_perm": "정육면체 최단경로 순열",
+  "probability_new/mini/word_diamond_perm": "단어 다이아몬드 순열",
+  "probability_new/mini/morra_game": "손가락 게임 ‘모라’",
+  "probability_new/mini/polygon_count_circles": "원 위의 점으로 만든 도형",
+  "probability_new/mini/pascal_fractal": "파스칼 삼각형 속 프랙털",
+};
+
+function displayBlockTitle(block: ContentBlock): string {
+  if (block.type === "interactive_activity") {
+    const short = SHORT_ACTIVITY_TITLE[block.content.activitySlug];
+    if (short) {
+      return short;
+    }
+  }
+  // "미니:" 접두어 제거(앞에 이모지가 있어도 첫 "미니:"를 떼어 냄).
+  return block.title.replace(/미니:\s*/, "").trim();
+}
+
 function getBlockTypeLabel(type: ContentBlock["type"]) {
   if (type === "text_instruction") {
     return "안내";
@@ -63,7 +86,7 @@ function renderTextInstruction(
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <p className="text-sm font-semibold text-cyan-300">활동 안내</p>
 
-      <h3 className="mt-3 text-2xl font-bold">{block.title}</h3>
+      <h3 className="mt-3 text-2xl font-bold">{displayBlockTitle(block)}</h3>
 
       {block.description ? (
         <p className="mt-3 leading-7 text-slate-300">{block.description}</p>
@@ -201,7 +224,7 @@ export default function ActivityRenderer({
             <p className="text-sm font-semibold text-yellow-300/80">
               미니활동 · 준비 중
             </p>
-            <h3 className="mt-2 text-xl font-bold">{block.title}</h3>
+            <h3 className="mt-2 text-xl font-bold">{displayBlockTitle(block)}</h3>
             <p className="mt-3 leading-7 text-yellow-100/90">
               이 미니활동은 아직 새 앱으로 옮기는 중입니다. 곧 여기에서 직접 활동할 수
               있게 됩니다.
@@ -253,7 +276,7 @@ export default function ActivityRenderer({
                     {getBlockTypeLabel(block.type)}
                   </span>
                   <span className="mt-1 block whitespace-nowrap">
-                    {block.title}
+                    {displayBlockTitle(block)}
                   </span>
                 </button>
               );
