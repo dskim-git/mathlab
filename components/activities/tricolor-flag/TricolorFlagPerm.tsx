@@ -6,7 +6,7 @@ import ReflectionForm from "@/components/activities/ReflectionForm";
 import { useCountUp } from "@/lib/activities/anim";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
 import WorldMap from "./WorldMap";
-import { COLORS, FLAGS, type ColorKey } from "./data";
+import { BG_CLASS, COLORS, FLAGS, type ColorKey } from "./data";
 
 function factorial(n: number): number {
   let r = 1;
@@ -48,7 +48,7 @@ function StripeFlag({ colors, size = "md" }: { colors: ColorKey[]; size?: "sm" |
   return (
     <div className={`flex ${dim} overflow-hidden rounded-md border border-white/15 shadow`}>
       {colors.map((c, i) => (
-        <div key={i} className="flex-1" style={{ background: COLORS[c].hex }} />
+        <div key={i} className={`flex-1 ${BG_CLASS[c]}`} />
       ))}
     </div>
   );
@@ -234,10 +234,9 @@ export default function TricolorFlagPerm() {
                   key={c}
                   type="button"
                   onClick={() => setSelected(c)}
-                  className={`h-10 w-10 rounded-full border-2 transition ${
-                    selected === c ? "border-white scale-110" : "border-white/20"
+                  className={`h-10 w-10 rounded-full border-2 transition ${BG_CLASS[c]} ${
+                    selected === c ? "scale-110 border-white" : "border-white/20"
                   }`}
-                  style={{ background: COLORS[c].hex }}
                   aria-label={COLORS[c].name}
                 />
               ))}
@@ -250,9 +249,8 @@ export default function TricolorFlagPerm() {
                     type="button"
                     onClick={() => paint(i)}
                     className={`flex h-20 w-14 items-center justify-center rounded-lg border-2 ${
-                      c ? "border-solid" : "border-dashed border-white/25"
+                      c ? `${BG_CLASS[c]} border-transparent` : "border-dashed border-white/25"
                     }`}
-                    style={c ? { background: COLORS[c].hex, borderColor: COLORS[c].hex } : undefined}
                   >
                     {!c ? <span className="text-2xl text-white/20">{i + 1}</span> : null}
                   </button>
@@ -299,7 +297,7 @@ export default function TricolorFlagPerm() {
                   key={c}
                   className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950 px-3 py-2"
                 >
-                  <span className="h-5 w-5 rounded border border-white/20" style={{ background: COLORS[c].hex }} />
+                  <span className={`h-5 w-5 rounded border border-white/20 ${BG_CLASS[c]}`} />
                   <span className="text-sm font-semibold text-slate-200">{COLORS[c].name}</span>
                   <button type="button" onClick={() => changeCnt(c, -1)} className="h-6 w-6 rounded border border-white/15 hover:bg-white/10">−</button>
                   <span className="w-4 text-center font-extrabold tabular-nums">{counts[c]}</span>

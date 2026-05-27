@@ -64,7 +64,7 @@ export default function WorldMap() {
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/10">
-      <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" style={{ background: "#0a1832" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block w-full bg-[#0a1832]">
         <path d={graticule} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth={0.3} />
         {countries.map((d, i) => (
           <path key={i} d={d} fill="#1e3a5f" stroke="#2d5a9e" strokeWidth={0.3} />
@@ -85,6 +85,48 @@ export default function WorldMap() {
             onMouseLeave={() => setHover(null)}
           />
         ))}
+
+        {hover
+          ? (() => {
+              const name = hover.f.name;
+              const boxW = Math.max(112, name.length * 14 + 24);
+              return (
+                <g transform={`translate(${hover.x}, ${hover.y})`} pointerEvents="none">
+                  <rect
+                    x={-boxW / 2}
+                    y={-58}
+                    width={boxW}
+                    height={48}
+                    rx={6}
+                    fill="#0a0a1a"
+                    fillOpacity={0.95}
+                    stroke="#ffffff"
+                    strokeOpacity={0.2}
+                  />
+                  {hover.f.c.map((c, i) => (
+                    <rect
+                      key={i}
+                      x={-boxW / 2 + 12 + i * 15}
+                      y={-52}
+                      width={12}
+                      height={16}
+                      rx={2}
+                      fill={COLORS[c].hex}
+                      stroke="#ffffff"
+                      strokeOpacity={0.25}
+                    />
+                  ))}
+                  <text x={0} y={-26} textAnchor="middle" fill="#ffffff" fontSize={12} fontWeight={700}>
+                    {name}
+                  </text>
+                  <text x={0} y={-14} textAnchor="middle" fill="#94a3b8" fontSize={9}>
+                    {hover.f.c.map((c) => COLORS[c].short).join("·")} ·{" "}
+                    {hover.f.o === "v" ? "세로" : "가로"}
+                  </text>
+                </g>
+              );
+            })()
+          : null}
       </svg>
 
       {status === "loading" ? (
@@ -96,28 +138,6 @@ export default function WorldMap() {
         <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm text-red-300">
           ❌ 지도 데이터를 불러오지 못했습니다.
         </p>
-      ) : null}
-
-      {hover ? (
-        <div
-          className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-lg border border-white/20 bg-slate-950/95 px-3 py-2 text-xs"
-          style={{ left: `${(hover.x / W) * 100}%`, top: `${(hover.y / H) * 100}%` }}
-        >
-          <div className="flex gap-0.5">
-            {hover.f.c.map((c, i) => (
-              <span
-                key={i}
-                className="inline-block h-4 w-3 rounded-sm border border-white/20"
-                style={{ background: COLORS[c].hex }}
-              />
-            ))}
-          </div>
-          <div className="mt-1 font-bold text-white">{hover.f.name}</div>
-          <div className="mt-0.5 text-[10px] text-slate-400">
-            {hover.f.c.map((c) => COLORS[c].short).join("·")} ·{" "}
-            {hover.f.o === "v" ? "세로" : "가로"} 줄무늬
-          </div>
-        </div>
       ) : null}
     </div>
   );

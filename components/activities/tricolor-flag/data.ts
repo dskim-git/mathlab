@@ -13,6 +13,18 @@ export const COLORS: Record<ColorKey, { hex: string; name: string; short: string
   lb: { hex: "#00A3E0", name: "하늘색", short: "하" },
 };
 
+// 인라인 style 대신 쓰는 정적 Tailwind 배경 클래스(고정 팔레트라 가능 — JIT가 리터럴로 인식).
+export const BG_CLASS: Record<ColorKey, string> = {
+  b: "bg-[#0047AB]",
+  w: "bg-[#FFFFFF]",
+  r: "bg-[#CF142B]",
+  y: "bg-[#FFCD00]",
+  g: "bg-[#009A44]",
+  k: "bg-[#000000]",
+  o: "bg-[#FF8200]",
+  lb: "bg-[#00A3E0]",
+};
+
 export type FlagDef = {
   name: string;
   code: string;
