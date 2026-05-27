@@ -98,7 +98,7 @@ export default function TeacherLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+    <main className="min-h-screen px-6 py-10">
       <section className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8">
         <p className="text-sm font-semibold text-cyan-300">교사 로그인</p>
 
