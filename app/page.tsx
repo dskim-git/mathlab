@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { LogoMark } from "@/components/brand/LogoMark";
 
 const roles = [
   {
@@ -27,16 +28,21 @@ export default function Home() {
   return (
     <main className="min-h-screen px-6 py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl flex-col">
-        <header className="pt-10 text-center sm:pt-16">
-          <p className="text-sm font-semibold tracking-[0.25em] text-cyan-300">
+        <header className="pt-12 text-center sm:pt-20">
+          <div className="flex justify-center">
+            <LogoMark
+              size={76}
+              className="drop-shadow-[0_0_22px_rgba(34,211,238,0.35)]"
+            />
+          </div>
+          <h1 className="mt-5 text-5xl font-extrabold tracking-tight sm:text-6xl">
             MATHLAB
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            수학 수업 활동 플랫폼
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg leading-8 text-slate-300">
-            학생은 활동에 참여해 기록을 쌓고, 교사는 수업을 만들고 응답을
-            확인합니다.
+          <p className="mt-2 text-sm font-medium tracking-[0.2em] text-slate-400 sm:text-base">
+            수학 수업 활동 플랫폼
+          </p>
+          <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-cyan-100/90 sm:text-xl">
+            수학을 실험하다 — 해보고, 관찰하고, 발견하는 수학
           </p>
         </header>
 

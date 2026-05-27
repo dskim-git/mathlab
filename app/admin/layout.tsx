@@ -110,7 +110,7 @@ export default function AdminLayout({
 
   return (
     <>
-      <div className="bg-slate-950 px-6 pt-6 text-white">
+      <div className="px-6 pt-6 text-white">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
           <p className="text-sm text-slate-300">
             <span className="font-semibold text-cyan-200">{admin?.name}</span>{" "}
