@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/Alert";
 type Subject = {
   id: string;
   name: string;
+  order_index: number | null;
 };
 
 type SchoolClass = {
@@ -38,7 +39,11 @@ export default function AdminSettingsPage() {
     setIsLoading(true);
 
     const [subjectResult, classResult, yearResult] = await Promise.all([
-      supabase.from("subjects").select("id, name").order("name"),
+      supabase
+        .from("subjects")
+        .select("id, name, order_index")
+        .order("order_index", { nullsFirst: false })
+        .order("name"),
       supabase
         .from("school_classes")
         .select("id, grade, class_number")
