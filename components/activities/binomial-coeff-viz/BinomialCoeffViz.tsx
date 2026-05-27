@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import { sup } from "@/lib/activities/anim";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
+import { supabase } from "@/lib/supabase/client";
+
+// 도전 모드 점수/랭킹 RPC(20260527_activity_scores.sql) 식별자.
+const ACTIVITY_SLUG = "probability_new/mini/binomial_coeff_viz";
+const ACTIVITY_SUBJECT = "확률과통계";
 
 // ─────────────────────────────────────────────────────────────
 //  공용 수학 유틸
@@ -506,12 +511,15 @@ function TabChallenge() {
   const [fb, setFb] = useState<{ ok: boolean; text: string } | null>(null);
   const [highScore, setHighScore] = useState<HighScore | null>(null);
   const [finalScore, setFinalScore] = useState(0);
+  const [submitMsg, setSubmitMsg] = useState("");
+  const [lbReload, setLbReload] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   // 콜백/타이머에서 항상 최신 값을 읽기 위한 refs
   const scoreRef = useRef(0);
   const comboRef = useRef(0);
+  const statRef = useRef({ ok: 0, ng: 0 });
   const probRef = useRef<Problem | null>(null);
   const lockRef = useRef(false);
 
@@ -532,15 +540,14 @@ function TabChallenge() {
   function start() {
     setScore(0); scoreRef.current = 0;
     setCombo(0); comboRef.current = 0;
+    statRef.current = { ok: 0, ng: 0 };
     setStat({ ok: 0, ng: 0 });
+    setSubmitMsg("");
     setTimeLeft(TOTAL_SEC);
     setPhase("play");
     newQ();
     timerRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) { finish(); return 0; }
-        return t - 1;
-      });
+      setTimeLeft((t) => (t <= 0 ? 0 : t - 1));
     }, 1000);
   }
 
@@ -557,7 +564,37 @@ function TabChallenge() {
       }
       return prev;
     });
+    void submitScore(fs);
   }
+
+  // 점수를 Supabase 랭킹에 제출(신원은 서버 RPC 가 auth.uid() 로 채움).
+  async function submitScore(fs: number) {
+    if (fs <= 0) { setSubmitMsg("ℹ️ 0점은 랭킹에 기록되지 않습니다."); return; }
+    setSubmitMsg("📡 점수 저장 중...");
+    const { error } = await supabase.rpc("submit_activity_score", {
+      p_activity_slug: ACTIVITY_SLUG,
+      p_subject: ACTIVITY_SUBJECT,
+      p_difficulty: diff,
+      p_score: fs,
+      p_meta: { ok: statRef.current.ok, ng: statRef.current.ng },
+    });
+    if (error) {
+      setSubmitMsg(
+        /not a student/i.test(error.message)
+          ? "ℹ️ 로그인한 학생만 랭킹에 기록됩니다."
+          : `⚠️ 점수 저장 실패: ${error.message}`
+      );
+      return;
+    }
+    setSubmitMsg("✅ 랭킹에 기록되었습니다!");
+    setLbReload((x) => x + 1);
+  }
+
+  // 타이머가 0에 도달하면 종료(상태 업데이터 안에서 부수효과를 일으키지 않도록 effect 로 처리).
+  useEffect(() => {
+    if (phase === "play" && timeLeft <= 0) finish();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, timeLeft]);
 
   function check() {
     if (lockRef.current || !timerRef.current || !probRef.current) return;
@@ -574,14 +611,16 @@ function TabChallenge() {
       const pts = cfg.base * mul;
       scoreRef.current += pts;
       setScore(scoreRef.current);
-      setStat((s) => ({ ...s, ok: s.ok + 1 }));
+      statRef.current = { ok: statRef.current.ok + 1, ng: statRef.current.ng };
+      setStat(statRef.current);
       setFb({ ok: true, text: `🎉 정답! +${pts}점${nextCombo >= 2 ? ` (×${mul} 콤보!)` : ""}` });
     } else {
       comboRef.current = 0;
       setCombo(0);
       scoreRef.current = Math.max(0, scoreRef.current - 10);
       setScore(scoreRef.current);
-      setStat((s) => ({ ...s, ng: s.ng + 1 }));
+      statRef.current = { ok: statRef.current.ok, ng: statRef.current.ng + 1 };
+      setStat(statRef.current);
       setFb({ ok: false, text: `❌ 답은 ${probRef.current.ans} · −10점` });
     }
     setTimeout(() => { if (timerRef.current) newQ(); }, 850);
@@ -611,7 +650,7 @@ function TabChallenge() {
             🏁 시작!
           </button>
         </div>
-        <CrossUserLeaderboard />
+        <CrossUserLeaderboard reloadToken={lbReload} />
       </div>
     );
   }
@@ -627,12 +666,13 @@ function TabChallenge() {
           <p className="my-2 text-5xl font-black text-amber-300">{finalScore}점</p>
           <p className="text-sm text-slate-400">✅ {stat.ok}문제 정답 &nbsp;|&nbsp; ❌ {stat.ng}문제 오답 &nbsp;|&nbsp; {msgs[lvl]}</p>
           {highScore ? <p className="mt-2 text-sm font-bold text-cyan-200">🏅 최고 기록: {highScore.score}점</p> : null}
+          {submitMsg ? <p className="mt-2 text-xs text-slate-400">{submitMsg}</p> : null}
           <button type="button" onClick={() => setPhase("start")}
             className="mt-5 rounded-xl bg-cyan-300 px-9 py-3 text-base font-bold text-slate-950 transition hover:bg-cyan-200">
             다시 도전 🔄
           </button>
         </div>
-        <CrossUserLeaderboard />
+        <CrossUserLeaderboard reloadToken={lbReload} />
       </div>
     );
   }
@@ -725,14 +765,97 @@ function DiffSelector({ diff, onSelect }: { diff: Diff; onSelect: (d: Diff) => v
   );
 }
 
-// 크로스유저 랭킹 — 단계 3에서 Supabase(activity_scores) 조회로 배선 예정.
-function CrossUserLeaderboard() {
+// 크로스유저 랭킹 — Supabase RPC activity_leaderboard(전체 공개, 학생별 최고점 Top N).
+type LeaderRow = {
+  rank: number;
+  display_name: string;
+  grade: number | null;
+  class_number: number | null;
+  best_score: number;
+  best_difficulty: string | null;
+  is_me: boolean;
+};
+
+const MEDALS = ["🥇", "🥈", "🥉"];
+function diffLabel(d: string | null): string {
+  return d === "easy" || d === "mid" || d === "hard" ? DIFF_CFG[d].label : "—";
+}
+
+function CrossUserLeaderboard({ reloadToken }: { reloadToken: number }) {
+  const [rows, setRows] = useState<LeaderRow[] | null>(null);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr("");
+    const { data, error } = await supabase.rpc("activity_leaderboard", {
+      p_activity_slug: ACTIVITY_SLUG,
+      p_limit: 20,
+    });
+    if (error) {
+      setErr(error.message);
+      setRows(null);
+    } else {
+      setRows((data ?? []) as LeaderRow[]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load, reloadToken]);
+
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-      <p className="text-sm font-bold text-cyan-300">🏆 도전 모드 랭킹</p>
-      <p className="mt-2 text-sm leading-7 text-slate-500">
-        전체 학생 랭킹은 곧 연결됩니다. 지금은 내 최고 기록이 이 기기에 저장됩니다.
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold text-cyan-300">🏆 도전 모드 랭킹 <span className="text-xs font-normal text-slate-500">(학생별 최고점)</span></p>
+        <button
+          type="button" onClick={() => void load()}
+          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/10"
+        >
+          🔄 새로고침
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="mt-3 text-sm text-slate-500">불러오는 중...</p>
+      ) : err ? (
+        <p className="mt-3 text-sm text-red-300">랭킹을 불러오지 못했습니다: {err}</p>
+      ) : !rows || rows.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-500">아직 도전 기록이 없습니다. 첫 번째 도전자가 되어보세요! 🎯</p>
+      ) : (
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+                <th className="px-2.5 py-2 text-left font-semibold">순위</th>
+                <th className="px-2.5 py-2 text-left font-semibold">이름</th>
+                <th className="px-2.5 py-2 text-right font-semibold">최고점</th>
+                <th className="px-2.5 py-2 text-center font-semibold">난이도</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const rank = Number(r.rank);
+                const medal = rank <= 3 ? MEDALS[rank - 1] : `${rank}위`;
+                return (
+                  <tr
+                    key={`${rank}-${r.display_name}`}
+                    className={`border-t border-white/5 ${r.is_me ? "bg-cyan-400/10 font-bold" : ""}`}
+                  >
+                    <td className="px-2.5 py-2 text-left text-base">{medal}</td>
+                    <td className="px-2.5 py-2 text-left text-slate-200">
+                      {r.display_name}
+                      {r.is_me ? <span className="ml-1.5 text-xs text-cyan-300">← 나</span> : null}
+                    </td>
+                    <td className="px-2.5 py-2 text-right font-extrabold text-amber-300">{r.best_score.toLocaleString()}점</td>
+                    <td className="px-2.5 py-2 text-center text-xs text-slate-400">{diffLabel(r.best_difficulty)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
