@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ProbabilitySimulator from "@/components/activities/ProbabilitySimulator";
+import { ACTIVITY_REGISTRY } from "@/components/activities/registry";
 import CanvaEmbed from "@/components/content-blocks/CanvaEmbed";
 import ExternalEmbed from "@/components/content-blocks/ExternalEmbed";
 import GoogleDriveEmbed from "@/components/content-blocks/GoogleDriveEmbed";
@@ -168,23 +169,34 @@ export default function ActivityRenderer({
             height={block.content.height}
           />
         );
-      case "interactive_activity":
-        return block.content.activitySlug === "probability-simulator" ? (
-          <ProbabilitySimulator
-            allowSubmit={mode === "student"}
-            sessionId={sessionId ?? ""}
-            activityId={activityId}
-            activitySlug={activitySlug ?? block.content.activitySlug}
-            activitySubject={activitySubject}
-            studentId={studentId}
-            studentLoginId={studentLoginId}
-            studentName={studentName}
-            studentNumber={studentNumber}
-            studentGrade={studentGrade}
-            studentClassNumber={studentClassNumber}
-            studentCode={studentCode}
-          />
-        ) : (
+      case "interactive_activity": {
+        const slug = block.content.activitySlug;
+
+        if (slug === "probability-simulator") {
+          return (
+            <ProbabilitySimulator
+              allowSubmit={mode === "student"}
+              sessionId={sessionId ?? ""}
+              activityId={activityId}
+              activitySlug={activitySlug ?? slug}
+              activitySubject={activitySubject}
+              studentId={studentId}
+              studentLoginId={studentLoginId}
+              studentName={studentName}
+              studentNumber={studentNumber}
+              studentGrade={studentGrade}
+              studentClassNumber={studentClassNumber}
+              studentCode={studentCode}
+            />
+          );
+        }
+
+        const Ported = ACTIVITY_REGISTRY[slug];
+        if (Ported) {
+          return <Ported />;
+        }
+
+        return (
           <section className="rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
             <p className="text-sm font-semibold text-yellow-300/80">
               미니활동 · 준비 중
@@ -194,11 +206,10 @@ export default function ActivityRenderer({
               이 미니활동은 아직 새 앱으로 옮기는 중입니다. 곧 여기에서 직접 활동할 수
               있게 됩니다.
             </p>
-            <p className="mt-2 text-xs text-yellow-200/50">
-              {block.content.activitySlug}
-            </p>
+            <p className="mt-2 text-xs text-yellow-200/50">{slug}</p>
           </section>
         );
+      }
     }
   }
 
