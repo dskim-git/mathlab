@@ -137,6 +137,13 @@ export default function AdminLayout({
             </Link>
 
             <Link
+              href="/admin/subjects"
+              className={buttonClasses("secondary", { size: "sm" })}
+            >
+              교과 접근
+            </Link>
+
+            <Link
               href="/admin/roster"
               className={buttonClasses("secondary", { size: "sm" })}
             >
