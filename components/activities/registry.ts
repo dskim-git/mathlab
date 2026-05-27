@@ -18,6 +18,7 @@ import BinomialTheoremApply from "./probability/1-2-binomial-theorem/binomial-th
 import GaltonBoard from "./probability/1-2-binomial-theorem/galton-board/GaltonBoard";
 import PascalTriangleProperties from "./probability/1-2-binomial-theorem/pascal-triangle-properties/PascalTriangleProperties";
 import PolygonCountCircles from "./probability/1-2-binomial-theorem/polygon-count-circles/PolygonCountCircles";
+import PascalFractal from "./probability/1-2-binomial-theorem/pascal-fractal/PascalFractal";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -39,4 +40,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/galton_board": GaltonBoard,
   "probability_new/mini/pascal_triangle_properties": PascalTriangleProperties,
   "probability_new/mini/polygon_count_circles": PolygonCountCircles,
+  "probability_new/mini/pascal_fractal": PascalFractal,
 };
