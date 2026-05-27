@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css"; // 미니활동 수식 조판(KaTeX)
 import { SiteBackground } from "@/components/brand/SiteBackground";
 
 const geistSans = Geist({
