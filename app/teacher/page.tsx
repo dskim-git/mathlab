@@ -228,6 +228,10 @@ export default async function TeacherPage({ searchParams }: TeacherPageProps) {
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/learn" className={buttonClasses("primary")}>
+            교과 학습
+          </Link>
+
           <Link href="/teacher/activities" className={buttonClasses("secondary")}>
             활동 콘텐츠 블록 관리
           </Link>
