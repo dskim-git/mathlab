@@ -7,6 +7,7 @@ import TricolorFlagPerm from "./tricolor-flag/TricolorFlagPerm";
 import CubePathPerm from "./cube-path/CubePathPerm";
 import WordDiamondPerm from "./word-diamond/WordDiamondPerm";
 import RepCombStarsBars from "./rep-comb-stars-bars/RepCombStarsBars";
+import PolyExpandTermCount from "./poly-expand-terms/PolyExpandTermCount";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -20,4 +21,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/cube_path_perm": CubePathPerm,
   "probability_new/mini/word_diamond_perm": WordDiamondPerm,
   "probability_new/mini/rep_comb_stars_bars": RepCombStarsBars,
+  "probability_new/mini/poly_expand_term_count": PolyExpandTermCount,
 };
