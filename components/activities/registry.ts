@@ -12,6 +12,7 @@ import FunctionCountLab from "./function-count/FunctionCountLab";
 import BinomialCoeffViz from "./binomial-coeff-viz/BinomialCoeffViz";
 import BinomialTheoremApply from "./binomial-theorem-apply/BinomialTheoremApply";
 import GaltonBoard from "./galton-board/GaltonBoard";
+import PascalTriangleProperties from "./pascal-triangle-properties/PascalTriangleProperties";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -30,4 +31,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/binomial_coeff_viz": BinomialCoeffViz,
   "probability_new/mini/binomial_theorem_apply": BinomialTheoremApply,
   "probability_new/mini/galton_board": GaltonBoard,
+  "probability_new/mini/pascal_triangle_properties": PascalTriangleProperties,
 };
