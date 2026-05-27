@@ -35,3 +35,19 @@ html {
     outline-offset: 2px;
   }
 }
+
+/*
+ * 미니활동 공용 등장 애니메이션.
+ * Tailwind v4 의 arbitrary 유틸 animate-[fadeIn_0.25s_ease_both] 가 이 키프레임을 참조한다.
+ * (결과 카드·선택행·피드백이 부드럽게 나타나도록.)
+ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
