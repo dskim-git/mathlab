@@ -43,6 +43,9 @@ import BayesTheoremMini from "./probability/2-2-conditional-prob/bayes-theorem-m
 import MontyHallMini from "./probability/2-2-conditional-prob/monty-hall-mini/MontyHallMini";
 import NontransitiveDice from "./probability/2-2-conditional-prob/nontransitive-dice/NontransitiveDice";
 
+// 2-2-2 사건의 독립과 종속
+import IndependenceVsExclusive from "./probability/2-2-conditional-prob/independence-vs-exclusive/IndependenceVsExclusive";
+
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
 // (probability-simulator 는 제출 props 가 많아 ActivityRenderer 에서 별도 처리한다.)
@@ -84,4 +87,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   // ⚠️ monty_hall_mini 는 커리큘럼에서 구 교과 슬러그(probability/mini/...)로 임포트됨
   "probability/mini/monty_hall_mini": MontyHallMini,
   "probability_new/mini/nontransitive_dice": NontransitiveDice,
+  "probability_new/mini/independence_vs_exclusive": IndependenceVsExclusive,
 };
