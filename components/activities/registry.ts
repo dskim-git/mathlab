@@ -33,6 +33,7 @@ import ProbBasicProperties from "./probability/2-1-prob-concept/prob-basic-prope
 
 // 2-1-2 확률의 덧셈정리
 import ProbAdditionTheorem from "./probability/2-1-prob-concept/prob-addition-theorem/ProbAdditionTheorem";
+import BirthdayParadoxMini from "./probability/2-1-prob-concept/birthday-paradox-mini/BirthdayParadoxMini";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -66,4 +67,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/bertrand_paradox_mini": BertrandParadox,
   "probability_new/mini/prob_basic_properties": ProbBasicProperties,
   "probability_new/mini/prob_addition_theorem": ProbAdditionTheorem,
+  "probability_new/mini/birthday_paradox_mini": BirthdayParadoxMini,
 };
