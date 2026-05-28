@@ -29,6 +29,7 @@ import StatProbExperiment from "./probability/2-1-prob-concept/stat-prob-experim
 import DiceLab from "./probability/2-1-prob-concept/dice-lab/DiceLab";
 import BuffonNeedle from "./probability/2-1-prob-concept/buffon-needle/BuffonNeedle";
 import BertrandParadox from "./probability/2-1-prob-concept/bertrand-paradox/BertrandParadox";
+import ProbBasicProperties from "./probability/2-1-prob-concept/prob-basic-properties/ProbBasicProperties";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -60,4 +61,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability/mini/dice_lab": DiceLab,
   "probability_new/mini/buffon_needle_mini": BuffonNeedle,
   "probability_new/mini/bertrand_paradox_mini": BertrandParadox,
+  "probability_new/mini/prob_basic_properties": ProbBasicProperties,
 };

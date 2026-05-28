@@ -43,6 +43,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability/mini/dice_lab": "주사위 실험",
   "probability_new/mini/buffon_needle_mini": "뷔퐁의 바늘 실험",
   "probability_new/mini/bertrand_paradox_mini": "베르트랑의 역설",
+  "probability_new/mini/prob_basic_properties": "확률의 기본 성질",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
