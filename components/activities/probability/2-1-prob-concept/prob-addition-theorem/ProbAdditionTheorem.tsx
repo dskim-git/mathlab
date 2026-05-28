@@ -150,6 +150,7 @@ function VennPanel() {
             <input
               type="range" min={1} max={99} value={pa}
               onChange={(e) => setPa(Number(e.target.value))}
+              aria-label="P(A) 값 슬라이더"
               className="w-full accent-cyan-400"
             />
           </SliderRow>
@@ -157,6 +158,7 @@ function VennPanel() {
             <input
               type="range" min={1} max={99} value={pb}
               onChange={(e) => setPb(Number(e.target.value))}
+              aria-label="P(B) 값 슬라이더"
               className="w-full accent-pink-400"
             />
           </SliderRow>
@@ -169,6 +171,7 @@ function VennPanel() {
             <input
               type="range" min={minAB} max={maxAB} value={Math.min(Math.max(pab, minAB), maxAB)}
               onChange={(e) => setPab(Number(e.target.value))}
+              aria-label="P(A 교집합 B) 값 슬라이더"
               className="w-full accent-violet-400"
             />
           </SliderRow>
@@ -240,8 +243,8 @@ const PROBLEMS: Problem[] = [
       </>
     ),
     visual: (
-      <div className="space-y-1.5">
-        <div className="flex justify-center gap-1.5">
+      <div className="w-full space-y-1.5">
+        <div className="flex flex-wrap justify-center gap-1">
           {[1, 2, 3, 4, 5, 6].map((n) => {
             const inA = n % 3 === 0;
             const inB = n >= 4;
@@ -251,7 +254,7 @@ const PROBLEMS: Problem[] = [
               : inB ? "border-pink-400 bg-pink-400/25 text-pink-100"
               : "border-white/15 bg-white/[0.05] text-slate-200";
             return (
-              <div key={n} className={`flex h-10 w-10 items-center justify-center rounded-lg border-2 text-base font-bold ${cls}`}>
+              <div key={n} className={`flex h-8 w-8 items-center justify-center rounded-md border-2 text-sm font-bold ${cls}`}>
                 {n}
               </div>
             );
