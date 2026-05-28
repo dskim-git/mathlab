@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css"; // 미니활동 수식 조판(KaTeX)
 import { SiteBackground } from "@/components/brand/SiteBackground";
+import SiteFooter from "@/components/site/SiteFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans text-slate-100">
         <SiteBackground />
-        {children}
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
       </body>
     </html>
   );
