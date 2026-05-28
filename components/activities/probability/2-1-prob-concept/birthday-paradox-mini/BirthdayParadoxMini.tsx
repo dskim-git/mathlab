@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
+import { supabase } from "@/lib/supabase/client";
+import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
 
 /* ──────────────────────────────────────────────────────────────
    🎂 생일 역설 탐구  (3 tabs)
@@ -58,18 +60,14 @@ function CircleSim() {
   const [matches, setMatches] = useState<[Person, Person][]>([]);
   const [auto, setAuto] = useState(false);
   const [speed, setSpeed] = useState(2); // 1~5, 클수록 빠름
-  const lastNewIdRef = useRef<number | null>(null);
 
   const p = calcP(people.length);
   const pTone = p >= 0.5 ? "text-red-300" : p >= 0.25 ? "text-amber-300" : "text-emerald-300";
-  const pBarTone = p >= 0.5 ? "bg-red-400" : p >= 0.25 ? "bg-amber-400" : "bg-emerald-400";
+  const pBarColor = p >= 0.5 ? "#f87171" : p >= 0.25 ? "#fbbf24" : "#34d399";
 
-  function addOne() {
-    if (people.length >= MAX_PERSONS) {
-      setAuto(false);
-      return;
-    }
+  const addOne = useCallback(() => {
     setPeople((prev) => {
+      if (prev.length >= MAX_PERSONS) return prev;
       const id = prev.length;
       const bd = randomBirthday();
       const next: Person = { ...bd, id, color: COLORS[id % COLORS.length], isMatch: false };
@@ -85,28 +83,23 @@ function CircleSim() {
         next.isMatch = true;
         setMatches((ms) => [...ms, [found as Person, next]]);
       }
-      lastNewIdRef.current = id;
       return [...updated, next];
     });
-  }
+  }, []);
+
   function reset() {
     setPeople([]);
     setMatches([]);
     setAuto(false);
-    lastNewIdRef.current = null;
   }
 
-  // 자동 실행
+  // 자동 실행: 매 추가 후 다음 스케줄. 한계 도달 시 새 스케줄을 잡지 않음(자동 정지).
   useEffect(() => {
-    if (!auto) return;
-    if (people.length >= MAX_PERSONS) {
-      setAuto(false);
-      return;
-    }
+    if (!auto || people.length >= MAX_PERSONS) return;
     const ms = Math.max(80, 700 - speed * 130); // speed 1=570 / 5=50
     const t = window.setTimeout(addOne, ms);
     return () => window.clearTimeout(t);
-  }, [auto, speed, people.length]);
+  }, [auto, speed, people.length, addOne]);
 
   // SVG 좌표 (viewBox 240×240, 자동 반응형)
   const VB = 240;
@@ -172,12 +165,12 @@ function CircleSim() {
               const p2 = a2xy(b.doy);
               return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="rgba(239,68,68,0.55)" strokeWidth={1.4} />;
             })}
-            {/* 점 */}
-            {people.map((per) => {
+            {/* 점 — 가장 마지막에 추가된 점에만 pop 애니메이션(키는 per.id 라 새 마운트 시 한 번 재생) */}
+            {people.map((per, idx) => {
               const pos = a2xy(per.doy);
-              const isNew = per.id === lastNewIdRef.current;
+              const isNewest = idx === people.length - 1;
               return (
-                <g key={per.id} className={isNew ? "animate-[pop_0.4s_ease-out]" : ""}>
+                <g key={per.id} className={isNewest ? "animate-[pop_0.4s_ease-out]" : ""}>
                   {per.isMatch ? (
                     <circle cx={pos.x} cy={pos.y} r={8} fill="none" stroke="rgba(239,68,68,0.55)" strokeWidth={1.4} />
                   ) : null}
@@ -207,12 +200,20 @@ function CircleSim() {
             <p className={`mt-0.5 font-mono text-3xl font-bold transition-colors ${pTone}`}>
               {p.toFixed(4)}
             </p>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${pBarTone}`}
-                style={{ width: `${Math.min(p * 100, 100)}%` }}
+            <svg
+              viewBox="0 0 100 8"
+              preserveAspectRatio="none"
+              className="mt-1.5 block h-2 w-full overflow-hidden rounded-full bg-white/10"
+              aria-hidden="true"
+            >
+              <rect
+                x={0} y={0}
+                width={Math.min(p * 100, 100)}
+                height={8}
+                fill={pBarColor}
+                className="transition-all duration-300"
               />
-            </div>
+            </svg>
             <div className="mt-1 flex justify-between text-[9px] text-slate-500">
               <span>0</span><span>0.5</span><span>1</span>
             </div>
@@ -496,7 +497,7 @@ function ProbabilityGraph() {
           </>
         ) : (
           <>
-            n = <span className="font-bold text-amber-300">23</span>명일 때 처음으로 P(A) {">"} 0.5 — 이것이 바로 <b>"생일 역설"</b>!
+            n = <span className="font-bold text-amber-300">23</span>명일 때 처음으로 P(A) {">"} 0.5 — 이것이 바로 <b>생일 역설</b>!
           </>
         )}
       </p>
@@ -706,33 +707,519 @@ function ExamplePanel() {
 }
 
 // ============================================================
-// 탭 3 — 우리 반 탐구 (단계 B에서 활성화)
+// 탭 3 — 우리 반 탐구 (Supabase 연동)
 // ============================================================
 
-function OurClassPlaceholder() {
+type Phase = "loading" | "anon" | "student" | "teacher" | "admin" | "general" | "error";
+type StudentSelf = {
+  studentId: string;
+  schoolYear: number;
+  grade: number;
+  classNumber: number;
+  studentNumber: number;
+  studentLoginId: string;
+  name: string;
+};
+type ClassKey = { schoolYear: number; grade: number; classNumber: number };
+type BdStat = { birthday_month: number; birthday_day: number; cnt: number };
+
+function OurClassPanel() {
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  // 학생 모드 상태
+  const [self, setSelf] = useState<StudentSelf | null>(null);
+  const [myBd, setMyBd] = useState<{ month: number; day: number } | null>(null);
+  const [inputMonth, setInputMonth] = useState(1);
+  const [inputDay, setInputDay] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMsg, setSubmitMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  // 교사/관리자 모드 상태
+  const [classOptions, setClassOptions] = useState<ClassKey[]>([]);
+  const [selectedClass, setSelectedClass] = useState<ClassKey | null>(null);
+
+  // 통계 (공통)
+  const [stats, setStats] = useState<BdStat[] | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const loadStats = useCallback(async (year: number, grade: number, classNum: number) => {
+    setStatsLoading(true);
+    const { data, error } = await supabase.rpc("get_class_birthday_stats", {
+      p_year: year, p_grade: grade, p_class: classNum,
+    });
+    setStatsLoading(false);
+    if (error) {
+      setStats([]);
+      return;
+    }
+    setStats(((data ?? []) as BdStat[]));
+  }, []);
+
+  // 초기 식별
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+      if (cancelled) return;
+      if (!user) { setPhase("anon"); return; }
+
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("role, name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!profileRow) { setErrMsg("프로필을 찾을 수 없습니다."); setPhase("error"); return; }
+      const role = (profileRow as { role: string }).role;
+      const profileName = (profileRow as { name: string }).name;
+
+      if (role === "student") {
+        const { data: sRow } = await supabase
+          .from("students")
+          .select("id, school_year, grade, class_number, student_number, student_login_id")
+          .eq("profile_id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (!sRow) { setErrMsg("학생 정보를 찾을 수 없습니다."); setPhase("error"); return; }
+        const s = sRow as {
+          id: string; school_year: number; grade: number;
+          class_number: number; student_number: number; student_login_id: string;
+        };
+        const ident: StudentSelf = {
+          studentId: s.id, schoolYear: s.school_year,
+          grade: s.grade, classNumber: s.class_number,
+          studentNumber: s.student_number, studentLoginId: s.student_login_id,
+          name: profileName,
+        };
+        setSelf(ident);
+
+        // 본인 기존 생일 (RLS 본인 행만 SELECT 통과)
+        const { data: bdRow } = await supabase
+          .from("class_birthdays")
+          .select("birthday_month, birthday_day")
+          .eq("student_id", s.id)
+          .maybeSingle();
+        if (!cancelled && bdRow) {
+          const b = bdRow as { birthday_month: number; birthday_day: number };
+          setMyBd({ month: b.birthday_month, day: b.birthday_day });
+          setInputMonth(b.birthday_month);
+          setInputDay(b.birthday_day);
+        }
+        setPhase("student");
+        await loadStats(ident.schoolYear, ident.grade, ident.classNumber);
+        return;
+      }
+
+      if (role === "teacher" || role === "admin") {
+        const year = await getCurrentSchoolYear();
+        let opts: ClassKey[] = [];
+        if (role === "teacher") {
+          const { data: tps } = await supabase
+            .from("teacher_permissions")
+            .select("grade, class_number, teachers!inner(profile_id)")
+            .eq("teachers.profile_id", user.id);
+          const seen = new Map<string, ClassKey>();
+          ((tps as { grade: number; class_number: number }[] | null) ?? []).forEach((tp) => {
+            const k = `${tp.grade}-${tp.class_number}`;
+            if (!seen.has(k)) seen.set(k, { schoolYear: year, grade: tp.grade, classNumber: tp.class_number });
+          });
+          opts = Array.from(seen.values()).sort((a, b) => a.grade - b.grade || a.classNumber - b.classNumber);
+        } else {
+          const { data: scs } = await supabase
+            .from("school_classes")
+            .select("grade, class_number")
+            .order("grade", { ascending: true })
+            .order("class_number", { ascending: true });
+          opts = ((scs as { grade: number; class_number: number }[] | null) ?? []).map((s) => ({
+            schoolYear: year, grade: s.grade, classNumber: s.class_number,
+          }));
+        }
+        if (cancelled) return;
+        setClassOptions(opts);
+        setPhase(role);
+        if (opts.length > 0) {
+          setSelectedClass(opts[0]);
+          await loadStats(opts[0].schoolYear, opts[0].grade, opts[0].classNumber);
+        }
+        return;
+      }
+
+      setPhase("general");
+    })();
+    return () => { cancelled = true; };
+  }, [loadStats]);
+
+  // 월 변경 시 일이 새 월의 최대 일수를 넘으면 클램프 (이벤트 핸들러에서 처리)
+  function handleMonthChange(m: number) {
+    setInputMonth(m);
+    const max = DAYS_IN_MONTH[m - 1];
+    setInputDay((d) => (d > max ? max : d));
+  }
+
+  async function submitBirthday() {
+    if (!self) return;
+    setSubmitting(true);
+    setSubmitMsg(null);
+    const maxDay = DAYS_IN_MONTH[inputMonth - 1];
+    if (inputDay > maxDay) {
+      setSubmitMsg({ kind: "err", text: `${inputMonth}월은 ${maxDay}일까지입니다.` });
+      setSubmitting(false);
+      return;
+    }
+    const { error } = await supabase.rpc("submit_class_birthday", {
+      p_month: inputMonth, p_day: inputDay,
+    });
+    if (error) {
+      setSubmitMsg({ kind: "err", text: `등록 실패: ${error.message}` });
+      setSubmitting(false);
+      return;
+    }
+    setMyBd({ month: inputMonth, day: inputDay });
+    setSubmitMsg({ kind: "ok", text: `✅ 생일 ${pad2(inputMonth)}.${pad2(inputDay)}이(가) 등록되었습니다!` });
+    setSubmitting(false);
+    await loadStats(self.schoolYear, self.grade, self.classNumber);
+  }
+
+  // ── 렌더 ──
+  if (phase === "loading") {
+    return <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6 text-center text-sm text-slate-400">불러오는 중…</div>;
+  }
+  if (phase === "error") {
+    return <NoticeCard tone="red" title="오류" body={errMsg ?? "알 수 없는 오류"} />;
+  }
+  if (phase === "anon") {
+    return <NoticeCard tone="amber" title="로그인이 필요합니다" body="학생 계정으로 로그인하면 본인 생일을 등록하고 우리 반 통계를 볼 수 있어요." />;
+  }
+  if (phase === "general") {
+    return <NoticeCard tone="amber" title="학생 계정 전용" body="이 탐구는 학급 단위 데이터 수집이라 학생 계정으로 참여할 수 있어요. 통계 조회는 교사/관리자도 가능합니다." />;
+  }
+
+  if (phase === "student" && self) {
+    return (
+      <div className="space-y-4">
+        <StudentHeader self={self} />
+        <BirthdayInputCard
+          month={inputMonth} day={inputDay}
+          myBd={myBd}
+          onMonthChange={handleMonthChange} onDayChange={setInputDay}
+          onSubmit={submitBirthday}
+          submitting={submitting}
+          submitMsg={submitMsg}
+        />
+        <StatsPanel
+          klass={{ schoolYear: self.schoolYear, grade: self.grade, classNumber: self.classNumber }}
+          stats={stats} loading={statsLoading}
+        />
+      </div>
+    );
+  }
+
+  if (phase === "teacher" || phase === "admin") {
+    return (
+      <div className="space-y-4">
+        <NoticeCard
+          tone="cyan"
+          title={phase === "admin" ? "관리자 모드 (read-only)" : "교사 모드 (read-only)"}
+          body="학급을 선택해 학생들의 생일 분포·통계를 볼 수 있어요. 입력은 학생 계정에서만 가능합니다."
+        />
+        <ClassPicker
+          options={classOptions}
+          selected={selectedClass}
+          onSelect={(k) => { setSelectedClass(k); void loadStats(k.schoolYear, k.grade, k.classNumber); }}
+        />
+        {selectedClass ? (
+          <StatsPanel klass={selectedClass} stats={stats} loading={statsLoading} />
+        ) : (
+          <NoticeCard tone="amber" title="학급 정보 없음" body={
+            phase === "teacher"
+              ? "담당 학급이 등록되어 있지 않습니다. 관리자에게 권한 부여를 요청하세요."
+              : "학급(학년·반) 마스터가 비어 있습니다. /admin/settings 에서 등록하세요."
+          } />
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ─── 보조 컴포넌트들 ───
+
+function pad2(n: number): string {
+  return n.toString().padStart(2, "0");
+}
+
+function NoticeCard({ tone, title, body }: { tone: "cyan" | "amber" | "red"; title: string; body: string }) {
+  const border =
+    tone === "cyan" ? "border-cyan-400/35 bg-cyan-400/[0.06]" :
+    tone === "red" ? "border-red-400/35 bg-red-400/[0.06]" :
+    "border-amber-400/35 bg-amber-400/[0.06]";
+  const tt =
+    tone === "cyan" ? "text-cyan-300" :
+    tone === "red" ? "text-red-300" :
+    "text-amber-300";
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border-2 border-dashed border-emerald-400/35 bg-emerald-400/[0.04] p-6 text-center">
-        <div className="text-4xl">🏫</div>
-        <h4 className="mt-2 text-lg font-bold text-emerald-300">우리 반 생일 탐구</h4>
-        <p className="mt-2 text-sm leading-6 text-slate-300">
-          학생들이 자기 생일을 입력하면 <b>같은 학년·반 전체 통계</b>와<br />
-          <b>같은 생일 발견 알림</b>, 이론적 확률 P(A)와의 비교를 볼 수 있어요.
+    <div className={`rounded-xl border p-4 ${border}`}>
+      <div className={`text-sm font-bold ${tt}`}>{title}</div>
+      <div className="mt-1 text-sm leading-6 text-slate-200">{body}</div>
+    </div>
+  );
+}
+
+function StudentHeader({ self }: { self: StudentSelf }) {
+  return (
+    <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/[0.06] p-4">
+      <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">내 정보</div>
+      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <span className="text-slate-100"><b>{self.name}</b></span>
+        <span className="text-slate-400">학번 <span className="font-mono text-slate-200">{self.studentLoginId}</span></span>
+        <span className="text-slate-400">
+          {self.schoolYear}학년도 · {self.grade}학년 {self.classNumber}반 {self.studentNumber}번
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// 다크 테마 드롭다운 — 펼친 option 목록도 slate-950 어두운 배경(브라우저 기본 흰색 회피).
+// admin/subjects·teachers 와 톤 통일, 행 높이만 컴팩트(py-1).
+const BD_SELECT_CLS =
+  "rounded-lg border border-white/10 bg-slate-950 px-2.5 py-1 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40";
+
+function BirthdayInputCard({
+  month, day, myBd, onMonthChange, onDayChange, onSubmit, submitting, submitMsg,
+}: {
+  month: number; day: number;
+  myBd: { month: number; day: number } | null;
+  onMonthChange: (m: number) => void;
+  onDayChange: (d: number) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  submitMsg: { kind: "ok" | "err"; text: string } | null;
+}) {
+  const maxDay = DAYS_IN_MONTH[month - 1];
+  const dayOptions = useMemo(() => Array.from({ length: maxDay }, (_, i) => i + 1), [maxDay]);
+  const isUpdate = myBd != null;
+  return (
+    <div className="rounded-xl border border-amber-400/30 bg-amber-400/[0.05] p-4">
+      <div className="text-xs font-bold uppercase tracking-wider text-amber-300">🎂 내 생일 입력</div>
+      {myBd ? (
+        <p className="mt-1 text-xs text-slate-400">
+          현재 등록된 생일: <span className="font-mono font-bold text-amber-200">{pad2(myBd.month)}.{pad2(myBd.day)}</span>
+          {" · "}수정하려면 아래에서 다시 선택하세요.
         </p>
-        <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-semibold text-amber-200">
-          ⏳ 곧 활성화될 예정입니다
-        </div>
+      ) : (
+        <p className="mt-1 text-xs text-slate-400">월·일을 선택하고 등록 버튼을 누르세요.</p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <label htmlFor="bp-month" className="text-xs text-slate-400">월</label>
+        <select
+          id="bp-month"
+          value={month}
+          onChange={(e) => onMonthChange(Number(e.target.value))}
+          className={BD_SELECT_CLS}
+        >
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+            <option key={m} value={m} className="bg-slate-950 text-white">{m}월</option>
+          ))}
+        </select>
+        <label htmlFor="bp-day" className="text-xs text-slate-400">일</label>
+        <select
+          id="bp-day"
+          value={day}
+          onChange={(e) => onDayChange(Number(e.target.value))}
+          className={BD_SELECT_CLS}
+        >
+          {dayOptions.map((d) => (
+            <option key={d} value={d} className="bg-slate-950 text-white">{d}일</option>
+          ))}
+        </select>
+        <span className="ml-1 font-mono text-sm text-amber-200">선택: {pad2(month)}.{pad2(day)}</span>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={submitting}
+          className="ml-auto rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-1.5 text-sm font-bold text-slate-950 transition hover:brightness-110 disabled:opacity-40"
+        >
+          {submitting ? "처리 중…" : isUpdate ? "✏️ 수정" : "🎂 등록"}
+        </button>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <h5 className="text-xs font-bold uppercase tracking-wider text-slate-400">활성화되면 가능한 것</h5>
-        <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-300">
-          <li>• 🎂 본인 생일 입력 (월/일 선택, 수정 가능)</li>
-          <li>• 👥 같은 학년·반 참여 인원, 같은 생일 쌍 수, 이론적 확률 P(A) 비교</li>
-          <li>• 🔍 같은 생일 발견 시 친구 이름 노출 (이론 vs 실제 검증)</li>
-          <li>• 📋 우리 반 전체 생일 목록 보기</li>
-        </ul>
+      {submitMsg ? (
+        <div
+          className={`mt-3 rounded-lg px-3 py-2 text-xs ${
+            submitMsg.kind === "ok"
+              ? "border border-emerald-400/35 bg-emerald-400/10 text-emerald-200"
+              : "border border-red-400/35 bg-red-400/10 text-red-200"
+          }`}
+        >
+          {submitMsg.text}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ClassPicker({
+  options, selected, onSelect,
+}: {
+  options: ClassKey[];
+  selected: ClassKey | null;
+  onSelect: (k: ClassKey) => void;
+}) {
+  if (options.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">학급 선택</div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {options.map((k) => {
+          const sel = selected
+            && selected.schoolYear === k.schoolYear
+            && selected.grade === k.grade
+            && selected.classNumber === k.classNumber;
+          return (
+            <button
+              key={`${k.schoolYear}-${k.grade}-${k.classNumber}`}
+              type="button"
+              onClick={() => onSelect(k)}
+              className={`rounded-md border px-3 py-1 text-xs font-semibold transition ${
+                sel
+                  ? "border-cyan-400 bg-cyan-400 text-slate-950"
+                  : "border-white/15 bg-white/[0.04] text-slate-300 hover:border-cyan-400/50 hover:bg-cyan-400/10"
+              }`}
+            >
+              {k.schoolYear} · {k.grade}학년 {k.classNumber}반
+            </button>
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+function StatsPanel({
+  klass, stats, loading,
+}: {
+  klass: ClassKey;
+  stats: BdStat[] | null;
+  loading: boolean;
+}) {
+  const n = useMemo(() => (stats ?? []).reduce((acc, s) => acc + s.cnt, 0), [stats]);
+  const pairCount = useMemo(
+    () => (stats ?? []).reduce((acc, s) => acc + (s.cnt >= 2 ? (s.cnt * (s.cnt - 1)) / 2 : 0), 0),
+    [stats]
+  );
+  const theoryP = useMemo(() => calcP(n), [n]);
+  const matches = useMemo(() => (stats ?? []).filter((s) => s.cnt >= 2), [stats]);
+
+  const pTone = theoryP >= 0.5 ? "text-red-300" : theoryP >= 0.25 ? "text-amber-300" : "text-emerald-300";
+  const actualRate = n >= 2 ? pairCount / ((n * (n - 1)) / 2) : 0;
+
+  return (
+    <div className="rounded-xl border border-violet-400/25 bg-white/[0.04] p-4">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-bold uppercase tracking-wider text-violet-300">
+          📊 우리 반 통계 ({klass.schoolYear} · {klass.grade}학년 {klass.classNumber}반)
+        </div>
+        {loading ? <span className="text-[11px] text-slate-500">불러오는 중…</span> : null}
+      </div>
+
+      {(!stats || stats.length === 0) && !loading ? (
+        <p className="mt-3 rounded-md bg-black/20 px-3 py-2 text-sm text-slate-400">
+          아직 등록된 생일이 없어요. 첫 번째로 등록해 보세요! 🎉
+        </p>
+      ) : (
+        <>
+          {/* KPI 카드 3개 */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <StatCard label="참여 인원" value={`${n}명`} tone="cyan" />
+            <StatCard label="같은 생일 쌍" value={`${pairCount}쌍`} tone="violet" />
+            <StatCard label="이론적 P(A)" value={theoryP.toFixed(3)} tone={theoryP >= 0.5 ? "red" : theoryP >= 0.25 ? "amber" : "emerald"} mono />
+          </div>
+
+          {/* 매치된 일자 */}
+          <div className="mt-3 rounded-lg border border-red-400/25 bg-red-400/[0.06] p-3">
+            <div className="text-xs font-bold text-red-300">🎉 같은 생일 발견 일자</div>
+            {matches.length === 0 ? (
+              <p className="mt-1 text-xs text-slate-400">
+                아직 같은 생일 쌍이 없습니다.
+                {theoryP >= 0.5 ? (
+                  <> 이론적으로는 같은 쌍이 있을 확률이 <b className="text-red-300">{(theoryP * 100).toFixed(1)}%</b>인데, 더 많이 모이면 달라질 수 있어요.</>
+                ) : null}
+              </p>
+            ) : (
+              <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                {matches.map((m) => (
+                  <li
+                    key={`${m.birthday_month}-${m.birthday_day}`}
+                    className="rounded-md border border-red-400/40 bg-red-400/15 px-2 py-0.5 font-mono text-xs font-bold text-red-100"
+                  >
+                    {pad2(m.birthday_month)}.{pad2(m.birthday_day)} — {m.cnt}명
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* 이론 vs 실제 비교 */}
+          <div className="mt-2 rounded-md bg-black/20 px-3 py-2 text-xs leading-6 text-slate-300">
+            <b className="text-slate-100">이론 vs 실제</b>: n = <b className="text-cyan-300">{n}</b>명일 때 이론적 같은 생일 쌍 존재 확률 P(A) ≈ <b className={pTone}>{(theoryP * 100).toFixed(1)}%</b>.
+            현재 실측 매치율(모든 쌍 중) = <b className="text-amber-200">{(actualRate * 100).toFixed(2)}%</b>.
+          </div>
+
+          {/* 전체 분포 (월별) */}
+          <details className="mt-2 rounded-md border border-white/10 bg-black/15 p-2 text-xs text-slate-300">
+            <summary className="cursor-pointer select-none px-1 py-0.5 font-bold text-slate-200">📋 전체 생일 분포 (월별)</summary>
+            <div className="mt-2 space-y-1">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
+                const items = (stats ?? []).filter((s) => s.birthday_month === m);
+                if (items.length === 0) return null;
+                return (
+                  <div key={m} className="flex flex-wrap items-center gap-1.5">
+                    <span className="w-9 text-slate-400">{m}월</span>
+                    {items.map((s) => (
+                      <span
+                        key={s.birthday_day}
+                        className={`rounded px-1.5 py-px font-mono text-[11px] ${
+                          s.cnt >= 2
+                            ? "border border-red-400/40 bg-red-400/15 font-bold text-red-100"
+                            : "bg-white/8 text-slate-300"
+                        }`}
+                      >
+                        {pad2(s.birthday_day)}{s.cnt >= 2 ? `×${s.cnt}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatCard({
+  label, value, tone, mono,
+}: {
+  label: string; value: string;
+  tone: "cyan" | "violet" | "emerald" | "amber" | "red";
+  mono?: boolean;
+}) {
+  const valTone =
+    tone === "cyan" ? "text-cyan-300" :
+    tone === "violet" ? "text-violet-300" :
+    tone === "amber" ? "text-amber-300" :
+    tone === "red" ? "text-red-300" :
+    "text-emerald-300";
+  return (
+    <div className="rounded-lg border border-white/12 bg-white/[0.06] p-2 text-center">
+      <div className={`${mono ? "font-mono" : ""} text-xl font-bold tabular-nums ${valTone}`}>{value}</div>
+      <div className="text-[10px] text-slate-400">{label}</div>
     </div>
   );
 }
@@ -753,6 +1240,12 @@ const REFLECTION_QUESTIONS: ReflectionQuestion[] = [
     kind: "text",
     prompt: "23명이면 P(A) > 50%라는 결과가 처음 예상과 어떻게 달랐나요?",
     placeholder: "처음에 예상한 인원 수, 실제 결과와의 차이, 그렇게 차이 난 이유...",
+  },
+  {
+    id: "our_class_result",
+    kind: "text",
+    prompt: "탐구 3에서 우리 반 생일 결과를 이론적 확률과 비교해 보고, 어떤 차이가 있는지 적어 보세요.",
+    placeholder: "같은 생일 쌍이 있었는지, 이론적 확률은 몇 %였는지, 결과가 이론과 일치했는지...",
   },
   {
     id: "assumption_limit",
@@ -810,7 +1303,7 @@ export default function BirthdayParadoxMini() {
         ) : tab === "example" ? (
           <ExamplePanel />
         ) : (
-          <OurClassPlaceholder />
+          <OurClassPanel />
         )}
       </div>
 
