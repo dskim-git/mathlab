@@ -58,6 +58,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/random_response_survey": "솔직한 설문의 비밀",
   "probability_new/mini/monte_carlo_sim": "몬테카를로 시뮬레이션",
   "probability_new/mini/rv_classify_game": "확률변수 분류 게임",
+  "probability_new/mini/distribution_zoo": "세상의 확률분포 한눈에 보기",
 };
 
 function displayBlockTitle(block: ContentBlock): string {

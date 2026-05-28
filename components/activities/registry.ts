@@ -52,6 +52,7 @@ import MonteCarloSim from "./probability/2-2-conditional-prob/monte-carlo-sim/Mo
 
 // 3-1-1 확률변수와 확률분포
 import RvClassifyGame from "./probability/3-1-prob-distribution/rv-classify-game/RvClassifyGame";
+import DistributionZoo from "./probability/3-1-prob-distribution/distribution-zoo/DistributionZoo";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -100,4 +101,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/random_response_survey": RandomResponseSurvey,
   "probability_new/mini/monte_carlo_sim": MonteCarloSim,
   "probability_new/mini/rv_classify_game": RvClassifyGame,
+  "probability_new/mini/distribution_zoo": DistributionZoo,
 };
