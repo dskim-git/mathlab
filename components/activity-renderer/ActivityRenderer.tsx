@@ -57,6 +57,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/independent_trial_apply": "독립시행 실생활 탐구",
   "probability_new/mini/random_response_survey": "솔직한 설문의 비밀",
   "probability_new/mini/monte_carlo_sim": "몬테카를로 시뮬레이션",
+  "probability_new/mini/rv_classify_game": "확률변수 분류 게임",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
