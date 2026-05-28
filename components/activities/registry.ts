@@ -40,6 +40,7 @@ import SimpsonsParadoxMini from "./probability/2-1-prob-concept/simpsons-paradox
 import OddPrimeConditional from "./probability/2-2-conditional-prob/odd-prime-conditional/OddPrimeConditional";
 import ConditionalProbExplorer from "./probability/2-2-conditional-prob/conditional-prob-explorer/ConditionalProbExplorer";
 import BayesTheoremMini from "./probability/2-2-conditional-prob/bayes-theorem-mini/BayesTheoremMini";
+import MontyHallMini from "./probability/2-2-conditional-prob/monty-hall-mini/MontyHallMini";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -79,4 +80,6 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability/mini/odd_prime_conditional": OddPrimeConditional,
   "probability_new/mini/conditional_prob_explorer": ConditionalProbExplorer,
   "probability_new/mini/bayes_theorem_mini": BayesTheoremMini,
+  // ⚠️ monty_hall_mini 는 커리큘럼에서 구 교과 슬러그(probability/mini/...)로 임포트됨
+  "probability/mini/monty_hall_mini": MontyHallMini,
 };
