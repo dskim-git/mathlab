@@ -52,6 +52,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/bayes_theorem_mini": "베이즈 정리 탐구",
   "probability/mini/monty_hall_mini": "몬티홀 시뮬레이터",
   "probability_new/mini/nontransitive_dice": "비추이적 주사위",
+  "probability_new/mini/independence_vs_exclusive": "독립과 배반 탐구",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
