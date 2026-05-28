@@ -40,6 +40,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/pascal_fractal": "파스칼 삼각형 속 프랙털",
   "probability_new/mini/statistical_prob_sim": "통계적 확률 탐험대",
   "probability_new/mini/stat_prob_experiment": "통계적 확률 실험실",
+  "probability/mini/dice_lab": "주사위 실험",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
