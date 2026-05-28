@@ -38,6 +38,8 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/morra_game": "손가락 게임 ‘모라’",
   "probability_new/mini/polygon_count_circles": "원 위의 점으로 만든 도형",
   "probability_new/mini/pascal_fractal": "파스칼 삼각형 속 프랙털",
+  "probability_new/mini/statistical_prob_sim": "통계적 확률 탐험대",
+  "probability_new/mini/stat_prob_experiment": "통계적 확률 실험실",
 };
 
 function displayBlockTitle(block: ContentBlock): string {

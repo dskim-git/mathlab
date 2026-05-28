@@ -24,6 +24,7 @@ import MorraGame from "./probability/1-2-binomial-theorem/morra-game/MorraGame";
 // 2-1 확률의 개념과 활용
 import TrialEventVocabGame from "./probability/2-1-prob-concept/trial-event-vocab-game/TrialEventVocabGame";
 import WeirdDiceSim from "./probability/2-1-prob-concept/weird-dice-sim/WeirdDiceSim";
+import StatisticalProbSim from "./probability/2-1-prob-concept/statistical-prob-sim/StatisticalProbSim";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -49,4 +50,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/morra_game": MorraGame,
   "probability_new/mini/trial_event_vocab_game": TrialEventVocabGame,
   "probability_new/mini/weird_dice_sim": WeirdDiceSim,
+  "probability_new/mini/statistical_prob_sim": StatisticalProbSim,
 };
