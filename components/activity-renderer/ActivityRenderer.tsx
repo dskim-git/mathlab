@@ -49,6 +49,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/simpsons_paradox_mini": "심슨의 역설",
   "probability/mini/odd_prime_conditional": "홀수일 때 소수일 확률",
   "probability_new/mini/conditional_prob_explorer": "조건부확률 탐험기",
+  "probability_new/mini/bayes_theorem_mini": "베이즈 정리 탐구",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
