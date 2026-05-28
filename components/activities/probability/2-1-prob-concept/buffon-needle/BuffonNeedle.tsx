@@ -222,7 +222,12 @@ function SimTab() {
         <Stat val={stats.crossings.toLocaleString()} lbl="교차 횟수" tone="text-red-300" />
         <Stat val={Number.isNaN(stats.rate) ? "—" : stats.rate.toFixed(5)} lbl="교차율" tone="text-violet-300" />
         <Stat val={stats.theo.toFixed(5)} lbl="이론 교차율" tone="text-violet-300" />
-        <Stat val={Number.isNaN(stats.pi) ? "던져보세요!" : stats.pi.toFixed(6)} lbl={`π 추정값${Number.isNaN(stats.pi) ? "" : ` (오차 ${(Math.abs(stats.pi - Math.PI) / Math.PI * 100).toFixed(2)}%)`}`} tone={piColor} />
+        <Stat
+          val={Number.isNaN(stats.pi) ? "던져보세요!" : stats.pi.toFixed(6)}
+          lbl="π 추정값"
+          sub={Number.isNaN(stats.pi) ? "" : `오차 ${(Math.abs(stats.pi - Math.PI) / Math.PI * 100).toFixed(2)}%`}
+          tone={piColor}
+        />
         <Stat val="3.141592…" lbl="실제 π" tone="text-amber-300" />
       </div>
 
@@ -258,11 +263,15 @@ function SimTab() {
   );
 }
 
-function Stat({ val, lbl, tone }: { val: number | string; lbl: string; tone: string }) {
+function Stat({ val, lbl, sub, tone }: { val: number | string; lbl: string; sub?: string; tone: string }) {
   return (
     <div className="rounded-xl border border-white/9 bg-white/[0.04] p-2.5 text-center">
-      <div className={`text-lg font-black tabular-nums ${tone}`}>{val}</div>
-      <div className="mt-0.5 text-[11px] leading-tight text-slate-500">{lbl}</div>
+      <div className={`truncate text-lg font-black tabular-nums ${tone}`}>{val}</div>
+      <div className="mt-0.5 whitespace-nowrap text-[11px] leading-tight text-slate-500">{lbl}</div>
+      {/* 오차처럼 자릿수가 바뀌는 보조 수치는 고정 높이의 별도 줄에 둬서 칸 높이가 흔들리지 않게 한다. */}
+      {sub !== undefined ? (
+        <div className="h-[14px] whitespace-nowrap text-[11px] leading-tight tabular-nums text-slate-500">{sub}</div>
+      ) : null}
     </div>
   );
 }
