@@ -38,6 +38,7 @@ import SimpsonsParadoxMini from "./probability/2-1-prob-concept/simpsons-paradox
 
 // 2-2-1 조건부확률
 import OddPrimeConditional from "./probability/2-2-conditional-prob/odd-prime-conditional/OddPrimeConditional";
+import ConditionalProbExplorer from "./probability/2-2-conditional-prob/conditional-prob-explorer/ConditionalProbExplorer";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -75,4 +76,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/simpsons_paradox_mini": SimpsonsParadoxMini,
   // ⚠️ odd_prime_conditional 은 커리큘럼에서 구 교과 슬러그(probability/mini/...)로 임포트됨
   "probability/mini/odd_prime_conditional": OddPrimeConditional,
+  "probability_new/mini/conditional_prob_explorer": ConditionalProbExplorer,
 };
