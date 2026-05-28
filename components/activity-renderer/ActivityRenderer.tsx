@@ -47,6 +47,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/prob_addition_theorem": "확률의 덧셈정리",
   "probability_new/mini/birthday_paradox_mini": "생일 역설",
   "probability_new/mini/simpsons_paradox_mini": "심슨의 역설",
+  "probability/mini/odd_prime_conditional": "홀수일 때 소수일 확률",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
