@@ -53,6 +53,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability/mini/monty_hall_mini": "몬티홀 시뮬레이터",
   "probability_new/mini/nontransitive_dice": "비추이적 주사위",
   "probability_new/mini/independence_vs_exclusive": "독립과 배반 탐구",
+  "probability_new/mini/de_mere_letter": "드 메레의 편지",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
