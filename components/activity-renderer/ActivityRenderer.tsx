@@ -55,6 +55,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/independence_vs_exclusive": "독립과 배반 탐구",
   "probability_new/mini/de_mere_letter": "드 메레의 편지",
   "probability_new/mini/independent_trial_apply": "독립시행 실생활 탐구",
+  "probability_new/mini/random_response_survey": "솔직한 설문의 비밀",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
