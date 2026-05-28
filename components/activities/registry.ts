@@ -48,6 +48,7 @@ import IndependenceVsExclusive from "./probability/2-2-conditional-prob/independ
 import DeMereLetter from "./probability/2-2-conditional-prob/de-mere-letter/DeMereLetter";
 import IndependentTrialApply from "./probability/2-2-conditional-prob/independent-trial-apply/IndependentTrialApply";
 import RandomResponseSurvey from "./probability/2-2-conditional-prob/random-response-survey/RandomResponseSurvey";
+import MonteCarloSim from "./probability/2-2-conditional-prob/monte-carlo-sim/MonteCarloSim";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -94,4 +95,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/de_mere_letter": DeMereLetter,
   "probability_new/mini/independent_trial_apply": IndependentTrialApply,
   "probability_new/mini/random_response_survey": RandomResponseSurvey,
+  "probability_new/mini/monte_carlo_sim": MonteCarloSim,
 };
