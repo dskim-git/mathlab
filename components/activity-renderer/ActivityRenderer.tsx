@@ -65,6 +65,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/binomial_mean_var_explorer": "이항분포 평균·분산 탐험",
   "probability_new/mini/binomial_graph_sim": "이항분포 그래프 시뮬레이터",
   "probability_new/mini/lln_binomial_simple": "큰 수의 법칙 탐구",
+  "probability_new/mini/hardy_weinberg_mini": "하디-바인베르크 법칙",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
