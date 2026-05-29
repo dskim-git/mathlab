@@ -110,7 +110,7 @@ export default function SampleMeanDistLab() {
           🎲 표본평균의 평균·분산·표준편차 시뮬레이터
         </h3>
         <p className="mt-2 leading-7 text-slate-300">
-          표본의 크기 <b>n</b>을 늘리며 표본평균 <Xb /> 의{" "}
+          표본의 크기 <b>n</b>을 늘리며 표본평균 X̄ 의{" "}
           <b className="text-rose-300">평균</b>·<b className="text-violet-300">분산</b>·
           <b className="text-cyan-300">표준편차</b>가{" "}
           <b className="text-amber-300">m, σ²/n, σ/√n</b> 으로 수렴하는 모습을 직접 관찰합니다.
@@ -166,15 +166,6 @@ export default function SampleMeanDistLab() {
         <ReflectionForm questions={REFLECTION_QUESTIONS} />
       </div>
     </section>
-  );
-}
-
-// ─── X̄ 표기 ─────────────────────────────────────────────
-function Xb() {
-  return (
-    <span className="inline-block px-px leading-none [text-decoration:overline] decoration-[1.5px]">
-      X
-    </span>
   );
 }
 
@@ -486,7 +477,7 @@ function PopulationLab({
           <div className="mb-1.5 flex items-center justify-between text-sm font-extrabold text-emerald-300">
             <span>📦 이번에 뽑힌 {popIcon === "🃏" ? "카드" : "공"}</span>
             <span className="text-amber-100">
-              <Xb /> ={" "}
+              X̄ ={" "}
               {lastSample ? fmtNum(lastSample.xbar, 2) : "--"}
             </span>
           </div>
@@ -505,7 +496,7 @@ function PopulationLab({
       {/* ③ 분포 + 통계 */}
       <div className="rounded-2xl border border-cyan-300/15 bg-slate-900/40 p-4">
         <h4 className={`mb-2 text-base font-bold ${theme.accentText}`}>
-          📈 표본평균 <Xb /> 의 분포
+          📈 표본평균 X̄ 의 분포
         </h4>
 
         <div className="rounded-xl border border-cyan-300/20 bg-slate-900/50 p-3">
@@ -554,9 +545,9 @@ function PopulationLab({
         <div className="mt-3 flex items-start gap-2 rounded-xl border-[1.5px] border-amber-400/45 bg-amber-500/10 p-3 text-sm leading-6 text-amber-50">
           <span className="text-xl">💡</span>
           <span>
-            n을 <b className="text-yellow-200">크게</b> 할수록 <Xb /> 의 평균은{" "}
+            n을 <b className="text-yellow-200">크게</b> 할수록 X̄ 의 평균은{" "}
             <b className="text-yellow-200">여전히 m</b>이고, 분산은{" "}
-            <b className="text-yellow-200">σ²/n</b> 으로 작아져요. 즉 <Xb /> 이 m 주위에 더
+            <b className="text-yellow-200">σ²/n</b> 으로 작아져요. 즉 X̄ 이 m 주위에 더
             촘촘히 모입니다!
           </span>
         </div>
@@ -787,7 +778,7 @@ function SummaryTable({
           <SummaryRow
             label={
               <>
-                E(<Xb />)
+                E(X̄)
               </>
             }
             values={[1, 2, 3, 4, 5].map(() => fmtNum(M))}
@@ -796,7 +787,7 @@ function SummaryTable({
           <SummaryRow
             label={
               <>
-                V(<Xb />)
+                V(X̄)
               </>
             }
             values={[1, 2, 3, 4, 5].map((k) => fmtNum(SIGMA2 / k))}
@@ -805,7 +796,7 @@ function SummaryTable({
           <SummaryRow
             label={
               <>
-                σ(<Xb />)
+                σ(X̄)
               </>
             }
             values={[1, 2, 3, 4, 5].map((k) => fmtNum(SIGMA / Math.sqrt(k)))}
@@ -899,7 +890,7 @@ function AllSamplesTable({
               합
             </th>
             <th className="border-b-2 border-violet-400/50 bg-violet-500/25 px-2 py-2 font-extrabold text-violet-100">
-              <Xb />
+              X̄
             </th>
           </tr>
         </thead>
