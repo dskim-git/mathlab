@@ -64,6 +64,9 @@ import SeunggyeongdoSim from "./probability/3-1-prob-distribution/seunggyeongdo-
 import RvMeanVarLab from "./probability/3-1-prob-distribution/rv-mean-var-lab/RvMeanVarLab";
 import RvSpreadsheetLab from "./probability/3-1-prob-distribution/rv-spreadsheet-lab/RvSpreadsheetLab";
 
+// 3-1-3 이항분포
+import BinomialMeanVarExplorer from "./probability/3-1-prob-distribution/binomial-mean-var-explorer/BinomialMeanVarExplorer";
+
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
 // (probability-simulator 는 제출 props 가 많아 ActivityRenderer 에서 별도 처리한다.)
@@ -119,4 +122,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/seunggyeongdo_sim": SeunggyeongdoSim,
   "probability_new/mini/rv_mean_var_lab": RvMeanVarLab,
   "probability_new/mini/rv_spreadsheet_lab": RvSpreadsheetLab,
+  "probability_new/mini/binomial_mean_var_explorer": BinomialMeanVarExplorer,
 };
