@@ -61,6 +61,7 @@ import DistributionZoo from "./probability/3-1-prob-distribution/distribution-zo
 
 // 3-1-2 이산확률변수의 기댓값과 표준편차
 import SeunggyeongdoSim from "./probability/3-1-prob-distribution/seunggyeongdo-sim/SeunggyeongdoSim";
+import RvMeanVarLab from "./probability/3-1-prob-distribution/rv-mean-var-lab/RvMeanVarLab";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -115,4 +116,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/rv_classify_game": RvClassifyGame,
   "probability_new/mini/distribution_zoo": DistributionZoo,
   "probability_new/mini/seunggyeongdo_sim": SeunggyeongdoSim,
+  "probability_new/mini/rv_mean_var_lab": RvMeanVarLab,
 };
