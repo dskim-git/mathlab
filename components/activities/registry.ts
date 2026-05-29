@@ -72,6 +72,7 @@ import HardyWeinbergMini from "./probability/3-1-prob-distribution/hardy-weinber
 
 // 3-1-4 정규분포
 import NormalCompareP5 from "./probability/3-1-prob-distribution/normal-compare-p5/NormalCompareP5";
+import StdNormalTableQuiz from "./probability/3-1-prob-distribution/std-normal-table-quiz/StdNormalTableQuiz";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -133,4 +134,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/lln_binomial_simple": LlnBinomialSimple,
   "probability_new/mini/hardy_weinberg_mini": HardyWeinbergMini,
   "probability_new/mini/normal_compare_p5": NormalCompareP5,
+  "probability_new/mini/std_normal_table_quiz": StdNormalTableQuiz,
 };
