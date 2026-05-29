@@ -83,6 +83,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/ci_proportion_lab": "모비율 신뢰구간 챌린지",
   "probability_new/mini/ci_proportion_news_lab": "뉴스로 배우는 신뢰구간",
   "probability/mini/circular_perm_anchor_p5": "원순열과 한 자리 고정",
+  "probability/mini/polygon_edge_arrangements_p5": "다각형 변 위 배열과 대칭",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 

@@ -96,6 +96,7 @@ import CiProportionNewsLab from "./probability/3-2-statistical-estimation/ci-pro
 
 // 교육과정 외(X) — 원순열·분할
 import CircularPermAnchor from "./probability/X-extracurricular/circular-perm-anchor/CircularPermAnchor";
+import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edge-arrangements/PolygonEdgeArrangements";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -174,4 +175,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/ci_proportion_news_lab": CiProportionNewsLab,
   // 교육과정 외(X) — subject="probability"(구) 슬러그로 임포트됨
   "probability/mini/circular_perm_anchor_p5": CircularPermAnchor,
+  "probability/mini/polygon_edge_arrangements_p5": PolygonEdgeArrangements,
 };
