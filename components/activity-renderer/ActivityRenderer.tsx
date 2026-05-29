@@ -64,6 +64,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/rv_spreadsheet_lab": "스프레드시트로 확률변수 분석",
   "probability_new/mini/binomial_mean_var_explorer": "이항분포 평균·분산 탐험",
   "probability_new/mini/binomial_graph_sim": "이항분포 그래프 시뮬레이터",
+  "probability_new/mini/lln_binomial_simple": "큰 수의 법칙 탐구",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
