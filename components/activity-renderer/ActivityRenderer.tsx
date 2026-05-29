@@ -75,6 +75,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/pop_sample_mean_lab": "모평균과 표본평균",
   "probability_new/mini/sample_variance_n1_lab": "표본분산을 n−1로 나누는 이유",
   "probability_new/mini/sample_mean_dist_lab": "표본평균의 평균·분산·표준편차",
+  "probability_new/mini/sampling_mean_relation_lab": "모평균과 표본평균의 관계",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
