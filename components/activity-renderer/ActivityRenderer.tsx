@@ -68,6 +68,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/hardy_weinberg_mini": "하디-바인베르크 법칙",
   "probability_new/mini/normal_compare_p5": "정규분포곡선 탐색기",
   "probability_new/mini/std_normal_table_quiz": "표준정규분포표 활용 퀴즈",
+  "probability_new/mini/binom_normal_approx": "이항분포의 정규 근사",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
