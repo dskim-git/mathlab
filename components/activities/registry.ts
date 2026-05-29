@@ -75,6 +75,9 @@ import NormalCompareP5 from "./probability/3-1-prob-distribution/normal-compare-
 import StdNormalTableQuiz from "./probability/3-1-prob-distribution/std-normal-table-quiz/StdNormalTableQuiz";
 import BinomNormalApprox from "./probability/3-1-prob-distribution/binom-normal-approx/BinomNormalApprox";
 
+// 3-2-1 모집단과 표본
+import CensusOrSampleQuiz from "./probability/3-2-statistical-estimation/census-or-sample-quiz/CensusOrSampleQuiz";
+
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
 // (probability-simulator 는 제출 props 가 많아 ActivityRenderer 에서 별도 처리한다.)
@@ -137,4 +140,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/normal_compare_p5": NormalCompareP5,
   "probability_new/mini/std_normal_table_quiz": StdNormalTableQuiz,
   "probability_new/mini/binom_normal_approx": BinomNormalApprox,
+  "probability_new/mini/census_or_sample_quiz": CensusOrSampleQuiz,
 };
