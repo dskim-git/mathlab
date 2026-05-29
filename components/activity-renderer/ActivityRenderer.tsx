@@ -80,6 +80,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/ci_meaning_lab": "신뢰도의 의미",
   "probability_new/mini/ci_length_factors_lab": "구간 길이의 3가지 요인",
   "probability_new/mini/sample_proportion_dist_lab": "표본비율의 분포",
+  "probability_new/mini/ci_proportion_lab": "모비율 신뢰구간 챌린지",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
