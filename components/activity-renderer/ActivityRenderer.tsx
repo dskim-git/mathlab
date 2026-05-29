@@ -60,6 +60,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/rv_classify_game": "확률변수 분류 게임",
   "probability_new/mini/distribution_zoo": "세상의 확률분포 한눈에 보기",
   "probability_new/mini/seunggyeongdo_sim": "승경도 윤목 시뮬레이션",
+  "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
 function displayBlockTitle(block: ContentBlock): string {
