@@ -5,6 +5,15 @@ import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
 
+// 인라인 수식 — KaTeX 한 토막
+function InlineFormula({ expr }: { expr: string }) {
+  return (
+    <span className="inline-flex items-center rounded bg-slate-950/60 px-1.5 py-0.5 align-middle text-amber-200">
+      <Katex expr={expr} />
+    </span>
+  );
+}
+
 // ─── 성찰 ─────────────────────────────────────────────────
 const REFLECTION_QUESTIONS: ReflectionQuestion[] = [
   {
@@ -489,26 +498,16 @@ export default function CiProportionLab() {
           <span className="text-xl">📏</span>
           <span>
             산술–기하평균 부등식{" "}
-            <code className="rounded bg-slate-950/60 px-1.5 py-0.5 text-amber-200">
-              a + b ≥ 2√(ab)
-            </code>{" "}
-            을{" "}
-            <code className="rounded bg-slate-950/60 px-1.5 py-0.5 text-amber-200">
-              p̂ + q̂ = 1
-            </code>{" "}
-            에 적용하면
+            <InlineFormula expr={String.raw`a + b \ge 2\sqrt{ab}`} /> 을{" "}
+            <InlineFormula expr={String.raw`\hat{p} + \hat{q} = 1`} /> 에 적용하면
             <br />
-            <code className="rounded bg-slate-950/60 px-1.5 py-0.5 text-amber-200">
-              1 = p̂ + q̂ ≥ 2√(p̂q̂)
-            </code>{" "}
-            →{" "}
-            <code className="rounded bg-slate-950/60 px-1.5 py-0.5 text-amber-200">
-              √(p̂q̂) ≤ 1/2
-            </code>{" "}
-            ∴{" "}
-            <code className="rounded bg-slate-950/60 px-1.5 py-0.5 text-amber-200">
-              √(p̂q̂/n) ≤ 1/(2√n)
-            </code>
+            <InlineFormula
+              expr={String.raw`1 = \hat{p} + \hat{q} \ge 2\sqrt{\hat{p}\hat{q}}`}
+            />{" "}
+            → <InlineFormula expr={String.raw`\sqrt{\hat{p}\hat{q}} \le \tfrac{1}{2}`} /> ∴{" "}
+            <InlineFormula
+              expr={String.raw`\sqrt{\dfrac{\hat{p}\hat{q}}{n}} \le \dfrac{1}{2\sqrt{n}}`}
+            />
             <br />
             따라서 신뢰구간의 길이는{" "}
             <b className="text-yellow-200">2k × 1/(2√n) = k/√n</b> 이하이며, 등호는{" "}
