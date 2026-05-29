@@ -1,5 +1,10 @@
 import type { ComponentType } from "react";
 
+// ─── 공통수학 ──────────────────────────────────────────────
+// [3] 경우의 수 — (1) 경우의 수
+import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
+
+// ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
 import RepPermPassword from "./probability/1-1-permutations-combinations/rep-perm-password/RepPermPassword";
 import RepPermMorse from "./probability/1-1-permutations-combinations/rep-perm-morse/RepPermMorse";
@@ -62,6 +67,10 @@ import SeunggyeongdoSim from "./probability/3-1-prob-distribution/seunggyeongdo-
 // (probability-simulator 는 제출 props 가 많아 ActivityRenderer 에서 별도 처리한다.)
 // 파일은 교과/중단원 폴더로 정리: components/activities/<교과>/<중단원>/<활동>/.
 export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
+  // ── 공통수학 ──
+  "common/mini/perm_comb_growth_race": PermCombGrowthRace,
+
+  // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
   "probability_new/mini/rep_perm_morse": RepPermMorse,
   "probability_new/mini/rep_perm_tiles": RepPermTiles,
