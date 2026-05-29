@@ -61,6 +61,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/distribution_zoo": "세상의 확률분포 한눈에 보기",
   "probability_new/mini/seunggyeongdo_sim": "승경도 윤목 시뮬레이션",
   "probability_new/mini/rv_mean_var_lab": "기댓값·분산·표준편차 탐험",
+  "probability_new/mini/rv_spreadsheet_lab": "스프레드시트로 확률변수 분석",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
