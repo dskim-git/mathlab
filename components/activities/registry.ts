@@ -68,6 +68,7 @@ import RvSpreadsheetLab from "./probability/3-1-prob-distribution/rv-spreadsheet
 import BinomialMeanVarExplorer from "./probability/3-1-prob-distribution/binomial-mean-var-explorer/BinomialMeanVarExplorer";
 import BinomialGraphSim from "./probability/3-1-prob-distribution/binomial-graph-sim/BinomialGraphSim";
 import LlnBinomialSimple from "./probability/3-1-prob-distribution/lln-binomial-simple/LlnBinomialSimple";
+import HardyWeinbergMini from "./probability/3-1-prob-distribution/hardy-weinberg-mini/HardyWeinbergMini";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -127,4 +128,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/binomial_mean_var_explorer": BinomialMeanVarExplorer,
   "probability_new/mini/binomial_graph_sim": BinomialGraphSim,
   "probability_new/mini/lln_binomial_simple": LlnBinomialSimple,
+  "probability_new/mini/hardy_weinberg_mini": HardyWeinbergMini,
 };

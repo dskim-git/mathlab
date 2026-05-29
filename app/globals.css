@@ -110,6 +110,12 @@ html {
   100% { transform: scale(1); }
 }
 
+/* 하디-바인베르크 — '발견' 안내 박스 amber 글로우 */
+@keyframes glowAmber {
+  0%, 100% { box-shadow: 0 0 0 rgba(253, 224, 71, 0); }
+  50% { box-shadow: 0 0 16px rgba(253, 224, 71, 0.35); }
+}
+
 /* 스프레드시트로 확률변수 분석 — 활성 셀 강조(녹색·노랑) + 입력 오류 흔들림 */
 @keyframes pulseG {
   0%, 100% { outline-color: rgba(34, 197, 94, 0.85); }
