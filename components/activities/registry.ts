@@ -85,6 +85,7 @@ import PopSampleMeanLab from "./probability/3-2-statistical-estimation/pop-sampl
 import SampleVarianceN1Lab from "./probability/3-2-statistical-estimation/sample-variance-n1-lab/SampleVarianceN1Lab";
 import SampleMeanDistLab from "./probability/3-2-statistical-estimation/sample-mean-dist-lab/SampleMeanDistLab";
 import SamplingMeanRelationLab from "./probability/3-2-statistical-estimation/sampling-mean-relation-lab/SamplingMeanRelationLab";
+import CiConfidenceTradeoffLab from "./probability/3-2-statistical-estimation/ci-confidence-tradeoff-lab/CiConfidenceTradeoffLab";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -155,4 +156,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/sample_variance_n1_lab": SampleVarianceN1Lab,
   "probability_new/mini/sample_mean_dist_lab": SampleMeanDistLab,
   "probability_new/mini/sampling_mean_relation_lab": SamplingMeanRelationLab,
+  "probability_new/mini/ci_confidence_tradeoff_lab": CiConfidenceTradeoffLab,
 };
