@@ -91,6 +91,7 @@ import CiLengthFactorsLab from "./probability/3-2-statistical-estimation/ci-leng
 
 // 3-2-3 모비율의 추정
 import SampleProportionDistLab from "./probability/3-2-statistical-estimation/sample-proportion-dist-lab/SampleProportionDistLab";
+import CiProportionLab from "./probability/3-2-statistical-estimation/ci-proportion-lab/CiProportionLab";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -165,4 +166,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/ci_meaning_lab": CiMeaningLab,
   "probability_new/mini/ci_length_factors_lab": CiLengthFactorsLab,
   "probability_new/mini/sample_proportion_dist_lab": SampleProportionDistLab,
+  "probability_new/mini/ci_proportion_lab": CiProportionLab,
 };
