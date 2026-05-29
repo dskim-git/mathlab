@@ -70,6 +70,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/std_normal_table_quiz": "표준정규분포표 활용 퀴즈",
   "probability_new/mini/binom_normal_approx": "이항분포의 정규 근사",
   "probability_new/mini/census_or_sample_quiz": "전수조사 vs 표본조사 퀴즈",
+  "probability_new/mini/random_sampling_lab": "임의추출 방법 시뮬레이션",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
