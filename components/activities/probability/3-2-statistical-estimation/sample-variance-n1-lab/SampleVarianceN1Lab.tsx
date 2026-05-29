@@ -63,44 +63,6 @@ function sampleFromPop(n: number): number[] {
   return out;
 }
 
-// X̄ 표기 — 'X' + overline (Tailwind 임의값 underline-offset 트릭 회피, decoration 사용)
-function Xb() {
-  return (
-    <span className="inline-block px-px leading-none [text-decoration:overline] decoration-[1.5px]">
-      X
-    </span>
-  );
-}
-
-// Canvas 위에 X̄ 라벨 그리기 — X 위에 직접 윗줄
-function drawXbarText(
-  ctx: CanvasRenderingContext2D,
-  suffix: string,
-  cx: number,
-  y: number,
-  color: string,
-  fontStr: string
-) {
-  ctx.font = fontStr;
-  const xW = ctx.measureText("X").width;
-  const sufW = ctx.measureText(suffix).width;
-  const totalW = xW + sufW;
-  const left = cx - totalW / 2;
-  ctx.fillStyle = color;
-  ctx.textAlign = "left";
-  ctx.fillText("X", left, y);
-  if (suffix) ctx.fillText(suffix, left + xW, y);
-  const fsMatch = fontStr.match(/\d+/);
-  const fs = fsMatch ? parseInt(fsMatch[0], 10) : 13;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1.2, fs / 10);
-  ctx.beginPath();
-  ctx.moveTo(left + 0.5, y - fs * 0.88);
-  ctx.lineTo(left + xW - 0.5, y - fs * 0.88);
-  ctx.stroke();
-  ctx.textAlign = "center";
-}
-
 // ─── 메인 ─────────────────────────────────────────────────
 type TabKey = "compare" | "race" | "secret";
 
@@ -115,7 +77,7 @@ export default function SampleVarianceN1Lab() {
           ✨ 표본분산을 n−1로 나누는 이유 (베셀 보정)
         </h3>
         <p className="mt-2 leading-7 text-slate-300">
-          표본평균 <Xb /> 기준으로 잰 퍼짐은 모평균 <b className="text-rose-300">m</b> 기준
+          표본평균 X̄ 기준으로 잰 퍼짐은 모평균 <b className="text-rose-300">m</b> 기준
           퍼짐보다 <b className="text-amber-300">항상 작거나 같다</b>는 사실에서 출발해,
           그 모자란 양을 정확히 <b className="text-emerald-300">(n−1)</b>로 보정하는 과정을
           시각적으로 탐구합니다.
@@ -318,7 +280,10 @@ function CompareTab() {
       ctx.textAlign = "center";
       ctx.fillText("c=" + testC.toFixed(1), xX, 30);
     } else {
-      drawXbarText(ctx, "=" + xbar.toFixed(1), xX, 30, xColor, "bold 13px sans-serif");
+      ctx.font = "bold 13px sans-serif";
+      ctx.fillStyle = xColor;
+      ctx.textAlign = "center";
+      ctx.fillText("X̄=" + xbar.toFixed(1), xX, 30);
     }
 
     const now = performance.now();
@@ -593,7 +558,7 @@ function CompareTab() {
                 "c 기준 (직접 조절)"
               ) : (
                 <>
-                  표본평균 <Xb /> 기준
+                  표본평균 X̄ 기준
                 </>
               )}
             </h5>
@@ -605,7 +570,7 @@ function CompareTab() {
                 "Σ(Xᵢ − c)²"
               ) : (
                 <>
-                  Σ(Xᵢ − <Xb />)²
+                  Σ(Xᵢ − X̄)²
                 </>
               )}
             </div>
@@ -616,7 +581,7 @@ function CompareTab() {
                 <>c = <b className="text-amber-300">{testC.toFixed(2)}</b></>
               ) : (
                 <>
-                  <Xb /> = <b className="text-amber-300">{xbar.toFixed(2)}</b>
+                  X̄ = <b className="text-amber-300">{xbar.toFixed(2)}</b>
                 </>
               )}
             </div>
@@ -625,8 +590,8 @@ function CompareTab() {
 
         {testMode && (
           <div className="mt-3 rounded-xl border-[1.5px] border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-center text-sm font-bold text-cyan-200 [animation:slideDown_0.35s_ease]">
-            💡 <Xb />은 Σ(Xᵢ − c)² 를 <b className="text-amber-300">최소</b>로 만드는 c 값입니다!
-            → 그래서 어떤 표본이라도 <Xb /> 기준 퍼짐이 m 기준보다 항상 작거나 같습니다.
+            💡 X̄은 Σ(Xᵢ − c)² 를 <b className="text-amber-300">최소</b>로 만드는 c 값입니다!
+            → 그래서 어떤 표본이라도 X̄ 기준 퍼짐이 m 기준보다 항상 작거나 같습니다.
           </div>
         )}
 
@@ -636,10 +601,10 @@ function CompareTab() {
             <b className="text-yellow-200">관찰해 봐요:</b>
             <br />• 표본을 여러 번 새로 뽑아도 거의 항상{" "}
             <b>
-              <Xb /> 기준 퍼짐이 더 작다
+              X̄ 기준 퍼짐이 더 작다
             </b>
             는 사실!
-            <br />• 그래서 <Xb /> 기준으로 잰 퍼짐을{" "}
+            <br />• 그래서 X̄ 기준으로 잰 퍼짐을{" "}
             <b>n으로 나누면 σ²보다 작게</b> 나오는 거예요. → 이게 바로 편향(bias)!
           </div>
         </div>
@@ -1227,7 +1192,7 @@ const STEPS: Step[] = [
           </li>
           <li>
             <span className="font-extrabold text-sky-300">
-              표본평균 <Xb />에서 잰 퍼짐
+              표본평균 X̄에서 잰 퍼짐
             </span>{" "}
             — 우리가 <b>실제로 계산할 수 있는 것</b>
           </li>
@@ -1244,19 +1209,19 @@ const STEPS: Step[] = [
         <Eqn>
           E[<span className="font-extrabold text-rose-300">Σ(Xᵢ − m)²/n</span>] = E[
           <span className="font-extrabold text-sky-300">
-            Σ(Xᵢ − <Xb />)²/n
+            Σ(Xᵢ − X̄)²/n
           </span>
-          ] + <span className="font-extrabold text-yellow-300">V(<Xb />)</span>
+          ] + <span className="font-extrabold text-yellow-300">V(X̄)</span>
         </Eqn>
         <ul className="ml-5 list-disc leading-7">
           <li>
             <span className="font-extrabold text-rose-300">표본 ⇄ m 까지의 퍼짐</span> ={" "}
             <span className="font-extrabold text-sky-300">
-              표본 ⇄ <Xb /> 까지의 퍼짐
+              표본 ⇄ X̄ 까지의 퍼짐
             </span>{" "}
             +{" "}
             <span className="font-extrabold text-yellow-300">
-              <Xb /> ⇄ m 까지의 흔들림
+              X̄ ⇄ m 까지의 흔들림
             </span>
           </li>
         </ul>
@@ -1276,19 +1241,19 @@ const STEPS: Step[] = [
         <Eqn>
           <span className="font-extrabold text-yellow-300">σ²</span> = E[
           <span className="font-extrabold text-sky-300">
-            Σ(Xᵢ − <Xb />)²/n
+            Σ(Xᵢ − X̄)²/n
           </span>
-          ] + V(<Xb />)
+          ] + V(X̄)
         </Eqn>
         <p>
-          여기서 우리가 알고 싶은 부분(<Xb /> 기준 퍼짐의 기댓값)만 옮겨 봅시다.
+          여기서 우리가 알고 싶은 부분(X̄ 기준 퍼짐의 기댓값)만 옮겨 봅시다.
         </p>
         <Eqn>
           E[
           <span className="font-extrabold text-sky-300">
-            Σ(Xᵢ − <Xb />)²/n
+            Σ(Xᵢ − X̄)²/n
           </span>
-          ] = <span className="font-extrabold text-yellow-300">σ²</span> − V(<Xb />)
+          ] = <span className="font-extrabold text-yellow-300">σ²</span> − V(X̄)
         </Eqn>
       </>
     ),
@@ -1297,18 +1262,18 @@ const STEPS: Step[] = [
   {
     title: (
       <>
-        ④ V(<Xb />) = σ²/n을 대입!
+        ④ V(X̄) = σ²/n을 대입!
       </>
     ),
     body: (
       <>
         <p>
-          이미 배웠죠? <b>표본평균의 분산</b>은 V(<Xb />) = σ²/n 입니다.
+          이미 배웠죠? <b>표본평균의 분산</b>은 V(X̄) = σ²/n 입니다.
         </p>
         <Eqn>
           E[
           <span className="font-extrabold text-sky-300">
-            Σ(Xᵢ − <Xb />)²/n
+            Σ(Xᵢ − X̄)²/n
           </span>
           ] = σ² − <span className="text-rose-300">σ²/n</span>
         </Eqn>
@@ -1333,7 +1298,7 @@ const STEPS: Step[] = [
         <Eqn>
           n/(n−1) · E[
           <span className="font-extrabold text-sky-300">
-            Σ(Xᵢ − <Xb />)²/n
+            Σ(Xᵢ − X̄)²/n
           </span>
           ] = n/(n−1) · (n−1)/n · σ² ={" "}
           <span className="font-extrabold text-yellow-300">σ²</span>
@@ -1341,14 +1306,14 @@ const STEPS: Step[] = [
         <Eqn>
           ⟹ E[
           <span className="font-extrabold text-emerald-300">
-            Σ(Xᵢ − <Xb />)²/(n−1)
+            Σ(Xᵢ − X̄)²/(n−1)
           </span>
           ] = <span className="font-extrabold text-yellow-300">σ²</span> ✅
         </Eqn>
         <div className="mt-3 rounded-2xl border-2 border-emerald-400/55 bg-gradient-to-br from-emerald-500/20 to-amber-400/10 p-4 text-center">
           <div className="text-base font-extrabold text-yellow-200">💎 결론</div>
           <div className="my-2 text-xl font-extrabold tracking-wide text-emerald-200">
-            S² = <span className="text-[1.1em]">1/(n−1)</span> · Σ(Xᵢ − <Xb />)²
+            S² = <span className="text-[1.1em]">1/(n−1)</span> · Σ(Xᵢ − X̄)²
           </div>
           <div className="text-sm leading-6 text-slate-200">
             이렇게 정의해야 <b>E(S²) = σ²</b>가 되어 <b>불편추정량</b>이 됩니다.
@@ -1498,7 +1463,10 @@ function DecompCanvas() {
     ctx.lineTo(xx, baseY);
     ctx.stroke();
     ctx.setLineDash([]);
-    drawXbarText(ctx, "", xx, 36, "#38bdf8", "bold 14px sans-serif");
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillStyle = "#38bdf8";
+    ctx.textAlign = "center";
+    ctx.fillText("X̄", xx, 36);
 
     for (const v of samp) {
       const px = X(v);
@@ -1538,16 +1506,9 @@ function DecompCanvas() {
     ctx.fillStyle = "#38bdf8";
     ctx.fillRect(8, lgY2 - 3, 14, 3);
     ctx.fillStyle = "#cbd5e1";
-    ctx.fillText("━━ 표본 → ", 28, lgY2);
-    const x0 = 28 + ctx.measureText("━━ 표본 → ").width;
-    drawXbarText(
-      ctx,
-      " (계산 가능)",
-      x0 + ctx.measureText("X (계산 가능)").width / 2,
-      lgY2,
-      "#cbd5e1",
-      "12px sans-serif"
-    );
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("━━ 표본 → X̄ (계산 가능)", 28, lgY2);
   }, []);
 
   return (

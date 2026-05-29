@@ -151,55 +151,6 @@ function fmt(v: number, d = 3): string {
   return Number(v.toFixed(d)).toString();
 }
 
-// ─── Canvas X̄ 라벨 헬퍼 ────────────────────────────────────
-function fillXBar(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  prefix: string,
-  suffix: string
-) {
-  const oldAlign = ctx.textAlign;
-  const oldBaseline = ctx.textBaseline;
-  const parts: { t: string; bar: boolean }[] = [];
-  if (prefix) parts.push({ t: prefix, bar: false });
-  parts.push({ t: "X", bar: true });
-  if (suffix) parts.push({ t: suffix, bar: false });
-  let totalW = 0;
-  for (const p of parts) totalW += ctx.measureText(p.t).width;
-  let cursor: number;
-  if (oldAlign === "center") cursor = x - totalW / 2;
-  else if (oldAlign === "right") cursor = x - totalW;
-  else cursor = x;
-  const fm = ctx.font.match(/(\d+(?:\.\d+)?)px/);
-  const fpx = fm ? parseFloat(fm[1]) : 12;
-  ctx.textAlign = "left";
-  for (const p of parts) {
-    const w = ctx.measureText(p.t).width;
-    ctx.fillText(p.t, cursor, y);
-    if (p.bar && w > 0) {
-      let top: number;
-      if (oldBaseline === "top") top = y - 1;
-      else if (oldBaseline === "middle") top = y - fpx * 0.55;
-      else if (oldBaseline === "bottom") top = y - fpx * 1.0 - 1;
-      else top = y - fpx * 0.92;
-      const barH = Math.max(1.5, fpx * 0.09);
-      ctx.fillRect(cursor + 1, top, w - 2, barH);
-    }
-    cursor += w;
-  }
-  ctx.textAlign = oldAlign;
-}
-
-// ─── X̄ React 표기 ─────────────────────────────────────────
-function Xb() {
-  return (
-    <span className="inline-block px-px leading-none [text-decoration:overline] decoration-[1.5px]">
-      X
-    </span>
-  );
-}
-
 // ─── 메인 ─────────────────────────────────────────────────
 export default function SamplingMeanRelationLab() {
   const [popKey, setPopKey] = useState<PopKey>("heights");
@@ -267,7 +218,7 @@ export default function SamplingMeanRelationLab() {
           🌟 모평균과 표본평균의 관계 — 두 정규곡선 비교 실험실
         </h3>
         <p className="mt-2 leading-7 text-slate-300">
-          모집단에서 표본을 여러 번 뽑아 <Xb /> 들이 그리는 분포를{" "}
+          모집단에서 표본을 여러 번 뽑아 X̄ 들이 그리는 분포를{" "}
           <b className="text-amber-300">두 정규곡선</b>{" "}
           <b className="text-cyan-300">N(m, σ²)</b> ↔ <b className="text-orange-300">N(m, σ²/n)</b>{" "}
           과 함께 비교해 봐요!
@@ -403,17 +354,17 @@ export default function SamplingMeanRelationLab() {
             </Legend>
             <Legend dot dotClass="bg-slate-700 ring-1 ring-slate-500">
               <>
-                표본평균 <Xb /> 들 (점)
+                표본평균 X̄ 들 (점)
               </>
             </Legend>
             <Legend dot dotClass="bg-rose-500">
               <>
-                선택된 표본의 <Xb />
+                선택된 표본의 X̄
               </>
             </Legend>
             <Legend swatchClass="bg-cyan-400/35">
               <>
-                <Xb /> 히스토그램
+                X̄ 히스토그램
               </>
             </Legend>
           </div>
@@ -421,10 +372,10 @@ export default function SamplingMeanRelationLab() {
         <div className="mt-3 flex items-start gap-2 rounded-xl border-2 border-amber-300/45 bg-amber-300/10 p-3 text-sm leading-6 text-amber-50">
           <span className="text-xl">💡</span>
           <span>
-            모집단 곡선보다 <Xb /> 의 곡선이 <b className="text-yellow-200">훨씬 좁고 뾰족</b>해요.
-            n이 커질수록 <Xb /> 점들이 모평균 m 주위에{" "}
+            모집단 곡선보다 X̄ 의 곡선이 <b className="text-yellow-200">훨씬 좁고 뾰족</b>해요.
+            n이 커질수록 X̄ 점들이 모평균 m 주위에{" "}
             <b className="text-yellow-200">더 촘촘히</b> 모이고, 모집단이 종 모양이 아니어도{" "}
-            <Xb /> 의 분포는 점점 종 모양에 가까워져요!
+            X̄ 의 분포는 점점 종 모양에 가까워져요!
           </span>
         </div>
       </div>
@@ -475,7 +426,7 @@ export default function SamplingMeanRelationLab() {
           <span>
             m(표본 개수)을 늘릴수록 <b className="text-yellow-200">표본평균(경험)</b> 행이{" "}
             <b className="text-yellow-200">표본평균(이론)</b> 행에 가까워져요. 이론:{" "}
-            E(<Xb />) = m, V(<Xb />) = σ²/n.
+            E(X̄) = m, V(X̄) = σ²/n.
           </span>
         </div>
       </div>
@@ -648,7 +599,7 @@ function SampleListTable({
                 크기 n
               </th>
               <th className="sticky top-0 z-10 border-b-2 border-violet-400/40 bg-slate-950/95 px-2 py-2 font-extrabold text-violet-200">
-                표본평균 <Xb />
+                표본평균 X̄
               </th>
               <th className="sticky top-0 z-10 border-b-2 border-violet-400/40 bg-slate-950/95 px-2 py-2 font-extrabold text-violet-200">
                 표본표준편차 S
@@ -707,7 +658,7 @@ function SelectedSampleDetail({
           📦 선택한 표본 #{selectedIdx ?? "--"}
         </span>
         <span className="rounded-md bg-slate-950/55 px-2 py-1 text-sm font-extrabold text-amber-200">
-          <Xb /> = {sample ? fmt(sample.mean) : "--"}
+          X̄ = {sample ? fmt(sample.mean) : "--"}
         </span>
       </div>
       {sample ? (
@@ -1038,7 +989,7 @@ function NormChartCanvas({
         ctx.font = "bold 13px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
-        fillXBar(ctx, sx, yDots - 9, "", "=" + fmt(sel.mean));
+        ctx.fillText("X̄=" + fmt(sel.mean), sx, yDots - 9);
       }
     }
 

@@ -78,6 +78,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/sampling_mean_relation_lab": "모평균과 표본평균의 관계",
   "probability_new/mini/ci_confidence_tradeoff_lab": "신뢰도와 구간 길이",
   "probability_new/mini/ci_meaning_lab": "신뢰도의 의미",
+  "probability_new/mini/ci_length_factors_lab": "구간 길이의 3가지 요인",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 
