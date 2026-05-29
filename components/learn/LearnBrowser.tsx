@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 import type { ContentBlock } from "@/lib/activities/activityBlocks";
 import type { AccessibleSubject } from "@/lib/curriculum/accessibleSubjects";
@@ -30,13 +30,18 @@ function depthLabel(depth: number): string {
 export default function LearnBrowser({
   subjects,
   units,
+  otMaterials = {},
 }: {
   subjects: AccessibleSubject[];
   units: CurriculumUnit[];
+  /** 교과명 → OT(오리엔테이션) Canva 임베드 URL. 관리자에게만 전달된다. */
+  otMaterials?: Record<string, string>;
 }) {
   const [subject, setSubject] = useState(subjects[0]?.name ?? "");
   // 선택 경로(상위→하위 단원 id 체인). 마지막 항목이 잎이면 그 콘텐츠를 렌더.
   const [chain, setChain] = useState<string[]>([]);
+  // OT 모드 — 켜지면 단원 콘텐츠 자리에 OT 자료 iframe 을 보여준다.
+  const [otOpen, setOtOpen] = useState(false);
 
   const { roots, childrenOf, byId } = useMemo(() => {
     const inSubject = units
@@ -68,9 +73,9 @@ export default function LearnBrowser({
     return path;
   }, [roots, childrenOf]);
 
-  useEffect(() => {
-    setChain(firstLeafChain);
-  }, [subject, firstLeafChain]);
+  // chain 이 비어 있으면 자동으로 firstLeafChain(현 교과의 첫 잎까지) 사용 →
+  // useEffect 의 setChain 동기화를 회피(react-hooks/set-state-in-effect).
+  const effectiveChain = chain.length > 0 ? chain : firstLeafChain;
 
   // chain 을 따라 단계별 칩 행을 만든다(각 행 = 같은 부모의 형제들).
   const rows = useMemo(() => {
@@ -78,7 +83,7 @@ export default function LearnBrowser({
     let options = roots;
     let level = 0;
     while (options.length > 0) {
-      const selectedId = chain[level];
+      const selectedId = effectiveChain[level];
       out.push({ depth: options[0].depth, options, selectedId });
       if (!selectedId) break;
       const kids = childrenOf.get(selectedId) ?? [];
@@ -87,15 +92,15 @@ export default function LearnBrowser({
       level += 1;
     }
     return out;
-  }, [roots, childrenOf, chain]);
+  }, [roots, childrenOf, effectiveChain]);
 
-  const lastId = chain[chain.length - 1];
+  const lastId = effectiveChain[effectiveChain.length - 1];
   const lastNode = lastId ? byId.get(lastId) : undefined;
   const selectedLeaf = lastNode && isLeaf(lastNode) ? lastNode : undefined;
 
   // 어떤 레벨의 칩을 누르면: 그 레벨까지 잘라 붙이고, 컨테이너면 첫 잎까지 자동으로 더 내려간다.
   function selectAt(level: number, id: string) {
-    const next = [...chain.slice(0, level), id];
+    const next = [...effectiveChain.slice(0, level), id];
     let node = byId.get(id);
     while (node && !isLeaf(node)) {
       const child = (childrenOf.get(node.id) ?? [])[0];
@@ -104,6 +109,13 @@ export default function LearnBrowser({
       node = child;
     }
     setChain(next);
+  }
+
+  // 교과 전환 — chain 비워 firstLeafChain 으로 자동 진입, OT 모드도 해제.
+  function handleSubjectChange(name: string) {
+    setSubject(name);
+    setChain([]);
+    setOtOpen(false);
   }
 
   if (subjects.length === 0) {
@@ -121,14 +133,14 @@ export default function LearnBrowser({
         {/* 교과 */}
         <div className="flex items-center gap-3">
           <span className="w-14 shrink-0 text-xs font-semibold text-slate-400">교과</span>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
             {subjects.map((s) => {
               const active = s.name === subject;
               return (
                 <button
                   key={s.name}
                   type="button"
-                  onClick={() => setSubject(s.name)}
+                  onClick={() => handleSubjectChange(s.name)}
                   className={
                     active
                       ? "shrink-0 rounded-full bg-cyan-300 px-4 py-1.5 text-sm font-semibold text-slate-950"
@@ -140,6 +152,21 @@ export default function LearnBrowser({
               );
             })}
           </div>
+          {/* OT 자료 토글 — 관리자에게만, 현 교과에 OT 가 있을 때만 노출 */}
+          {otMaterials[subject] && (
+            <button
+              type="button"
+              onClick={() => setOtOpen((v) => !v)}
+              className={
+                otOpen
+                  ? "shrink-0 rounded-full bg-amber-300 px-4 py-1.5 text-sm font-bold text-slate-950"
+                  : "shrink-0 rounded-full border border-amber-300/45 px-4 py-1.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-300/10"
+              }
+              title="관리자 전용 — OT 오리엔테이션 자료"
+            >
+              📋 OT 자료{otOpen ? " 닫기" : ""}
+            </button>
+          )}
         </div>
 
         {/* 대 / 중 / 소단원 단계별 칩 */}
@@ -176,9 +203,34 @@ export default function LearnBrowser({
         ))}
       </div>
 
-      {/* 선택 단원 콘텐츠 — 전체 폭 */}
+      {/* 선택 단원 콘텐츠 — 전체 폭. OT 모드면 OT iframe 으로 대체. */}
       <div className="mt-6">
-        {selectedLeaf ? (
+        {otOpen && otMaterials[subject] ? (
+          <div className="rounded-2xl border-2 border-amber-300/55 bg-amber-300/5 p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-base font-extrabold text-amber-200">
+                📋 {subject} — OT 오리엔테이션 자료{" "}
+                <span className="text-xs font-bold text-slate-400">(관리자 전용)</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setOtOpen(false)}
+                className="rounded-md border border-amber-300/45 px-3 py-1 text-xs font-bold text-amber-200 transition hover:bg-amber-300/10"
+              >
+                ✕ 닫기
+              </button>
+            </div>
+            <div className="aspect-video w-full overflow-hidden rounded-lg border border-amber-300/30 bg-slate-950">
+              <iframe
+                src={otMaterials[subject]}
+                title={`${subject} OT 자료`}
+                className="h-full w-full"
+                loading="lazy"
+                allow="fullscreen"
+              />
+            </div>
+          </div>
+        ) : selectedLeaf ? (
           <ActivityRenderer
             key={selectedLeaf.id}
             blocks={selectedLeaf.content_blocks ?? []}

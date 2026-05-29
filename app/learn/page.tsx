@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/requireUser";
 import { getAccessibleSubjects } from "@/lib/curriculum/accessibleSubjects";
+import { OT_MATERIALS } from "@/lib/learn/otMaterials";
 import { buttonClasses } from "@/components/ui/Button";
 import LearnBrowser, { type CurriculumUnit } from "@/components/learn/LearnBrowser";
 
@@ -24,6 +25,10 @@ export default async function LearnPage() {
   }
 
   const homeHref = profile.role === "student" ? "/student/home" : "/teacher";
+  const isAdmin = profile.role === "admin";
+  // 관리자에게만 OT 자료 노출. 비관리자에게는 빈 객체로 전달해
+  // LearnBrowser 가 OT 버튼·콘텐츠를 모두 숨긴다.
+  const otMaterials = isAdmin ? OT_MATERIALS : {};
 
   return (
     <main className="min-h-screen px-6 py-10">
@@ -42,7 +47,7 @@ export default async function LearnPage() {
         </div>
 
         <div className="mt-8">
-          <LearnBrowser subjects={subjects} units={units} />
+          <LearnBrowser subjects={subjects} units={units} otMaterials={otMaterials} />
         </div>
       </div>
     </main>
