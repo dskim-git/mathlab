@@ -72,6 +72,7 @@ const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/census_or_sample_quiz": "전수조사 vs 표본조사 퀴즈",
   "probability_new/mini/random_sampling_lab": "임의추출 방법 시뮬레이션",
   "probability_new/mini/sampling_methods_lab": "복원·비복원·동시추출 실험실",
+  "probability_new/mini/pop_sample_mean_lab": "모평균과 표본평균",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
 };
 

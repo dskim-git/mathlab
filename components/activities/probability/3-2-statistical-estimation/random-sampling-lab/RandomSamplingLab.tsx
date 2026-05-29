@@ -414,13 +414,10 @@ function Die({ color, value, rolling }: { color: "violet" | "amber" | "emerald";
     color === "violet" ? "from-violet-500 to-violet-700"
     : color === "amber" ? "from-orange-500 to-orange-700"
     : "from-emerald-500 to-emerald-700";
-  // clip-path는 인라인 style 불가피 — Tailwind에 6각형 클리핑이 없음.
   return (
     <div className={`relative flex h-[130px] w-[130px] items-center justify-center ${rolling ? "animate-[rollDie_0.6s_linear_infinite]" : ""}`}>
-      {/* clipPath 는 Tailwind 에 없는 동적 속성이라 인라인 style 사용. */}
       <div
-        className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br ${grad} shadow-[0_6px_20px_rgba(0,0,0,0.45)]`}
-        style={{ clipPath: "polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)" }}
+        className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br ${grad} shadow-[0_6px_20px_rgba(0,0,0,0.45)] [clip-path:polygon(50%_0%,95%_25%,95%_75%,50%_100%,5%_75%,5%_25%)]`}
       >
         <span className={`font-mono text-6xl font-black text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.7)] ${rolling ? "animate-[flicker_0.08s_linear_infinite]" : ""}`}>
           {value}
@@ -680,16 +677,14 @@ function DigitBtn({
     : locked ? "text-slate-800"
     : "text-slate-800 cursor-pointer hover:scale-110 hover:bg-indigo-500/[0.18]";
   return (
-    <span
-      role="button"
-      tabIndex={0}
-      aria-disabled={locked ? "true" : "false"}
-      onClick={() => !locked && onClick(r, dc)}
-      onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !locked) onClick(r, dc); }}
-      className={`inline-block w-8 select-none rounded px-0 py-1.5 text-center text-lg font-black transition ${cls}`}
+    <button
+      type="button"
+      disabled={locked}
+      onClick={() => onClick(r, dc)}
+      className={`inline-block w-8 select-none appearance-none rounded border-0 bg-transparent px-0 py-1.5 text-center text-lg font-black transition ${cls}`}
     >
       {digit}
-    </span>
+    </button>
   );
 }
 
