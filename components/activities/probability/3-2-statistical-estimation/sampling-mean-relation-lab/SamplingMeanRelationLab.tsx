@@ -9,10 +9,10 @@ const REFLECTION_QUESTIONS: ReflectionQuestion[] = [
   {
     id: "two_curves",
     prompt:
-      "그래프에 함께 그려진 두 정규곡선 N(μ, σ²)과 N(μ, σ²/n)은 모양이 어떻게 달랐나요? 어느 쪽이 더 좁고 뾰족했는지, 왜 그렇게 보였는지 적어 보세요.",
+      "그래프에 함께 그려진 두 정규곡선 N(m, σ²)과 N(m, σ²/n)은 모양이 어떻게 달랐나요? 어느 쪽이 더 좁고 뾰족했는지, 왜 그렇게 보였는지 적어 보세요.",
     kind: "text",
     placeholder:
-      "예: 모집단 곡선 N(μ, σ²)은 넓게 퍼져 있었고, 표본평균 곡선 N(μ, σ²/n)은 같은 μ 자리에서 훨씬 좁고 뾰족했다. 분산이 σ²/n으로 n분의 1로 줄기 때문이다.",
+      "예: 모집단 곡선 N(m, σ²)은 넓게 퍼져 있었고, 표본평균 곡선 N(m, σ²/n)은 같은 m 자리에서 훨씬 좁고 뾰족했다. 분산이 σ²/n으로 n분의 1로 줄기 때문이다.",
   },
   {
     id: "n_and_m_effect",
@@ -20,7 +20,7 @@ const REFLECTION_QUESTIONS: ReflectionQuestion[] = [
       "표본 크기 n(예: 4 → 40)을 키웠을 때와 표본 개수 m(예: 10 → 200)을 늘렸을 때, X̄들의 점·히스토그램은 각각 어떻게 변했나요?",
     kind: "text",
     placeholder:
-      "예: n을 키우면 표본평균 곡선이 더 좁아지고 X̄ 점들이 μ 주변에 더 모였다. m을 늘리면 히스토그램이 점점 더 매끄러워져 표본평균 이론 곡선 N(μ, σ²/n)에 가까워졌다.",
+      "예: n을 키우면 표본평균 곡선이 더 좁아지고 X̄ 점들이 m 주변에 더 모였다. 표본 개수를 늘리면 히스토그램이 점점 더 매끄러워져 표본평균 이론 곡선 N(m, σ²/n)에 가까워졌다.",
   },
   {
     id: "nonnormal_clt",
@@ -269,7 +269,7 @@ export default function SamplingMeanRelationLab() {
         <p className="mt-2 leading-7 text-slate-300">
           모집단에서 표본을 여러 번 뽑아 <Xb /> 들이 그리는 분포를{" "}
           <b className="text-amber-300">두 정규곡선</b>{" "}
-          <b className="text-cyan-300">N(μ, σ²)</b> ↔ <b className="text-orange-300">N(μ, σ²/n)</b>{" "}
+          <b className="text-cyan-300">N(m, σ²)</b> ↔ <b className="text-orange-300">N(m, σ²/n)</b>{" "}
           과 함께 비교해 봐요!
         </p>
       </div>
@@ -313,7 +313,7 @@ export default function SamplingMeanRelationLab() {
 
         <div className="mt-3 grid gap-2 sm:grid-cols-4">
           <PopStatCard label="모집단 크기 N" value={String(pop.data.length)} />
-          <PopStatCard label="모평균 μ" value={fmt(ps.mean, 2)} />
+          <PopStatCard label="모평균 m" value={fmt(ps.mean, 2)} />
           <PopStatCard label="모분산 σ²" value={fmt(ps.variance, 2)} />
           <PopStatCard label="모표준편차 σ" value={fmt(ps.sd, 2)} />
         </div>
@@ -384,7 +384,7 @@ export default function SamplingMeanRelationLab() {
       {/* ④ 정규곡선 차트 */}
       <div className="mt-3 rounded-2xl border border-cyan-300/20 bg-slate-900/40 p-4">
         <h4 className="mb-3 text-base font-bold text-cyan-200">
-          📈 정규곡선 비교: N(μ, σ²) vs N(μ, σ²/n)
+          📈 정규곡선 비교: N(m, σ²) vs N(m, σ²/n)
         </h4>
         <div className="rounded-xl border-[1.5px] border-cyan-400/30 bg-slate-900/50 p-3">
           <NormChartCanvas
@@ -396,10 +396,10 @@ export default function SamplingMeanRelationLab() {
           />
           <div className="mt-2 flex flex-wrap justify-center gap-3 text-xs text-slate-300">
             <Legend swatchClass="bg-cyan-400">
-              모집단 N(μ, σ²)
+              모집단 N(m, σ²)
             </Legend>
             <Legend swatchClass="bg-orange-400">
-              표본평균 N(μ, σ²/n)
+              표본평균 N(m, σ²/n)
             </Legend>
             <Legend dot dotClass="bg-slate-700 ring-1 ring-slate-500">
               <>
@@ -422,7 +422,7 @@ export default function SamplingMeanRelationLab() {
           <span className="text-xl">💡</span>
           <span>
             모집단 곡선보다 <Xb /> 의 곡선이 <b className="text-yellow-200">훨씬 좁고 뾰족</b>해요.
-            n이 커질수록 <Xb /> 점들이 모평균 μ 주위에{" "}
+            n이 커질수록 <Xb /> 점들이 모평균 m 주위에{" "}
             <b className="text-yellow-200">더 촘촘히</b> 모이고, 모집단이 종 모양이 아니어도{" "}
             <Xb /> 의 분포는 점점 종 모양에 가까워져요!
           </span>
@@ -439,7 +439,7 @@ export default function SamplingMeanRelationLab() {
             <thead>
               <tr className="border-b-2 border-violet-400/50 bg-violet-500/25">
                 <th className="px-2 py-2 text-left text-base font-extrabold text-violet-100 pl-3">항목</th>
-                <th className="px-2 py-2 text-base font-extrabold text-violet-100">평균 (μ)</th>
+                <th className="px-2 py-2 text-base font-extrabold text-violet-100">평균 (m)</th>
                 <th className="px-2 py-2 text-base font-extrabold text-violet-100">분산 (σ²)</th>
                 <th className="px-2 py-2 text-base font-extrabold text-violet-100">표준편차 (σ)</th>
               </tr>
@@ -475,7 +475,7 @@ export default function SamplingMeanRelationLab() {
           <span>
             m(표본 개수)을 늘릴수록 <b className="text-yellow-200">표본평균(경험)</b> 행이{" "}
             <b className="text-yellow-200">표본평균(이론)</b> 행에 가까워져요. 이론:{" "}
-            E(<Xb />) = μ, V(<Xb />) = σ²/n.
+            E(<Xb />) = m, V(<Xb />) = σ²/n.
           </span>
         </div>
       </div>
@@ -808,7 +808,7 @@ function PopLineCanvas({
     ctx.font = "bold 12px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
-    ctx.fillText("μ=" + fmt(stats.mean, 2), xMu, padT - 6);
+    ctx.fillText("m=" + fmt(stats.mean, 2), xMu, padT - 6);
 
     const half = 22;
     for (let i = 0; i < data.length; i++) {
@@ -944,7 +944,7 @@ function NormChartCanvas({
       }
     }
 
-    // 모집단 N(μ, σ²) — 파랑
+    // 모집단 N(m, σ²) — 파랑
     ctx.strokeStyle = "#38bdf8";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
@@ -956,7 +956,7 @@ function NormChartCanvas({
     }
     ctx.stroke();
 
-    // 표본평균 N(μ, σ²/n) — 주황
+    // 표본평균 N(m, σ²/n) — 주황
     ctx.strokeStyle = "#f59e0b";
     ctx.lineWidth = 2.8;
     ctx.beginPath();
@@ -968,7 +968,7 @@ function NormChartCanvas({
     }
     ctx.stroke();
 
-    // μ 점선
+    // m 점선
     const xMu = X(mu);
     ctx.strokeStyle = "rgba(251,191,36,.9)";
     ctx.setLineDash([5, 4]);
@@ -982,7 +982,7 @@ function NormChartCanvas({
     ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
-    ctx.fillText("μ=" + fmt(mu, 2), xMu, padT - 5);
+    ctx.fillText("m=" + fmt(mu, 2), xMu, padT - 5);
 
     // 축
     ctx.strokeStyle = "rgba(148,163,184,.5)";
