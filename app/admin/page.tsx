@@ -2,273 +2,266 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { formatKoreanDateTime } from "@/lib/dateTime";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Alert } from "@/components/ui/Alert";
+import { DashboardCard } from "@/components/dashboard/DashboardCard";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { NoticeBoard } from "@/components/notices/NoticeBoard";
+import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
-type PendingProfile = {
-  id: string;
-  login_id: string;
-  name: string;
-  role: string;
-  status: string;
-  email: string | null;
-  created_at: string | null;
+type Counts = {
+  pending: number | null;
+  responses: number | null;
+  sessions: number | null;
+  students: number | null;
+  newFeedback: number | null;
 };
 
-const ROLE_LABEL: Record<string, string> = {
-  admin: "관리자",
-  teacher: "교사",
-  student: "학생",
-  general: "일반",
+const initialCounts: Counts = {
+  pending: null,
+  responses: null,
+  sessions: null,
+  students: null,
+  newFeedback: null,
 };
 
-export default function AdminApprovalPage() {
-  const [pending, setPending] = useState<PendingProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+function formatCount(value: number | null) {
+  if (value == null) return "···";
+  return value.toLocaleString("ko-KR");
+}
+
+export default function AdminHomePage() {
+  const [counts, setCounts] = useState<Counts>(initialCounts);
   const [errorMessage, setErrorMessage] = useState("");
-  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const loadPending = useCallback(async () => {
-    setIsLoading(true);
+  const load = useCallback(async () => {
     setErrorMessage("");
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, login_id, name, role, status, email, created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
+    const [
+      pendingRes,
+      responsesRes,
+      sessionsRes,
+      studentsRes,
+      newFeedbackRes,
+    ] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("activity_responses")
+        .select("id", { count: "exact", head: true }),
+      supabase
+        .from("sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true),
+      supabase
+        .from("students")
+        .select("id", { count: "exact", head: true }),
+      supabase
+        .from("feedback")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "received"),
+    ]);
 
-    if (error) {
-      setErrorMessage(`승인 대기 목록을 불러오지 못했습니다: ${error.message}`);
-      setPending([]);
-    } else {
-      setPending((data ?? []) as PendingProfile[]);
+    const errors = [
+      pendingRes.error,
+      responsesRes.error,
+      sessionsRes.error,
+      studentsRes.error,
+      newFeedbackRes.error,
+    ].filter(Boolean);
+
+    if (errors.length > 0) {
+      setErrorMessage(errors.map((e) => e?.message ?? "").join(" / "));
     }
 
-    setIsLoading(false);
+    setCounts({
+      pending: pendingRes.count ?? null,
+      responses: responsesRes.count ?? null,
+      sessions: sessionsRes.count ?? null,
+      students: studentsRes.count ?? null,
+      newFeedback: newFeedbackRes.count ?? null,
+    });
   }, []);
 
   useEffect(() => {
-    loadPending();
-  }, [loadPending]);
+    load();
+  }, [load]);
 
-  async function handleApprove(profile: PendingProfile) {
-    setBusyId(profile.id);
-    setErrorMessage("");
-
-    // 1. 승인 처리
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ status: "approved" })
-      .eq("id", profile.id);
-
-    if (updateError) {
-      setErrorMessage(`승인 처리 중 오류: ${updateError.message}`);
-      setBusyId(null);
-      return;
-    }
-
-    // 2. 교사면 teachers 행이 없을 때 생성 (담당 권한은 추후 별도 화면에서 부여)
-    if (profile.role === "teacher") {
-      const { data: existingTeacher, error: teacherSelectError } =
-        await supabase
-          .from("teachers")
-          .select("id")
-          .eq("profile_id", profile.id)
-          .maybeSingle();
-
-      if (teacherSelectError) {
-        setErrorMessage(`교사 정보 확인 중 오류: ${teacherSelectError.message}`);
-        setBusyId(null);
-        return;
-      }
-
-      if (!existingTeacher) {
-        const { error: teacherInsertError } = await supabase
-          .from("teachers")
-          .insert({ profile_id: profile.id });
-
-        if (teacherInsertError) {
-          setErrorMessage(
-            `교사 정보(teachers) 생성 중 오류: ${teacherInsertError.message}`
-          );
-          setBusyId(null);
-          return;
-        }
-      }
-    }
-
-    setBusyId(null);
-    await loadPending();
-  }
-
-  async function handleReject(profile: PendingProfile) {
-    setBusyId(profile.id);
-    setErrorMessage("");
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ status: "rejected" })
-      .eq("id", profile.id);
-
-    if (error) {
-      setErrorMessage(`거부 처리 중 오류: ${error.message}`);
-      setBusyId(null);
-      return;
-    }
-
-    setBusyId(null);
-    await loadPending();
-  }
+  const theme = getRoleTheme("admin");
 
   return (
-    <main className="min-h-screen px-6 py-10">
-      <Card className="mx-auto max-w-5xl p-6 sm:p-8">
-        <p className="text-sm font-semibold text-cyan-300">관리자 대시보드</p>
-
-        <h1 className="mt-3 text-3xl font-bold">가입 승인 대기</h1>
-
-        <p className="mt-4 leading-7 text-slate-300">
-          새로 가입한 계정을 승인하거나 거부합니다. 교사 계정을 승인하면 교사
-          정보가 함께 생성되어 교사 로그인을 사용할 수 있습니다.
+    <>
+      <div className="mb-6">
+        <p className={`text-sm font-semibold ${theme.accentText}`}>
+          관리자 대시보드
         </p>
+        <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
+          MathLab 운영 현황
+        </h1>
+        <p className="mt-1 text-sm text-slate-400">
+          시스템 핵심 지표와 빠른 진입을 한곳에 모았습니다.
+        </p>
+      </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Button variant="secondary" size="sm" onClick={loadPending}>
-            새로고침
-          </Button>
-
-          <span className="text-sm text-slate-400">
-            대기 중:{" "}
-            <span className="font-bold text-cyan-300">{pending.length}</span>건
-          </span>
+      {errorMessage ? (
+        <div className="mb-4 rounded-2xl border border-red-300/30 bg-red-950/30 p-4 text-sm text-red-200">
+          일부 지표를 불러오지 못했습니다: {errorMessage}
         </div>
+      ) : null}
 
-        {errorMessage ? (
-          <Alert tone="error" className="mt-5">
-            {errorMessage}
-          </Alert>
-        ) : null}
+      <NoticeBoard accentText={theme.accentText} />
 
-        <section className="mt-6 rounded-2xl border border-white/10 bg-slate-900 p-6">
-          {isLoading ? (
-            <p className="text-slate-300">불러오는 중...</p>
-          ) : pending.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
-              승인 대기 중인 계정이 없습니다.
-            </div>
-          ) : (
-            <>
-              <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[760px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-left text-slate-300">
-                    <th className="py-3 pr-4">이름</th>
-                    <th className="py-3 pr-4">아이디</th>
-                    <th className="py-3 pr-4">역할</th>
-                    <th className="py-3 pr-4">가입 시각</th>
-                    <th className="py-3 pr-4">처리</th>
-                  </tr>
-                </thead>
+      {/* KPI 줄 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <KpiCard
+          label="가입 승인 대기"
+          value={`${formatCount(counts.pending)}건`}
+          valueClassName={theme.accentText}
+          hint={
+            counts.pending && counts.pending > 0
+              ? "처리 필요 →"
+              : "대기 없음 →"
+          }
+          href="/admin/members"
+        />
+        <KpiCard
+          label="누적 활동 응답"
+          value={`${formatCount(counts.responses)}회`}
+          valueClassName="text-cyan-200"
+          href="/admin/stats"
+        />
+        <KpiCard
+          label="진행 중 세션"
+          value={`${formatCount(counts.sessions)}개`}
+          valueClassName="text-emerald-200"
+          href="/teacher/sessions?filter=active"
+        />
+        <KpiCard
+          label="등록 학생"
+          value={`${formatCount(counts.students)}명`}
+          valueClassName="text-amber-200"
+          href="/admin/roster"
+        />
+      </div>
 
-                <tbody>
-                  {pending.map((profile) => (
-                    <tr
-                      key={profile.id}
-                      className="border-b border-white/5 text-slate-300"
-                    >
-                      <td className="py-4 pr-4 font-semibold text-white">
-                        {profile.name}
-                      </td>
+      {/* 데이터 부재 KPI 안내 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <KpiCard
+          label="새 건의 사항"
+          value={`${formatCount(counts.newFeedback)}건`}
+          valueClassName={
+            counts.newFeedback && counts.newFeedback > 0
+              ? "text-rose-200"
+              : "text-slate-300"
+          }
+          hint={
+            counts.newFeedback && counts.newFeedback > 0
+              ? "검토 필요 →"
+              : "접수 없음 →"
+          }
+          href="/admin/feedback"
+        />
+        <KpiCard
+          label="오늘 접속자"
+          value="-"
+          hint="2차(접속 이력)"
+          valueClassName="text-slate-400"
+          href="/admin/stats"
+        />
+        <KpiCard
+          label="이번 주 활동"
+          value="-"
+          hint="2차(통계)"
+          valueClassName="text-slate-400"
+          href="/admin/stats"
+        />
+        <KpiCard
+          label="성찰 작성 비율"
+          value="-"
+          hint="2차(통계)"
+          valueClassName="text-slate-400"
+          href="/admin/stats"
+        />
+      </div>
 
-                      <td className="py-4 pr-4">{profile.login_id}</td>
+      {/* 기능 카드 그리드 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <DashboardCard
+          icon="👥"
+          title="회원관리"
+          description="가입 승인·계정·명렬표"
+          href="/admin/members"
+          badge={
+            counts.pending && counts.pending > 0
+              ? `대기 ${counts.pending}`
+              : undefined
+          }
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="⚙️"
+          title="마스터"
+          description="과목·학급·학년도"
+          href="/admin/settings"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🔐"
+          title="교과 권한"
+          description="교사·학생·일반인 접근"
+          href="/admin/access"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="💬"
+          title="건의사항"
+          description="오류 제보·활동 건의 처리"
+          href="/admin/feedback"
+          badge={
+            counts.newFeedback && counts.newFeedback > 0
+              ? `접수 ${counts.newFeedback}`
+              : undefined
+          }
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📊"
+          title="통계"
+          description="접속·활동 분석 (준비 중)"
+          href="/admin/stats"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📋"
+          title="명렬표"
+          description="CSV 업로드 · 학년도별"
+          href="/admin/roster"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📚"
+          title="교과 학습 보기"
+          description="모든 교과 전체 열람"
+          href="/learn"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🎯"
+          title="교사 대시보드"
+          description="교사 화면 열람"
+          href="/teacher"
+          hoverBorderClass={theme.hoverBorder}
+        />
+      </div>
 
-                      <td className="py-4 pr-4">
-                        <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-semibold text-cyan-200">
-                          {ROLE_LABEL[profile.role] ?? profile.role}
-                        </span>
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        {formatKoreanDateTime(profile.created_at)}
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            disabled={busyId === profile.id}
-                            onClick={() => handleApprove(profile)}
-                          >
-                            {busyId === profile.id ? "처리 중..." : "승인"}
-                          </Button>
-
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            disabled={busyId === profile.id}
-                            onClick={() => handleReject(profile)}
-                          >
-                            거부
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-
-              <div className="space-y-4 lg:hidden">
-                {pending.map((profile) => (
-                  <div
-                    key={profile.id}
-                    className="rounded-2xl border border-white/10 bg-slate-950 p-5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-white">
-                          {profile.name}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-400">
-                          {profile.login_id}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-200">
-                        {ROLE_LABEL[profile.role] ?? profile.role}
-                      </span>
-                    </div>
-
-                    <p className="mt-3 text-xs text-slate-400">
-                      가입: {formatKoreanDateTime(profile.created_at)}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        disabled={busyId === profile.id}
-                        onClick={() => handleApprove(profile)}
-                      >
-                        {busyId === profile.id ? "처리 중..." : "승인"}
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        disabled={busyId === profile.id}
-                        onClick={() => handleReject(profile)}
-                      >
-                        거부
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </section>
-      </Card>
-    </main>
+      {/* 최근 활동 (자리표시자, 추후 채움) */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
+        <p className="text-xs font-semibold text-slate-400">최근 활동</p>
+        <p className="mt-2 text-sm text-slate-400">
+          신규 가입·세션 종료·신규 건의 등을 시간순으로 보여줄 예정입니다.
+          (Step 6 이후)
+        </p>
+      </section>
+    </>
   );
 }

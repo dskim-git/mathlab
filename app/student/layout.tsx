@@ -4,19 +4,38 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { PageShell } from "@/components/dashboard/PageShell";
 
 type GateState = "loading" | "denied" | "ok";
 
-export default function StudentHomeLayout({
+type GateProfile = {
+  name: string;
+  role: string;
+};
+
+// 학생 영역 공용 가드 + 셸. 다만 인증·세션 진입 등 특수 페이지는 셸·게이트 없이 통과.
+function isPublicStudentPath(pathname: string): boolean {
+  if (pathname === "/student/login") return true;
+  if (pathname === "/student/signup") return true;
+  if (pathname.startsWith("/student/session")) return true; // 입장 코드 후 진입(별도 가드)
+  return false;
+}
+
+export default function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [gateState, setGateState] = useState<GateState>("loading");
+  const isPublic = isPublicStudentPath(pathname);
 
-  // 경로가 바뀔 때마다 Auth 세션을 확인한다(로그인/로그아웃 직후 반영).
+  const [gateState, setGateState] = useState<GateState>("loading");
+  const [profile, setProfile] = useState<GateProfile | null>(null);
+
   useEffect(() => {
+    if (isPublic) {
+      return;
+    }
     let active = true;
     setGateState("loading");
 
@@ -26,13 +45,30 @@ export default function StudentHomeLayout({
       } = await supabase.auth.getSession();
 
       if (!active) return;
-      setGateState(session ? "ok" : "denied");
+      if (!session) {
+        setGateState("denied");
+        return;
+      }
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("name, role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (!active) return;
+      setProfile((data as GateProfile | null) ?? null);
+      setGateState("ok");
     })();
 
     return () => {
       active = false;
     };
-  }, [pathname]);
+  }, [pathname, isPublic]);
+
+  if (isPublic) {
+    return <>{children}</>;
+  }
 
   if (gateState === "loading") {
     return (
@@ -48,14 +84,11 @@ export default function StudentHomeLayout({
     return (
       <main className="min-h-screen px-6 py-10">
         <section className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8">
-          <p className="text-sm font-semibold text-cyan-300">학생 홈</p>
-
+          <p className="text-sm font-semibold text-cyan-300">학생 페이지</p>
           <h1 className="mt-3 text-3xl font-bold">학생 로그인이 필요합니다</h1>
-
           <p className="mt-4 leading-7 text-slate-300">
-            내 활동 기록은 학번과 비밀번호로 로그인한 후에 볼 수 있습니다.
+            학생 페이지는 학번과 비밀번호로 로그인한 후에 볼 수 있습니다.
           </p>
-
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/student/login"
@@ -63,7 +96,6 @@ export default function StudentHomeLayout({
             >
               학생 로그인하러 가기
             </Link>
-
             <Link
               href="/"
               className="rounded-full border border-white/20 px-5 py-3 font-semibold transition hover:bg-white/10"
@@ -76,5 +108,13 @@ export default function StudentHomeLayout({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <PageShell
+      role="student"
+      userName={profile?.name ?? "이용자"}
+      isAdmin={profile?.role === "admin"}
+    >
+      {children}
+    </PageShell>
+  );
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { Button, buttonClasses } from "@/components/ui/Button";
+import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PageShell } from "@/components/dashboard/PageShell";
 
 type AdminProfile = {
   id: string;
@@ -22,8 +22,6 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-
   const [gateState, setGateState] = useState<GateState>("loading");
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
 
@@ -67,11 +65,6 @@ export default function AdminLayout({
     };
   }, []);
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/teacher/login");
-  }
-
   if (gateState === "loading") {
     return (
       <main className="min-h-screen px-6 py-10">
@@ -109,59 +102,12 @@ export default function AdminLayout({
   }
 
   return (
-    <>
-      <div className="px-6 pt-6 text-white">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
-          <p className="text-sm text-slate-300">
-            <span className="font-semibold text-cyan-200">{admin?.name}</span>{" "}
-            관리자로 로그인됨
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            <Link href="/admin" className={buttonClasses("secondary", { size: "sm" })}>
-              승인 대기
-            </Link>
-
-            <Link
-              href="/admin/teachers"
-              className={buttonClasses("secondary", { size: "sm" })}
-            >
-              교사 권한
-            </Link>
-
-            <Link
-              href="/admin/settings"
-              className={buttonClasses("secondary", { size: "sm" })}
-            >
-              과목·학급
-            </Link>
-
-            <Link
-              href="/admin/subjects"
-              className={buttonClasses("secondary", { size: "sm" })}
-            >
-              교과 접근
-            </Link>
-
-            <Link
-              href="/admin/roster"
-              className={buttonClasses("secondary", { size: "sm" })}
-            >
-              명렬표
-            </Link>
-
-            <Link href="/teacher" className={buttonClasses("neutral", { size: "sm" })}>
-              교사 대시보드
-            </Link>
-
-            <Button variant="danger" size="sm" onClick={handleLogout}>
-              로그아웃
-            </Button>
-          </div>
-        </div>
-      </div>
-
+    <PageShell
+      role="admin"
+      userName={admin?.name ?? "관리자"}
+      isAdmin
+    >
       {children}
-    </>
+    </PageShell>
   );
 }

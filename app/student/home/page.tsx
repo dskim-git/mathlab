@@ -1,141 +1,98 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { Button, buttonClasses } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Alert } from "@/components/ui/Alert";
+import { DashboardCard } from "@/components/dashboard/DashboardCard";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { NoticeBoard } from "@/components/notices/NoticeBoard";
+import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
-// Phase 4: 학생 정보는 localStorage 블롭이 아니라 Auth 세션에서 파생한다.
 type StudentInfo = {
   studentId: string;
   loginId: string;
   name: string;
   schoolYear: number;
-  studentCode: string;
   grade: number;
   classNumber: number;
   studentNumber: number;
 };
 
-type ActivityResponseRow = {
+type RecentResponseRow = {
   id: string;
   subject: string | null;
   activity_slug: string | null;
-  reflection_data: {
-    interpretationType?: string;
-    reflection?: string;
-  } | null;
-  response_data: {
-    modeLabel?: string;
-    n?: number;
-    repeats?: number;
-    p?: number;
-    observedMean?: number;
-    expectedMean?: number;
-    observedVariance?: number;
-    expectedVariance?: number;
-  } | null;
   created_at: string;
-  activities: {
-    title: string | null;
-  } | null;
+  activities: { title: string | null } | null;
 };
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("ko-KR", {
-    dateStyle: "medium",
+    dateStyle: "short",
     timeStyle: "short",
   });
 }
 
-function previewText(text: string, max = 120) {
-  const trimmed = text.trim();
-  return trimmed.length > max ? `${trimmed.slice(0, max)}…` : trimmed;
-}
-
-function getInterpretationLabel(value?: string) {
-  switch (value) {
-    case "theory_comparison":
-      return "시뮬레이션 결과와 이론값 비교";
-    case "large_number_law":
-      return "반복 횟수와 큰 수의 법칙 관점";
-    case "distribution_shape":
-      return "성공 횟수 분포 모양 관찰";
-    case "personal_question":
-      return "스스로 생긴 궁금증";
-    default:
-      return value ?? "-";
-  }
-}
-
-function formatNumber(value?: number) {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return "-";
-  }
-
-  return value.toLocaleString("ko-KR", { maximumFractionDigits: 4 });
-}
-
 export default function StudentHomePage() {
-  const router = useRouter();
-
   const [student, setStudent] = useState<StudentInfo | null>(null);
+  const [userRole, setUserRole] = useState<"student" | "admin" | "other" | null>(
+    null
+  );
+  const [profileName, setProfileName] = useState<string>("");
   const [authChecked, setAuthChecked] = useState(false);
 
-  const [responses, setResponses] = useState<ActivityResponseRow[]>([]);
-  const [isLoadingResponses, setIsLoadingResponses] = useState(false);
-  const [loadError, setLoadError] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [markedCount, setMarkedCount] = useState<number | null>(null);
+  const [recent, setRecent] = useState<RecentResponseRow[]>([]);
 
-  // 로그인 세션에서 본인 학생 정보를 가져온다(localStorage 블롭 제거).
   useEffect(() => {
     let active = true;
-
     (async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
       if (!user) {
-        if (active) {
-          setStudent(null);
-          setAuthChecked(true);
-        }
+        if (active) setAuthChecked(true);
         return;
       }
 
-      const { data } = await supabase
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("role, name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const profile = profileRow as { role: string; name: string } | null;
+      if (active) {
+        setProfileName(profile?.name ?? "");
+        if (profile?.role === "admin") setUserRole("admin");
+        else if (profile?.role === "student") setUserRole("student");
+        else setUserRole("other");
+      }
+
+      const { data: studentRow } = await supabase
         .from("students")
         .select(
-          "id, school_year, student_code, student_login_id, grade, class_number, student_number, profiles ( name )"
+          "id, school_year, student_login_id, grade, class_number, student_number, profiles ( name )"
         )
         .eq("profile_id", user.id)
         .maybeSingle();
-
       if (!active) return;
-
-      const row = data as unknown as {
+      const row = studentRow as unknown as {
         id: string;
         school_year: number;
-        student_code: string;
         student_login_id: string;
         grade: number;
         class_number: number;
         student_number: number;
         profiles: { name: string } | null;
       } | null;
-
       setStudent(
         row
           ? {
               studentId: row.id,
               loginId: row.student_login_id,
-              name: row.profiles?.name ?? "",
+              name: row.profiles?.name ?? profile?.name ?? "",
               schoolYear: row.school_year,
-              studentCode: row.student_code,
               grade: row.grade,
               classNumber: row.class_number,
               studentNumber: row.student_number,
@@ -144,7 +101,6 @@ export default function StudentHomePage() {
       );
       setAuthChecked(true);
     })();
-
     return () => {
       active = false;
     };
@@ -152,311 +108,207 @@ export default function StudentHomePage() {
 
   const studentId = student?.studentId;
 
-  const loadResponses = useCallback(async () => {
-    if (!studentId) {
-      setResponses([]);
-      return;
-    }
+  const loadStats = useCallback(async () => {
+    if (!studentId) return;
+    const [countRes, markedRes, recentRes] = await Promise.all([
+      supabase
+        .from("activity_responses")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId),
+      supabase
+        .from("reflection_priority")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .eq("marked", true),
+      supabase
+        .from("activity_responses")
+        .select(
+          "id, subject, activity_slug, created_at, activities ( title )"
+        )
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(3),
+    ]);
 
-    setIsLoadingResponses(true);
-    setLoadError("");
-
-    const { data, error } = await supabase
-      .from("activity_responses")
-      .select(
-        "id, subject, activity_slug, reflection_data, response_data, created_at, activities ( title )"
-      )
-      .eq("student_id", studentId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      setLoadError(error.message);
-      setResponses([]);
-    } else {
-      setResponses((data ?? []) as unknown as ActivityResponseRow[]);
-    }
-
-    setIsLoadingResponses(false);
+    setTotalCount(countRes.count ?? 0);
+    setMarkedCount(markedRes.count ?? 0);
+    setRecent((recentRes.data ?? []) as unknown as RecentResponseRow[]);
   }, [studentId]);
 
   useEffect(() => {
-    loadResponses();
-  }, [loadResponses]);
-
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/student/login");
-  }
+    loadStats();
+  }, [loadStats]);
 
   if (!authChecked) {
     return (
-      <main className="min-h-screen px-6 py-10">
-        <Card className="mx-auto max-w-3xl p-6 text-slate-300 sm:p-8">
-          확인 중...
-        </Card>
-      </main>
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300">
+        확인 중...
+      </div>
     );
   }
 
-  if (!student) {
-    return (
-      <main className="min-h-screen px-6 py-10">
-        <Card className="mx-auto max-w-3xl p-6 sm:p-8">
-          <p className="text-sm font-semibold text-cyan-300">학생 홈</p>
-
-          <h1 className="mt-3 text-3xl font-bold">
-            로그인된 학생 정보가 없습니다
-          </h1>
-
-          <p className="mt-4 leading-7 text-slate-300">
-            학생 ID로 먼저 로그인해야 학생 활동 기록을 확인할 수 있습니다.
-          </p>
-
-          <Link
-            href="/student/login"
-            className={buttonClasses("primary", { className: "mt-8" })}
-          >
-            학생 로그인하러 가기
-          </Link>
-        </Card>
-      </main>
-    );
-  }
+  const displayName = student?.name ?? profileName ?? "";
+  const isAdmin = userRole === "admin";
+  const theme = getRoleTheme("student");
 
   return (
-    <main className="min-h-screen px-6 py-10">
-      <Card className="mx-auto max-w-3xl p-6 sm:p-8">
-        <p className="text-sm font-semibold text-cyan-300">학생 홈</p>
-
-        <h1 className="mt-3 text-3xl font-bold">
-          {student.name} 학생, 안녕하세요
+    <>
+      <div className="mb-6">
+        <p className={`text-sm font-semibold ${theme.accentText}`}>학생 홈</p>
+        <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
+          {displayName ? `${displayName} 학생, 안녕하세요 👋` : "안녕하세요 👋"}
         </h1>
-
-        <p className="mt-4 leading-7 text-slate-300">
-          로그인한 학생 계정에 쌓인 활동·성찰 기록을 한곳에서 확인하는 화면입니다.
-        </p>
-
-        <section className="mt-8 rounded-2xl border border-cyan-300/30 bg-cyan-950/30 p-6">
-          <h2 className="text-xl font-bold text-cyan-100">내 학생 정보</h2>
-
-          <div className="mt-5 space-y-3 text-slate-200">
-            <p>
-              <span className="font-semibold text-slate-400">이름: </span>
-              {student.name}
-            </p>
-
-            <p>
-              <span className="font-semibold text-slate-400">로그인 ID: </span>
-              {student.loginId}
-            </p>
-
-            <p>
-              <span className="font-semibold text-slate-400">학년도: </span>
-              {student.schoolYear}
-            </p>
-
-            <p>
-              <span className="font-semibold text-slate-400">학번: </span>
-              {student.grade}학년 {student.classNumber}반{" "}
-              {student.studentNumber}번
-            </p>
-
-            <p>
-              <span className="font-semibold text-slate-400">
-                학생 코드:{" "}
-              </span>
-              {student.studentCode}
-            </p>
-          </div>
-        </section>
-
-        <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">
-              내 활동 기록{" "}
-              <span className="text-base font-semibold text-slate-400">
-                ({responses.length}개)
-              </span>
-            </h2>
-
-            <button
-              type="button"
-              onClick={loadResponses}
-              disabled={isLoadingResponses}
-              className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoadingResponses ? "불러오는 중..." : "새로고침"}
-            </button>
-          </div>
-
-          <p className="mt-2 text-sm text-slate-400">
-            로그인한 학생 계정으로 저장된 활동·성찰 기록입니다. (최신순)
+        {student ? (
+          <p className="mt-1 text-sm text-slate-400">
+            {student.schoolYear}학년도 · {student.grade}학년{" "}
+            {student.classNumber}반 {student.studentNumber}번 · 로그인 ID{" "}
+            {student.loginId}
           </p>
+        ) : isAdmin ? (
+          <p className="mt-1 text-sm text-amber-300">
+            관리자 계정으로 학생 화면을 보고 있습니다 (읽기 전용).
+          </p>
+        ) : null}
+      </div>
 
-          {loadError ? (
-            <Alert tone="error" className="mt-5">
-              기록을 불러오지 못했습니다: {loadError}
-            </Alert>
-          ) : null}
+      <NoticeBoard accentText={theme.accentText} />
 
-          {isLoadingResponses && responses.length === 0 ? (
-            <div className="mt-5 rounded-xl border border-dashed border-white/20 bg-slate-950 p-5 text-slate-400">
-              활동 기록을 불러오는 중입니다...
-            </div>
-          ) : null}
+      {/* KPI */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <KpiCard
+          label="누적 활동"
+          value={totalCount == null ? "···" : `${totalCount}회`}
+          valueClassName={theme.accentText}
+          href="/student/records"
+        />
+        <KpiCard
+          label="별표 성찰"
+          value={markedCount == null ? "···" : `${markedCount}개`}
+          hint="생기부 후보 →"
+          valueClassName="text-amber-200"
+          href="/student/reflections"
+        />
+        <KpiCard
+          label="이번 주 활동"
+          value="-"
+          hint="교과 학습 →"
+          valueClassName="text-slate-400"
+          href="/learn"
+        />
+        <KpiCard
+          label="이어보기"
+          value="-"
+          hint="교과 학습 →"
+          valueClassName="text-slate-400"
+          href="/learn"
+        />
+      </div>
 
-          {!isLoadingResponses && !loadError && responses.length === 0 ? (
-            <div className="mt-5 rounded-xl border border-dashed border-white/20 bg-slate-950 p-5 text-slate-400">
-              아직 제출한 활동 기록이 없습니다. 활동에 참여해 결과와 성찰을
-              제출하면 여기에 쌓입니다.
-            </div>
-          ) : null}
+      {/* 오늘의 수업 */}
+      <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
+        <p className="mt-2 text-slate-300">
+          교사의 진도표(/teacher/progress)와 연동되면 오늘 수업할 단원·활동이
+          여기에 표시됩니다.
+        </p>
+      </section>
 
-          {responses.length > 0 ? (
-            <ul className="mt-5 space-y-4">
-              {responses.map((row) => {
-                const isExpanded = expandedId === row.id;
-                const data = row.response_data;
-                const reflection = row.reflection_data?.reflection?.trim() ?? "";
-                const hasResultData =
-                  data != null && Object.keys(data).length > 0;
+      {/* 기능 카드 그리드 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <DashboardCard
+          icon="📚"
+          title="교과 학습"
+          description="단원별 수업 자료"
+          href="/learn"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📝"
+          title="내 활동"
+          description={
+            totalCount != null ? `누적 ${totalCount}개` : "활동 기록·결과"
+          }
+          href="/student/records"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="💭"
+          title="내 성찰"
+          description={
+            markedCount != null ? `별표 ${markedCount}개` : "생기부 후보 모음"
+          }
+          href="/student/reflections"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🎯"
+          title="입장코드"
+          description="수업 참여"
+          href="/join"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="💡"
+          title="건의 보내기"
+          description="오류·활동 건의"
+          href="/student/feedback"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="👤"
+          title="내 정보"
+          description="비밀번호 변경 등"
+          href="/student/profile"
+          hoverBorderClass={theme.hoverBorder}
+        />
+      </div>
 
-                const stats = [
-                  { label: "실험 종류", value: data?.modeLabel ?? "-" },
-                  { label: "시행 수 n", value: formatNumber(data?.n) },
-                  { label: "반복 횟수", value: formatNumber(data?.repeats) },
-                  { label: "성공확률 p", value: formatNumber(data?.p) },
-                  {
-                    label: "시뮬레이션 평균",
-                    value: formatNumber(data?.observedMean),
-                  },
-                  {
-                    label: "이론 평균 np",
-                    value: formatNumber(data?.expectedMean),
-                  },
-                  {
-                    label: "시뮬레이션 분산",
-                    value: formatNumber(data?.observedVariance),
-                  },
-                  {
-                    label: "이론 분산",
-                    value: formatNumber(data?.expectedVariance),
-                  },
-                ];
-
-                return (
-                  <li
-                    key={row.id}
-                    className="rounded-xl border border-white/10 bg-slate-950 p-5"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-semibold text-white">
-                        {row.activities?.title ?? row.activity_slug ?? "활동"}
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {formatDateTime(row.created_at)}
-                      </p>
-                    </div>
-
-                    <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                      {row.subject ? (
-                        <span className="text-cyan-300">{row.subject}</span>
-                      ) : null}
-                      {row.activity_slug ? (
-                        <span className="text-slate-400">
-                          {row.activity_slug}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {reflection ? (
-                      <p className="mt-3 text-sm leading-6 text-slate-300">
-                        {isExpanded ? reflection : previewText(reflection)}
-                      </p>
-                    ) : (
-                      <p className="mt-3 text-sm text-slate-400">
-                        성찰 내용 없음
-                      </p>
-                    )}
-
-                    {isExpanded ? (
-                      <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-400">
-                            해석 관점
-                          </p>
-                          <p className="mt-1 text-sm text-slate-200">
-                            {getInterpretationLabel(
-                              row.reflection_data?.interpretationType
-                            )}
-                          </p>
-                        </div>
-
-                        {hasResultData ? (
-                          <div>
-                            <p className="text-xs font-semibold text-slate-400">
-                              결과 요약
-                            </p>
-                            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                              {stats.map((stat) => (
-                                <div
-                                  key={stat.label}
-                                  className="rounded-lg border border-white/10 bg-slate-900 p-3"
-                                >
-                                  <p className="text-[11px] text-slate-400">
-                                    {stat.label}
-                                  </p>
-                                  <p className="mt-1 text-sm font-semibold text-cyan-200">
-                                    {stat.value}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-slate-400">
-                            저장된 결과 데이터가 없습니다.
-                          </p>
-                        )}
-                      </div>
-                    ) : null}
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedId((current) =>
-                          current === row.id ? null : row.id
-                        )
-                      }
-                      className="mt-4 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-                    >
-                      {isExpanded ? "접기" : "자세히 보기"}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </section>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/learn" className={buttonClasses("primary")}>
-            교과 학습
+      {/* 최근 3건 미리보기 */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-bold">최근 활동</h2>
+          <Link
+            href="/student/records"
+            className={`text-xs font-semibold transition ${theme.accentText} hover:opacity-80`}
+          >
+            전체 보기 →
           </Link>
-
-          <Link href="/join" className={buttonClasses("secondary")}>
-            입장 코드로 활동 참여하기
-          </Link>
-
-          <Link href="/" className={buttonClasses("neutral")}>
-            홈으로 돌아가기
-          </Link>
-
-          <Button variant="danger" onClick={handleLogout}>
-            학생 로그아웃
-          </Button>
         </div>
-      </Card>
-    </main>
+        {recent.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">
+            아직 제출한 활동이 없습니다.{" "}
+            <Link href="/learn" className={theme.accentText}>
+              교과 학습
+            </Link>{" "}
+            에서 활동을 해보세요.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {recent.map((row) => (
+              <li
+                key={row.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-white">
+                    {row.activities?.title ??
+                      row.activity_slug ??
+                      "활동"}
+                  </span>
+                  {row.subject ? (
+                    <span className={`text-xs ${theme.accentText}`}>
+                      {row.subject}
+                    </span>
+                  ) : null}
+                </div>
+                <span className="text-xs text-slate-400">
+                  {formatDateTime(row.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
   );
 }
