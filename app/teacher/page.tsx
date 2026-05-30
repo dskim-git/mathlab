@@ -8,6 +8,10 @@ import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { NoticeBoard } from "@/components/notices/NoticeBoard";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
+import {
+  fetchTeacherTodayLessons,
+  formatTodayLabel,
+} from "@/lib/dashboard/todayLessons";
 
 type TeacherPermissionRow = {
   grade: number;
@@ -109,6 +113,13 @@ export default async function TeacherHomePage() {
     permissions.map((p) => `${p.grade}-${p.class_number}`)
   ).size;
 
+  // 오늘의 수업 — 자기 progress_tracker(관리자=전체)
+  const todayLessons = await fetchTeacherTodayLessons(supabase, {
+    teacherId: isAdmin ? null : user.id,
+  });
+  const todayLabel = formatTodayLabel();
+  const todayCount = todayLessons.length;
+
   return (
     <>
       <div className="mb-6">
@@ -151,20 +162,74 @@ export default async function TeacherHomePage() {
         />
         <KpiCard
           label="오늘 수업"
-          value="-"
+          value={`${todayCount}개`}
           hint="진도표 →"
-          valueClassName="text-slate-400"
+          valueClassName={todayCount > 0 ? theme.accentText : "text-slate-400"}
           href="/teacher/progress"
         />
       </div>
 
-      {/* 오늘의 수업 — Step 3-2 에서 진도표·세션 연동 */}
+      {/* 오늘의 수업 — progress_tracker 에 적어둔 오늘 행 */}
       <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-        <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
-        <p className="mt-2 text-slate-300">
-          진도표(`Step 3-2`)와 연동되면 오늘 수업할 학급·단원과 1클릭 세션
-          만들기 버튼이 여기에 표시됩니다.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
+            <p className="mt-1 text-sm text-slate-300">
+              {todayLabel}
+              {isAdmin ? (
+                <span className="ml-2 text-xs text-amber-300">
+                  (관리자: 전체 교사)
+                </span>
+              ) : null}
+            </p>
+          </div>
+          <Link
+            href="/teacher/progress"
+            className="text-xs font-semibold text-slate-400 transition hover:text-white"
+          >
+            진도표 →
+          </Link>
+        </div>
+
+        {todayLessons.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">
+            오늘 적어둔 수업이 없습니다.{" "}
+            <Link
+              href="/teacher/progress"
+              className={`font-semibold ${theme.accentText} hover:opacity-80`}
+            >
+              진도표에서 추가
+            </Link>
+          </p>
+        ) : (
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {todayLessons.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/10 bg-slate-950/60 p-3"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-semibold text-slate-200">
+                    {row.grade}학년 {row.class_number}반
+                  </span>
+                  <span className={`text-xs font-semibold ${theme.accentText}`}>
+                    {row.subject}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {row.lesson_topic || (
+                    <span className="text-slate-500">(주제 미입력)</span>
+                  )}
+                </p>
+                {row.notes ? (
+                  <p className="mt-1 text-xs text-slate-400 whitespace-pre-wrap">
+                    {row.notes}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* 기능 카드 그리드 */}
@@ -172,7 +237,7 @@ export default async function TeacherHomePage() {
         <DashboardCard
           icon="📅"
           title="진도표"
-          description="2주치 수업 진도 (준비 중)"
+          description="2주치 수업 진도"
           href="/teacher/progress"
           hoverBorderClass={theme.hoverBorder}
         />
