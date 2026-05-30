@@ -7,6 +7,11 @@ import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { NoticeBoard } from "@/components/notices/NoticeBoard";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
+import {
+  fetchStudentTodayLessons,
+  formatTodayLabel,
+  type TodayLesson,
+} from "@/lib/dashboard/todayLessons";
 
 type StudentInfo = {
   studentId: string;
@@ -44,6 +49,7 @@ export default function StudentHomePage() {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [markedCount, setMarkedCount] = useState<number | null>(null);
   const [recent, setRecent] = useState<RecentResponseRow[]>([]);
+  const [todayLessons, setTodayLessons] = useState<TodayLesson[] | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -139,6 +145,27 @@ export default function StudentHomePage() {
     loadStats();
   }, [loadStats]);
 
+  const studentGrade = student?.grade;
+  const studentClassNumber = student?.classNumber;
+
+  useEffect(() => {
+    let active = true;
+    if (studentGrade == null || studentClassNumber == null) {
+      setTodayLessons(null);
+      return;
+    }
+    (async () => {
+      const rows = await fetchStudentTodayLessons(supabase, {
+        grade: studentGrade,
+        classNumber: studentClassNumber,
+      });
+      if (active) setTodayLessons(rows);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [studentGrade, studentClassNumber]);
+
   if (!authChecked) {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300">
@@ -204,13 +231,49 @@ export default function StudentHomePage() {
         />
       </div>
 
-      {/* 오늘의 수업 */}
+      {/* 오늘의 수업 — 같은 학급(grade+class_number)의 progress_tracker 오늘 행 */}
       <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-        <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
-        <p className="mt-2 text-slate-300">
-          교사의 진도표(/teacher/progress)와 연동되면 오늘 수업할 단원·활동이
-          여기에 표시됩니다.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
+            <p className="mt-1 text-sm text-slate-300">{formatTodayLabel()}</p>
+          </div>
+        </div>
+
+        {student == null ? (
+          <p className="mt-3 text-sm text-slate-400">
+            학생 정보가 없어 오늘의 수업을 불러올 수 없습니다.
+          </p>
+        ) : todayLessons == null ? (
+          <p className="mt-3 text-sm text-slate-400">불러오는 중...</p>
+        ) : todayLessons.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">
+            오늘 예정된 수업이 없습니다.
+          </p>
+        ) : (
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {todayLessons.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/10 bg-slate-950/60 p-3"
+              >
+                <span className={`text-xs font-semibold ${theme.accentText}`}>
+                  {row.subject}
+                </span>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  {row.lesson_topic || (
+                    <span className="text-slate-500">(주제 미입력)</span>
+                  )}
+                </p>
+                {row.notes ? (
+                  <p className="mt-1 text-xs text-slate-400 whitespace-pre-wrap">
+                    {row.notes}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* 기능 카드 그리드 */}
