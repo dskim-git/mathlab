@@ -8,36 +8,24 @@ import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageShell } from "@/components/dashboard/PageShell";
 
-type TeacherProfile = {
-  id: string;
-  login_id: string;
+type GateState = "loading" | "denied" | "ok";
+
+type GateProfile = {
   name: string;
   role: string;
   status: string;
 };
 
-type GateState = "loading" | "denied" | "ok";
-
-export default function TeacherLayout({
+export default function GeneralLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-
-  // 로그인·회원가입 페이지는 게이트 없이 항상 통과시키고 셸도 적용하지 않는다.
-  const isPublicPage =
-    pathname === "/teacher/login" || pathname === "/teacher/signup";
-
   const [gateState, setGateState] = useState<GateState>("loading");
-  const [teacherName, setTeacherName] = useState("");
-  const [teacherRole, setTeacherRole] = useState<"teacher" | "admin" | "">("");
+  const [profile, setProfile] = useState<GateProfile | null>(null);
 
   useEffect(() => {
-    if (isPublicPage) {
-      return;
-    }
-
     let active = true;
     setGateState("loading");
 
@@ -51,38 +39,33 @@ export default function TeacherLayout({
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data } = await supabase
         .from("profiles")
-        .select("id, login_id, name, role, status")
+        .select("name, role, status")
         .eq("id", session.user.id)
         .maybeSingle();
 
       if (!active) return;
 
-      const profileData = profile as TeacherProfile | null;
-
+      const row = data as GateProfile | null;
+      // 일반인 또는 관리자(슈퍼유저)만 통과.
       if (
-        !profileData ||
-        profileData.status !== "approved" ||
-        (profileData.role !== "teacher" && profileData.role !== "admin")
+        !row ||
+        row.status !== "approved" ||
+        (row.role !== "general" && row.role !== "admin")
       ) {
         setGateState("denied");
         return;
       }
 
-      setTeacherName(profileData.name);
-      setTeacherRole(profileData.role as "teacher" | "admin");
+      setProfile(row);
       setGateState("ok");
     })();
 
     return () => {
       active = false;
     };
-  }, [pathname, isPublicPage]);
-
-  if (isPublicPage) {
-    return <>{children}</>;
-  }
+  }, [pathname]);
 
   if (gateState === "loading") {
     return (
@@ -98,18 +81,17 @@ export default function TeacherLayout({
     return (
       <main className="min-h-screen px-6 py-10">
         <Card className="mx-auto max-w-3xl p-6 sm:p-8">
-          <p className="text-sm font-semibold text-cyan-300">교사용 대시보드</p>
+          <p className="text-sm font-semibold text-cyan-300">일반인 페이지</p>
 
-          <h1 className="mt-3 text-3xl font-bold">교사 로그인이 필요합니다</h1>
+          <h1 className="mt-3 text-3xl font-bold">로그인이 필요합니다</h1>
 
           <p className="mt-4 leading-7 text-slate-300">
-            교사용 페이지는 승인된 교사·관리자 계정으로 로그인한 후에 이용할 수
-            있습니다.
+            이 페이지는 일반인 계정으로 로그인한 후에 이용할 수 있습니다.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/teacher/login" className={buttonClasses("primary")}>
-              교사 로그인하러 가기
+              로그인하러 가기
             </Link>
 
             <Link href="/" className={buttonClasses("neutral")}>
@@ -123,9 +105,9 @@ export default function TeacherLayout({
 
   return (
     <PageShell
-      role="teacher"
-      userName={teacherName}
-      isAdmin={teacherRole === "admin"}
+      role="general"
+      userName={profile?.name ?? "이용자"}
+      isAdmin={profile?.role === "admin"}
     >
       {children}
     </PageShell>

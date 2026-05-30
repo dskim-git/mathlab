@@ -4,572 +4,277 @@ export const revalidate = 0;
 import Link from "next/link";
 import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { formatKoreanDateTime } from "@/lib/dateTime";
-import SessionCreateForm from "@/components/teacher/SessionCreateForm";
-import SessionDeleteButton from "@/components/teacher/SessionDeleteButton";
-import SessionStatusButton from "@/components/teacher/SessionStatusButton";
-import { buttonClasses } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { DashboardCard } from "@/components/dashboard/DashboardCard";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { NoticeBoard } from "@/components/notices/NoticeBoard";
+import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
-type TeacherPageProps = {
-  searchParams: Promise<{
-    filter?: string;
-  }>;
+type TeacherPermissionRow = {
+  grade: number;
+  class_number: number;
+  subject: string;
 };
 
-type Activity = {
+type RecentResponseRow = {
   id: string;
-  slug: string;
-  title: string;
-  description: string | null;
+  created_at: string;
+  activity_slug: string | null;
   subject: string | null;
-  activity_type: string | null;
-  created_at: string | null;
-};
-
-type Session = {
-  id: string;
-  title: string;
-  join_code: string;
-  teacher_name: string | null;
-  is_active: boolean;
-  created_at: string | null;
-  activities: {
-    title: string;
-    slug: string;
-  } | null;
-};
-
-type SessionWithResponseCount = Session & {
-  responseCount: number;
-};
-
-type ResponseSessionIdRow = {
   session_id: string;
+  activities: { title: string | null } | null;
 };
 
-type SessionFilter =
-  | "all"
-  | "active"
-  | "closed"
-  | "has-responses"
-  | "no-responses";
-
-function createResponseCountMap(rows: ResponseSessionIdRow[]) {
-  const responseCountMap = new Map<string, number>();
-
-  rows.forEach((row) => {
-    responseCountMap.set(
-      row.session_id,
-      (responseCountMap.get(row.session_id) ?? 0) + 1
-    );
-  });
-
-  return responseCountMap;
-}
-
-function normalizeSessionFilter(value: string | undefined): SessionFilter {
-  if (value === "active") {
-    return "active";
-  }
-
-  if (value === "closed") {
-    return "closed";
-  }
-
-  if (value === "has-responses") {
-    return "has-responses";
-  }
-
-  if (value === "no-responses") {
-    return "no-responses";
-  }
-
-  return "all";
-}
-
-function filterSessions(
-  sessions: SessionWithResponseCount[],
-  filter: SessionFilter
-) {
-  if (filter === "active") {
-    return sessions.filter((session) => session.is_active);
-  }
-
-  if (filter === "closed") {
-    return sessions.filter((session) => !session.is_active);
-  }
-
-  if (filter === "has-responses") {
-    return sessions.filter((session) => session.responseCount > 0);
-  }
-
-  if (filter === "no-responses") {
-    return sessions.filter((session) => session.responseCount === 0);
-  }
-
-  return sessions;
-}
-
-function countSessions(
-  sessions: SessionWithResponseCount[],
-  filter: SessionFilter
-) {
-  return filterSessions(sessions, filter).length;
-}
-
-const filterOptions: {
-  value: SessionFilter;
-  label: string;
-  href: string;
-}[] = [
-  {
-    value: "all",
-    label: "전체",
-    href: "/teacher",
-  },
-  {
-    value: "active",
-    label: "진행 중",
-    href: "/teacher?filter=active",
-  },
-  {
-    value: "closed",
-    label: "종료",
-    href: "/teacher?filter=closed",
-  },
-  {
-    value: "has-responses",
-    label: "응답 있음",
-    href: "/teacher?filter=has-responses",
-  },
-  {
-    value: "no-responses",
-    label: "응답 없음",
-    href: "/teacher?filter=no-responses",
-  },
-];
-
-export default async function TeacherPage({ searchParams }: TeacherPageProps) {
-  const { filter } = await searchParams;
-  const selectedFilter = normalizeSessionFilter(filter);
-
-  // 승인된 교사/관리자만 통과 + 그 사용자 신원으로 조회하는 서버 클라이언트.
+export default async function TeacherHomePage() {
   const { supabase, user, profile } = await requireTeacher();
   const isAdmin = profile.role === "admin";
+  const theme = getRoleTheme("teacher");
 
-  const { data: activities, error: activitiesError } = await supabase
-    .from("activities")
-    .select("*")
-    .order("created_at", { ascending: true });
-
-  // 교사는 자기가 만든 세션만, 관리자는 전체를 본다.
-  let sessionsQuery = supabase
-    .from("sessions")
-    .select(
-      `
-      id,
-      title,
-      join_code,
-      teacher_name,
-      is_active,
-      created_at,
-      activities (
-        title,
-        slug
-      )
-    `
-    );
-
+  // AI세특 권한 여부 — 관리자는 무조건 활성, 교사는 ai_sebteuk_enabled 확인
+  let aiSebteukEnabled = isAdmin;
   if (!isAdmin) {
-    sessionsQuery = sessionsQuery.eq("created_by", user.id);
+    const { data: tRow } = await supabase
+      .from("teachers")
+      .select("ai_sebteuk_enabled")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    const t = tRow as { ai_sebteuk_enabled: boolean } | null;
+    aiSebteukEnabled = !!t?.ai_sebteuk_enabled;
   }
 
-  const { data: sessions, error: sessionsError } = await sessionsQuery
-    .order("created_at", { ascending: false })
-    .limit(20);
+  // === 카운트들 (병렬) ===
+  // 1) 본인 세션(관리자=전체) — 전체 / 진행 중
+  const baseSessionQuery = isAdmin
+    ? supabase.from("sessions").select("id, is_active")
+    : supabase.from("sessions").select("id, is_active").eq("created_by", user.id);
 
-  const sessionList = (sessions ?? []) as unknown as Session[];
-  const sessionIds = sessionList.map((session) => session.id);
+  // 2) 담당 학급(관리자는 표시 의미 약함, 0건 폴백)
+  const permissionsQuery = isAdmin
+    ? Promise.resolve({ data: [] as TeacherPermissionRow[] })
+    : (async () => {
+        const { data: teacherRow } = await supabase
+          .from("teachers")
+          .select("id")
+          .eq("profile_id", user.id)
+          .maybeSingle();
+        if (!teacherRow) return { data: [] as TeacherPermissionRow[] };
+        const { data } = await supabase
+          .from("teacher_permissions")
+          .select("grade, class_number, subject")
+          .eq("teacher_id", (teacherRow as { id: string }).id);
+        return { data: (data ?? []) as TeacherPermissionRow[] };
+      })();
 
-  const { data: responseSessionRows, error: responseCountError } =
+  // 3) 본인 세션에 들어온 활동 응답 수 — 세션 ID 모은 뒤 in()
+  const sessionsRes = await baseSessionQuery;
+  const sessionRows = (sessionsRes.data ?? []) as {
+    id: string;
+    is_active: boolean;
+  }[];
+  const totalSessions = sessionRows.length;
+  const activeSessions = sessionRows.filter((s) => s.is_active).length;
+
+  // 4) 응답 수·최근 응답 — 세션 id 가 있을 때만
+  const sessionIds = sessionRows.map((s) => s.id);
+
+  const [responsesCountRes, recentResponsesRes, permRes] = await Promise.all([
     sessionIds.length > 0
-      ? await supabase
+      ? supabase
           .from("activity_responses")
-          .select("session_id")
+          .select("id", { count: "exact", head: true })
           .in("session_id", sessionIds)
-      : { data: [], error: null };
+      : Promise.resolve({ count: 0, error: null } as {
+          count: number;
+          error: null;
+        }),
+    sessionIds.length > 0
+      ? supabase
+          .from("activity_responses")
+          .select(
+            "id, created_at, activity_slug, subject, session_id, activities ( title )"
+          )
+          .in("session_id", sessionIds)
+          .order("created_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: [], error: null } as {
+          data: RecentResponseRow[];
+          error: null;
+        }),
+    permissionsQuery,
+  ]);
 
-  const responseCountMap = createResponseCountMap(
-    (responseSessionRows ?? []) as ResponseSessionIdRow[]
-  );
-
-  const activityList = (activities ?? []) as Activity[];
-  const sessionListWithResponseCount: SessionWithResponseCount[] =
-    sessionList.map((session) => ({
-      ...session,
-      responseCount: responseCountMap.get(session.id) ?? 0,
-    }));
-
-  const filteredSessionList = filterSessions(
-    sessionListWithResponseCount,
-    selectedFilter
-  );
+  const responsesCount = (responsesCountRes as { count: number }).count ?? 0;
+  const recentResponses = (recentResponsesRes.data ?? []) as RecentResponseRow[];
+  const permissions = (permRes.data ?? []) as TeacherPermissionRow[];
+  const classCount = new Set(
+    permissions.map((p) => `${p.grade}-${p.class_number}`)
+  ).size;
 
   return (
-    <main className="min-h-screen px-6 py-10">
-      <Card className="mx-auto max-w-6xl p-6 sm:p-8">
-        <p className="text-sm font-semibold text-cyan-300">교사용 대시보드</p>
-
-        <h1 className="mt-3 text-3xl font-bold">수업 세션 관리</h1>
-
-        <p className="mt-4 leading-7 text-slate-300">
-          선생님이 활동 세션을 만들고, 입장 코드를 발급하고, 학생 응답을
-          확인하는 대시보드입니다.
+    <>
+      <div className="mb-6">
+        <p className={`text-sm font-semibold ${theme.accentText}`}>
+          교사 대시보드
         </p>
+        <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
+          {profile.name} {isAdmin ? "관리자" : "선생님"}, 안녕하세요 👋
+        </h1>
+        <p className="mt-1 text-sm text-slate-400">
+          {isAdmin
+            ? "관리자 계정으로 교사 화면을 보고 있습니다 (전체 세션 조회 가능)."
+            : "오늘의 수업·세션·학급 기록을 한곳에서 확인하세요."}
+        </p>
+      </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/learn" className={buttonClasses("primary")}>
-            교과 학습
-          </Link>
+      <NoticeBoard accentText={theme.accentText} />
 
-          <Link href="/teacher/activities" className={buttonClasses("secondary")}>
-            활동 콘텐츠 블록 관리
-          </Link>
+      {/* KPI 줄 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <KpiCard
+          label="진행 중 세션"
+          value={`${activeSessions}개`}
+          valueClassName={theme.accentText}
+          hint={`전체 ${totalSessions}개 →`}
+          href="/teacher/sessions?filter=active"
+        />
+        <KpiCard
+          label="누적 응답"
+          value={`${responsesCount}회`}
+          valueClassName="text-amber-200"
+          href="/teacher/records"
+        />
+        <KpiCard
+          label="담당 학급"
+          value={isAdmin ? "전체" : `${classCount}개`}
+          valueClassName="text-emerald-200"
+          hint={isAdmin ? "관리자" : undefined}
+          href="/teacher/profile"
+        />
+        <KpiCard
+          label="오늘 수업"
+          value="-"
+          hint="진도표 →"
+          valueClassName="text-slate-400"
+          href="/teacher/progress"
+        />
+      </div>
 
-          <Link href="/teacher/records" className={buttonClasses("secondary")}>
-            학급별 활동 기록 조회
+      {/* 오늘의 수업 — Step 3-2 에서 진도표·세션 연동 */}
+      <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
+        <p className="mt-2 text-slate-300">
+          진도표(`Step 3-2`)와 연동되면 오늘 수업할 학급·단원과 1클릭 세션
+          만들기 버튼이 여기에 표시됩니다.
+        </p>
+      </section>
+
+      {/* 기능 카드 그리드 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <DashboardCard
+          icon="📅"
+          title="진도표"
+          description="2주치 수업 진도 (준비 중)"
+          href="/teacher/progress"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🎯"
+          title="세션 관리"
+          description={`진행 ${activeSessions} · 전체 ${totalSessions}`}
+          href="/teacher/sessions"
+          badge={activeSessions > 0 ? `진행 ${activeSessions}` : undefined}
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📊"
+          title="학급 기록"
+          description="응답 조회 · 학급별"
+          href="/teacher/records"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📝"
+          title="콘텐츠 블록"
+          description="활동 공유 템플릿 편집"
+          href="/teacher/activities"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📚"
+          title="교과 학습"
+          description="단원·블록 보기"
+          href="/learn"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🤖"
+          title="AI 세특 작성"
+          description={
+            aiSebteukEnabled
+              ? "학생별 초안 생성"
+              : "관리자 승인 필요"
+          }
+          href={aiSebteukEnabled ? "/teacher/sebteuk" : undefined}
+          badge={aiSebteukEnabled ? "활성" : undefined}
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="👤"
+          title="내 정보"
+          description="비밀번호 변경 등"
+          href="/teacher/profile"
+          hoverBorderClass={theme.hoverBorder}
+        />
+      </div>
+
+      {/* 최근 응답 */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-bold">최근 응답</h2>
+          <Link
+            href="/teacher/records"
+            className="text-xs font-semibold text-slate-400 transition hover:text-white"
+          >
+            전체 보기 →
           </Link>
         </div>
 
-        <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
-          <h2 className="text-xl font-bold">Supabase 연결 상태</h2>
-
-          {activitiesError ? (
-            <div className="mt-4 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-red-200">
-              <p className="font-semibold">
-                활동 데이터를 불러오지 못했습니다.
-              </p>
-              <p className="mt-2 text-sm">{activitiesError.message}</p>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-slate-300">
-              activities 테이블에서 불러온 활동 수:{" "}
-              <span className="font-bold text-cyan-300">
-                {activityList.length}
-              </span>
-            </p>
-          )}
-
-          {responseCountError ? (
-            <div className="mt-4 rounded-xl border border-yellow-400/30 bg-yellow-950/30 p-4 text-yellow-100">
-              <p className="font-semibold">
-                응답 수 정보를 불러오지 못했습니다.
-              </p>
-              <p className="mt-2 text-sm">{responseCountError.message}</p>
-            </div>
-          ) : null}
-        </section>
-
-        {activityList.length > 0 ? (
-          <SessionCreateForm activities={activityList} />
+        {recentResponses.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">
+            아직 들어온 응답이 없습니다.
+          </p>
         ) : (
-          <div className="mt-8 rounded-2xl border border-yellow-400/30 bg-yellow-950/30 p-6 text-yellow-100">
-            활동 데이터가 없어서 수업 세션을 만들 수 없습니다.
-          </div>
-        )}
-
-        <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="text-xl font-bold">최근 수업 세션</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                생성된 세션의 입장 코드와 학생 응답 수를 확인하고, 수업이
-                끝난 세션을 종료하거나 삭제할 수 있습니다.
-              </p>
-            </div>
-
-            <div className="text-sm text-slate-400">
-              표시 중:{" "}
-              <span className="font-bold text-cyan-300">
-                {filteredSessionList.length}
-              </span>
-              개 / 전체{" "}
-              <span className="font-bold text-white">
-                {sessionListWithResponseCount.length}
-              </span>
-              개
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            {filterOptions.map((option) => {
-              const isSelected = option.value === selectedFilter;
-              const count = countSessions(
-                sessionListWithResponseCount,
-                option.value
-              );
-
-              return (
-                <Link
-                  key={option.value}
-                  href={option.href}
-                  scroll={false}
-                  className={
-                    isSelected
-                      ? "rounded-full border border-cyan-300/60 bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950"
-                      : "rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10"
-                  }
-                >
-                  {option.label}{" "}
-                  <span
-                    className={
-                      isSelected
-                        ? "text-slate-800"
-                        : "text-slate-400"
-                    }
-                  >
-                    {count}
+          <ul className="mt-3 space-y-2">
+            {recentResponses.map((row) => (
+              <li
+                key={row.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/5 bg-slate-950/60 px-4 py-2.5 text-sm"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-white">
+                    {row.activities?.title ??
+                      row.activity_slug ??
+                      "활동"}
                   </span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {sessionsError ? (
-            <div className="mt-5 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-red-200">
-              <p className="font-semibold">세션 목록을 불러오지 못했습니다.</p>
-              <p className="mt-2 text-sm">{sessionsError.message}</p>
-            </div>
-          ) : sessionListWithResponseCount.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
-              아직 생성된 수업 세션이 없습니다.
-            </div>
-          ) : filteredSessionList.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">
-              현재 필터 조건에 맞는 수업 세션이 없습니다.
-            </div>
-          ) : (
-            <>
-              <div className="mt-5 hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[980px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-left text-slate-300">
-                    <th className="py-3 pr-4">수업 세션</th>
-                    <th className="py-3 pr-4">활동</th>
-                    <th className="py-3 pr-4">입장 코드</th>
-                    <th className="py-3 pr-4">교사</th>
-                    <th className="py-3 pr-4">생성 시각</th>
-                    <th className="py-3 pr-4">상태</th>
-                    <th className="py-3 pr-4">응답 수</th>
-                    <th className="py-3 pr-4">응답</th>
-                    <th className="py-3 pr-4">관리</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredSessionList.map((session) => (
-                    <tr
-                      key={session.id}
-                      className="border-b border-white/5 text-slate-300"
-                    >
-                      <td className="py-4 pr-4 font-semibold text-white">
-                        {session.title}
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        {session.activities?.title ?? "-"}
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-bold tracking-[0.15em] text-cyan-300">
-                          {session.join_code}
-                        </span>
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        {session.teacher_name ?? "-"}
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        {formatKoreanDateTime(session.created_at)}
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        {session.is_active ? (
-                          <span className="rounded-full bg-green-300/10 px-3 py-1 font-semibold text-green-200">
-                            진행 중
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-300">
-                            종료
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        <span
-                          className={
-                            session.responseCount > 0
-                              ? "rounded-full bg-yellow-300/10 px-3 py-1 font-bold text-yellow-200"
-                              : "rounded-full bg-white/10 px-3 py-1 font-semibold text-slate-300"
-                          }
-                        >
-                          {session.responseCount}개
-                        </span>
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        <div className="flex flex-col gap-2">
-                          <Link
-                            href={`/teacher/sessions/${session.id}`}
-                            className={buttonClasses("secondary", { size: "sm" })}
-                          >
-                            응답 보기
-                          </Link>
-                          <Link
-                            href={`/teacher/sessions/${session.id}/lesson`}
-                            className={buttonClasses("neutral", { size: "sm" })}
-                          >
-                            수업 화면
-                          </Link>
-                          <Link
-                            href={`/teacher/sessions/${session.id}/edit`}
-                            className={buttonClasses("neutral", { size: "sm" })}
-                          >
-                            수업 편집
-                          </Link>
-                        </div>
-                      </td>
-
-                      <td className="py-4 pr-4">
-                        <div className="flex flex-col gap-2">
-                          <SessionStatusButton
-                            sessionId={session.id}
-                            isActive={session.is_active}
-                          />
-
-                          <SessionDeleteButton
-                            sessionId={session.id}
-                            sessionTitle={session.title}
-                            joinCode={session.join_code}
-                            responseCount={session.responseCount}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-
-              <div className="mt-5 space-y-4 lg:hidden">
-                {filteredSessionList.map((session) => (
-                  <div
-                    key={session.id}
-                    className="rounded-2xl border border-white/10 bg-slate-950 p-5"
+                  {row.subject ? (
+                    <span className="text-xs text-cyan-300">
+                      {row.subject}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-slate-400">
+                  <span>{formatKoreanDateTime(row.created_at)}</span>
+                  <Link
+                    href={`/teacher/sessions/${row.session_id}`}
+                    className="font-semibold text-cyan-200 transition hover:text-white"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-white">
-                          {session.title}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-400">
-                          {session.activities?.title ?? "-"}
-                        </p>
-                      </div>
-
-                      {session.is_active ? (
-                        <span className="shrink-0 rounded-full bg-green-300/10 px-3 py-1 text-xs font-semibold text-green-200">
-                          진행 중
-                        </span>
-                      ) : (
-                        <span className="shrink-0 rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">
-                          종료
-                        </span>
-                      )}
-                    </div>
-
-                    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                      <div>
-                        <dt className="text-xs text-slate-400">입장 코드</dt>
-                        <dd className="mt-1">
-                          <span className="rounded-full bg-cyan-300/10 px-3 py-1 font-bold tracking-[0.15em] text-cyan-300">
-                            {session.join_code}
-                          </span>
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-xs text-slate-400">응답 수</dt>
-                        <dd className="mt-1">
-                          <span
-                            className={
-                              session.responseCount > 0
-                                ? "rounded-full bg-yellow-300/10 px-3 py-1 font-bold text-yellow-200"
-                                : "rounded-full bg-white/10 px-3 py-1 font-semibold text-slate-300"
-                            }
-                          >
-                            {session.responseCount}개
-                          </span>
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-xs text-slate-400">교사</dt>
-                        <dd className="mt-1 text-slate-300">
-                          {session.teacher_name ?? "-"}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-xs text-slate-400">생성 시각</dt>
-                        <dd className="mt-1 text-slate-300">
-                          {formatKoreanDateTime(session.created_at)}
-                        </dd>
-                      </div>
-                    </dl>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/teacher/sessions/${session.id}`}
-                        className={buttonClasses("secondary", { size: "sm" })}
-                      >
-                        응답 보기
-                      </Link>
-                      <Link
-                        href={`/teacher/sessions/${session.id}/lesson`}
-                        className={buttonClasses("neutral", { size: "sm" })}
-                      >
-                        수업 화면
-                      </Link>
-                      <Link
-                        href={`/teacher/sessions/${session.id}/edit`}
-                        className={buttonClasses("neutral", { size: "sm" })}
-                      >
-                        수업 편집
-                      </Link>
-                      <SessionStatusButton
-                        sessionId={session.id}
-                        isActive={session.is_active}
-                      />
-                      <SessionDeleteButton
-                        sessionId={session.id}
-                        sessionTitle={session.title}
-                        joinCode={session.join_code}
-                        responseCount={session.responseCount}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </section>
-
-        <Link href="/" className={buttonClasses("neutral", { className: "mt-8" })}>
-          홈으로 돌아가기
-        </Link>
-      </Card>
-    </main>
+                    응답 →
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
   );
 }
