@@ -27,6 +27,10 @@ export default function AdminSettingsPage() {
   const [newGrade, setNewGrade] = useState("");
   const [newClass, setNewClass] = useState("");
 
+  // 과목 인라인 이름 편집 (한 번에 한 행만)
+  const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
+  const [editingSubjectName, setEditingSubjectName] = useState("");
+
   const [subjectError, setSubjectError] = useState("");
   const [classError, setClassError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
@@ -143,6 +147,61 @@ export default function AdminSettingsPage() {
 
     if (error) {
       setSubjectError(`삭제 중 오류: ${error.message}`);
+      return;
+    }
+    loadAll();
+  }
+
+  // 과목명 변경 — subject FK 가 ON UPDATE CASCADE 라 activities/responses/permissions 등이
+  // 자동으로 새 이름으로 따라간다.
+  async function handleRenameSubject(subject: Subject, newName: string) {
+    const t = newName.trim();
+    if (!t) {
+      setSubjectError("과목명은 비울 수 없습니다.");
+      return;
+    }
+    if (t === subject.name) return;
+    setSubjectError("");
+    setIsBusy(true);
+    const { error } = await supabase
+      .from("subjects")
+      .update({ name: t })
+      .eq("id", subject.id);
+    setIsBusy(false);
+    if (error) {
+      setSubjectError(
+        error.code === "23505"
+          ? "이미 같은 이름의 과목이 있습니다."
+          : `이름 변경 중 오류: ${error.message}`
+      );
+      return;
+    }
+    loadAll();
+  }
+
+  // 순서 변경 — 인접한 이웃과 order_index 를 교환. NULL 은 0 으로 간주.
+  async function handleMoveSubject(subject: Subject, direction: -1 | 1) {
+    setSubjectError("");
+    const sorted = [...subjects].sort(
+      (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)
+    );
+    const idx = sorted.findIndex((s) => s.id === subject.id);
+    const targetIdx = idx + direction;
+    if (idx < 0 || targetIdx < 0 || targetIdx >= sorted.length) return;
+    const me = sorted[idx];
+    const other = sorted[targetIdx];
+    const myOrder = me.order_index ?? 0;
+    const otherOrder = other.order_index ?? 0;
+    setIsBusy(true);
+    const [r1, r2] = await Promise.all([
+      supabase.from("subjects").update({ order_index: otherOrder }).eq("id", me.id),
+      supabase.from("subjects").update({ order_index: myOrder }).eq("id", other.id),
+    ]);
+    setIsBusy(false);
+    if (r1.error || r2.error) {
+      setSubjectError(
+        `순서 변경 중 오류: ${r1.error?.message ?? r2.error?.message ?? "?"}`
+      );
       return;
     }
     loadAll();
@@ -293,26 +352,113 @@ export default function AdminSettingsPage() {
                   등록된 과목이 없습니다.
                 </div>
               ) : (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {subjects.map((subject) => (
-                    <span
-                      key={subject.id}
-                      className="inline-flex items-center gap-2 rounded-full bg-cyan-300/10 px-3 py-1 text-sm font-semibold text-cyan-200"
-                    >
-                      {subject.name}
-                      <button
-                        type="button"
-                        disabled={isBusy}
-                        onClick={() => handleDeleteSubject(subject)}
-                        className="rounded-full px-1 text-cyan-200/70 transition hover:text-red-300 disabled:opacity-50"
-                        aria-label="과목 삭제"
-                        title="삭제"
+                <ul className="mt-4 space-y-2">
+                  {subjects.map((subject, idx) => {
+                    const isEditing = editingSubjectId === subject.id;
+                    return (
+                      <li
+                        key={subject.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2"
                       >
-                        ✕
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                        <div className="flex flex-1 items-center gap-2">
+                          <span className="w-6 text-xs font-semibold text-slate-500">
+                            {idx + 1}.
+                          </span>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editingSubjectName}
+                              onChange={(e) =>
+                                setEditingSubjectName(e.target.value)
+                              }
+                              aria-label="과목명"
+                              className="flex-1 rounded border border-cyan-300/40 bg-slate-900 px-2 py-1 text-sm font-semibold text-cyan-200 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                            />
+                          ) : (
+                            <span className="text-sm font-semibold text-cyan-200">
+                              {subject.name}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {isEditing ? (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => {
+                                  setEditingSubjectId(null);
+                                  setEditingSubjectName("");
+                                }}
+                                className="rounded px-2 py-1 text-[11px] text-slate-400 hover:text-white disabled:opacity-60"
+                              >
+                                취소
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={async () => {
+                                  await handleRenameSubject(
+                                    subject,
+                                    editingSubjectName
+                                  );
+                                  setEditingSubjectId(null);
+                                  setEditingSubjectName("");
+                                }}
+                                className="rounded-full bg-cyan-300 px-2 py-1 text-[11px] font-bold text-slate-950 hover:bg-cyan-200 disabled:opacity-60"
+                              >
+                                저장
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isBusy || idx === 0}
+                                onClick={() => handleMoveSubject(subject, -1)}
+                                aria-label="위로 이동"
+                                className="rounded border border-white/10 px-2 py-1 text-[11px] text-slate-300 transition hover:bg-white/10 disabled:opacity-30"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy || idx === subjects.length - 1}
+                                onClick={() => handleMoveSubject(subject, 1)}
+                                aria-label="아래로 이동"
+                                className="rounded border border-white/10 px-2 py-1 text-[11px] text-slate-300 transition hover:bg-white/10 disabled:opacity-30"
+                              >
+                                ↓
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => {
+                                  setEditingSubjectId(subject.id);
+                                  setEditingSubjectName(subject.name);
+                                  setSubjectError("");
+                                }}
+                                className="rounded border border-white/10 px-2 py-1 text-[11px] text-slate-300 transition hover:bg-white/10 disabled:opacity-60"
+                              >
+                                ✏️ 이름
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => handleDeleteSubject(subject)}
+                                aria-label="과목 삭제"
+                                title="삭제"
+                                className="rounded border border-rose-300/30 px-2 py-1 text-[11px] font-semibold text-rose-200 transition hover:bg-rose-300/10 disabled:opacity-60"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </section>
 

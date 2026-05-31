@@ -16,6 +16,14 @@ type MemberRow = {
   created_at: string | null;
 };
 
+/** 학생 회원의 추가 정보 — students 테이블에서 profile_id 로 매핑. */
+type StudentInfo = {
+  studentRowId: string;
+  grade: number;
+  class_number: number;
+  student_number: number;
+};
+
 const ROLE_LABEL: Record<string, string> = {
   admin: "관리자",
   teacher: "교사",
@@ -104,6 +112,17 @@ export function MembersDirectory({ accentText }: Props) {
   const [responsesCount, setResponsesCount] = useState<Record<string, number>>(
     {}
   );
+  // profile_id → 학생 추가 정보(학년·반·번호).
+  const [studentInfo, setStudentInfo] = useState<Record<string, StudentInfo>>({});
+
+  // 학생 정보 인라인 편집 — 한 번에 한 행만.
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [draftGrade, setDraftGrade] = useState("");
+  const [draftClass, setDraftClass] = useState("");
+  const [draftNumber, setDraftNumber] = useState("");
+  const [savingStudent, setSavingStudent] = useState(false);
+  const [studentEditError, setStudentEditError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -124,7 +143,9 @@ export function MembersDirectory({ accentText }: Props) {
         supabase.from("activity_visits").select("profile_id"),
         // 학생 응답 — student_id 기준이라 students 로 profile_id 매핑 필요.
         supabase.from("activity_responses").select("student_id"),
-        supabase.from("students").select("id, profile_id"),
+        supabase
+          .from("students")
+          .select("id, profile_id, grade, class_number, student_number"),
       ]);
 
     if (profilesRes.error) setErrorMessage(profilesRes.error.message);
@@ -148,13 +169,25 @@ export function MembersDirectory({ accentText }: Props) {
     setVisitsCount(vMap);
 
     // 누적 응답 카운트 — student_id → profile_id 변환 후 집계.
+    // + 학생 추가 정보(grade/class/number) 매핑.
     const stuToProfile = new Map<string, string>();
+    const infoMap: Record<string, StudentInfo> = {};
     for (const r of (studentsRes.data ?? []) as Array<{
       id: string;
       profile_id: string;
+      grade: number;
+      class_number: number;
+      student_number: number;
     }>) {
       stuToProfile.set(r.id, r.profile_id);
+      infoMap[r.profile_id] = {
+        studentRowId: r.id,
+        grade: r.grade,
+        class_number: r.class_number,
+        student_number: r.student_number,
+      };
     }
+    setStudentInfo(infoMap);
     const rMap: Record<string, number> = {};
     for (const r of (responsesRes.data ?? []) as Array<{
       student_id: string;
@@ -193,6 +226,7 @@ export function MembersDirectory({ accentText }: Props) {
   function openReset(profileId: string) {
     setOpenResetId(profileId);
     setOpenDeleteId(null);
+    setEditingStudentId(null);
     setNewPassword("");
     setResetError("");
     setResetOkId(null);
@@ -200,8 +234,73 @@ export function MembersDirectory({ accentText }: Props) {
   function openDelete(profileId: string) {
     setOpenDeleteId(profileId);
     setOpenResetId(null);
+    setEditingStudentId(null);
     setDeleteConfirmText("");
     setDeleteError("");
+  }
+  function openEditStudent(m: MemberRow) {
+    const info = studentInfo[m.id];
+    if (!info) return;
+    setEditingStudentId(m.id);
+    setOpenResetId(null);
+    setOpenDeleteId(null);
+    setDraftName(m.name);
+    setDraftGrade(String(info.grade));
+    setDraftClass(String(info.class_number));
+    setDraftNumber(String(info.student_number));
+    setStudentEditError("");
+  }
+  function cancelEditStudent() {
+    setEditingStudentId(null);
+    setStudentEditError("");
+  }
+  async function saveEditStudent(m: MemberRow) {
+    const info = studentInfo[m.id];
+    if (!info) return;
+    const name = draftName.trim();
+    const grade = Number(draftGrade);
+    const cls = Number(draftClass);
+    const num = Number(draftNumber);
+    if (!name) {
+      setStudentEditError("이름을 입력해 주세요.");
+      return;
+    }
+    if (!Number.isInteger(grade) || grade < 1) {
+      setStudentEditError("학년은 1 이상 정수.");
+      return;
+    }
+    if (!Number.isInteger(cls) || cls < 1) {
+      setStudentEditError("반은 1 이상 정수.");
+      return;
+    }
+    if (!Number.isInteger(num) || num < 1) {
+      setStudentEditError("번호는 1 이상 정수.");
+      return;
+    }
+    setSavingStudent(true);
+    setStudentEditError("");
+    // profiles.name 과 students 의 grade/class/number/(name 도 있으면) 동기화.
+    // student_code 와 student_login_id 는 가입 시 형식 그대로 둔다(로그인 ID 안정 유지).
+    const [profRes, stuRes] = await Promise.all([
+      supabase.from("profiles").update({ name }).eq("id", m.id),
+      supabase
+        .from("students")
+        .update({
+          grade,
+          class_number: cls,
+          student_number: num,
+        })
+        .eq("id", info.studentRowId),
+    ]);
+    setSavingStudent(false);
+    if (profRes.error || stuRes.error) {
+      setStudentEditError(
+        profRes.error?.message ?? stuRes.error?.message ?? "저장 실패"
+      );
+      return;
+    }
+    setEditingStudentId(null);
+    await load();
   }
   function cancelDelete() {
     setOpenDeleteId(null);
@@ -347,8 +446,10 @@ export function MembersDirectory({ accentText }: Props) {
             {filtered.map((m) => {
               const isOpen = openResetId === m.id;
               const isDeleteOpen = openDeleteId === m.id;
+              const isEditingStu = editingStudentId === m.id;
               const isSelf = currentUserId === m.id;
               const justSucceeded = resetOkId === m.id;
+              const stuInfo = studentInfo[m.id];
               return (
                 <li
                   key={m.id}
@@ -398,6 +499,15 @@ export function MembersDirectory({ accentText }: Props) {
                   <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[11px] text-slate-400">
                     {m.role === "student" ? (
                       <>
+                        {stuInfo ? (
+                          <>
+                            <span className="text-slate-300">
+                              {stuInfo.grade}학년 {stuInfo.class_number}반{" "}
+                              {stuInfo.student_number}번
+                            </span>
+                            <span className="text-slate-700">·</span>
+                          </>
+                        ) : null}
                         <span>
                           누적 활동{" "}
                           <span className="font-semibold text-cyan-200">
@@ -521,8 +631,88 @@ export function MembersDirectory({ accentText }: Props) {
                         </Button>
                       </div>
                     </div>
+                  ) : isEditingStu && stuInfo ? (
+                    <div className="mt-3 space-y-2 rounded border border-cyan-300/30 bg-slate-900/60 p-3">
+                      <p className="text-[11px] text-slate-400">
+                        학생 정보 편집 — 학년/반/번호 변경 시 student_code 와
+                        로그인 ID 는 가입 당시 형식 그대로 유지됩니다(로그인
+                        호환).
+                      </p>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+                        <label className="flex flex-col text-xs text-slate-300">
+                          <span>이름</span>
+                          <input
+                            type="text"
+                            value={draftName}
+                            onChange={(e) => setDraftName(e.target.value)}
+                            className="mt-1 rounded border border-white/10 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                          />
+                        </label>
+                        <label className="flex flex-col text-xs text-slate-300">
+                          <span>학년</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={draftGrade}
+                            onChange={(e) => setDraftGrade(e.target.value)}
+                            className="mt-1 rounded border border-white/10 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                          />
+                        </label>
+                        <label className="flex flex-col text-xs text-slate-300">
+                          <span>반</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={draftClass}
+                            onChange={(e) => setDraftClass(e.target.value)}
+                            className="mt-1 rounded border border-white/10 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                          />
+                        </label>
+                        <label className="flex flex-col text-xs text-slate-300">
+                          <span>번호</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={draftNumber}
+                            onChange={(e) => setDraftNumber(e.target.value)}
+                            className="mt-1 rounded border border-white/10 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                          />
+                        </label>
+                      </div>
+                      {studentEditError ? (
+                        <p className="text-[11px] text-rose-300">
+                          {studentEditError}
+                        </p>
+                      ) : null}
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={cancelEditStudent}
+                          disabled={savingStudent}
+                          className="rounded px-3 py-1 text-xs text-slate-400 hover:text-white disabled:opacity-60"
+                        >
+                          취소
+                        </button>
+                        <Button
+                          size="sm"
+                          onClick={() => saveEditStudent(m)}
+                          disabled={savingStudent}
+                        >
+                          {savingStudent ? "저장 중..." : "저장"}
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="mt-2 flex flex-wrap justify-end gap-2">
+                      {m.role === "student" && stuInfo ? (
+                        <button
+                          type="button"
+                          onClick={() => openEditStudent(m)}
+                          className="rounded-full border border-white/15 px-3 py-1 text-[11px] font-semibold text-slate-300 hover:bg-white/10"
+                        >
+                          ✏️ 정보 편집
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => openReset(m.id)}
