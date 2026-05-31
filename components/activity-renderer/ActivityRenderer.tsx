@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import ProbabilitySimulator from "@/components/activities/ProbabilitySimulator";
 import { ACTIVITY_REGISTRY } from "@/components/activities/registry";
+import { ActivityContextProvider } from "@/components/activities/ActivityContext";
 import CanvaEmbed from "@/components/content-blocks/CanvaEmbed";
 import ExternalEmbed from "@/components/content-blocks/ExternalEmbed";
 import GoogleDriveEmbed from "@/components/content-blocks/GoogleDriveEmbed";
@@ -13,6 +14,12 @@ type ActivityRendererProps = {
   blocks: ContentBlock[];
   /** student=학생 실제 활동(제출 가능) / teacher=교사 미리보기·수업 화면(미니활동 제출 없음). */
   mode?: "student" | "teacher";
+  /**
+   * 이식 미니활동(ReflectionForm) 의 자동 저장 Context 활성화. /learn 동선처럼
+   * 세션 없이 학생이 직접 활동할 때 켠다. mode 와 독립적이라 ProbabilitySimulator 의
+   * 세션 기반 제출 동작은 영향받지 않는다. (학생 행 없으면 submit 시 silent skip)
+   */
+  enableReflectionSave?: boolean;
   sessionId?: string;
 
   activityId?: string;
@@ -151,6 +158,7 @@ function renderTextInstruction(
 export default function ActivityRenderer({
   blocks,
   mode = "student",
+  enableReflectionSave = false,
   sessionId,
   activityId,
   activitySlug,
@@ -263,6 +271,17 @@ export default function ActivityRenderer({
 
         const Ported = ACTIVITY_REGISTRY[slug];
         if (Ported) {
+          // 학생 모드(세션 동선) 또는 enableReflectionSave(/learn 동선)면 자동 저장 Context 활성화.
+          // 교사 미리보기·수업 편집에선 비활성(props 둘 다 꺼짐).
+          if (mode === "student" || enableReflectionSave) {
+            return (
+              <ActivityContextProvider
+                value={{ activitySlug: slug, subject: activitySubject ?? null }}
+              >
+                <Ported />
+              </ActivityContextProvider>
+            );
+          }
           return <Ported />;
         }
 

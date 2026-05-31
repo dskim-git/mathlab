@@ -82,19 +82,37 @@ export function RawJsonResult({ responseData, reflectionData }: ActivityResultPr
         <div>
           <p className="text-xs font-semibold text-slate-400">성찰 부가 정보</p>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {reflEntries.map(([k, v]) => (
-              <div
-                key={k}
-                className="rounded-lg border border-white/10 bg-slate-900/60 p-3"
-              >
-                <p className="text-[10px] uppercase tracking-wider text-slate-400">
-                  {k}
-                </p>
-                <p className="mt-1 break-words text-sm text-slate-200">
-                  {valueText(v)}
-                </p>
-              </div>
-            ))}
+            {reflEntries.map(([k, v]) => {
+              // 새 형식: { prompt, answer } — prompt 를 한국어 라벨로.
+              // 옛 형식(string): 영어 id 그대로 라벨, 값은 문자열.
+              const isStructured =
+                isPlainObject(v) && typeof v.prompt === "string";
+              const label = isStructured
+                ? (v as { prompt: string }).prompt
+                : k;
+              const valueRaw = isStructured
+                ? (v as { answer?: unknown }).answer ?? ""
+                : v;
+              return (
+                <div
+                  key={k}
+                  className="rounded-lg border border-white/10 bg-slate-900/60 p-3"
+                >
+                  <p
+                    className={
+                      isStructured
+                        ? "text-xs text-slate-400"
+                        : "text-[10px] uppercase tracking-wider text-slate-400"
+                    }
+                  >
+                    {label}
+                  </p>
+                  <p className="mt-1 break-words text-sm text-slate-200 whitespace-pre-wrap">
+                    {valueText(valueRaw)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}

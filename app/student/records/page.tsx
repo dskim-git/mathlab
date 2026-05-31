@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/Alert";
 import { getResultRenderer } from "@/components/activities/resultRenderer";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
+import { extractMainReflection } from "@/lib/activities/reflection";
 
 type ActivityResponseRow = {
   id: string;
@@ -241,9 +242,7 @@ export default function StudentRecordsPage() {
         <ul className="space-y-3">
           {filtered.map((row) => {
             const isExpanded = expandedId === row.id;
-            const reflection =
-              (row.reflection_data as { reflection?: string } | null)
-                ?.reflection?.trim() ?? "";
+            const reflection = extractMainReflection(row.reflection_data);
             const Renderer = getResultRenderer(row.activity_slug);
             const isMarked = !!priorities[row.id]?.marked;
 

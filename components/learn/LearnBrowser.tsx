@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
+import { supabase } from "@/lib/supabase/client";
 import type { ContentBlock } from "@/lib/activities/activityBlocks";
 import type { AccessibleSubject } from "@/lib/curriculum/accessibleSubjects";
 
@@ -37,9 +39,39 @@ export default function LearnBrowser({
   /** 교과명 → OT(오리엔테이션) Canva 임베드 URL. 관리자에게만 전달된다. */
   otMaterials?: Record<string, string>;
 }) {
-  const [subject, setSubject] = useState(subjects[0]?.name ?? "");
+  const searchParams = useSearchParams();
+  const qsSubject = searchParams.get("subject");
+  const qsUnit = searchParams.get("unit");
+
+  // ?subject= 가 접근 가능한 교과명이면 그걸로, 아니면 첫 번째 교과로.
+  const [subject, setSubject] = useState(() => {
+    if (qsSubject && subjects.some((s) => s.name === qsSubject)) {
+      return qsSubject;
+    }
+    return subjects[0]?.name ?? "";
+  });
+
+  // ?unit= 가 있으면 그 잎까지의 경로를 chain 으로 미리 채운다.
+  // (마운트 1회만 — 이후엔 사용자 칩 클릭이 chain 을 덮어쓴다.)
+  const initialChain = useMemo<string[]>(() => {
+    if (!qsUnit) return [];
+    const inSubject = units.filter((u) => u.subject === subject);
+    const byId = new Map(inSubject.map((u) => [u.id, u]));
+    const target = inSubject.find((u) => u.unit_key === qsUnit);
+    if (!target) return [];
+    const path: string[] = [];
+    let node: CurriculumUnit | undefined = target;
+    while (node) {
+      path.unshift(node.id);
+      node = node.parent_id ? byId.get(node.parent_id) : undefined;
+    }
+    return path;
+    // mount-only — qsUnit/subject 변경에 반응하지 않음.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 선택 경로(상위→하위 단원 id 체인). 마지막 항목이 잎이면 그 콘텐츠를 렌더.
-  const [chain, setChain] = useState<string[]>([]);
+  const [chain, setChain] = useState<string[]>(() => initialChain);
   // OT 모드 — 켜지면 단원 콘텐츠 자리에 OT 자료 iframe 을 보여준다.
   const [otOpen, setOtOpen] = useState(false);
 
@@ -97,6 +129,35 @@ export default function LearnBrowser({
   const lastId = effectiveChain[effectiveChain.length - 1];
   const lastNode = lastId ? byId.get(lastId) : undefined;
   const selectedLeaf = lastNode && isLeaf(lastNode) ? lastNode : undefined;
+
+  // 잎(소단원)이 바뀔 때마다 본인 진도(learning_progress)를 upsert.
+  // 로그인된 사용자만 — 모든 역할 공통. 실패는 조용히 무시.
+  const leafKey = selectedLeaf?.unit_key;
+  const leafSubject = selectedLeaf?.subject;
+  const leafTitle = selectedLeaf?.label;
+  useEffect(() => {
+    if (!leafKey || !leafSubject || !leafTitle) return;
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!active || !user) return;
+      await supabase.from("learning_progress").upsert(
+        {
+          profile_id: user.id,
+          subject: leafSubject,
+          unit_key: leafKey,
+          unit_title: leafTitle,
+          last_seen_at: new Date().toISOString(),
+        },
+        { onConflict: "profile_id,subject,unit_key" }
+      );
+    })();
+    return () => {
+      active = false;
+    };
+  }, [leafKey, leafSubject, leafTitle]);
 
   // 어떤 레벨의 칩을 누르면: 그 레벨까지 잘라 붙이고, 컨테이너면 첫 잎까지 자동으로 더 내려간다.
   function selectAt(level: number, id: string) {
@@ -234,7 +295,13 @@ export default function LearnBrowser({
           <ActivityRenderer
             key={selectedLeaf.id}
             blocks={selectedLeaf.content_blocks ?? []}
+            // /learn 은 교사·학생·관리자 공용 미리보기 동선이라 mode 는 teacher 유지
+            // (ProbabilitySimulator 같은 세션 기반 활동의 제출 버튼 비활성).
+            // 단 enableReflectionSave 를 켜서 이식 미니활동(ReflectionForm)의 자동 저장은
+            // 활성화 — submitActivityReflection 이 students 행 없으면 silent skip.
             mode="teacher"
+            enableReflectionSave
+            activitySubject={selectedLeaf.subject}
           />
         ) : (
           <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-slate-400">

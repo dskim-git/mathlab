@@ -8,15 +8,18 @@ import {
   type ReflectionAnswers,
   type ReflectionQuestion,
 } from "@/lib/activities/reflection";
+import { useActivityContext } from "@/components/activities/ActivityContext";
+import { submitActivityReflection } from "@/lib/activities/submitReflection";
 
 type ReflectionFormProps = {
   /** 활동 고유 질문(공통 마무리 질문은 자동 추가). */
   questions: ReflectionQuestion[];
-  /** 제출 핸들러(저장). 없으면 저장 배선 전 상태로 안내만 표시(#3에서 연결). */
+  /** 명시적 핸들러. 주어지면 우선 사용. */
   onSubmit?: (answers: ReflectionAnswers) => Promise<void> | void;
 };
 
 export default function ReflectionForm({ questions, onSubmit }: ReflectionFormProps) {
+  const activityCtx = useActivityContext();
   const all = withCommonReflection(questions);
   const [answers, setAnswers] = useState<ReflectionAnswers>({});
   const [submitting, setSubmitting] = useState(false);
@@ -40,16 +43,30 @@ export default function ReflectionForm({ questions, onSubmit }: ReflectionFormPr
       return;
     }
 
-    if (!onSubmit) {
-      // #3에서 Supabase 저장을 연결할 예정.
-      setMessage("작성 내용이 확인되었습니다. (저장 기능은 곧 연결됩니다)");
-      return;
-    }
-
+    // 우선순위:
+    //  1) props.onSubmit 이 명시되면 그걸 사용
+    //  2) ActivityContext 가 있으면(학생 모드 + activitySlug 알림) 내장 자동 저장
+    //  3) 둘 다 없으면 안내만 표시(교사 미리보기 등)
     setSubmitting(true);
     try {
-      await onSubmit(answers);
-      setMessage("성찰을 제출했습니다.");
+      if (onSubmit) {
+        await onSubmit(answers);
+        setMessage("성찰을 제출했습니다.");
+      } else if (activityCtx) {
+        const res = await submitActivityReflection({
+          activitySlug: activityCtx.activitySlug,
+          subject: activityCtx.subject,
+          answers,
+          questions: all,
+        });
+        if (res.ok) {
+          setMessage("성찰을 제출했습니다. 학생 활동 기록에 저장됩니다.");
+        } else {
+          setError(`제출 중 오류가 발생했습니다: ${res.error}`);
+        }
+      } else {
+        setMessage("작성 내용이 확인되었습니다.");
+      }
     } catch (e) {
       setError(`제출 중 오류가 발생했습니다: ${(e as Error).message}`);
     } finally {
