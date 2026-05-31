@@ -76,6 +76,28 @@ export function MembersDirectory({ accentText }: Props) {
   const [resetError, setResetError] = useState("");
   const [resetOkId, setResetOkId] = useState<string | null>(null);
 
+  // 회원 삭제 UI 상태 — 이름 입력으로 확인.
+  const [openDeleteId, setOpenDeleteId] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // 자기 자신 삭제 차단을 위해 본인 profile id 보관.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!active) return;
+      setCurrentUserId(user?.id ?? null);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // profile_id → 누적 활동 방문 수(visits)·누적 응답 수(responses).
   // 학생 행에만 표시하지만 데이터는 한 번에 모아 보조 상태로 둔다.
   const [visitsCount, setVisitsCount] = useState<Record<string, number>>({});
@@ -170,9 +192,50 @@ export function MembersDirectory({ accentText }: Props) {
 
   function openReset(profileId: string) {
     setOpenResetId(profileId);
+    setOpenDeleteId(null);
     setNewPassword("");
     setResetError("");
     setResetOkId(null);
+  }
+  function openDelete(profileId: string) {
+    setOpenDeleteId(profileId);
+    setOpenResetId(null);
+    setDeleteConfirmText("");
+    setDeleteError("");
+  }
+  function cancelDelete() {
+    setOpenDeleteId(null);
+    setDeleteConfirmText("");
+    setDeleteError("");
+  }
+  async function submitDelete(profileId: string, expectedName: string) {
+    if (deleteConfirmText.trim() !== expectedName) {
+      setDeleteError(`확인을 위해 회원 이름 "${expectedName}" 을 정확히 입력하세요.`);
+      return;
+    }
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/admin/delete-member", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetProfileId: profileId }),
+      });
+      const data = (await res.json()) as { ok: boolean; error?: string };
+      if (!data.ok) {
+        setDeleteError(data.error ?? "삭제 실패");
+        setDeleting(false);
+        return;
+      }
+      // 성공 — 닫고 목록 갱신.
+      setOpenDeleteId(null);
+      setDeleteConfirmText("");
+      setDeleting(false);
+      await load();
+    } catch (e) {
+      setDeleteError((e as Error).message);
+      setDeleting(false);
+    }
   }
   function cancelReset() {
     setOpenResetId(null);
@@ -283,6 +346,8 @@ export function MembersDirectory({ accentText }: Props) {
           <ul className="space-y-2">
             {filtered.map((m) => {
               const isOpen = openResetId === m.id;
+              const isDeleteOpen = openDeleteId === m.id;
+              const isSelf = currentUserId === m.id;
               const justSucceeded = resetOkId === m.id;
               return (
                 <li
@@ -410,8 +475,54 @@ export function MembersDirectory({ accentText }: Props) {
                         </Button>
                       </div>
                     </div>
+                  ) : isDeleteOpen ? (
+                    <div className="mt-3 space-y-2 rounded border border-rose-300/30 bg-rose-950/30 p-3">
+                      <p className="text-[12px] font-semibold text-rose-200">
+                        ⚠️ 영구 삭제 — "{m.name}" 와 모든 관련 데이터(활동 기록·성찰·접속 로그·세특 초안 등)가 사라집니다.
+                      </p>
+                      <label
+                        htmlFor={`delete-${m.id}`}
+                        className="text-xs font-semibold text-rose-200"
+                      >
+                        확인을 위해 회원 이름{" "}
+                        <span className="font-bold">"{m.name}"</span> 을
+                        정확히 입력하세요.
+                      </label>
+                      <input
+                        id={`delete-${m.id}`}
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder={m.name}
+                        className="w-full rounded border border-rose-300/30 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-rose-300/40"
+                      />
+                      {deleteError ? (
+                        <p className="text-[11px] text-rose-300">{deleteError}</p>
+                      ) : null}
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={cancelDelete}
+                          disabled={deleting}
+                          className="rounded px-3 py-1 text-xs text-slate-400 hover:text-white disabled:opacity-60"
+                        >
+                          취소
+                        </button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => submitDelete(m.id, m.name)}
+                          disabled={
+                            deleting ||
+                            deleteConfirmText.trim() !== m.name
+                          }
+                        >
+                          {deleting ? "삭제 중..." : "영구 삭제"}
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="mt-2 flex justify-end">
+                    <div className="mt-2 flex flex-wrap justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => openReset(m.id)}
@@ -419,6 +530,15 @@ export function MembersDirectory({ accentText }: Props) {
                       >
                         🔐 비밀번호 재설정
                       </button>
+                      {!isSelf ? (
+                        <button
+                          type="button"
+                          onClick={() => openDelete(m.id)}
+                          className="rounded-full border border-rose-300/30 px-3 py-1 text-[11px] font-semibold text-rose-200 hover:bg-rose-300/10"
+                        >
+                          🗑️ 회원 삭제
+                        </button>
+                      ) : null}
                     </div>
                   )}
                 </li>
