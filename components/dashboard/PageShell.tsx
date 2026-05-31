@@ -5,6 +5,7 @@ import { AppHeader } from "./AppHeader";
 import { Sidebar } from "./Sidebar";
 import { MobileTabBar } from "./MobileTabBar";
 import { PageBreadcrumb } from "./PageBreadcrumb";
+import { LoginLogger } from "@/components/auth/LoginLogger";
 import type { DashboardRole } from "@/lib/dashboard/roleTheme";
 
 type PageShellProps = {
@@ -30,6 +31,8 @@ export function PageShell({
 }: PageShellProps) {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* 일자별 접속 로그 (KST 하루 1회, unique 제약으로 중복 무시). 4역할 공용 셸. */}
+      <LoginLogger />
       <AppHeader role={role} userName={userName} isAdmin={isAdmin} />
       <div className="flex flex-1">
         <Sidebar role={role} />

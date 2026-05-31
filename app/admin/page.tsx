@@ -6,6 +6,13 @@ import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { NoticeBoard } from "@/components/notices/NoticeBoard";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
+import { startOfThisWeekMonday } from "@/lib/dashboard/progressDates";
+
+function todayKst(): string {
+  const now = new Date();
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
+}
 
 // 관리자 대시보드 4행 구성 (사용자 결정):
 //   1행 통계 KPI (4): 오늘접속자·이번주 활동·성찰 작성 비율·새 건의사항
@@ -17,11 +24,18 @@ import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 type Counts = {
   pending: number | null;
   newFeedback: number | null;
+  todayLogins: number | null;
+  weeklyVisits: number | null;
+  /** 옵션 2 학생 단위 비율 (이번 주 방문한 학생 중 응답까지 한 학생 %). null=계산 전, 0~100. */
+  reflectionRatio: number | null;
 };
 
 const initialCounts: Counts = {
   pending: null,
   newFeedback: null,
+  todayLogins: null,
+  weeklyVisits: null,
+  reflectionRatio: null,
 };
 
 function formatCount(value: number | null) {
@@ -35,8 +49,16 @@ export default function AdminHomePage() {
 
   const load = useCallback(async () => {
     setErrorMessage("");
+    const today = todayKst();
+    const weekStartIso = startOfThisWeekMonday().toISOString();
 
-    const [pendingRes, newFeedbackRes] = await Promise.all([
+    // count 쿼리들 — RLS 관리자 ALL 로 전체 카운트.
+    const [
+      pendingRes,
+      newFeedbackRes,
+      todayLoginsRes,
+      weeklyVisitsRes,
+    ] = await Promise.all([
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
@@ -45,9 +67,72 @@ export default function AdminHomePage() {
         .from("feedback")
         .select("id", { count: "exact", head: true })
         .eq("status", "received"),
+      supabase
+        .from("login_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("log_date", today),
+      supabase
+        .from("activity_visits")
+        .select("id", { count: "exact", head: true })
+        .gte("visited_at", weekStartIso),
     ]);
 
-    const errors = [pendingRes.error, newFeedbackRes.error].filter(Boolean);
+    // 성찰 작성 비율(학생 단위) — 이번 주 활동한 학생 중 응답까지 한 학생.
+    //   1) activity_visits 의 이번 주 distinct profile_id 집합(분모)
+    //   2) activity_responses 의 이번 주 distinct student_id → students.profile_id 변환 집합(분자)
+    //   분모=0 이면 비율 null.
+    const [visitProfilesRes, responseStudentsRes] = await Promise.all([
+      supabase
+        .from("activity_visits")
+        .select("profile_id")
+        .gte("visited_at", weekStartIso),
+      supabase
+        .from("activity_responses")
+        .select("student_id")
+        .gte("created_at", weekStartIso),
+    ]);
+    const visitProfiles = new Set(
+      ((visitProfilesRes.data ?? []) as Array<{ profile_id: string }>).map(
+        (r) => r.profile_id
+      )
+    );
+    const respondedStudentIds = Array.from(
+      new Set(
+        ((responseStudentsRes.data ?? []) as Array<{ student_id: string }>).map(
+          (r) => r.student_id
+        )
+      )
+    );
+    let respondedProfiles = new Set<string>();
+    if (respondedStudentIds.length > 0) {
+      const { data: stuRows } = await supabase
+        .from("students")
+        .select("id, profile_id")
+        .in("id", respondedStudentIds);
+      respondedProfiles = new Set(
+        ((stuRows ?? []) as Array<{ profile_id: string }>).map(
+          (r) => r.profile_id
+        )
+      );
+    }
+    const denom = visitProfiles.size;
+    let reflectionRatio: number | null = null;
+    if (denom > 0) {
+      let respondedCount = 0;
+      for (const pid of visitProfiles) {
+        if (respondedProfiles.has(pid)) respondedCount += 1;
+      }
+      reflectionRatio = Math.round((respondedCount / denom) * 100);
+    }
+
+    const errors = [
+      pendingRes.error,
+      newFeedbackRes.error,
+      todayLoginsRes.error,
+      weeklyVisitsRes.error,
+      visitProfilesRes.error,
+      responseStudentsRes.error,
+    ].filter(Boolean);
     if (errors.length > 0) {
       setErrorMessage(errors.map((e) => e?.message ?? "").join(" / "));
     }
@@ -55,6 +140,9 @@ export default function AdminHomePage() {
     setCounts({
       pending: pendingRes.count ?? null,
       newFeedback: newFeedbackRes.count ?? null,
+      todayLogins: todayLoginsRes.count ?? null,
+      weeklyVisits: weeklyVisitsRes.count ?? null,
+      reflectionRatio,
     });
   }, []);
 
@@ -90,23 +178,27 @@ export default function AdminHomePage() {
       <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <KpiCard
           label="오늘 접속자"
-          value="-"
+          value={`${formatCount(counts.todayLogins)}명`}
+          valueClassName={theme.accentText}
           hint="통계 →"
-          valueClassName="text-slate-400"
           href="/admin/stats"
         />
         <KpiCard
           label="이번 주 활동"
-          value="-"
+          value={`${formatCount(counts.weeklyVisits)}회`}
+          valueClassName="text-cyan-200"
           hint="통계 →"
-          valueClassName="text-slate-400"
           href="/admin/stats"
         />
         <KpiCard
           label="성찰 작성 비율"
-          value="-"
-          hint="통계 →"
-          valueClassName="text-slate-400"
+          value={
+            counts.reflectionRatio == null
+              ? "···"
+              : `${counts.reflectionRatio}%`
+          }
+          valueClassName="text-emerald-200"
+          hint="이번 주(학생 단위) →"
           href="/admin/stats"
         />
         <KpiCard

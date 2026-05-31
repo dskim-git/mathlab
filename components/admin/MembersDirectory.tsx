@@ -41,8 +41,27 @@ type Props = {
   accentText: string;
 };
 
+function todayKstIsoDate(): string {
+  const now = new Date();
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
+}
+
+function dayDistanceLabel(isoDate: string): string {
+  const today = todayKstIsoDate();
+  if (isoDate === today) return "오늘";
+  const t = new Date(today + "T00:00:00Z").getTime();
+  const d = new Date(isoDate + "T00:00:00Z").getTime();
+  const diff = Math.round((t - d) / (24 * 60 * 60 * 1000));
+  if (diff === 1) return "어제";
+  if (diff > 1) return `${diff}일 전`;
+  return isoDate;
+}
+
 export function MembersDirectory({ accentText }: Props) {
   const [members, setMembers] = useState<MemberRow[]>([]);
+  // profile_id → 마지막 접속 일자(KST 'YYYY-MM-DD'). login_logs 의 max(log_date).
+  const [lastLogins, setLastLogins] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -57,15 +76,73 @@ export function MembersDirectory({ accentText }: Props) {
   const [resetError, setResetError] = useState("");
   const [resetOkId, setResetOkId] = useState<string | null>(null);
 
+  // profile_id → 누적 활동 방문 수(visits)·누적 응답 수(responses).
+  // 학생 행에만 표시하지만 데이터는 한 번에 모아 보조 상태로 둔다.
+  const [visitsCount, setVisitsCount] = useState<Record<string, number>>({});
+  const [responsesCount, setResponsesCount] = useState<Record<string, number>>(
+    {}
+  );
+
   const load = useCallback(async () => {
     setLoading(true);
     setErrorMessage("");
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, login_id, name, role, status, email, created_at")
-      .order("created_at", { ascending: false });
-    if (error) setErrorMessage(error.message);
-    setMembers((data ?? []) as MemberRow[]);
+
+    const [profilesRes, loginsRes, visitsRes, responsesRes, studentsRes] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, login_id, name, role, status, email, created_at")
+          .order("created_at", { ascending: false }),
+        // login_logs 의 (profile_id, log_date) — 같은 profile_id 의 max(log_date) 채집.
+        supabase
+          .from("login_logs")
+          .select("profile_id, log_date")
+          .order("log_date", { ascending: false }),
+        // 학생 활동 방문 카운트(전체) — 학교 규모 작아 클라이언트 집계 OK.
+        supabase.from("activity_visits").select("profile_id"),
+        // 학생 응답 — student_id 기준이라 students 로 profile_id 매핑 필요.
+        supabase.from("activity_responses").select("student_id"),
+        supabase.from("students").select("id, profile_id"),
+      ]);
+
+    if (profilesRes.error) setErrorMessage(profilesRes.error.message);
+    setMembers((profilesRes.data ?? []) as MemberRow[]);
+
+    // 마지막 접속 매핑 — order desc 라 첫 등장한 log_date 가 max.
+    const lastMap: Record<string, string> = {};
+    for (const r of (loginsRes.data ?? []) as Array<{
+      profile_id: string;
+      log_date: string;
+    }>) {
+      if (!lastMap[r.profile_id]) lastMap[r.profile_id] = r.log_date;
+    }
+    setLastLogins(lastMap);
+
+    // 누적 활동 방문 카운트.
+    const vMap: Record<string, number> = {};
+    for (const r of (visitsRes.data ?? []) as Array<{ profile_id: string }>) {
+      vMap[r.profile_id] = (vMap[r.profile_id] ?? 0) + 1;
+    }
+    setVisitsCount(vMap);
+
+    // 누적 응답 카운트 — student_id → profile_id 변환 후 집계.
+    const stuToProfile = new Map<string, string>();
+    for (const r of (studentsRes.data ?? []) as Array<{
+      id: string;
+      profile_id: string;
+    }>) {
+      stuToProfile.set(r.id, r.profile_id);
+    }
+    const rMap: Record<string, number> = {};
+    for (const r of (responsesRes.data ?? []) as Array<{
+      student_id: string;
+    }>) {
+      const pid = stuToProfile.get(r.student_id);
+      if (!pid) continue;
+      rMap[pid] = (rMap[pid] ?? 0) + 1;
+    }
+    setResponsesCount(rMap);
+
     setLoading(false);
   }, []);
 
@@ -244,9 +321,46 @@ export function MembersDirectory({ accentText }: Props) {
                           : m.status}
                       </span>
                       <span className="text-slate-500">
-                        {formatKoreanDateTime(m.created_at)}
+                        가입 {formatKoreanDateTime(m.created_at)}
                       </span>
                     </div>
+                  </div>
+
+                  {/* 가입날짜 아래 메타.
+                      학생: 누적 활동 → 누적 성찰 → 마지막 접속
+                      그 외: 마지막 접속만
+                      (마지막 접속을 항상 줄 끝에 두어 역할 무관 같은 위치) */}
+                  <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                    {m.role === "student" ? (
+                      <>
+                        <span>
+                          누적 활동{" "}
+                          <span className="font-semibold text-cyan-200">
+                            {visitsCount[m.id] ?? 0}회
+                          </span>
+                        </span>
+                        <span>
+                          누적 성찰{" "}
+                          <span className="font-semibold text-emerald-200">
+                            {responsesCount[m.id] ?? 0}개
+                          </span>
+                        </span>
+                        <span className="text-slate-700">·</span>
+                      </>
+                    ) : null}
+                    <span>
+                      마지막 접속:{" "}
+                      {lastLogins[m.id] ? (
+                        <span className="text-slate-200">
+                          {lastLogins[m.id]}{" "}
+                          <span className="text-slate-500">
+                            ({dayDistanceLabel(lastLogins[m.id])})
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">기록 없음</span>
+                      )}
+                    </span>
                   </div>
 
                   {justSucceeded ? (
