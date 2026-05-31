@@ -93,6 +93,28 @@ export default function AdminRosterPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
+  // 행별 ✕ 삭제 — confirm 으로 1번 더 확인.
+  async function handleDeleteRow(row: RosterRow) {
+    const label = `${row.student_code} ${row.name} (${row.grade}학년 ${row.class_number}반 ${row.student_number}번)`;
+    const ok = confirm(
+      `명렬표에서 영구 삭제할까요?\n${label}\n\n주의: 이 학생이 이미 회원가입한 상태라면 student_roster 행만 사라지고 학생 계정(profiles/students)은 그대로 남습니다. 계정도 함께 정리하려면 회원관리에서 별도 삭제하세요.`
+    );
+    if (!ok) return;
+    setErrorMessage("");
+    setMessage("");
+    const { error } = await supabase
+      .from("student_roster")
+      .delete()
+      .eq("id", row.id);
+    if (error) {
+      setErrorMessage(`삭제 오류: ${error.message}`);
+      return;
+    }
+    setMessage(`삭제: ${label}`);
+    // 표 갱신
+    setRoster((prev) => prev.filter((r) => r.id !== row.id));
+  }
+
   const loadRoster = useCallback(async (year: number) => {
     setIsLoading(true);
     const { data, error } = await supabase
@@ -302,6 +324,9 @@ export default function AdminRosterPage() {
                     <th className="py-2 pr-4">반</th>
                     <th className="py-2 pr-4">번호</th>
                     <th className="py-2 pr-4">이름</th>
+                    <th className="py-2 pr-2 text-right" scope="col">
+                      <span className="sr-only">삭제</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -314,6 +339,16 @@ export default function AdminRosterPage() {
                       <td className="py-2 pr-4">{row.class_number}</td>
                       <td className="py-2 pr-4">{row.student_number}</td>
                       <td className="py-2 pr-4">{row.name}</td>
+                      <td className="py-2 pr-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRow(row)}
+                          aria-label={`${row.name} 명렬표 삭제`}
+                          className="rounded border border-rose-300/30 px-2 py-0.5 text-[11px] font-semibold text-rose-200 transition hover:bg-rose-300/10"
+                        >
+                          ✕
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

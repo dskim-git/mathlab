@@ -82,6 +82,14 @@ export default function AdminNoticesPage() {
   const [listError, setListError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // 인라인 수정 — 한 번에 한 공지만 편집(title + body).
+  // 대상(target_kind/target_value) 은 단순화를 위해 수정 X (변경하려면 삭제 후 재작성).
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+
   // 1) 내 정보 + 학급 마스터 로드
   useEffect(() => {
     let active = true;
@@ -234,6 +242,43 @@ export default function AdminNoticesPage() {
       return;
     }
     setDeletingId(null);
+    load();
+  }
+
+  function startEdit(n: NoticeRow) {
+    setEditingId(n.id);
+    setEditTitle(n.title);
+    setEditBody(n.body);
+    setEditError("");
+  }
+  function cancelEdit() {
+    setEditingId(null);
+    setEditTitle("");
+    setEditBody("");
+    setEditError("");
+  }
+  async function saveEdit(id: string) {
+    const t = editTitle.trim();
+    const b = editBody.trim();
+    if (!t || !b) {
+      setEditError("제목과 본문을 모두 입력해 주세요.");
+      return;
+    }
+    setSavingEdit(true);
+    setEditError("");
+    const { error } = await supabase
+      .from("notices")
+      .update({ title: t, body: b })
+      .eq("id", id);
+    if (error) {
+      setEditError(error.message);
+      setSavingEdit(false);
+      return;
+    }
+    setSavingEdit(false);
+    setEditingId(null);
+    setEditTitle("");
+    setEditBody("");
     load();
   }
 
@@ -483,38 +528,98 @@ export default function AdminNoticesPage() {
           <p className="mt-3 text-sm text-slate-400">아직 발송한 공지가 없습니다.</p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {notices.map((n) => (
-              <li
-                key={n.id}
-                className="rounded-lg border border-white/5 bg-slate-950/60 p-3"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-white">{n.title}</p>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${theme.badgeClass}`}
-                  >
-                    {targetSummary(n)}
-                  </span>
-                </div>
-                <p className="mt-1 whitespace-pre-wrap text-xs text-slate-300">
-                  {n.body}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-                  <span>
-                    {n.profiles?.name ?? "(작성자 미상)"} ·{" "}
-                    {formatKoreanDateTime(n.created_at)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(n.id)}
-                    disabled={deletingId === n.id}
-                    className="rounded-full border border-red-300/40 px-2 py-0.5 font-semibold text-red-200 hover:bg-red-300/10 disabled:opacity-60"
-                  >
-                    {deletingId === n.id ? "삭제 중" : "삭제"}
-                  </button>
-                </div>
-              </li>
-            ))}
+            {notices.map((n) => {
+              const isEditing = editingId === n.id;
+              return (
+                <li
+                  key={n.id}
+                  className="rounded-lg border border-white/5 bg-slate-950/60 p-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        aria-label="공지 제목"
+                        className="flex-1 rounded border border-cyan-300/40 bg-slate-950 px-2 py-1 text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-cyan-300/40"
+                      />
+                    ) : (
+                      <p className="text-sm font-semibold text-white">
+                        {n.title}
+                      </p>
+                    )}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${theme.badgeClass}`}
+                    >
+                      {targetSummary(n)}
+                    </span>
+                  </div>
+                  {isEditing ? (
+                    <textarea
+                      value={editBody}
+                      onChange={(e) => setEditBody(e.target.value)}
+                      rows={4}
+                      aria-label="공지 본문"
+                      className="mt-2 w-full rounded border border-cyan-300/40 bg-slate-950 px-2 py-1 text-xs text-slate-200 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                    />
+                  ) : (
+                    <p className="mt-1 whitespace-pre-wrap text-xs text-slate-300">
+                      {n.body}
+                    </p>
+                  )}
+                  {isEditing && editError ? (
+                    <p className="mt-1 text-[11px] text-rose-300">
+                      {editError}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                    <span>
+                      {n.profiles?.name ?? "(작성자 미상)"} ·{" "}
+                      {formatKoreanDateTime(n.created_at)}
+                    </span>
+                    {isEditing ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          disabled={savingEdit}
+                          className="rounded-full border border-white/15 px-2 py-0.5 font-semibold text-slate-300 hover:bg-white/10 disabled:opacity-60"
+                        >
+                          취소
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => saveEdit(n.id)}
+                          disabled={savingEdit}
+                          className="rounded-full bg-cyan-300 px-2 py-0.5 font-bold text-slate-950 hover:bg-cyan-200 disabled:opacity-60"
+                        >
+                          {savingEdit ? "저장 중" : "저장"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(n)}
+                          className="rounded-full border border-white/15 px-2 py-0.5 font-semibold text-slate-300 hover:bg-white/10"
+                        >
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(n.id)}
+                          disabled={deletingId === n.id}
+                          className="rounded-full border border-red-300/40 px-2 py-0.5 font-semibold text-red-200 hover:bg-red-300/10 disabled:opacity-60"
+                        >
+                          {deletingId === n.id ? "삭제 중" : "삭제"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

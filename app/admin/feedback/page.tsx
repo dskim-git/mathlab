@@ -48,6 +48,7 @@ export default function AdminFeedbackPage() {
   const [statusDraft, setStatusDraft] = useState<FeedbackStatus>("received");
   const [replyDraft, setReplyDraft] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,6 +114,24 @@ export default function AdminFeedbackPage() {
       return;
     }
     setSavingId(null);
+    setOpenId(null);
+    load();
+  }
+
+  async function handleDelete(rowId: string, title: string) {
+    const ok = confirm(
+      `이 건의를 영구 삭제할까요?\n"${title}"\n\n주의: 작성자 본인 화면에서도 함께 사라집니다.`
+    );
+    if (!ok) return;
+    setDeletingId(rowId);
+    setErrorMessage("");
+    const { error } = await supabase.from("feedback").delete().eq("id", rowId);
+    if (error) {
+      setErrorMessage(error.message);
+      setDeletingId(null);
+      return;
+    }
+    setDeletingId(null);
     setOpenId(null);
     load();
   }
@@ -259,7 +278,15 @@ export default function AdminFeedbackPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(row.id, row.title)}
+                        disabled={isSaving || deletingId === row.id}
+                        className="mr-auto rounded-full border border-rose-300/30 px-3 py-1 text-xs font-semibold text-rose-200 transition hover:bg-rose-300/10 disabled:opacity-60"
+                      >
+                        {deletingId === row.id ? "삭제 중..." : "🗑️ 영구 삭제"}
+                      </button>
                       <button
                         type="button"
                         onClick={cancelEdit}
