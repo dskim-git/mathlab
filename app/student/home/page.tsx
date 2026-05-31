@@ -7,12 +7,8 @@ import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { NoticeBoard } from "@/components/notices/NoticeBoard";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
-import {
-  fetchStudentTodayLessons,
-  formatTodayLabel,
-  type TodayLesson,
-} from "@/lib/dashboard/todayLessons";
 import { startOfThisWeekMonday } from "@/lib/dashboard/progressDates";
+import { shortActivityTitle } from "@/lib/activities/activityTitles";
 
 type StudentInfo = {
   studentId: string;
@@ -24,12 +20,11 @@ type StudentInfo = {
   studentNumber: number;
 };
 
-type RecentResponseRow = {
-  id: string;
+type RecentVisitRow = {
+  id: number;
+  activity_slug: string;
   subject: string | null;
-  activity_slug: string | null;
-  created_at: string;
-  activities: { title: string | null } | null;
+  visited_at: string;
 };
 
 function formatDateTime(value: string) {
@@ -48,10 +43,11 @@ export default function StudentHomePage() {
   const [authChecked, setAuthChecked] = useState(false);
 
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [reflectionCount, setReflectionCount] = useState<number | null>(null);
   const [markedCount, setMarkedCount] = useState<number | null>(null);
   const [weeklyCount, setWeeklyCount] = useState<number | null>(null);
-  const [recent, setRecent] = useState<RecentResponseRow[]>([]);
-  const [todayLessons, setTodayLessons] = useState<TodayLesson[] | null>(null);
+  const [recent, setRecent] = useState<RecentVisitRow[]>([]);
+  const [accessibleSubjects, setAccessibleSubjects] = useState<string[]>([]);
   const [lastUnit, setLastUnit] = useState<
     { subject: string; unit_key: string; unit_title: string } | null
   >(null);
@@ -118,65 +114,98 @@ export default function StudentHomePage() {
   }, []);
 
   const studentId = student?.studentId;
+  const studentGrade = student?.grade;
+  const studentClassNumber = student?.classNumber;
+  const isAdmin = userRole === "admin";
 
+  // KPI 카운트들 — activity_visits 기반(누적/이번주) + reflection_priority(별표).
   const loadStats = useCallback(async () => {
     if (!studentId) return;
     const weekStartIso = startOfThisWeekMonday().toISOString();
-    const [countRes, markedRes, weeklyRes, recentRes] = await Promise.all([
+    const [
+      {
+        data: { user },
+      },
+      totalRes,
+      weeklyRes,
+      reflectionRes,
+      markedRes,
+      recentRes,
+    ] = await Promise.all([
+      supabase.auth.getUser(),
+      // 누적 활동(visits 전체) — 본인만(RLS 자체 제한).
+      supabase
+        .from("activity_visits")
+        .select("id", { count: "exact", head: true }),
+      supabase
+        .from("activity_visits")
+        .select("id", { count: "exact", head: true })
+        .gte("visited_at", weekStartIso),
+      // 내 성찰 총수(제출한 응답 개수) — activity_responses.
       supabase
         .from("activity_responses")
         .select("id", { count: "exact", head: true })
         .eq("student_id", studentId),
+      // 별표 성찰 — 본인이 마킹한 reflection_priority.
       supabase
         .from("reflection_priority")
         .select("id", { count: "exact", head: true })
         .eq("student_id", studentId)
         .eq("marked", true),
+      // 최근 활동 미리보기 — 활동 슬러그 + 시각(visits).
       supabase
-        .from("activity_responses")
-        .select("id", { count: "exact", head: true })
-        .eq("student_id", studentId)
-        .gte("created_at", weekStartIso),
-      supabase
-        .from("activity_responses")
-        .select(
-          "id, subject, activity_slug, created_at, activities ( title )"
-        )
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false })
+        .from("activity_visits")
+        .select("id, activity_slug, subject, visited_at")
+        .order("visited_at", { ascending: false })
         .limit(3),
     ]);
 
-    setTotalCount(countRes.count ?? 0);
-    setMarkedCount(markedRes.count ?? 0);
+    // user 는 위에서 RLS 가 알아서 본인 행만 카운트하므로 별도 안 씀.
+    void user;
+    setTotalCount(totalRes.count ?? 0);
     setWeeklyCount(weeklyRes.count ?? 0);
-    setRecent((recentRes.data ?? []) as unknown as RecentResponseRow[]);
+    setReflectionCount(reflectionRes.count ?? 0);
+    setMarkedCount(markedRes.count ?? 0);
+    setRecent((recentRes.data ?? []) as RecentVisitRow[]);
   }, [studentId]);
 
   useEffect(() => {
     loadStats();
   }, [loadStats]);
 
-  const studentGrade = student?.grade;
-  const studentClassNumber = student?.classNumber;
-
+  // 접근 가능한 교과(학생=학급 권한, 관리자=전체) — Hero 칩 그리드.
   useEffect(() => {
     let active = true;
-    if (studentGrade == null || studentClassNumber == null) {
-      setTodayLessons(null);
-      return;
-    }
     (async () => {
-      const rows = await fetchStudentTodayLessons(supabase, {
-        grade: studentGrade,
-        classNumber: studentClassNumber,
-      });
-      if (active) setTodayLessons(rows);
+      const { data: allSubj } = await supabase
+        .from("subjects")
+        .select("name, order_index")
+        .order("order_index");
+      const all = (allSubj ?? []) as Array<{ name: string; order_index: number }>;
+
+      if (isAdmin) {
+        if (active) setAccessibleSubjects(all.map((s) => s.name));
+        return;
+      }
+      if (studentGrade == null || studentClassNumber == null) {
+        if (active) setAccessibleSubjects([]);
+        return;
+      }
+      const { data: perms } = await supabase
+        .from("class_subject_permissions")
+        .select("subject")
+        .eq("grade", studentGrade)
+        .eq("class_number", studentClassNumber);
+      const allowed = new Set(
+        ((perms ?? []) as Array<{ subject: string }>).map((r) => r.subject)
+      );
+      if (active)
+        setAccessibleSubjects(all.filter((s) => allowed.has(s.name)).map((s) => s.name));
     })();
     return () => {
       active = false;
     };
-  }, [studentGrade, studentClassNumber]);
+  }, [isAdmin, studentGrade, studentClassNumber]);
 
   // 이어보기 — /learn 에서 마지막으로 본 잎(소단원)
   useEffect(() => {
@@ -201,9 +230,6 @@ export default function StudentHomePage() {
       } | null;
       setLastUnit(row);
     })();
-    return () => {
-      active = false;
-    };
   }, []);
 
   if (!authChecked) {
@@ -215,7 +241,6 @@ export default function StudentHomePage() {
   }
 
   const displayName = student?.name ?? profileName ?? "";
-  const isAdmin = userRole === "admin";
   const theme = getRoleTheme("student");
 
   return (
@@ -240,29 +265,78 @@ export default function StudentHomePage() {
 
       <NoticeBoard accentText={theme.accentText} />
 
-      {/* KPI */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* Hero — 내 교과 바로가기. 학생 학습 동선의 첫 진입점. */}
+      <section className="mb-6 rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-300/10 via-white/5 to-transparent p-5 sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <p className={`text-xs font-semibold ${theme.accentText}`}>
+              내 교과
+            </p>
+            <h2 className="mt-1 text-xl font-bold text-white sm:text-2xl">
+              교과를 선택해 학습을 시작하세요
+            </h2>
+          </div>
+          <Link
+            href="/learn"
+            className="text-xs font-semibold text-slate-400 transition hover:text-white"
+          >
+            전체 교과 학습 →
+          </Link>
+        </div>
+
+        {accessibleSubjects.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">
+            접근 가능한 교과가 없습니다. 관리자에게 교과 접근 권한을 요청해 주세요.
+          </p>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+            {accessibleSubjects.map((s) => (
+              <Link
+                key={s}
+                href={`/learn?subject=${encodeURIComponent(s)}`}
+                className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-3 transition hover:-translate-y-0.5 hover:border-emerald-300/50 hover:bg-slate-950"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-300/15 text-xl">
+                  📘
+                </span>
+                <span className="text-sm font-semibold text-white group-hover:text-emerald-100">
+                  {s}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 1행 3개 — 활동·성찰·이어보기 (KPI 카드, 누적·이번주를 한 카드에 묶어 표시) */}
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
         <KpiCard
-          label="누적 활동"
-          value={totalCount == null ? "···" : `${totalCount}회`}
-          valueClassName={theme.accentText}
-          href="/student/records"
-        />
-        <KpiCard
-          label="별표 성찰"
-          value={markedCount == null ? "···" : `${markedCount}개`}
-          hint="생기부 후보 →"
-          valueClassName="text-amber-200"
-          href="/student/reflections"
-        />
-        <KpiCard
-          label="이번 주 활동"
-          value={weeklyCount == null ? "···" : `${weeklyCount}회`}
-          hint="활동 기록 →"
-          valueClassName={
-            (weeklyCount ?? 0) > 0 ? theme.accentText : "text-slate-400"
+          label="내 활동 (이번 주 활동)"
+          value={
+            <span>
+              {totalCount == null ? "···" : `${totalCount}회`}
+              <span className="ml-2 text-lg text-amber-200 sm:text-xl">
+                ({weeklyCount == null ? "···" : `${weeklyCount}회`})
+              </span>
+            </span>
           }
-          href="/student/records"
+          valueClassName={theme.accentText}
+          hint="학습 이력 →"
+          href="/student/activity"
+        />
+        <KpiCard
+          label="내 성찰 (별표 성찰)"
+          value={
+            <span>
+              {reflectionCount == null ? "···" : `${reflectionCount}개`}
+              <span className="ml-2 text-lg text-amber-200 sm:text-xl">
+                ({markedCount == null ? "···" : `${markedCount}개`})
+              </span>
+            </span>
+          }
+          valueClassName={theme.accentText}
+          hint="응답·생기부 후보 →"
+          href="/student/reflections"
         />
         <KpiCard
           label="이어보기"
@@ -291,85 +365,8 @@ export default function StudentHomePage() {
         />
       </div>
 
-      {/* 오늘의 수업 — 같은 학급(grade+class_number)의 progress_tracker 오늘 행 */}
-      <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold text-slate-400">오늘의 수업</p>
-            <p className="mt-1 text-sm text-slate-300">{formatTodayLabel()}</p>
-          </div>
-        </div>
-
-        {student == null ? (
-          <p className="mt-3 text-sm text-slate-400">
-            학생 정보가 없어 오늘의 수업을 불러올 수 없습니다.
-          </p>
-        ) : todayLessons == null ? (
-          <p className="mt-3 text-sm text-slate-400">불러오는 중...</p>
-        ) : todayLessons.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">
-            오늘 예정된 수업이 없습니다.
-          </p>
-        ) : (
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-            {todayLessons.map((row) => (
-              <li
-                key={row.id}
-                className="rounded-lg border border-white/10 bg-slate-950/60 p-3"
-              >
-                <span className={`text-xs font-semibold ${theme.accentText}`}>
-                  {row.subject}
-                </span>
-                <p className="mt-1 text-sm font-semibold text-white">
-                  {row.lesson_topic || (
-                    <span className="text-slate-500">(주제 미입력)</span>
-                  )}
-                </p>
-                {row.notes ? (
-                  <p className="mt-1 text-xs text-slate-400 whitespace-pre-wrap">
-                    {row.notes}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* 기능 카드 그리드 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-        <DashboardCard
-          icon="📚"
-          title="교과 학습"
-          description="단원별 수업 자료"
-          href="/learn"
-          hoverBorderClass={theme.hoverBorder}
-        />
-        <DashboardCard
-          icon="📝"
-          title="내 활동"
-          description={
-            totalCount != null ? `누적 ${totalCount}개` : "활동 기록·결과"
-          }
-          href="/student/records"
-          hoverBorderClass={theme.hoverBorder}
-        />
-        <DashboardCard
-          icon="💭"
-          title="내 성찰"
-          description={
-            markedCount != null ? `별표 ${markedCount}개` : "생기부 후보 모음"
-          }
-          href="/student/reflections"
-          hoverBorderClass={theme.hoverBorder}
-        />
-        <DashboardCard
-          icon="🎯"
-          title="입장코드"
-          description="수업 참여"
-          href="/join"
-          hoverBorderClass={theme.hoverBorder}
-        />
+      {/* 2행 2개 — 건의·내 정보 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4">
         <DashboardCard
           icon="💡"
           title="건의 보내기"
@@ -386,12 +383,12 @@ export default function StudentHomePage() {
         />
       </div>
 
-      {/* 최근 3건 미리보기 */}
+      {/* 최근 활동 — visits 최근 3건 */}
       <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base font-bold">최근 활동</h2>
           <Link
-            href="/student/records"
+            href="/student/activity"
             className={`text-xs font-semibold transition ${theme.accentText} hover:opacity-80`}
           >
             전체 보기 →
@@ -399,11 +396,11 @@ export default function StudentHomePage() {
         </div>
         {recent.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">
-            아직 제출한 활동이 없습니다.{" "}
+            아직 학습 이력이 없습니다.{" "}
             <Link href="/learn" className={theme.accentText}>
               교과 학습
             </Link>{" "}
-            에서 활동을 해보세요.
+            에서 활동을 시작해 보세요.
           </p>
         ) : (
           <ul className="mt-3 space-y-2">
@@ -414,9 +411,7 @@ export default function StudentHomePage() {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-white">
-                    {row.activities?.title ??
-                      row.activity_slug ??
-                      "활동"}
+                    {shortActivityTitle(row.activity_slug)}
                   </span>
                   {row.subject ? (
                     <span className={`text-xs ${theme.accentText}`}>
@@ -425,7 +420,7 @@ export default function StudentHomePage() {
                   ) : null}
                 </div>
                 <span className="text-xs text-slate-400">
-                  {formatDateTime(row.created_at)}
+                  {formatDateTime(row.visited_at)}
                 </span>
               </li>
             ))}
