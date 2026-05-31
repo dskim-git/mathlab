@@ -12,6 +12,7 @@ import {
   formatTodayLabel,
   type TodayLesson,
 } from "@/lib/dashboard/todayLessons";
+import { startOfThisWeekMonday } from "@/lib/dashboard/progressDates";
 
 type StudentInfo = {
   studentId: string;
@@ -48,8 +49,12 @@ export default function StudentHomePage() {
 
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [markedCount, setMarkedCount] = useState<number | null>(null);
+  const [weeklyCount, setWeeklyCount] = useState<number | null>(null);
   const [recent, setRecent] = useState<RecentResponseRow[]>([]);
   const [todayLessons, setTodayLessons] = useState<TodayLesson[] | null>(null);
+  const [lastUnit, setLastUnit] = useState<
+    { subject: string; unit_key: string; unit_title: string } | null
+  >(null);
 
   useEffect(() => {
     let active = true;
@@ -116,7 +121,8 @@ export default function StudentHomePage() {
 
   const loadStats = useCallback(async () => {
     if (!studentId) return;
-    const [countRes, markedRes, recentRes] = await Promise.all([
+    const weekStartIso = startOfThisWeekMonday().toISOString();
+    const [countRes, markedRes, weeklyRes, recentRes] = await Promise.all([
       supabase
         .from("activity_responses")
         .select("id", { count: "exact", head: true })
@@ -126,6 +132,11 @@ export default function StudentHomePage() {
         .select("id", { count: "exact", head: true })
         .eq("student_id", studentId)
         .eq("marked", true),
+      supabase
+        .from("activity_responses")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .gte("created_at", weekStartIso),
       supabase
         .from("activity_responses")
         .select(
@@ -138,6 +149,7 @@ export default function StudentHomePage() {
 
     setTotalCount(countRes.count ?? 0);
     setMarkedCount(markedRes.count ?? 0);
+    setWeeklyCount(weeklyRes.count ?? 0);
     setRecent((recentRes.data ?? []) as unknown as RecentResponseRow[]);
   }, [studentId]);
 
@@ -165,6 +177,34 @@ export default function StudentHomePage() {
       active = false;
     };
   }, [studentGrade, studentClassNumber]);
+
+  // 이어보기 — /learn 에서 마지막으로 본 잎(소단원)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!active || !user) return;
+      const { data } = await supabase
+        .from("learning_progress")
+        .select("subject, unit_key, unit_title")
+        .eq("profile_id", user.id)
+        .order("last_seen_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!active) return;
+      const row = data as {
+        subject: string;
+        unit_key: string;
+        unit_title: string;
+      } | null;
+      setLastUnit(row);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (!authChecked) {
     return (
@@ -217,17 +257,37 @@ export default function StudentHomePage() {
         />
         <KpiCard
           label="이번 주 활동"
-          value="-"
-          hint="교과 학습 →"
-          valueClassName="text-slate-400"
-          href="/learn"
+          value={weeklyCount == null ? "···" : `${weeklyCount}회`}
+          hint="활동 기록 →"
+          valueClassName={
+            (weeklyCount ?? 0) > 0 ? theme.accentText : "text-slate-400"
+          }
+          href="/student/records"
         />
         <KpiCard
           label="이어보기"
-          value="-"
-          hint="교과 학습 →"
-          valueClassName="text-slate-400"
-          href="/learn"
+          value={
+            lastUnit ? (
+              <span className="block break-keep text-lg leading-snug sm:text-xl">
+                {lastUnit.unit_title}
+              </span>
+            ) : (
+              "—"
+            )
+          }
+          hint={
+            lastUnit ? `${lastUnit.subject} →` : "교과 학습에서 시작 →"
+          }
+          valueClassName={
+            lastUnit ? theme.accentText : "text-slate-400"
+          }
+          href={
+            lastUnit
+              ? `/learn?subject=${encodeURIComponent(
+                  lastUnit.subject
+                )}&unit=${encodeURIComponent(lastUnit.unit_key)}`
+              : "/learn"
+          }
         />
       </div>
 

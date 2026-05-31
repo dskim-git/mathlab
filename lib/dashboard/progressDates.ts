@@ -18,6 +18,11 @@ function addDays(d: Date, n: number): Date {
   return x;
 }
 
+/** 이번 주 월요일 00:00 (로컬 타임존). KPI/카운트의 "이번 주" 시작 시각. */
+export function startOfThisWeekMonday(now: Date = new Date()): Date {
+  return startOfWeekMonday(now);
+}
+
 export function toIsoDate(d: Date): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");

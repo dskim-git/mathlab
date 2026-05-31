@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { extractMainReflection } from "@/lib/activities/reflection";
 import {
   SEBTEUK_MODELS,
   DEFAULT_SEBTEUK_MODEL,
@@ -23,7 +24,7 @@ type RecordRow = {
   subject: string | null;
   activity_slug: string | null;
   created_at: string;
-  reflection_data: { reflection?: string } | null;
+  reflection_data: Record<string, unknown> | null;
   activities: { title: string | null } | null;
 };
 
@@ -230,7 +231,7 @@ export function SebteukWorkflow({
     const others = chosen.filter((r) => !markedIds.has(r.id));
     const fmtLine = (r: RecordRow, prefix: string) => {
       const title = r.activities?.title ?? r.activity_slug ?? "활동";
-      const refl = r.reflection_data?.reflection?.trim() ?? "(성찰 없음)";
+      const refl = extractMainReflection(r.reflection_data) || "(성찰 없음)";
       return `${prefix} 활동: ${title}\n  성찰: ${refl}`;
     };
     const blocks: string[] = [];
@@ -488,15 +489,18 @@ export function SebteukWorkflow({
                             </span>
                           ) : null}
                         </div>
-                        {r.reflection_data?.reflection ? (
-                          <p className="mt-2 whitespace-pre-wrap text-xs text-slate-300">
-                            {r.reflection_data.reflection.trim()}
-                          </p>
-                        ) : (
-                          <p className="mt-2 text-[11px] text-slate-500">
-                            성찰 없음
-                          </p>
-                        )}
+                        {(() => {
+                          const refl = extractMainReflection(r.reflection_data);
+                          return refl ? (
+                            <p className="mt-2 whitespace-pre-wrap text-xs text-slate-300">
+                              {refl}
+                            </p>
+                          ) : (
+                            <p className="mt-2 text-[11px] text-slate-500">
+                              성찰 없음
+                            </p>
+                          );
+                        })()}
                       </div>
                     </label>
                   </li>

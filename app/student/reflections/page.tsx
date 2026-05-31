@@ -6,12 +6,13 @@ import { supabase } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClasses } from "@/components/ui/Button";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
+import { extractMainReflection } from "@/lib/activities/reflection";
 
 type ActivityResponseRow = {
   id: string;
   subject: string | null;
   activity_slug: string | null;
-  reflection_data: { reflection?: string } | null;
+  reflection_data: Record<string, unknown> | null;
   created_at: string;
   activities: { title: string | null } | null;
 };
@@ -222,7 +223,7 @@ export default function StudentReflectionsPage() {
         <ul className="space-y-3">
           {markedSorted.map((row) => {
             const prio = priorities[row.id];
-            const reflection = row.reflection_data?.reflection?.trim() ?? "";
+            const reflection = extractMainReflection(row.reflection_data);
             const isEditingComment = editingComment === row.id;
 
             return (
