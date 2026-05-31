@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/requireUser";
 import { getAccessibleSubjects } from "@/lib/curriculum/accessibleSubjects";
+import { fetchUserOverrideMap } from "@/lib/curriculum/lessonOverrides";
 import { OT_MATERIALS } from "@/lib/learn/otMaterials";
 import { buttonClasses } from "@/components/ui/Button";
 import LearnBrowser, { type CurriculumUnit } from "@/components/learn/LearnBrowser";
@@ -23,6 +24,17 @@ export default async function LearnPage() {
       .order("order_index");
     units = (data ?? []) as CurriculumUnit[];
   }
+
+  // 학생 = 자기 학급 담당 교사의 override / 교사 = 본인 override / 그 외 = 빈 맵.
+  // LearnBrowser 가 잎 선택 시 (subject, unit_key) 로 lookup 해 기본 블록 위에 적용한다.
+  const overrideMap = await fetchUserOverrideMap(supabase, {
+    role: profile.role,
+    userId: user.id,
+  });
+  const overrideEntries = Array.from(overrideMap.entries()).map(([key, ids]) => ({
+    key,
+    blockIds: ids,
+  }));
 
   const homeHref = profile.role === "student" ? "/student/home" : "/teacher";
   const isAdmin = profile.role === "admin";
@@ -47,7 +59,12 @@ export default async function LearnPage() {
         </div>
 
         <div className="mt-8">
-          <LearnBrowser subjects={subjects} units={units} otMaterials={otMaterials} />
+          <LearnBrowser
+            subjects={subjects}
+            units={units}
+            otMaterials={otMaterials}
+            overrideEntries={overrideEntries}
+          />
         </div>
       </div>
     </main>

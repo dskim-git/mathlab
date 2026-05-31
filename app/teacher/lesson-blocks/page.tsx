@@ -1,45 +1,98 @@
-import Link from "next/link";
-import { requireTeacher } from "@/lib/auth/requireTeacher";
-import { buttonClasses } from "@/components/ui/Button";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-// 자리표시자 — 단원 안의 수업 블록을 교사별로 편집(순서 변경/제외)하는 화면.
-// 데이터 모델(teacher_unit_overrides) 과 학생측 진입 시 "내 담당 교사 우선" 해석 로직을
-// 별도 작업(C"-b) 으로 분리해 진행 중.
+import { requireTeacher } from "@/lib/auth/requireTeacher";
+import LessonBlocksEditor, {
+  type EditorOverride,
+  type EditorUnit,
+} from "@/components/teacher/LessonBlocksEditor";
+
+// 교사 페이지 — 단원(잎) 별 수업 블록 커스터마이즈.
+// - 본인 담당 교과(관리자=전체) 의 curriculum_units 와 본인 teacher_unit_overrides 를 미리 SELECT.
+// - 편집 UI 는 클라이언트 컴포넌트(LessonBlocksEditor)에서 처리.
+
+type TeacherPermissionRow = { subject: string };
+
 export default async function TeacherLessonBlocksPage() {
-  await requireTeacher();
+  const { supabase, user, profile } = await requireTeacher();
+  const isAdmin = profile.role === "admin";
+
+  // 담당 교과 — 관리자=전체, 교사=teacher_permissions 의 distinct subject.
+  let subjects: string[] = [];
+  if (isAdmin) {
+    const { data } = await supabase
+      .from("subjects")
+      .select("name, order_index")
+      .order("order_index");
+    subjects = ((data ?? []) as Array<{ name: string }>).map((s) => s.name);
+  } else {
+    const { data: teacherRow } = await supabase
+      .from("teachers")
+      .select("id")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    if (teacherRow) {
+      const { data } = await supabase
+        .from("teacher_permissions")
+        .select("subject")
+        .eq("teacher_id", (teacherRow as { id: string }).id);
+      const set = new Set(
+        ((data ?? []) as TeacherPermissionRow[]).map((r) => r.subject)
+      );
+      if (set.size > 0) {
+        const { data: ordered } = await supabase
+          .from("subjects")
+          .select("name, order_index")
+          .in("name", Array.from(set))
+          .order("order_index");
+        subjects = ((ordered ?? []) as Array<{ name: string }>).map(
+          (s) => s.name
+        );
+      }
+    }
+  }
+
+  // 위 교과들에 속하는 모든 curriculum_units 한 번에 가져오기.
+  let units: EditorUnit[] = [];
+  if (subjects.length > 0) {
+    const { data } = await supabase
+      .from("curriculum_units")
+      .select(
+        "id, subject, parent_id, unit_key, label, depth, order_index, content_blocks"
+      )
+      .in("subject", subjects)
+      .order("depth")
+      .order("order_index");
+    units = (data ?? []) as EditorUnit[];
+  }
+
+  // 본인이 만들어둔 override 들 — RLS 본인 SELECT 로 자동 필터.
+  const { data: ovData } = await supabase
+    .from("teacher_unit_overrides")
+    .select("subject, unit_key, block_ids")
+    .eq("teacher_profile_id", user.id);
+  const overrides = (ovData ?? []) as EditorOverride[];
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
+    <>
+      <div className="mb-6">
         <p className="text-sm font-semibold text-cyan-300">수업활동 편집</p>
         <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
-          내 단원·블록 구성 (준비 중)
+          내 단원·블록 구성
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
-          이 화면에서는 곧 각 단원의 수업 블록 순서를 조정하거나 필요 없는
-          블록을 제외할 수 있게 됩니다. 편집 결과는 교사별로 저장되어 다른
-          교사·기본 자료에는 영향을 주지 않습니다.
+        <p className="mt-1 text-sm text-slate-400">
+          기본 자료 위에 본인 수업용 구성을 얹습니다. 불필요한 블록은 빼고
+          순서를 바꿔도 다른 교사·기본 자료에는 영향이 없습니다. ●는 내가 편집한
+          단원입니다.
         </p>
       </div>
 
-      <section className="rounded-2xl border border-amber-300/30 bg-amber-300/5 p-5 text-sm leading-7 text-amber-100">
-        <p className="font-semibold">기능 범위(예정)</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>교과·대단원·중단원·소단원 트리에서 단원을 선택</li>
-          <li>그 단원의 기본 수업 블록을 가져와 미리보기</li>
-          <li>각 블록 순서 변경(↑↓) / 제외(체크 해제) / 다시 포함</li>
-          <li>저장 시 본인 계정에만 적용 — 다른 교사·기본 자료 영향 없음</li>
-          <li>학생이 자기 학급의 담당 교사 화면을 따라가도록 자동 연결</li>
-        </ul>
-      </section>
-
-      <div className="flex flex-wrap gap-2">
-        <Link href="/learn" className={buttonClasses("secondary", { size: "sm" })}>
-          기본 수업 자료 둘러보기 (교과 학습)
-        </Link>
-        <Link href="/teacher" className={buttonClasses("neutral", { size: "sm" })}>
-          교사 홈으로
-        </Link>
-      </div>
-    </div>
+      <LessonBlocksEditor
+        subjects={subjects}
+        units={units}
+        overrides={overrides}
+        teacherProfileId={user.id}
+      />
+    </>
   );
 }
