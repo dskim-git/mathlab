@@ -6,6 +6,17 @@ import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 import { supabase } from "@/lib/supabase/client";
 import type { ContentBlock } from "@/lib/activities/activityBlocks";
 import type { AccessibleSubject } from "@/lib/curriculum/accessibleSubjects";
+import {
+  applyOverrideToBlocks,
+  makeOverrideKey,
+} from "@/lib/curriculum/lessonOverrides";
+
+/** 서버에서 미리 해석한 override 항목(키 + 블록 ID 순서 배열). */
+export type LessonOverrideEntry = {
+  /** makeOverrideKey(subject, unit_key) 결과 */
+  key: string;
+  blockIds: string[];
+};
 
 export type CurriculumUnit = {
   id: string;
@@ -33,12 +44,24 @@ export default function LearnBrowser({
   subjects,
   units,
   otMaterials = {},
+  overrideEntries = [],
 }: {
   subjects: AccessibleSubject[];
   units: CurriculumUnit[];
   /** 교과명 → OT(오리엔테이션) Canva 임베드 URL. 관리자에게만 전달된다. */
   otMaterials?: Record<string, string>;
+  /**
+   * 현재 사용자에게 적용할 단원별 블록 ID 오버라이드.
+   * 학생 = 자기 학급 담당 교사의 편집, 교사 = 본인 편집, 그 외 = 빈 배열.
+   */
+  overrideEntries?: LessonOverrideEntry[];
 }) {
+  const overrideMap = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const e of overrideEntries) m.set(e.key, e.blockIds);
+    return m;
+  }, [overrideEntries]);
+
   const searchParams = useSearchParams();
   const qsSubject = searchParams.get("subject");
   const qsUnit = searchParams.get("unit");
@@ -292,17 +315,31 @@ export default function LearnBrowser({
             </div>
           </div>
         ) : selectedLeaf ? (
-          <ActivityRenderer
-            key={selectedLeaf.id}
-            blocks={selectedLeaf.content_blocks ?? []}
-            // /learn 은 교사·학생·관리자 공용 미리보기 동선이라 mode 는 teacher 유지
-            // (ProbabilitySimulator 같은 세션 기반 활동의 제출 버튼 비활성).
-            // 단 enableReflectionSave 를 켜서 이식 미니활동(ReflectionForm)의 자동 저장은
-            // 활성화 — submitActivityReflection 이 students 행 없으면 silent skip.
-            mode="teacher"
-            enableReflectionSave
-            activitySubject={selectedLeaf.subject}
-          />
+          (() => {
+            // 본인(교사) 또는 자기 학급 담당 교사의 override 가 있으면 그 순서·포함 적용.
+            // 없으면 기본 블록 그대로.
+            const ovKey = makeOverrideKey(
+              selectedLeaf.subject,
+              selectedLeaf.unit_key
+            );
+            const ovIds = overrideMap.get(ovKey);
+            const base = selectedLeaf.content_blocks ?? [];
+            const blocks = applyOverrideToBlocks(base, ovIds);
+            return (
+              <ActivityRenderer
+                // override 적용 결과가 바뀌면 강제 재마운트 → 방문한 블록 상태 초기화.
+                key={`${selectedLeaf.id}::${ovIds ? ovIds.join(",") : "base"}`}
+                blocks={blocks}
+                // /learn 은 교사·학생·관리자 공용 미리보기 동선이라 mode 는 teacher 유지
+                // (ProbabilitySimulator 같은 세션 기반 활동의 제출 버튼 비활성).
+                // 단 enableReflectionSave 를 켜서 이식 미니활동(ReflectionForm)의 자동 저장은
+                // 활성화 — submitActivityReflection 이 students 행 없으면 silent skip.
+                mode="teacher"
+                enableReflectionSave
+                activitySubject={selectedLeaf.subject}
+              />
+            );
+          })()
         ) : (
           <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-slate-400">
             위에서 소단원을 선택하면 수업 자료가 여기에 표시됩니다.

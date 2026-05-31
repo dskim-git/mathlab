@@ -33,7 +33,10 @@ export function PageShell({
       <AppHeader role={role} userName={userName} isAdmin={isAdmin} />
       <div className="flex flex-1">
         <Sidebar role={role} />
-        <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pb-10">
+        {/* min-w-0: flex item 의 기본 min-width:auto 가 자식 콘텐츠 폭에 끌려 main 을
+            부풀려 페이지 가로 스크롤을 일으키는 것 방지. 본문은 어차피 mx-auto max-w-7xl
+            안에 들어가므로 min-w-0 이 정상 폭을 가둔다. */}
+        <main className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pb-10">
           <div className="mx-auto max-w-7xl">
             <PageBreadcrumb role={role} />
             {children}
