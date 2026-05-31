@@ -13,19 +13,20 @@ const studentMenu: MenuItem[] = [
   { key: "home", label: "홈", icon: "🏠", href: "/student/home", inTabBar: true },
   { key: "learn", label: "교과 학습", icon: "📚", href: "/learn", inTabBar: true },
   {
-    key: "records",
+    // /learn 에서 미니활동에 진입한 시뮬레이션 이력(activity_visits).
+    key: "activity",
     label: "내 활동",
-    icon: "📝",
-    href: "/student/records",
+    icon: "🧭",
+    href: "/student/activity",
     inTabBar: true,
   },
   {
+    // 제출한 응답·성찰 + 별표/우선순위/코멘트 (옛 /student/records 흡수).
     key: "reflections",
     label: "내 성찰",
     icon: "💭",
     href: "/student/reflections",
   },
-  { key: "join", label: "입장코드", icon: "🎯", href: "/join" },
   {
     key: "feedback",
     label: "건의 보내기",
@@ -43,6 +44,7 @@ const studentMenu: MenuItem[] = [
 
 const teacherMenu: MenuItem[] = [
   { key: "home", label: "홈", icon: "🏠", href: "/teacher", inTabBar: true },
+  { key: "learn", label: "교과 학습", icon: "📚", href: "/learn", inTabBar: true },
   {
     key: "progress",
     label: "진도표",
@@ -51,21 +53,27 @@ const teacherMenu: MenuItem[] = [
     inTabBar: true,
   },
   {
-    key: "sessions",
-    label: "세션 관리",
-    icon: "🎯",
-    href: "/teacher/sessions",
-    inTabBar: true,
+    // 누적 응답 = 학급 기록 같은 화면. KPI 카드에서 바로 진입하므로 메뉴 항목으로 노출.
+    key: "records",
+    label: "응답 기록",
+    icon: "📊",
+    href: "/teacher/records",
   },
-  { key: "records", label: "학급 기록", icon: "📊", href: "/teacher/records" },
   {
-    key: "activities",
-    label: "콘텐츠 블록",
+    // 단원 안의 수업 블록(콘텐츠) 을 교사별로 편집 — /teacher/activities 의 공유 템플릿과는 다른 개념.
+    key: "lesson-blocks",
+    label: "수업활동 편집",
     icon: "📝",
-    href: "/teacher/activities",
+    href: "/teacher/lesson-blocks",
   },
-  { key: "learn", label: "교과 학습", icon: "📚", href: "/learn" },
   { key: "sebteuk", label: "AI 세특", icon: "🤖", href: "/teacher/sebteuk" },
+  {
+    key: "feedback",
+    label: "건의 보내기",
+    icon: "💡",
+    href: "/teacher/feedback",
+  },
+  // 세션 메뉴는 진입 빈도가 낮아 사이드바·탭바에서 제외. 필요 시 /teacher/sessions URL 직접 접근.
   {
     key: "profile",
     label: "내 정보",
@@ -158,19 +166,22 @@ export const ROUTE_LABELS: Record<string, string> = {
   // 교사
   "/teacher": "교사 홈",
   "/teacher/sessions": "세션 관리",
-  "/teacher/records": "학급 기록",
+  "/teacher/records": "응답 기록",
   "/teacher/activities": "콘텐츠 블록",
+  "/teacher/lesson-blocks": "수업활동 편집",
   "/teacher/progress": "진도표",
   "/teacher/progress/schedule": "요일 시간표 설정",
   "/teacher/progress/history": "과거 기록",
   "/teacher/sebteuk": "AI 세특 작성",
   "/teacher/sebteuk/list": "저장된 세특",
+  "/teacher/feedback": "건의 보내기",
   "/teacher/profile": "내 정보",
 
   // 학생
   "/student/home": "학생 홈",
-  "/student/records": "내 활동",
+  "/student/activity": "내 활동",
   "/student/reflections": "내 성찰",
+  // (구) /student/records 는 /student/reflections 로 흡수·리다이렉트.
   "/student/feedback": "건의 보내기",
   "/student/profile": "내 정보",
   "/student/session": "수업 참여",
