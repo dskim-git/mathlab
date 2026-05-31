@@ -36,8 +36,17 @@ export default async function LearnPage() {
     blockIds: ids,
   }));
 
-  const homeHref = profile.role === "student" ? "/student/home" : "/teacher";
   const isAdmin = profile.role === "admin";
+  // 역할별 홈 — 관리자는 /admin, 학생은 /student/home, 일반인은 /general, 그 외(교사)는 /teacher.
+  // (이전엔 학생만 분기되어 관리자가 /teacher 로 가는 버그가 있었음.)
+  const homeHref =
+    profile.role === "student"
+      ? "/student/home"
+      : isAdmin
+      ? "/admin"
+      : profile.role === "general"
+      ? "/general"
+      : "/teacher";
   // 관리자에게만 OT 자료 노출. 비관리자에게는 빈 객체로 전달해
   // LearnBrowser 가 OT 버튼·콘텐츠를 모두 숨긴다.
   const otMaterials = isAdmin ? OT_MATERIALS : {};

@@ -92,7 +92,7 @@ const adminMenu: MenuItem[] = [
     href: "/admin/members",
     inTabBar: true,
   },
-  { key: "settings", label: "마스터", icon: "⚙️", href: "/admin/settings" },
+  { key: "settings", label: "설정", icon: "⚙️", href: "/admin/settings" },
   {
     key: "access",
     label: "교과 권한",
@@ -157,7 +157,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/teachers": "교사 권한",
   "/admin/roster": "명렬표",
   "/admin/subjects": "교과 접근(학생·일반)",
-  "/admin/settings": "마스터 설정",
+  "/admin/settings": "설정",
   "/admin/access": "교과 권한",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",
