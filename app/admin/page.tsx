@@ -7,19 +7,20 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { NoticeBoard } from "@/components/notices/NoticeBoard";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
+// 관리자 대시보드 4행 구성 (사용자 결정):
+//   1행 통계 KPI (4): 오늘접속자·이번주 활동·성찰 작성 비율·새 건의사항
+//                   — 처음 3개는 /admin/stats 로 (실데이터 매핑은 후속)
+//   2행 회원 관리 (5): 가입승인 대기·회원관리·설정·교과권한·명렬표
+//   3행 교과 (2):     교과 학습 관리·교사 대시보드
+//   4행 기타 (2):     통계·건의사항
+
 type Counts = {
   pending: number | null;
-  responses: number | null;
-  sessions: number | null;
-  students: number | null;
   newFeedback: number | null;
 };
 
 const initialCounts: Counts = {
   pending: null,
-  responses: null,
-  sessions: null,
-  students: null,
   newFeedback: null,
 };
 
@@ -35,50 +36,24 @@ export default function AdminHomePage() {
   const load = useCallback(async () => {
     setErrorMessage("");
 
-    const [
-      pendingRes,
-      responsesRes,
-      sessionsRes,
-      studentsRes,
-      newFeedbackRes,
-    ] = await Promise.all([
+    const [pendingRes, newFeedbackRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending"),
-      supabase
-        .from("activity_responses")
-        .select("id", { count: "exact", head: true }),
-      supabase
-        .from("sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("is_active", true),
-      supabase
-        .from("students")
-        .select("id", { count: "exact", head: true }),
       supabase
         .from("feedback")
         .select("id", { count: "exact", head: true })
         .eq("status", "received"),
     ]);
 
-    const errors = [
-      pendingRes.error,
-      responsesRes.error,
-      sessionsRes.error,
-      studentsRes.error,
-      newFeedbackRes.error,
-    ].filter(Boolean);
-
+    const errors = [pendingRes.error, newFeedbackRes.error].filter(Boolean);
     if (errors.length > 0) {
       setErrorMessage(errors.map((e) => e?.message ?? "").join(" / "));
     }
 
     setCounts({
       pending: pendingRes.count ?? null,
-      responses: responsesRes.count ?? null,
-      sessions: sessionsRes.count ?? null,
-      students: studentsRes.count ?? null,
       newFeedback: newFeedbackRes.count ?? null,
     });
   }, []);
@@ -111,41 +86,29 @@ export default function AdminHomePage() {
 
       <NoticeBoard accentText={theme.accentText} />
 
-      {/* KPI 줄 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* 1행 — 통계 KPI 4 */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <KpiCard
-          label="가입 승인 대기"
-          value={`${formatCount(counts.pending)}건`}
-          valueClassName={theme.accentText}
-          hint={
-            counts.pending && counts.pending > 0
-              ? "처리 필요 →"
-              : "대기 없음 →"
-          }
-          href="/admin/members"
-        />
-        <KpiCard
-          label="누적 활동 응답"
-          value={`${formatCount(counts.responses)}회`}
-          valueClassName="text-cyan-200"
+          label="오늘 접속자"
+          value="-"
+          hint="통계 →"
+          valueClassName="text-slate-400"
           href="/admin/stats"
         />
         <KpiCard
-          label="진행 중 세션"
-          value={`${formatCount(counts.sessions)}개`}
-          valueClassName="text-emerald-200"
-          href="/teacher/sessions?filter=active"
+          label="이번 주 활동"
+          value="-"
+          hint="통계 →"
+          valueClassName="text-slate-400"
+          href="/admin/stats"
         />
         <KpiCard
-          label="등록 학생"
-          value={`${formatCount(counts.students)}명`}
-          valueClassName="text-amber-200"
-          href="/admin/roster"
+          label="성찰 작성 비율"
+          value="-"
+          hint="통계 →"
+          valueClassName="text-slate-400"
+          href="/admin/stats"
         />
-      </div>
-
-      {/* 데이터 부재 KPI 안내 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <KpiCard
           label="새 건의 사항"
           value={`${formatCount(counts.newFeedback)}건`}
@@ -161,35 +124,18 @@ export default function AdminHomePage() {
           }
           href="/admin/feedback"
         />
-        <KpiCard
-          label="오늘 접속자"
-          value="-"
-          hint="2차(접속 이력)"
-          valueClassName="text-slate-400"
-          href="/admin/stats"
-        />
-        <KpiCard
-          label="이번 주 활동"
-          value="-"
-          hint="2차(통계)"
-          valueClassName="text-slate-400"
-          href="/admin/stats"
-        />
-        <KpiCard
-          label="성찰 작성 비율"
-          value="-"
-          hint="2차(통계)"
-          valueClassName="text-slate-400"
-          href="/admin/stats"
-        />
       </div>
 
-      {/* 기능 카드 그리드 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {/* 2행 — 회원 관리 5 */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
-          icon="👥"
-          title="회원관리"
-          description="가입 승인·계정·명렬표"
+          icon="🕒"
+          title="가입 승인 대기"
+          description={
+            counts.pending != null
+              ? `${counts.pending}명 대기`
+              : "신규 가입 처리"
+          }
           href="/admin/members"
           badge={
             counts.pending && counts.pending > 0
@@ -199,8 +145,15 @@ export default function AdminHomePage() {
           hoverBorderClass={theme.hoverBorder}
         />
         <DashboardCard
+          icon="👥"
+          title="회원관리"
+          description="전체 회원 · 검색·필터"
+          href="/admin/members"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
           icon="⚙️"
-          title="마스터"
+          title="설정"
           description="과목·학급·학년도"
           href="/admin/settings"
           hoverBorderClass={theme.hoverBorder}
@@ -210,6 +163,42 @@ export default function AdminHomePage() {
           title="교과 권한"
           description="교사·학생·일반인 접근"
           href="/admin/access"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📋"
+          title="명렬표"
+          description="CSV 업로드 · 학년도별"
+          href="/admin/roster"
+          hoverBorderClass={theme.hoverBorder}
+        />
+      </div>
+
+      {/* 3행 — 교과 2. 2행과 같은 5컬럼 그리드라 카드 크기 일정. 우측 3칸은 빈 공간(후속). */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <DashboardCard
+          icon="📚"
+          title="교과 학습 관리"
+          description="모든 교과 전체 열람·점검"
+          href="/learn"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🎯"
+          title="교사 대시보드"
+          description="교사 화면 미리보기"
+          href="/teacher"
+          hoverBorderClass={theme.hoverBorder}
+        />
+      </div>
+
+      {/* 4행 — 기타 2. 동일한 5컬럼 그리드, 우측 3칸 빈 공간. */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <DashboardCard
+          icon="📊"
+          title="통계"
+          description="접속·활동 분석"
+          href="/admin/stats"
           hoverBorderClass={theme.hoverBorder}
         />
         <DashboardCard
@@ -224,34 +213,6 @@ export default function AdminHomePage() {
           }
           hoverBorderClass={theme.hoverBorder}
         />
-        <DashboardCard
-          icon="📊"
-          title="통계"
-          description="접속·활동 분석 (준비 중)"
-          href="/admin/stats"
-          hoverBorderClass={theme.hoverBorder}
-        />
-        <DashboardCard
-          icon="📋"
-          title="명렬표"
-          description="CSV 업로드 · 학년도별"
-          href="/admin/roster"
-          hoverBorderClass={theme.hoverBorder}
-        />
-        <DashboardCard
-          icon="📚"
-          title="교과 학습 보기"
-          description="모든 교과 전체 열람"
-          href="/learn"
-          hoverBorderClass={theme.hoverBorder}
-        />
-        <DashboardCard
-          icon="🎯"
-          title="교사 대시보드"
-          description="교사 화면 열람"
-          href="/teacher"
-          hoverBorderClass={theme.hoverBorder}
-        />
       </div>
 
       {/* 최근 활동 (자리표시자, 추후 채움) */}
@@ -259,7 +220,6 @@ export default function AdminHomePage() {
         <p className="text-xs font-semibold text-slate-400">최근 활동</p>
         <p className="mt-2 text-sm text-slate-400">
           신규 가입·세션 종료·신규 건의 등을 시간순으로 보여줄 예정입니다.
-          (Step 6 이후)
         </p>
       </section>
     </>

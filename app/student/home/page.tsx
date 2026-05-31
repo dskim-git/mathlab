@@ -365,8 +365,9 @@ export default function StudentHomePage() {
         />
       </div>
 
-      {/* 2행 2개 — 건의·내 정보 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4">
+      {/* 2행 2개 — 건의·내 정보. 관리자·교사 대시보드와 같은 5컬럼 그리드로 카드 크기 통일.
+          우측 3칸은 빈 공간(후속 사용 예정). */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
           icon="💡"
           title="건의 보내기"
