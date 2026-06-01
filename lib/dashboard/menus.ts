@@ -28,6 +28,13 @@ const studentMenu: MenuItem[] = [
     href: "/student/reflections",
   },
   {
+    // 본인 성장 그래프 — 주간 활동·누적 곡선·이번 주 비교.
+    key: "growth",
+    label: "내 성장",
+    icon: "📈",
+    href: "/student/growth",
+  },
+  {
     key: "feedback",
     label: "건의 보내기",
     icon: "💡",
@@ -197,6 +204,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/student/home": "학생 홈",
   "/student/activity": "내 활동",
   "/student/reflections": "내 성찰",
+  "/student/growth": "내 성장",
   // (구) /student/records 는 /student/reflections 로 흡수·리다이렉트.
   "/student/feedback": "건의 보내기",
   "/student/profile": "내 정보",
