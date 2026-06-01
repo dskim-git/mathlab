@@ -94,6 +94,20 @@ const adminMenu: MenuItem[] = [
   },
   { key: "settings", label: "설정", icon: "⚙️", href: "/admin/settings" },
   {
+    key: "learn",
+    label: "교과 학습 관리",
+    icon: "📚",
+    href: "/learn",
+    inTabBar: true,
+  },
+  {
+    // 교과 단원(curriculum_units) 트리 + 콘텐츠 블록 관리. SQL 임포트 대체.
+    key: "curriculum",
+    label: "단원 관리",
+    icon: "🗂️",
+    href: "/admin/curriculum",
+  },
+  {
     key: "access",
     label: "교과 권한",
     icon: "🔐",
@@ -158,6 +172,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/roster": "명렬표",
   "/admin/subjects": "교과 접근(학생·일반)",
   "/admin/settings": "설정",
+  "/admin/curriculum": "단원 관리",
   "/admin/access": "교과 권한",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",

@@ -14,10 +14,12 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
+import { ACTIVITY_CATALOG } from "@/lib/activities/activityCatalog";
+import { shortActivityTitle } from "@/lib/activities/activityTitles";
 
 type ActivityBlocksEditorProps = {
-  /** 저장 대상 — activities=공유 템플릿, sessions=교사별 세션 구성. */
-  targetTable: "activities" | "sessions";
+  /** 저장 대상 — activities=공유 템플릿, sessions=교사별 세션 구성, curriculum_units=관리자 단원 콘텐츠. */
+  targetTable: "activities" | "sessions" | "curriculum_units";
   targetId: string;
   initialContentBlocks: unknown;
 };
@@ -305,13 +307,31 @@ export default function ActivityBlocksEditor({
                 value={block.content.activitySlug}
                 onChange={(event) => setContent(block.id, "activitySlug", event.target.value)}
               >
-                <option value="probability-simulator">
-                  확률 시뮬레이터 (probability-simulator)
-                </option>
+                {/* 등록되지 않은 슬러그가 저장돼 있을 경우 보존 표시 */}
+                {block.content.activitySlug &&
+                !ACTIVITY_CATALOG.some((g) =>
+                  g.slugs.includes(block.content.activitySlug)
+                ) ? (
+                  <option value={block.content.activitySlug}>
+                    {block.content.activitySlug} (등록되지 않음)
+                  </option>
+                ) : null}
+                {ACTIVITY_CATALOG.map((g) => (
+                  <optgroup
+                    key={`${g.subject}::${g.unit ?? ""}`}
+                    label={g.unit ? `${g.subject} — ${g.unit}` : g.subject}
+                  >
+                    {g.slugs.map((slug) => (
+                      <option key={slug} value={slug}>
+                        {shortActivityTitle(slug)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
               <p className="mt-1.5 text-xs leading-5 text-slate-400">
-                현재 연결된 미니활동은 확률 시뮬레이터뿐입니다. 새 미니활동은 코드 연결이
-                필요합니다.
+                교과·단원별로 묶여 있습니다. 새 미니활동은 React 컴포넌트 이식 후
+                registry.ts + activityTitles.ts + activityCatalog.ts 에 등록됩니다.
               </p>
             </div>
             <div>

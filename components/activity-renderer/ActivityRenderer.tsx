@@ -217,10 +217,17 @@ export default function ActivityRenderer({
         if (Ported) {
           // 학생 모드(세션 동선) 또는 enableReflectionSave(/learn 동선)면 자동 저장 Context 활성화.
           // 교사 미리보기·수업 편집에선 비활성(props 둘 다 꺼짐).
+          // 블록 설정의 reflectionType 을 Context 에 흘려 ReflectionForm 이 공통 질문 깊이를 결정.
+          const reflectionDepth: "simple" | "deep" =
+            block.content.reflectionType === "deep" ? "deep" : "simple";
           if (mode === "student" || enableReflectionSave) {
             return (
               <ActivityContextProvider
-                value={{ activitySlug: slug, subject: activitySubject ?? null }}
+                value={{
+                  activitySlug: slug,
+                  subject: activitySubject ?? null,
+                  reflectionDepth,
+                }}
               >
                 <Ported />
               </ActivityContextProvider>

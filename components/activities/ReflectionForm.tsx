@@ -20,7 +20,9 @@ type ReflectionFormProps = {
 
 export default function ReflectionForm({ questions, onSubmit }: ReflectionFormProps) {
   const activityCtx = useActivityContext();
-  const all = withCommonReflection(questions);
+  // 블록의 reflectionType(Context 로 흘려옴) 에 따라 공통 마무리 질문 깊이 결정.
+  // Context 없으면(교사 미리보기 등) 기본 simple.
+  const all = withCommonReflection(questions, activityCtx?.reflectionDepth);
   const [answers, setAnswers] = useState<ReflectionAnswers>({});
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
