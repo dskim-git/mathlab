@@ -9,6 +9,7 @@ import { NoticeBoard } from "@/components/notices/NoticeBoard";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 import { startOfThisWeekMonday } from "@/lib/dashboard/progressDates";
 import { shortActivityTitle } from "@/lib/activities/activityTitles";
+import { GamificationCard } from "@/components/student/GamificationCard";
 
 type StudentInfo = {
   studentId: string;
@@ -364,6 +365,16 @@ export default function StudentHomePage() {
           }
         />
       </div>
+
+      {/* 게이미피케이션 — 스트릭·이번 주 목표·배지 (학생 동기 부여) */}
+      {studentId ? (
+        <div className="mb-4">
+          <GamificationCard
+            studentId={studentId}
+            reflectionCount={reflectionCount}
+          />
+        </div>
+      ) : null}
 
       {/* 2행 2개 — 건의·내 정보. 관리자·교사 대시보드와 같은 5컬럼 그리드로 카드 크기 통일.
           우측 3칸은 빈 공간(후속 사용 예정). */}

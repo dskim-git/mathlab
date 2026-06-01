@@ -74,7 +74,7 @@ export default function StudentLoginPage() {
         `
         id, profile_id, school_year, student_code, student_login_id,
         grade, class_number, student_number,
-        profiles ( id, login_id, name, role, status )
+        profiles!profile_id ( id, login_id, name, role, status )
       `
       )
       .eq("profile_id", signInData.user.id)
