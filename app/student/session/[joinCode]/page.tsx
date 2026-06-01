@@ -64,7 +64,7 @@ export default async function StudentSessionPage({
   const { data: meData } = await supabase
     .from("students")
     .select(
-      "id, student_login_id, student_code, grade, class_number, student_number, profiles ( name )"
+      "id, student_login_id, student_code, grade, class_number, student_number, profiles!profile_id ( name )"
     )
     .eq("profile_id", user.id)
     .maybeSingle();

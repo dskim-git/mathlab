@@ -65,7 +65,7 @@ export function SebteukList({
     const { data, error } = await supabase
       .from("sebteuk_drafts")
       .select(
-        "id, student_id, body, ai_model, status, created_at, updated_at, finalized_at, students ( grade, class_number, student_number, student_code, student_login_id, profiles ( name ) )"
+        "id, student_id, body, ai_model, status, created_at, updated_at, finalized_at, students ( grade, class_number, student_number, student_code, student_login_id, profiles!profile_id ( name ) )"
       )
       .eq("teacher_id", teacherProfileId)
       .eq("school_year", schoolYear)

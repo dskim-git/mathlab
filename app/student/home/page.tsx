@@ -79,7 +79,7 @@ export default function StudentHomePage() {
       const { data: studentRow } = await supabase
         .from("students")
         .select(
-          "id, school_year, student_login_id, grade, class_number, student_number, profiles ( name )"
+          "id, school_year, student_login_id, grade, class_number, student_number, profiles!profile_id ( name )"
         )
         .eq("profile_id", user.id)
         .maybeSingle();
