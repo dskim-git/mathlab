@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/brand/LogoMark";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   getRoleTheme,
   ROLE_HOME_ROUTE,
@@ -78,6 +79,8 @@ export function AppHeader({ role, userName, isAdmin }: AppHeaderProps) {
           <span className="hidden text-sm text-slate-300 sm:inline">
             <span className="font-semibold text-white">{userName}</span> 님
           </span>
+
+          <NotificationBell />
 
           <button
             type="button"
