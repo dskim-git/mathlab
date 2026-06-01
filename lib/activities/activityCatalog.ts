@@ -16,6 +16,14 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   },
   {
     subject: "공통수학1",
+    unit: "1-1 다항식의 연산",
+    slugs: [
+      "common/mini/poly_sort_game",
+      "common/mini/poly_add_sub_game",
+    ],
+  },
+  {
+    subject: "공통수학1",
     unit: "3-1 경우의 수",
     slugs: ["common/mini/perm_comb_growth_race"],
   },

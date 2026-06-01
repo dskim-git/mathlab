@@ -1,6 +1,9 @@
 import type { ComponentType } from "react";
 
 // ─── 공통수학 ──────────────────────────────────────────────
+// [1] 다항식 — (1) 다항식의 연산
+import PolySortGame from "./common/1-1-polynomials/poly-sort-game/PolySortGame";
+import PolyAddSubGame from "./common/1-1-polynomials/poly-add-sub-game/PolyAddSubGame";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -104,6 +107,8 @@ import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edg
 // 파일은 교과/중단원 폴더로 정리: components/activities/<교과>/<중단원>/<활동>/.
 export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   // ── 공통수학 ──
+  "common/mini/poly_sort_game": PolySortGame,
+  "common/mini/poly_add_sub_game": PolyAddSubGame,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
