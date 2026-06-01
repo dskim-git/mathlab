@@ -266,13 +266,20 @@ export default function AdminHomePage() {
         />
       </div>
 
-      {/* 3행 — 교과 2. 2행과 같은 5컬럼 그리드라 카드 크기 일정. 우측 3칸은 빈 공간(후속). */}
+      {/* 3행 — 교과 3. 2행과 같은 5컬럼 그리드라 카드 크기 일정. 우측 2칸은 빈 공간(후속). */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
           icon="📚"
           title="교과 학습 관리"
           description="모든 교과 전체 열람·점검"
           href="/learn"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🗂️"
+          title="단원 관리"
+          description="대·중·소단원 + 콘텐츠 블록"
+          href="/admin/curriculum"
           hoverBorderClass={theme.hoverBorder}
         />
         <DashboardCard

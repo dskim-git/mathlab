@@ -23,6 +23,8 @@ export type ActivityContextValue = {
   activitySlug: string;
   /** /learn 단원의 교과명. 세션 경로 등에선 null 일 수 있다. */
   subject: string | null;
+  /** 블록의 reflectionType — ReflectionForm 이 공통 마무리 질문 깊이 결정에 사용. */
+  reflectionDepth?: "simple" | "deep";
 };
 
 const Ctx = createContext<ActivityContextValue | null>(null);
