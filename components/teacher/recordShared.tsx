@@ -29,6 +29,11 @@ export type TeacherRecordRowData = {
       name: string | null;
     } | null;
   } | null;
+  /** 마감 시각. NOT NULL = 학생이 더 이상 수정 못 함. */
+  locked_at?: string | null;
+  /** 학년·반(조회 쿼리에 같이 가져오는 경우). 마감 일괄 처리에 필요. */
+  grade?: number | null;
+  class_number?: number | null;
 };
 
 export { formatKoreanDateTime };
