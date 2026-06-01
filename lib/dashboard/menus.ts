@@ -164,6 +164,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/": "홈",
   "/learn": "교과 학습",
   "/join": "입장코드",
+  "/notifications": "알림함",
 
   // 관리자
   "/admin": "관리자 홈",

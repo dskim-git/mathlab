@@ -174,14 +174,11 @@ export function NotificationBell() {
                 </button>
               ) : null}
               <Link
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  load();
-                }}
+                href="/notifications"
+                onClick={() => setOpen(false)}
                 className="text-[11px] font-semibold text-slate-400 hover:text-white"
               >
-                새로고침
+                전체 보기 →
               </Link>
             </div>
           </div>
