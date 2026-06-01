@@ -24,31 +24,110 @@ type Props = {
 export function GamificationCard({ studentId, reflectionCount }: Props) {
   const [visitDates, setVisitDates] = useState<string[] | null>(null);
   const [error, setError] = useState("");
+  // user_settings.weekly_goal — NULL/없으면 DEFAULT_WEEKLY_GOAL.
+  const [customGoal, setCustomGoal] = useState<number | null>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState<string>("");
+  const [goalSaving, setGoalSaving] = useState(false);
+  const [goalError, setGoalError] = useState("");
 
   useEffect(() => {
     let active = true;
     (async () => {
-      // 학생 본인 visit 의 visited_at 만 가져와 일자 추출.
-      const { data, error: e } = await supabase
-        .from("activity_visits")
-        .select("visited_at")
-        .order("visited_at", { ascending: false })
-        .limit(2000);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!active) return;
-      if (e) {
-        setError(e.message);
+      const [visitsRes, settingsRes] = await Promise.all([
+        supabase
+          .from("activity_visits")
+          .select("visited_at")
+          .order("visited_at", { ascending: false })
+          .limit(2000),
+        user
+          ? supabase
+              .from("user_settings")
+              .select("weekly_goal")
+              .eq("profile_id", user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null } as {
+              data: { weekly_goal: number | null } | null;
+              error: null;
+            }),
+      ]);
+      if (!active) return;
+      if (visitsRes.error) {
+        setError(visitsRes.error.message);
         setVisitDates([]);
         return;
       }
-      const dates = ((data ?? []) as Array<{ visited_at: string }>).map((r) =>
-        toIsoDate(new Date(r.visited_at))
+      const dates = ((visitsRes.data ?? []) as Array<{ visited_at: string }>).map(
+        (r) => toIsoDate(new Date(r.visited_at))
       );
       setVisitDates(dates);
+      const s = settingsRes.data as { weekly_goal: number | null } | null;
+      setCustomGoal(s?.weekly_goal ?? null);
     })();
     return () => {
       active = false;
     };
   }, [studentId]);
+
+  async function saveGoal() {
+    const n = Number(goalDraft);
+    if (!Number.isInteger(n) || n < 1 || n > 30) {
+      setGoalError("1~30 사이 정수를 입력해 주세요.");
+      return;
+    }
+    setGoalSaving(true);
+    setGoalError("");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setGoalError("로그인이 필요합니다.");
+      setGoalSaving(false);
+      return;
+    }
+    const { error: e } = await supabase
+      .from("user_settings")
+      .upsert(
+        { profile_id: user.id, weekly_goal: n },
+        { onConflict: "profile_id" }
+      );
+    setGoalSaving(false);
+    if (e) {
+      setGoalError(e.message);
+      return;
+    }
+    setCustomGoal(n);
+    setEditingGoal(false);
+  }
+
+  async function resetGoal() {
+    setGoalSaving(true);
+    setGoalError("");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setGoalSaving(false);
+      return;
+    }
+    const { error: e } = await supabase
+      .from("user_settings")
+      .upsert(
+        { profile_id: user.id, weekly_goal: null },
+        { onConflict: "profile_id" }
+      );
+    setGoalSaving(false);
+    if (e) {
+      setGoalError(e.message);
+      return;
+    }
+    setCustomGoal(null);
+    setEditingGoal(false);
+  }
 
   if (visitDates == null) {
     return (
@@ -74,7 +153,7 @@ export function GamificationCard({ studentId, reflectionCount }: Props) {
   const totalVisits = visitDates.length;
   const totalReflections = reflectionCount ?? 0;
 
-  const goal = DEFAULT_WEEKLY_GOAL;
+  const goal = customGoal ?? DEFAULT_WEEKLY_GOAL;
   const progressPct = Math.min(100, Math.round((weekly / goal) * 100));
   const goalDone = weekly >= goal;
 
@@ -114,7 +193,23 @@ export function GamificationCard({ studentId, reflectionCount }: Props) {
         </div>
         <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
           <div className="flex items-end justify-between gap-2">
-            <p className="text-xs text-slate-400">이번 주 목표</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-slate-400">이번 주 목표</p>
+              {!editingGoal ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingGoal(true);
+                    setGoalDraft(String(goal));
+                    setGoalError("");
+                  }}
+                  aria-label="목표 수정"
+                  className="rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400 transition hover:bg-white/10"
+                >
+                  ✏️
+                </button>
+              ) : null}
+            </div>
             <p className="text-xs text-slate-300">
               <span className="font-bold text-emerald-200">{weekly}</span>{" "}
               / {goal}회
@@ -138,11 +233,60 @@ export function GamificationCard({ studentId, reflectionCount }: Props) {
               className={goalDone ? "fill-emerald-300" : "fill-emerald-300/70"}
             />
           </svg>
-          <p className="mt-0.5 text-[11px] text-slate-500">
-            {goalDone
-              ? "이번 주 목표 달성!"
-              : `목표까지 ${Math.max(goal - weekly, 0)}회 남음`}
-          </p>
+          {editingGoal ? (
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={goalDraft}
+                  onChange={(e) => setGoalDraft(e.target.value)}
+                  aria-label="주간 목표 (1~30)"
+                  className="w-20 rounded border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-emerald-300/40"
+                />
+                <span className="text-xs text-slate-400">회 / 주</span>
+                <button
+                  type="button"
+                  onClick={saveGoal}
+                  disabled={goalSaving}
+                  className="rounded-full bg-emerald-300 px-3 py-1 text-[11px] font-bold text-slate-950 hover:bg-emerald-200 disabled:opacity-60"
+                >
+                  {goalSaving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingGoal(false);
+                    setGoalError("");
+                  }}
+                  disabled={goalSaving}
+                  className="rounded px-2 py-1 text-[11px] text-slate-400 hover:text-white disabled:opacity-60"
+                >
+                  취소
+                </button>
+                {customGoal != null ? (
+                  <button
+                    type="button"
+                    onClick={resetGoal}
+                    disabled={goalSaving}
+                    className="ml-auto rounded px-2 py-1 text-[11px] text-slate-500 hover:text-slate-300 disabled:opacity-60"
+                  >
+                    기본값({DEFAULT_WEEKLY_GOAL})으로
+                  </button>
+                ) : null}
+              </div>
+              {goalError ? (
+                <p className="text-[11px] text-rose-300">{goalError}</p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              {goalDone
+                ? "이번 주 목표 달성!"
+                : `목표까지 ${Math.max(goal - weekly, 0)}회 남음`}
+            </p>
+          )}
         </div>
       </div>
 
