@@ -91,3 +91,94 @@ export function buildTwoWeekDays(
 export function flattenWeeks(weeks: ProgressWeek[]): ProgressDay[] {
   return weeks.flatMap((w) => w.days);
 }
+
+/**
+ * count 주(1~4) 만큼 평일 윈도우를 만든다.
+ * 윈도우의 마지막 주 = 현재 이번 주 + weekOffset*7 (buildTwoWeekDays 와 동일 의미).
+ * 가장 앞 (count-1)개 주는 자동으로 이전 주들.
+ * count=2 + offset=0 인 특수 케이스만 옛 친근 라벨("전 주"/"이번 주") 유지(브래드크럼·헤더 호환).
+ */
+export function buildWeekRangeDays(
+  now: Date = new Date(),
+  weekOffset: number = 0,
+  count: number = 2
+): ProgressWeek[] {
+  const safeCount = Math.max(1, Math.min(count, 4));
+  const monThisActual = startOfWeekMonday(now);
+  const monLast = addDays(monThisActual, weekOffset * 7);
+  const todayIso = toIsoDate(now);
+
+  function buildWeek(monday: Date, fallbackLabel: string): ProgressWeek {
+    const days: ProgressDay[] = [];
+    for (let i = 0; i < 5; i++) {
+      const d = addDays(monday, i);
+      days.push({
+        iso: toIsoDate(d),
+        dayLabel: DAY_LABELS_KO[d.getDay()],
+        monthDay: `${d.getMonth() + 1}/${d.getDate()}`,
+        isToday: toIsoDate(d) === todayIso,
+      });
+    }
+    const first = days[0];
+    const last = days[days.length - 1];
+    const absoluteLabel = `${first.monthDay} ~ ${last.monthDay}`;
+    return { label: fallbackLabel || absoluteLabel, days };
+  }
+
+  const out: ProgressWeek[] = [];
+  for (let i = safeCount - 1; i >= 0; i--) {
+    const monday = addDays(monLast, -i * 7);
+    const friendly =
+      weekOffset === 0 && safeCount === 2
+        ? i === 1
+          ? "전 주"
+          : "이번 주"
+        : "";
+    out.push(buildWeek(monday, friendly));
+  }
+  return out;
+}
+
+/**
+ * 한 달(year-month, 1-base month) 의 평일(월~금) 묶음.
+ * 월요일이 그 달 시작 전이면 잘라서 그 달 첫 평일부터; 마찬가지로 끝 처리.
+ * 헤더 라벨 = "YYYY년 M월 1주"/"2주" ...
+ */
+export function buildMonthDays(year: number, month: number): ProgressWeek[] {
+  const today = new Date();
+  const todayIso = toIsoDate(today);
+  const monthStart = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  const monthEnd = new Date(year, month, 0, 23, 59, 59, 999); // 마지막 날
+
+  // 첫 평일이 속한 주의 월요일부터 5일씩 끊되 month 안의 평일만 days 에 포함.
+  const mondays: Date[] = [];
+  // monthStart 가 속한 주의 월요일.
+  let cursor = startOfWeekMonday(monthStart);
+  while (cursor <= monthEnd) {
+    mondays.push(new Date(cursor));
+    cursor = addDays(cursor, 7);
+  }
+
+  const weeks: ProgressWeek[] = [];
+  mondays.forEach((monday, idx) => {
+    const days: ProgressDay[] = [];
+    for (let i = 0; i < 5; i++) {
+      const d = addDays(monday, i);
+      // 해당 월에 속하는 평일만.
+      if (
+        d.getFullYear() === year &&
+        d.getMonth() + 1 === month
+      ) {
+        days.push({
+          iso: toIsoDate(d),
+          dayLabel: DAY_LABELS_KO[d.getDay()],
+          monthDay: `${d.getMonth() + 1}/${d.getDate()}`,
+          isToday: toIsoDate(d) === todayIso,
+        });
+      }
+    }
+    if (days.length === 0) return;
+    weeks.push({ label: `${year}년 ${month}월 ${idx + 1}주`, days });
+  });
+  return weeks;
+}
