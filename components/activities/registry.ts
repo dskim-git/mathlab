@@ -6,6 +6,7 @@ import PolySortGame from "./common/1-1-polynomials/poly-sort-game/PolySortGame";
 import PolyAddSubGame from "./common/1-1-polynomials/poly-add-sub-game/PolyAddSubGame";
 import PolyMulExpand from "./common/1-1-polynomials/poly-mul-expand/PolyMulExpand";
 import GelosiaMul from "./common/1-1-polynomials/gelosia-mul/GelosiaMul";
+import AlgebraTileFormulas from "./common/1-1-polynomials/algebra-tile-formulas/AlgebraTileFormulas";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -112,6 +113,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/poly_sort_game": PolySortGame,
   "common/mini/poly_add_sub_game": PolyAddSubGame,
   "common/mini/poly_mul_expand": PolyMulExpand,
+  "common/mini/algebra_tile_formulas": AlgebraTileFormulas,
   "common/mini/gelosia_mul": GelosiaMul,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
