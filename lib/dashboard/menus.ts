@@ -115,6 +115,13 @@ const adminMenu: MenuItem[] = [
     href: "/admin/curriculum",
   },
   {
+    // activities 행 자체(공유 템플릿) 신규/삭제. 운영 빈도 낮음.
+    key: "activities",
+    label: "활동 행 관리",
+    icon: "🧪",
+    href: "/admin/activities",
+  },
+  {
     key: "access",
     label: "교과 권한",
     icon: "🔐",
@@ -182,6 +189,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/subjects": "교과 접근(학생·일반)",
   "/admin/settings": "설정",
   "/admin/curriculum": "단원 관리",
+  "/admin/activities": "활동 행 관리",
   "/admin/access": "교과 권한",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",
