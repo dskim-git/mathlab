@@ -48,7 +48,7 @@ export default function JoinPage() {
       const { data } = await supabase
         .from("students")
         .select(
-          "id, student_login_id, grade, class_number, student_number, profiles ( name )"
+          "id, student_login_id, grade, class_number, student_number, profiles!profile_id ( name )"
         )
         .eq("profile_id", user.id)
         .maybeSingle();

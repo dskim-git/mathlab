@@ -68,7 +68,7 @@ export default async function TeacherRecordsPage({
     let query = supabase
       .from("activity_responses")
       .select(
-        "id, student_code, student_number, grade, class_number, subject, activity_slug, reflection_data, response_data, created_at, locked_at, activities ( title ), students ( profiles ( name ) )"
+        "id, student_code, student_number, grade, class_number, subject, activity_slug, reflection_data, response_data, created_at, locked_at, activities ( title ), students ( profiles!profile_id ( name ) )"
       )
       .eq("grade", gradeValue)
       .eq("class_number", classValue)

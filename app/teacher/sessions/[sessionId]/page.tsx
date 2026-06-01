@@ -173,7 +173,7 @@ export default async function TeacherSessionResponsesPage({
   const { data: activityResponses, error: responsesError } = await supabase
     .from("activity_responses")
     .select(
-      "id, student_code, student_number, grade, class_number, response_data, reflection_data, created_at, students ( profiles ( name ) )"
+      "id, student_code, student_number, grade, class_number, response_data, reflection_data, created_at, students ( profiles!profile_id ( name ) )"
     )
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false });

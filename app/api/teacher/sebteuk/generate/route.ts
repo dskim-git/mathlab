@@ -90,6 +90,7 @@ export async function POST(req: Request) {
   // 3) body 파싱
   let body: {
     studentRecord?: string;
+    teacherNote?: string;
     targetBytes?: number;
     subject?: string;
     model?: string;
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+  const teacherNote = (body.teacherNote ?? "").trim();
   const targetBytes = Math.min(Math.max(body.targetBytes ?? 1500, 300), 4000);
   const subject = (body.subject ?? "수학").trim();
   const requestedModel: AllowedModel =
@@ -133,11 +135,17 @@ export async function POST(req: Request) {
   const model: AllowedModel = requestedModel;
 
   // 4) Anthropic Messages API 호출 (prompt caching 적용)
+  // teacherNote(교사 비공개 메모)는 학생 활동 기록 위에 별도 섹션으로 함께 보낸다.
+  // 시스템 프롬프트(캐시 대상)는 손대지 않고, 사용자 메시지에 합쳐 캐시 히트율 유지.
+  const noteBlock = teacherNote
+    ? `[담당 교사 비공개 메모 — 세특 작성 시 참고]\n${teacherNote}\n\n`
+    : "";
   const userMessage =
     `과목: ${subject}\n` +
     `목표 분량: 약 ${targetBytes}바이트 (한글 약 ${Math.round(
       targetBytes / 3
     )}자 내외).\n\n` +
+    noteBlock +
     `[학생 활동 기록]\n${record}`;
 
   const apiBody = {

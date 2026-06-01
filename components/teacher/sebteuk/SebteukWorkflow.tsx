@@ -104,6 +104,14 @@ export function SebteukWorkflow({
   // 이 학생에 대한 기존 드래프트 목록
   const [drafts, setDrafts] = useState<DraftRow[]>([]);
 
+  // 학생별 비공개 메모(teacher_student_notes). 교사 본인+관리자만 RLS 접근.
+  // AI 세특 generate 시 컨텍스트로 함께 전송된다.
+  const [noteText, setNoteText] = useState<string>("");
+  const [noteOriginal, setNoteOriginal] = useState<string>("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [noteError, setNoteError] = useState("");
+
   // 1) 학생 목록 (담당 학급)
   const loadStudents = useCallback(async () => {
     setStudentsLoading(true);
@@ -111,7 +119,7 @@ export function SebteukWorkflow({
       const { data } = await supabase
         .from("students")
         .select(
-          "id, grade, class_number, student_number, student_login_id, profiles ( name )"
+          "id, grade, class_number, student_number, student_login_id, profiles!profile_id ( name )"
         )
         .order("grade")
         .order("class_number")
@@ -138,7 +146,7 @@ export function SebteukWorkflow({
           const { data } = await supabase
             .from("students")
             .select(
-              "id, grade, class_number, student_number, student_login_id, profiles ( name )"
+              "id, grade, class_number, student_number, student_login_id, profiles!profile_id ( name )"
             )
             .in("grade", grades)
             .order("grade")
@@ -173,10 +181,14 @@ export function SebteukWorkflow({
       setBody("");
       setSavedDraftId(null);
       setSaveOk(false);
+      setNoteText("");
+      setNoteOriginal("");
+      setNoteSaved(false);
+      setNoteError("");
       return;
     }
     setRecordsLoading(true);
-    const [recRes, prioRes, draftRes] = await Promise.all([
+    const [recRes, prioRes, draftRes, noteRes] = await Promise.all([
       supabase
         .from("activity_responses")
         .select(
@@ -197,6 +209,13 @@ export function SebteukWorkflow({
         .eq("student_id", selStudentId)
         .eq("school_year", schoolYear)
         .order("updated_at", { ascending: false }),
+      // 본인이 이 학생에 대해 적어둔 메모(있으면).
+      supabase
+        .from("teacher_student_notes")
+        .select("note")
+        .eq("teacher_profile_id", teacherProfileId)
+        .eq("student_id", selStudentId)
+        .maybeSingle(),
     ]);
 
     const recordRows = (recRes.data ?? []) as unknown as RecordRow[];
@@ -214,10 +233,16 @@ export function SebteukWorkflow({
         : new Set(recordRows.map((r) => r.id))
     );
     setDrafts((draftRes.data ?? []) as DraftRow[]);
+    const noteRow = noteRes.data as { note: string } | null;
+    const initialNote = noteRow?.note ?? "";
+    setNoteText(initialNote);
+    setNoteOriginal(initialNote);
+    setNoteSaved(false);
+    setNoteError("");
     setRecordsLoading(false);
     setSavedDraftId(null);
     setSaveOk(false);
-  }, [selStudentId, schoolYear]);
+  }, [selStudentId, schoolYear, teacherProfileId]);
 
   useEffect(() => {
     loadStudentData();
@@ -268,6 +293,30 @@ export function SebteukWorkflow({
     setSelectedIds(new Set());
   }
 
+  // 학생 메모 저장 — note 가 비어도 행 유지(다음 진입 시 빈 값으로 로드).
+  // 빈 값으로 save = 사실상 delete 와 같은 효과. upsert 로 일관 처리.
+  async function saveNote() {
+    if (!selStudentId) return;
+    setNoteSaving(true);
+    setNoteError("");
+    setNoteSaved(false);
+    const { error } = await supabase.from("teacher_student_notes").upsert(
+      {
+        teacher_profile_id: teacherProfileId,
+        student_id: selStudentId,
+        note: noteText,
+      },
+      { onConflict: "teacher_profile_id,student_id" }
+    );
+    setNoteSaving(false);
+    if (error) {
+      setNoteError(error.message);
+      return;
+    }
+    setNoteOriginal(noteText);
+    setNoteSaved(true);
+  }
+
   async function generate() {
     if (!selStudentId || !inputContext) {
       setGenError("학생을 선택하고 활동 기록이 있어야 생성할 수 있습니다.");
@@ -281,6 +330,8 @@ export function SebteukWorkflow({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentRecord: inputContext,
+          // 교사 비공개 메모를 컨텍스트에 포함(저장된 값 + 미저장 편집 모두 반영).
+          teacherNote: noteText.trim(),
           targetBytes,
           model,
           subject: "수학",
@@ -398,6 +449,50 @@ export function SebteukWorkflow({
           </select>
         </div>
       </section>
+
+      {/* 학생별 비공개 메모 — AI 세특 생성 시 컨텍스트로 자동 포함됨. */}
+      {selStudent ? (
+        <section className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-bold">
+              교사 비공개 메모{" "}
+              <span className="text-xs font-semibold text-amber-200">
+                (학생에게 보이지 않음 · AI 세특 입력에 포함)
+              </span>
+            </h2>
+            <div className="flex items-center gap-2 text-[11px]">
+              {noteSaved ? (
+                <span className="text-emerald-300">✓ 저장됨</span>
+              ) : null}
+              {noteError ? (
+                <span className="text-rose-300">{noteError}</span>
+              ) : null}
+              <button
+                type="button"
+                onClick={saveNote}
+                disabled={noteSaving || noteText === noteOriginal}
+                className="rounded-full border border-amber-300/40 px-3 py-1 font-semibold text-amber-200 transition hover:bg-amber-300/10 disabled:opacity-60"
+              >
+                {noteSaving ? "저장 중..." : "메모 저장"}
+              </button>
+            </div>
+          </div>
+          <textarea
+            value={noteText}
+            onChange={(e) => {
+              setNoteText(e.target.value);
+              setNoteSaved(false);
+              setNoteError("");
+            }}
+            rows={4}
+            placeholder="예: 수업 시간에 자기 주도적으로 질문을 많이 함. 통계 단원 흥미가 큼. 또래 협력 학습 잘 이끔."
+            className="mt-3 w-full rounded border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-amber-300/40"
+          />
+          <p className="mt-2 text-[11px] text-slate-400">
+            저장 안 한 편집 내용도 AI 세특 생성 시 함께 전송됩니다. 빈 값으로 두면 메모 없이 생성.
+          </p>
+        </section>
+      ) : null}
 
       {/* 학생 활동 기록 미리보기 + 선택 */}
       {selStudent ? (
