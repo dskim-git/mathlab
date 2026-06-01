@@ -21,6 +21,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/poly_sort_game",
       "common/mini/poly_add_sub_game",
       "common/mini/poly_mul_expand",
+      "common/mini/gelosia_mul",
     ],
   },
   {
