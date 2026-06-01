@@ -30,6 +30,14 @@ export default function TeacherRecordCard({
           </p>
           <p className="mt-1 text-sm text-slate-400">
             {row.activities?.title ?? row.activity_slug ?? "-"}
+            {row.locked_at ? (
+              <span
+                className="ml-2 rounded-full bg-amber-300/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-200"
+                title="마감됨"
+              >
+                🔒
+              </span>
+            ) : null}
           </p>
         </div>
         <span className="shrink-0 text-sm font-semibold text-cyan-300">

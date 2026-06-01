@@ -8,6 +8,7 @@ import TeacherRecordRow, {
 } from "@/components/teacher/TeacherRecordRow";
 import TeacherClassPicker from "@/components/teacher/TeacherClassPicker";
 import TeacherRecordCard from "@/components/teacher/TeacherRecordCard";
+import LockManager, { type LockGroup } from "@/components/teacher/LockManager";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
@@ -67,7 +68,7 @@ export default async function TeacherRecordsPage({
     let query = supabase
       .from("activity_responses")
       .select(
-        "id, student_code, student_number, grade, class_number, subject, activity_slug, reflection_data, response_data, created_at, activities ( title ), students ( profiles ( name ) )"
+        "id, student_code, student_number, grade, class_number, subject, activity_slug, reflection_data, response_data, created_at, locked_at, activities ( title ), students ( profiles ( name ) )"
       )
       .eq("grade", gradeValue)
       .eq("class_number", classValue)
@@ -85,6 +86,29 @@ export default async function TeacherRecordsPage({
       records = (data ?? []) as unknown as TeacherRecordRowData[];
     }
   }
+
+  // (subject, activity_slug) 별 그룹 집계 — 마감 관리 섹션용.
+  const lockGroups: LockGroup[] = (() => {
+    const map = new Map<string, LockGroup>();
+    for (const r of records) {
+      if (!r.activity_slug) continue;
+      const key = `${r.subject ?? ""}::${r.activity_slug}`;
+      const cur = map.get(key) ?? {
+        activity_slug: r.activity_slug,
+        subject: r.subject ?? null,
+        total: 0,
+        lockedCount: 0,
+      };
+      cur.total += 1;
+      if (r.locked_at) cur.lockedCount += 1;
+      map.set(key, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      const s = (a.subject ?? "").localeCompare(b.subject ?? "", "ko");
+      if (s !== 0) return s;
+      return a.activity_slug.localeCompare(b.activity_slug);
+    });
+  })();
 
   return (
     <main className="min-h-screen px-6 py-10">
@@ -124,6 +148,26 @@ export default async function TeacherRecordsPage({
                   </span>
                 </h2>
               </div>
+
+              {/* 활동별 마감 관리 — 학생 측 수정 가능 여부를 교사가 통제. */}
+              {records.length > 0 ? (
+                <div className="mt-5 rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5">
+                  <p className="text-sm font-semibold text-cyan-300">
+                    활동별 마감 관리
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    마감을 누르면 그 학급·활동의 학생 응답이 잠겨 더 이상 수정할 수 없습니다.
+                    필요 시 마감 해제로 다시 풀 수 있습니다.
+                  </p>
+                  <div className="mt-3">
+                    <LockManager
+                      grade={gradeValue}
+                      classNumber={classValue}
+                      groups={lockGroups}
+                    />
+                  </div>
+                </div>
+              ) : null}
 
               {records.length === 0 ? (
                 <div className="mt-5 rounded-xl border border-dashed border-white/20 bg-slate-950 p-6 text-slate-300">

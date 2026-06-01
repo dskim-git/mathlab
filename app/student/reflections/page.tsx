@@ -21,8 +21,40 @@ type ActivityResponseRow = {
   reflection_data: Record<string, unknown> | null;
   response_data: Record<string, unknown> | null;
   created_at: string;
+  locked_at: string | null;
   activities: { title: string | null } | null;
 };
+
+/**
+ * reflection_data 가 비어 있지 않은 객체이면 편집 가능 처리.
+ * 옛 형식 ({ id: string } 또는 { reflection: string }) 도 편집할 수 있도록 normalize 한다.
+ * 새 형식 { id: { prompt, answer } } 는 그대로 사용, 옛 형식은 prompt 를 빈 문자열로 둔다.
+ */
+function isEditableReflection(data: unknown): boolean {
+  if (!data || typeof data !== "object") return false;
+  const entries = Object.entries(data as Record<string, unknown>);
+  return entries.length > 0;
+}
+
+/** 편집 폼용으로 reflection_data 를 { id: { prompt, answer } } 형식으로 정규화. */
+function normalizeReflection(
+  data: unknown
+): Record<string, { prompt: string; answer: string }> {
+  const out: Record<string, { prompt: string; answer: string }> = {};
+  if (!data || typeof data !== "object") return out;
+  for (const [id, v] of Object.entries(data as Record<string, unknown>)) {
+    if (v != null && typeof v === "object") {
+      const obj = v as { prompt?: unknown; answer?: unknown };
+      const prompt = typeof obj.prompt === "string" ? obj.prompt : "";
+      const answer = typeof obj.answer === "string" ? obj.answer : "";
+      out[id] = { prompt, answer };
+    } else if (typeof v === "string") {
+      // 옛 형식 — prompt 미상, answer 만 보존.
+      out[id] = { prompt: "", answer: v };
+    }
+  }
+  return out;
+}
 
 type PriorityRow = {
   id: string;
@@ -53,6 +85,12 @@ export default function StudentReflectionsPage() {
   const [filter, setFilter] = useState<"all" | "marked">("all");
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
+
+  // 본인 응답 수정 — 한 번에 한 행. reflection_data 의 entries 별 answer 만 편집(prompt 는 보존).
+  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
+  const [responseDraft, setResponseDraft] = useState<Record<string, string>>({});
+  const [savingResponse, setSavingResponse] = useState(false);
+  const [responseEditError, setResponseEditError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -91,7 +129,7 @@ export default function StudentReflectionsPage() {
       supabase
         .from("activity_responses")
         .select(
-          "id, subject, activity_slug, reflection_data, response_data, created_at, activities ( title )"
+          "id, subject, activity_slug, reflection_data, response_data, created_at, locked_at, activities ( title )"
         )
         .eq("student_id", studentId)
         .order("created_at", { ascending: false }),
@@ -182,6 +220,57 @@ export default function StudentReflectionsPage() {
       ...prev,
       [responseId]: data as PriorityRow,
     }));
+  }
+
+  // 본인 응답 수정 — locked_at IS NULL 일 때만. 옛 형식도 normalize 해서 편집 가능.
+  function openEditResponse(row: ActivityResponseRow) {
+    if (row.locked_at) return;
+    const normalized = normalizeReflection(row.reflection_data);
+    if (Object.keys(normalized).length === 0) return;
+    const draft: Record<string, string> = {};
+    for (const [id, entry] of Object.entries(normalized)) {
+      draft[id] = entry.answer;
+    }
+    setEditingResponseId(row.id);
+    setResponseDraft(draft);
+    setResponseEditError("");
+  }
+  function cancelEditResponse() {
+    setEditingResponseId(null);
+    setResponseDraft({});
+    setResponseEditError("");
+  }
+  async function saveEditResponse(row: ActivityResponseRow) {
+    const orig = normalizeReflection(row.reflection_data);
+    if (Object.keys(orig).length === 0) return;
+    // 빈 답이 있으면 거부.
+    const empties = Object.entries(orig).filter(
+      ([id]) => !(responseDraft[id] ?? "").trim()
+    );
+    if (empties.length > 0) {
+      setResponseEditError("모든 항목을 작성해 주세요.");
+      return;
+    }
+    const next: Record<string, { prompt: string; answer: string }> = {};
+    for (const [id, entry] of Object.entries(orig)) {
+      next[id] = { prompt: entry.prompt, answer: responseDraft[id]?.trim() ?? "" };
+    }
+    setSavingResponse(true);
+    setResponseEditError("");
+    const { error } = await supabase
+      .from("activity_responses")
+      .update({ reflection_data: next, updated_at: new Date().toISOString() })
+      .eq("id", row.id);
+    setSavingResponse(false);
+    if (error) {
+      setResponseEditError(error.message);
+      return;
+    }
+    // 로컬 갱신 + 닫기
+    setResponses((prev) =>
+      prev.map((r) => (r.id === row.id ? { ...r, reflection_data: next } : r))
+    );
+    cancelEditResponse();
   }
 
   const filtered = useMemo(() => {
@@ -285,6 +374,9 @@ export default function StudentReflectionsPage() {
             const prio = priorities[row.id];
             const isMarked = !!prio?.marked;
             const isEditingComment = editingComment === row.id;
+            const isLocked = !!row.locked_at;
+            const isEditableForm = isEditableReflection(row.reflection_data);
+            const isEditingResp = editingResponseId === row.id;
 
             return (
               <li
@@ -316,22 +408,100 @@ export default function StudentReflectionsPage() {
                   </p>
                 </div>
 
-                <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                   {row.subject ? (
                     <span className={theme.accentText}>{row.subject}</span>
                   ) : null}
                   {row.activity_slug ? (
                     <span className="text-slate-500">{row.activity_slug}</span>
                   ) : null}
+                  {isLocked ? (
+                    <span className="rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[10px] font-bold text-amber-200">
+                      🔒 마감됨
+                    </span>
+                  ) : null}
                 </div>
 
-                {reflection ? (
+                {/* 본인 응답 수정 폼(isEditingResp) — 미마감일 때만 진입 가능.
+                    옛 형식(entry.prompt 가 빈 문자열)도 normalize 해서 편집 가능. */}
+                {isEditingResp && row.reflection_data ? (
+                  <div className="mt-3 space-y-3 rounded-lg border border-cyan-300/30 bg-slate-950 p-3">
+                    <p className="text-xs font-semibold text-cyan-200">
+                      성찰 수정 — 담당 교사가 마감하기 전까지 자유롭게 고칠 수 있습니다.
+                    </p>
+                    {Object.entries(normalizeReflection(row.reflection_data)).map(
+                      ([id, entry], idx) => (
+                      <div key={id}>
+                        <label
+                          htmlFor={`resp-edit-${row.id}-${id}`}
+                          className="block text-xs font-semibold text-slate-200"
+                        >
+                          {idx + 1}.{" "}
+                          {entry.prompt || (
+                            <span className="text-slate-500">
+                              (이전 질문 — {id})
+                            </span>
+                          )}
+                        </label>
+                        <textarea
+                          id={`resp-edit-${row.id}-${id}`}
+                          value={responseDraft[id] ?? ""}
+                          onChange={(e) =>
+                            setResponseDraft((prev) => ({
+                              ...prev,
+                              [id]: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          className="mt-1 w-full rounded border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+                        />
+                      </div>
+                      )
+                    )}
+                    {responseEditError ? (
+                      <p className="text-[11px] text-rose-300">
+                        {responseEditError}
+                      </p>
+                    ) : null}
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={cancelEditResponse}
+                        disabled={savingResponse}
+                        className="rounded px-3 py-1 text-xs text-slate-400 hover:text-white disabled:opacity-60"
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => saveEditResponse(row)}
+                        disabled={savingResponse}
+                        className="rounded-full bg-cyan-300 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-cyan-200 disabled:opacity-60"
+                      >
+                        {savingResponse ? "저장 중..." : "저장"}
+                      </button>
+                    </div>
+                  </div>
+                ) : reflection ? (
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-300">
                     {reflection}
                   </p>
                 ) : (
                   <p className="mt-3 text-sm text-slate-500">성찰 내용 없음</p>
                 )}
+
+                {/* 수정 진입 버튼 — 미마감 + 새 형식 + 편집 모드 아닐 때만 */}
+                {!isLocked && isEditableForm && !isEditingResp ? (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openEditResponse(row)}
+                      className={`text-xs font-semibold transition ${theme.accentText} hover:opacity-80`}
+                    >
+                      ✏️ 성찰 수정
+                    </button>
+                  </div>
+                ) : null}
 
                 {/* 별표된 행만: 우선순위 + 코멘트 인라인 */}
                 {isMarked && prio ? (
