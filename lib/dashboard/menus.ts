@@ -128,6 +128,7 @@ const adminMenu: MenuItem[] = [
     href: "/admin/feedback",
   },
   { key: "stats", label: "통계", icon: "📊", href: "/admin/stats", inTabBar: true },
+  { key: "scores", label: "점수 관리", icon: "🏆", href: "/admin/scores" },
   { key: "notices", label: "공지 작성", icon: "📢", href: "/admin/notices" },
 ];
 
@@ -184,6 +185,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/access": "교과 권한",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",
+  "/admin/scores": "점수 관리",
   "/admin/notices": "공지 작성",
 
   // 교사
