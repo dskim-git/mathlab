@@ -20,6 +20,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: [
       "common/mini/poly_sort_game",
       "common/mini/poly_add_sub_game",
+      "common/mini/poly_mul_expand",
     ],
   },
   {
