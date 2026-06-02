@@ -26,6 +26,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/synthetic_div_principle",
       "common/mini/remainder_same_expressions",
       "common/mini/synthetic_div_spreadsheet",
+      "common/mini/gelosia_div",
     ],
   },
   {

@@ -76,6 +76,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/synthetic_div_principle": "조립제법 원리 탐구",
   "common/mini/remainder_same_expressions": "나머지가 같은 식 탐험",
   "common/mini/synthetic_div_spreadsheet": "스프레드시트로 조립제법",
+  "common/mini/gelosia_div": "갤로시아 나눗셈 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
