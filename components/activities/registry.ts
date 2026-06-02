@@ -15,6 +15,7 @@ import GelosiaDiv from "./common/1-1-polynomials/gelosia-div/GelosiaDiv";
 import IdentityGame from "./common/1-2-remainder-factorize/identity-game/IdentityGame";
 import UndefinedCoefficients from "./common/1-2-remainder-factorize/undefined-coefficients/UndefinedCoefficients";
 import PowerRemainderBooster from "./common/1-2-remainder-factorize/power-remainder-booster/PowerRemainderBooster";
+import FactorCandidateRadar from "./common/1-2-remainder-factorize/factor-candidate-radar/FactorCandidateRadar";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -130,6 +131,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/identity_game": IdentityGame,
   "common/mini/undefined_coefficients": UndefinedCoefficients,
   "common/mini/power_remainder_booster": PowerRemainderBooster,
+  "common/mini/factor_candidate_radar": FactorCandidateRadar,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
