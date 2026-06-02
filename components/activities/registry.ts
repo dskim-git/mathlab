@@ -21,6 +21,7 @@ import FactorPathfinderArcade from "./common/1-2-remainder-factorize/factor-path
 // [2] 방정식과 부등식 — (1) 복소수와 이차방정식
 import ComplexNumberTerms from "./common/2-1-complex-numbers/complex-number-terms/ComplexNumberTerms";
 import ComplexArithmeticGame from "./common/2-1-complex-numbers/complex-arithmetic-game/ComplexArithmeticGame";
+import ImaginaryUnitCycle from "./common/2-1-complex-numbers/imaginary-unit-cycle/ImaginaryUnitCycle";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -142,6 +143,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/factor_pathfinder_arcade": FactorPathfinderArcade,
   "common/mini/complex_number_terms": ComplexNumberTerms,
   "common/mini/complex_arithmetic_game": ComplexArithmeticGame,
+  "common/mini/imaginary_unit_cycle": ImaginaryUnitCycle,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
