@@ -97,6 +97,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/quad_bridge_curve_fit": "다리에서 이차함수 찾기",
   "common/mini/cubic_quartic_equation_explorer": "삼·사차방정식 풀이 탐구",
   "common/mini/equation_history_flash": "방정식 해법의 역사",
+  "common/mini/omega_law_explorer": "ω-법칙 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

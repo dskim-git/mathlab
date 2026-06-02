@@ -34,6 +34,7 @@ import QuadBridgeCurveFit from "./common/2-2-quadratic-function/quad-bridge-curv
 // [2] 방정식과 부등식 — (3) 여러 가지 방정식과 부등식
 import CubicQuarticEquationExplorer from "./common/2-3-equation-inequality/cubic-quartic-equation-explorer/CubicQuarticEquationExplorer";
 import EquationHistoryFlash from "./common/2-3-equation-inequality/equation-history-flash/EquationHistoryFlash";
+import OmegaLawExplorer from "./common/2-3-equation-inequality/omega-law-explorer/OmegaLawExplorer";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -166,6 +167,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/quad_bridge_curve_fit": QuadBridgeCurveFit,
   "common/mini/cubic_quartic_equation_explorer": CubicQuarticEquationExplorer,
   "common/mini/equation_history_flash": EquationHistoryFlash,
+  "common/mini/omega_law_explorer": OmegaLawExplorer,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

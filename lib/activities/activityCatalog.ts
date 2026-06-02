@@ -70,6 +70,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: [
       "common/mini/cubic_quartic_equation_explorer",
       "common/mini/equation_history_flash",
+      "common/mini/omega_law_explorer",
     ],
   },
   {
