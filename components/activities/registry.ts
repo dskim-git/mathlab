@@ -28,6 +28,7 @@ import VietaRootsGame from "./common/2-1-complex-numbers/vieta-roots-game/VietaR
 // [2] 방정식과 부등식 — (2) 이차방정식과 이차함수
 import QuadFuncEquationExplorer from "./common/2-2-quadratic-function/quad-func-equation-explorer/QuadFuncEquationExplorer";
 import QuadLinePositionExplorer from "./common/2-2-quadratic-function/quad-line-position-explorer/QuadLinePositionExplorer";
+import QuadMaxminExplorer from "./common/2-2-quadratic-function/quad-maxmin-explorer/QuadMaxminExplorer";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -155,6 +156,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/vieta_roots_game": VietaRootsGame,
   "common/mini/quad_func_equation_explorer": QuadFuncEquationExplorer,
   "common/mini/quad_line_position_explorer": QuadLinePositionExplorer,
+  "common/mini/quad_maxmin_explorer": QuadMaxminExplorer,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

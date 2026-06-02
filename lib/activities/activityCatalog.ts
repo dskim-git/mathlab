@@ -59,6 +59,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: [
       "common/mini/quad_func_equation_explorer",
       "common/mini/quad_line_position_explorer",
+      "common/mini/quad_maxmin_explorer",
     ],
   },
   {

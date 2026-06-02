@@ -92,6 +92,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/vieta_roots_game": "근과 계수의 관계 탐정단",
   "common/mini/quad_func_equation_explorer": "이차함수·방정식 그래프 탐구",
   "common/mini/quad_line_position_explorer": "이차함수·직선 위치관계 실험실",
+  "common/mini/quad_maxmin_explorer": "이차함수의 최대·최소 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
