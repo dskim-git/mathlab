@@ -16,6 +16,7 @@ import IdentityGame from "./common/1-2-remainder-factorize/identity-game/Identit
 import UndefinedCoefficients from "./common/1-2-remainder-factorize/undefined-coefficients/UndefinedCoefficients";
 import PowerRemainderBooster from "./common/1-2-remainder-factorize/power-remainder-booster/PowerRemainderBooster";
 import FactorCandidateRadar from "./common/1-2-remainder-factorize/factor-candidate-radar/FactorCandidateRadar";
+import PrimeCompositeLock from "./common/1-2-remainder-factorize/prime-composite-lock/PrimeCompositeLock";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -76,6 +77,7 @@ import DistributionZoo from "./probability/3-1-prob-distribution/distribution-zo
 
 // 3-1-2 이산확률변수의 기댓값과 표준편차
 import SeunggyeongdoSim from "./probability/3-1-prob-distribution/seunggyeongdo-sim/SeunggyeongdoSim";
+import AxbNumberLineLab from "./probability/3-1-prob-distribution/axb-number-line-lab/AxbNumberLineLab";
 import RvMeanVarLab from "./probability/3-1-prob-distribution/rv-mean-var-lab/RvMeanVarLab";
 import RvSpreadsheetLab from "./probability/3-1-prob-distribution/rv-spreadsheet-lab/RvSpreadsheetLab";
 
@@ -132,6 +134,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/undefined_coefficients": UndefinedCoefficients,
   "common/mini/power_remainder_booster": PowerRemainderBooster,
   "common/mini/factor_candidate_radar": FactorCandidateRadar,
+  "common/mini/prime_composite_lock": PrimeCompositeLock,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
@@ -179,6 +182,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "probability_new/mini/rv_classify_game": RvClassifyGame,
   "probability_new/mini/distribution_zoo": DistributionZoo,
   "probability_new/mini/seunggyeongdo_sim": SeunggyeongdoSim,
+  "probability_new/mini/axb_number_line_lab": AxbNumberLineLab,
   "probability_new/mini/rv_mean_var_lab": RvMeanVarLab,
   "probability_new/mini/rv_spreadsheet_lab": RvSpreadsheetLab,
   "probability_new/mini/binomial_mean_var_explorer": BinomialMeanVarExplorer,

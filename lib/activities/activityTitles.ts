@@ -43,6 +43,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability_new/mini/rv_classify_game": "확률변수 분류 게임",
   "probability_new/mini/distribution_zoo": "세상의 확률분포 한눈에 보기",
   "probability_new/mini/seunggyeongdo_sim": "승경도 윤목 시뮬레이션",
+  "probability_new/mini/axb_number_line_lab": "aX+b 수직선 변환 실험실",
   "probability_new/mini/rv_mean_var_lab": "기댓값·분산·표준편차 탐험",
   "probability_new/mini/rv_spreadsheet_lab": "스프레드시트로 확률변수 분석",
   "probability_new/mini/binomial_mean_var_explorer": "이항분포 평균·분산 탐험",
@@ -81,6 +82,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/undefined_coefficients": "미정계수법 탐정 게임",
   "common/mini/power_remainder_booster": "거듭제곱 나머지 부스터",
   "common/mini/factor_candidate_radar": "인수 후보 레이더",
+  "common/mini/prime_composite_lock": "소수·합성수 잠금 해제",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

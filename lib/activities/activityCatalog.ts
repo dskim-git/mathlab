@@ -37,6 +37,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/undefined_coefficients",
       "common/mini/power_remainder_booster",
       "common/mini/factor_candidate_radar",
+      "common/mini/prime_composite_lock",
     ],
   },
   {
@@ -125,6 +126,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "probability_new/mini/rv_classify_game",
       "probability_new/mini/distribution_zoo",
       "probability_new/mini/seunggyeongdo_sim",
+      "probability_new/mini/axb_number_line_lab",
       "probability_new/mini/rv_mean_var_lab",
       "probability_new/mini/rv_spreadsheet_lab",
       "probability_new/mini/binomial_mean_var_explorer",
