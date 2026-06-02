@@ -362,7 +362,6 @@ function FormulaDeck() {
 
 // ─── Case Runner ──────────────────────────────────────────
 function CaseRunner({
-  idx,
   isLast,
   item,
   onSolved,

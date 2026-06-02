@@ -65,12 +65,22 @@ export default function PolyMulExpand() {
 
       {/* ─── 진행 + 점수 ─── */}
       <div className="mt-5 flex items-center gap-3">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-violet-400 transition-[width] duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
+        <svg
+          viewBox="0 0 100 4"
+          preserveAspectRatio="none"
+          className="h-2 flex-1"
+          role="img"
+          aria-label={`진행률 ${progressPct}%`}
+        >
+          <defs>
+            <linearGradient id="pmeProgGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#a78bfa" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="100" height="4" rx="2" fill="rgba(255,255,255,0.1)" />
+          <rect x="0" y="0" width={progressPct} height="4" rx="2" fill="url(#pmeProgGrad)" />
+        </svg>
         <span className="rounded-full border border-cyan-400/45 bg-cyan-400/15 px-4 py-1 font-mono text-sm font-bold text-cyan-100">
           {completedCount} / 3 · 점수 {score}
         </span>
@@ -521,6 +531,8 @@ function StageThree({ onComplete }: { onComplete: () => void }) {
       const shuffled = [...POOL_ITEMS].sort(() => Math.random() - 0.5);
       setPool(shuffled);
     }
+    // POOL_ITEMS 는 모듈 스코프 상수
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxN]);
 
   function clickPoolItem(item: string) {

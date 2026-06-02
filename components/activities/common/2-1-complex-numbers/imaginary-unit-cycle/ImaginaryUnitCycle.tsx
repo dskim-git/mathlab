@@ -30,15 +30,6 @@ function I() {
   return <em className="font-serif italic text-pink-300">i</em>;
 }
 
-const SUP_DIGIT: Record<string, string> = {
-  "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
-  "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
-  "-": "⁻",
-};
-function supText(n: number | string): string {
-  return String(n).split("").map((c) => SUP_DIGIT[c] ?? c).join("");
-}
-
 // i 거듭제곱 표기용 4 값
 type IVal = "i" | "-1" | "-i" | "1";
 const IVAL_LABEL: Record<IVal, ReactNode> = {

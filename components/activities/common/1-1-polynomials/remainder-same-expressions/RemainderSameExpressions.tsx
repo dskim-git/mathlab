@@ -36,7 +36,7 @@ function sup(n: number) {
 // 계수 [c_max, ..., c_0] (내림차순) → "x³ − 3x² + 2x + 1"
 function polyStr(coeffs: number[]): string {
   // 리딩 0 제거
-  let arr = [...coeffs];
+  const arr = [...coeffs];
   while (arr.length > 1 && arr[0] === 0) arr.shift();
   const n = arr.length;
   const parts: string[] = [];

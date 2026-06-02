@@ -279,8 +279,6 @@ function GridPanel({
   const R = config.ans.length;
   const C = config.ans[0].length;
 
-  // 풀(각 type별 남은 개수). label 키로 묶지 않고 (type,label) 별 슬롯 단위로 관리한다.
-  const totalSlots = R * C;
   // grid[r][c] = (poolItemIdx | null). 값이 있으면 그 poolItem에서 가져온 것.
   const [grid, setGrid] = useState<({ pi: number; label: string; type: TileType } | null)[][]>(
     () => Array.from({ length: R }, () => new Array(C).fill(null)),
@@ -298,8 +296,9 @@ function GridPanel({
     | null
   >(null);
 
-  // 패널 변경 시 자동 리셋
+  // 패널 변경 시 자동 리셋 (의도된 리셋 패턴)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setGrid(Array.from({ length: R }, () => new Array(C).fill(null)));
     setPoolCounts(config.pool.map((p) => p.cnt));
     setMsg(null);

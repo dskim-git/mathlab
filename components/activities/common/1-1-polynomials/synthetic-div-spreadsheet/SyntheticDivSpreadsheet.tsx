@@ -54,7 +54,7 @@ function fmtN(n: number | null | undefined): string {
   return n < 0 ? `−${Math.abs(n)}` : String(n);
 }
 function polyStr(coeffs: number[]): string {
-  let arr = [...coeffs];
+  const arr = [...coeffs];
   while (arr.length > 1 && arr[0] === 0) arr.shift();
   const n = arr.length;
   const parts: string[] = [];

@@ -439,10 +439,13 @@ function Step4() {
 }
 
 // Step 5 — 애니메이션 조립제법 표
+const STEP5_EX_COEFFS = [3, -2, 1, -4];
+const STEP5_EX_ALPHA = 2;
+
 function Step5() {
-  const EX_COEFFS = [3, -2, 1, -4];
-  const EX_ALPHA = 2;
-  const { r2, r3 } = useMemo(() => computeSynth(EX_COEFFS, EX_ALPHA), []);
+  const EX_COEFFS = STEP5_EX_COEFFS;
+  const EX_ALPHA = STEP5_EX_ALPHA;
+  const { r2, r3 } = useMemo(() => computeSynth(EX_COEFFS, EX_ALPHA), [EX_COEFFS, EX_ALPHA]);
   // 0: 1행만, 1: b[0], 2: r2[1], 3: b[1], 4: r2[2], 5: b[2], 6: r2[3], 7: b[3]=R
   const [anim, setAnim] = useState(0);
   const maxAnim = 7;
@@ -661,8 +664,9 @@ function PracticeRunner({
   const [fb, setFb] = useState<{ tone: "ok" | "ng"; message: string } | null>(null);
   const [done, setDone] = useState(false);
 
-  // 첫 칸은 자동
+  // 첫 칸은 자동 (의도된 리셋 패턴)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRow3((arr) => arr.map((v, i) => (i === 0 ? String(ansR3[0]) : v)));
   }, [ansR3]);
 

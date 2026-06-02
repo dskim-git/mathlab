@@ -168,8 +168,9 @@ export default function ComplexNumberTerms() {
   const [feedback, setFeedback] = useState<{ tone: Tone; node: ReactNode } | null>(null);
   const [answered, setAnswered] = useState(false);
 
-  // 문제 / phase 전환 시 입력 상태 리셋 + Phase 2 셔플
+  // 문제 / phase 전환 시 입력 상태 리셋 + Phase 2 셔플 (의도된 리셋 패턴)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChosenP1(null);
     setChosenP3(null);
     setP2RealPicked(null);
@@ -318,12 +319,22 @@ export default function ComplexNumberTerms() {
             <span className="rounded-full border border-violet-400/45 bg-violet-400/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-violet-100">
               Phase {phase} · {phase === 1 ? "분류관" : phase === 2 ? "성분 해독기" : "O/X 판별대"}
             </span>
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-violet-400 transition-[width] duration-500"
-                style={{ width: `${phaseProgress}%` }}
-              />
-            </div>
+            <svg
+              viewBox="0 0 100 4"
+              preserveAspectRatio="none"
+              className="h-2 flex-1"
+              role="img"
+              aria-label={`진행률 ${phaseProgress}%`}
+            >
+              <defs>
+                <linearGradient id="cntProgGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#22d3ee" />
+                  <stop offset="100%" stopColor="#a78bfa" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="100" height="4" rx="2" fill="rgba(255,255,255,0.1)" />
+              <rect x="0" y="0" width={phaseProgress} height="4" rx="2" fill="url(#cntProgGrad)" />
+            </svg>
             <span className="rounded-full border border-cyan-400/45 bg-cyan-400/15 px-3 py-1 font-mono text-xs font-bold text-cyan-100">
               {qIdx + 1} / {phaseTotal}
             </span>
@@ -696,12 +707,22 @@ function ResultScreen({ score, onRestart }: { score: number; onRestart: () => vo
         <p className="text-5xl">{emoji}</p>
         <p className="mt-2 text-2xl font-extrabold text-white">{score} 점</p>
         <p className="text-xs text-slate-400">/ {MAX_SCORE} 점 ({pct}%)</p>
-        <div className="mx-auto mt-4 h-3 max-w-md overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-violet-400 transition-[width] duration-1000"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+        <svg
+          viewBox="0 0 100 6"
+          preserveAspectRatio="none"
+          className="mx-auto mt-4 block h-3 w-full max-w-md"
+          role="img"
+          aria-label={`결과 ${pct}%`}
+        >
+          <defs>
+            <linearGradient id="cntResGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#a78bfa" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="100" height="6" rx="3" fill="rgba(255,255,255,0.1)" />
+          <rect x="0" y="0" width={pct} height="6" rx="3" fill="url(#cntResGrad)" />
+        </svg>
         <p className="mt-4 text-sm leading-7 text-slate-200">{msg}</p>
       </div>
 

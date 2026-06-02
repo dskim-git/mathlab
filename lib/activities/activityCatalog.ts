@@ -55,6 +55,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   },
   {
     subject: "공통수학1",
+    unit: "2-2 이차방정식과 이차함수",
+    slugs: ["common/mini/quad_func_equation_explorer"],
+  },
+  {
+    subject: "공통수학1",
     unit: "3-1 경우의 수",
     slugs: ["common/mini/perm_comb_growth_race"],
   },

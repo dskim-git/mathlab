@@ -340,7 +340,6 @@ function HudCard({ label, value, sub }: { label: string; value: string; sub: str
 type StepKey = "const" | "lead" | "candidate";
 
 function ProblemRunner({
-  idx,
   problem,
   isLast,
   onSolved,
