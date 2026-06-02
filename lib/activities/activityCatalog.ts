@@ -43,6 +43,14 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   },
   {
     subject: "공통수학1",
+    unit: "2-1 복소수와 이차방정식",
+    slugs: [
+      "common/mini/complex_number_terms",
+      "common/mini/complex_arithmetic_game",
+    ],
+  },
+  {
+    subject: "공통수학1",
     unit: "3-1 경우의 수",
     slugs: ["common/mini/perm_comb_growth_race"],
   },

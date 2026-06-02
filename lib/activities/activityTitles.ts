@@ -84,6 +84,8 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/factor_candidate_radar": "인수 후보 레이더",
   "common/mini/prime_composite_lock": "소수·합성수 잠금 해제",
   "common/mini/factor_pathfinder_arcade": "인수분해 패스파인더 아케이드",
+  "common/mini/complex_number_terms": "복소수 정복! 용어 마스터",
+  "common/mini/complex_arithmetic_game": "복소수 계산 배틀",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
