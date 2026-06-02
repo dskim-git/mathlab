@@ -38,6 +38,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/power_remainder_booster",
       "common/mini/factor_candidate_radar",
       "common/mini/prime_composite_lock",
+      "common/mini/factor_pathfinder_arcade",
     ],
   },
   {

@@ -17,6 +17,7 @@ import UndefinedCoefficients from "./common/1-2-remainder-factorize/undefined-co
 import PowerRemainderBooster from "./common/1-2-remainder-factorize/power-remainder-booster/PowerRemainderBooster";
 import FactorCandidateRadar from "./common/1-2-remainder-factorize/factor-candidate-radar/FactorCandidateRadar";
 import PrimeCompositeLock from "./common/1-2-remainder-factorize/prime-composite-lock/PrimeCompositeLock";
+import FactorPathfinderArcade from "./common/1-2-remainder-factorize/factor-pathfinder-arcade/FactorPathfinderArcade";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -135,6 +136,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/power_remainder_booster": PowerRemainderBooster,
   "common/mini/factor_candidate_radar": FactorCandidateRadar,
   "common/mini/prime_composite_lock": PrimeCompositeLock,
+  "common/mini/factor_pathfinder_arcade": FactorPathfinderArcade,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

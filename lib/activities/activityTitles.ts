@@ -83,6 +83,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/power_remainder_booster": "거듭제곱 나머지 부스터",
   "common/mini/factor_candidate_radar": "인수 후보 레이더",
   "common/mini/prime_composite_lock": "소수·합성수 잠금 해제",
+  "common/mini/factor_pathfinder_arcade": "인수분해 패스파인더 아케이드",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
