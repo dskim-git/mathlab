@@ -24,6 +24,7 @@ import ComplexArithmeticGame from "./common/2-1-complex-numbers/complex-arithmet
 import ImaginaryUnitCycle from "./common/2-1-complex-numbers/imaginary-unit-cycle/ImaginaryUnitCycle";
 import NegativeSqrtTrap from "./common/2-1-complex-numbers/negative-sqrt-trap/NegativeSqrtTrap";
 import ConjugateRootsExplorer from "./common/2-1-complex-numbers/conjugate-roots-explorer/ConjugateRootsExplorer";
+import VietaRootsGame from "./common/2-1-complex-numbers/vieta-roots-game/VietaRootsGame";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -148,6 +149,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/imaginary_unit_cycle": ImaginaryUnitCycle,
   "common/mini/negative_sqrt_trap": NegativeSqrtTrap,
   "common/mini/conjugate_roots_explorer": ConjugateRootsExplorer,
+  "common/mini/vieta_roots_game": VietaRootsGame,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
