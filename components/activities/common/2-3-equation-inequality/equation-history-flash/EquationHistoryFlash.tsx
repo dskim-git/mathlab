@@ -2324,7 +2324,9 @@ const PART3_SCENES: SceneDef[] = [
         <FadeBlock sceneT={sceneT} start={11200} fadeMs={800}>
           <p className="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/[0.08] px-3 py-2 text-sm leading-7 text-amber-100">
             <b>1824 년, 21 세.</b> 일반 5 차 방정식은 <b>거듭제곱근으로 풀 수 없다</b> 는 것을
-            증명. 인쇄비 부족으로 <b>6 쪽</b> 자비 출판.
+            증명.
+            <br />
+            인쇄비 부족으로 <b>6 쪽</b> 자비 출판.
           </p>
         </FadeBlock>
       </ScenePortraitNarration>
@@ -2396,7 +2398,7 @@ const PART3_SCENES: SceneDef[] = [
         imgAlt="갈루아"
         sceneT={sceneT}
         duration={duration}
-        objectPosition="50% 22%"
+        objectPosition="50% 32%"
         from={{ scale: 1.0, tx: 0, ty: 0 }}
         to={{ scale: 1.12, tx: 0, ty: 0 }}
       >
@@ -2448,7 +2450,7 @@ const PART3_SCENES: SceneDef[] = [
         imgAlt="갈루아"
         sceneT={sceneT}
         duration={duration}
-        objectPosition="50% 22%"
+        objectPosition="50% 32%"
         from={{ scale: 1.12, tx: 0, ty: 0 }}
         to={{ scale: 1.2, tx: -1, ty: -1 }}
       >
