@@ -67,7 +67,10 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학1",
     unit: "2-3 여러 가지 방정식과 부등식",
-    slugs: ["common/mini/cubic_quartic_equation_explorer"],
+    slugs: [
+      "common/mini/cubic_quartic_equation_explorer",
+      "common/mini/equation_history_flash",
+    ],
   },
   {
     subject: "공통수학1",
