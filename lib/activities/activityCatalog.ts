@@ -34,6 +34,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     unit: "1-2 나머지정리와 인수분해",
     slugs: [
       "common/mini/identity_game",
+      "common/mini/undefined_coefficients",
     ],
   },
   {
