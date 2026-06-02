@@ -30,6 +30,7 @@ import QuadFuncEquationExplorer from "./common/2-2-quadratic-function/quad-func-
 import QuadLinePositionExplorer from "./common/2-2-quadratic-function/quad-line-position-explorer/QuadLinePositionExplorer";
 import QuadMaxminExplorer from "./common/2-2-quadratic-function/quad-maxmin-explorer/QuadMaxminExplorer";
 import QuadMaxminReallife from "./common/2-2-quadratic-function/quad-maxmin-reallife/QuadMaxminReallife";
+import QuadBridgeCurveFit from "./common/2-2-quadratic-function/quad-bridge-curve-fit/QuadBridgeCurveFit";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -159,6 +160,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/quad_line_position_explorer": QuadLinePositionExplorer,
   "common/mini/quad_maxmin_explorer": QuadMaxminExplorer,
   "common/mini/quad_maxmin_reallife": QuadMaxminReallife,
+  "common/mini/quad_bridge_curve_fit": QuadBridgeCurveFit,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

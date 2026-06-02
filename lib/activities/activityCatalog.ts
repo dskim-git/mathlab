@@ -61,6 +61,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/quad_line_position_explorer",
       "common/mini/quad_maxmin_explorer",
       "common/mini/quad_maxmin_reallife",
+      "common/mini/quad_bridge_curve_fit",
     ],
   },
   {
