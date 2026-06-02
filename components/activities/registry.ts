@@ -11,6 +11,8 @@ import SyntheticDivPrinciple from "./common/1-1-polynomials/synthetic-div-princi
 import RemainderSameExpressions from "./common/1-1-polynomials/remainder-same-expressions/RemainderSameExpressions";
 import SyntheticDivSpreadsheet from "./common/1-1-polynomials/synthetic-div-spreadsheet/SyntheticDivSpreadsheet";
 import GelosiaDiv from "./common/1-1-polynomials/gelosia-div/GelosiaDiv";
+// [1] 다항식 — (2) 나머지정리와 인수분해
+import IdentityGame from "./common/1-2-remainder-factorize/identity-game/IdentityGame";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -123,6 +125,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/remainder_same_expressions": RemainderSameExpressions,
   "common/mini/synthetic_div_spreadsheet": SyntheticDivSpreadsheet,
   "common/mini/gelosia_div": GelosiaDiv,
+  "common/mini/identity_game": IdentityGame,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

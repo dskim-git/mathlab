@@ -31,6 +31,13 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   },
   {
     subject: "공통수학1",
+    unit: "1-2 나머지정리와 인수분해",
+    slugs: [
+      "common/mini/identity_game",
+    ],
+  },
+  {
+    subject: "공통수학1",
     unit: "3-1 경우의 수",
     slugs: ["common/mini/perm_comb_growth_race"],
   },
