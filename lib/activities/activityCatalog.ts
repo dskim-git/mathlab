@@ -23,6 +23,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/poly_mul_expand",
       "common/mini/algebra_tile_formulas",
       "common/mini/gelosia_mul",
+      "common/mini/synthetic_div_principle",
     ],
   },
   {

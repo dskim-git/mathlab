@@ -68,6 +68,12 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability/mini/circular_perm_anchor_p5": "원순열과 한 자리 고정",
   "probability/mini/polygon_edge_arrangements_p5": "다각형 변 위 배열과 대칭",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
+  "common/mini/poly_sort_game": "항 카드 정렬 게임",
+  "common/mini/poly_add_sub_game": "동류항 연결 게임",
+  "common/mini/poly_mul_expand": "곱셈 공식 확장 탐구",
+  "common/mini/algebra_tile_formulas": "대수막대 곱셈 공식 탐구",
+  "common/mini/gelosia_mul": "갤로시아 곱셈 탐구",
+  "common/mini/synthetic_div_principle": "조립제법 원리 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
