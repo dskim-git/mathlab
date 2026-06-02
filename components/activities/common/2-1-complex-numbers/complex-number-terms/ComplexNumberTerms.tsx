@@ -22,6 +22,15 @@ function I() {
   return <em className="font-serif italic text-pink-300">i</em>;
 }
 
+// 근호: √ 뒤 피연산자에 위 가로선(vinculum)을 그려 가독성을 높인다.
+function Sqrt({ children }: { children: ReactNode }) {
+  return (
+    <span className="whitespace-nowrap">
+      √<span className="border-t border-current px-[1px]">{children}</span>
+    </span>
+  );
+}
+
 // ─── 데이터 ─────────────────────────────────────────────────
 type Kind = "실수" | "허수" | "순허수";
 
@@ -37,15 +46,15 @@ type Phase3Q = { text: ReactNode; ans: "O" | "X"; hint: ReactNode };
 const P1: Phase1Q[] = [
   { expr: <>3</>, type: "실수",
     hint: <>3 = 3 + 0 · <I/> → 허수부분이 0이므로 <b>실수</b>입니다.</> },
-  { expr: <>2 + √5</>, type: "실수",
-    hint: <>√5 는 실수이므로 2 + √5 도 <b>실수</b>입니다. (허수부분 = 0)</> },
+  { expr: <>2 + <Sqrt>5</Sqrt></>, type: "실수",
+    hint: <><Sqrt>5</Sqrt> 는 실수이므로 2 + <Sqrt>5</Sqrt> 도 <b>실수</b>입니다. (허수부분 = 0)</> },
   { expr: <>1 − 2<I/></>, type: "허수",
     hint: <>허수부분 = −2 ≠ 0 → <b>허수</b> (실수가 아닌 복소수)</> },
   { expr: <>4<I/></>, type: "순허수",
     hint: <>실수부분 = 0, 허수부분 = 4 ≠ 0 → <b>순허수</b></> },
   { expr: <>−7</>, type: "실수",
     hint: <>−7 = −7 + 0 · <I/> → 허수부분 = 0 → <b>실수</b></> },
-  { expr: <>√2 + <I/></>, type: "허수",
+  { expr: <><Sqrt>2</Sqrt> + <I/></>, type: "허수",
     hint: <>허수부분 = 1 ≠ 0 → <b>허수</b></> },
   { expr: <>−3<I/></>, type: "순허수",
     hint: <>실수부분 = 0, 허수부분 = −3 ≠ 0 → <b>순허수</b></> },
@@ -73,10 +82,10 @@ const P2: Phase2Q[] = [
     hint: <>0 + (−2)<I/> → 실수부분 = <b>0</b>, 허수부분 = <b>−2</b> &nbsp;(순허수!)</>,
   },
   {
-    expr: <>√3</>,
-    realOpts: ["√3", "0", "3", "−√3"], realAns: 0,
-    imagOpts: ["0", "√3", "1", "−1"], imagAns: 0,
-    hint: <>√3 = √3 + 0<I/> → 실수부분 = <b>√3</b>, 허수부분 = <b>0</b> &nbsp;(실수!)</>,
+    expr: <><Sqrt>3</Sqrt></>,
+    realOpts: [<><Sqrt>3</Sqrt></>, "0", "3", <>−<Sqrt>3</Sqrt></>], realAns: 0,
+    imagOpts: ["0", <><Sqrt>3</Sqrt></>, "1", "−1"], imagAns: 0,
+    hint: <><Sqrt>3</Sqrt> = <Sqrt>3</Sqrt> + 0<I/> → 실수부분 = <b><Sqrt>3</Sqrt></b>, 허수부분 = <b>0</b> &nbsp;(실수!)</>,
   },
   {
     expr: <>−1 − 3<I/></>,

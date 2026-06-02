@@ -87,6 +87,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/complex_number_terms": "복소수 정복! 용어 마스터",
   "common/mini/complex_arithmetic_game": "복소수 계산 배틀",
   "common/mini/imaginary_unit_cycle": "허수단위 i의 순환 탐구",
+  "common/mini/negative_sqrt_trap": "음수의 제곱근 함정 탈출",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

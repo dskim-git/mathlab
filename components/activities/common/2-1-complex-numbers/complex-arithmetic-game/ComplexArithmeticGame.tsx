@@ -35,6 +35,15 @@ function Hi({ children }: { children: ReactNode }) {
   );
 }
 
+// 근호: √ 뒤 피연산자에 위 가로선(vinculum)을 그려 가독성을 높인다.
+function Sqrt({ children }: { children: ReactNode }) {
+  return (
+    <span className="whitespace-nowrap">
+      √<span className="border-t border-current px-[1px]">{children}</span>
+    </span>
+  );
+}
+
 // ─── 데이터 ─────────────────────────────────────────────────
 type Q = { expr: ReactNode; choices: ReactNode[]; correct: number; solution: ReactNode };
 type QType = "conjugate" | "division" | null;
@@ -615,7 +624,7 @@ function BreakScreen({ fromPhase, onNext }: { fromPhase: Phase; onNext: () => vo
               <br />
               무리수 분모 유리화와 같은 원리예요!
               <br />
-              <span className="text-amber-200">√2 분모 유리화</span> ×√2/√2 →{" "}
+              <span className="text-amber-200"><Sqrt>2</Sqrt> 분모 유리화</span> ×<Sqrt>2</Sqrt>/<Sqrt>2</Sqrt> →{" "}
               <span className="text-amber-200">복소수 나눗셈</span> ×켤레/켤레
             </>
           )}

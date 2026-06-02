@@ -48,6 +48,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/complex_number_terms",
       "common/mini/complex_arithmetic_game",
       "common/mini/imaginary_unit_cycle",
+      "common/mini/negative_sqrt_trap",
     ],
   },
   {
