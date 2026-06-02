@@ -79,6 +79,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/gelosia_div": "갤로시아 나눗셈 탐구",
   "common/mini/identity_game": "항등식 탐정 게임",
   "common/mini/undefined_coefficients": "미정계수법 탐정 게임",
+  "common/mini/power_remainder_booster": "거듭제곱 나머지 부스터",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

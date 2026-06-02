@@ -35,6 +35,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: [
       "common/mini/identity_game",
       "common/mini/undefined_coefficients",
+      "common/mini/power_remainder_booster",
     ],
   },
   {
