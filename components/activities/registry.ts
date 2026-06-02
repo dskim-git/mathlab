@@ -8,6 +8,7 @@ import PolyMulExpand from "./common/1-1-polynomials/poly-mul-expand/PolyMulExpan
 import GelosiaMul from "./common/1-1-polynomials/gelosia-mul/GelosiaMul";
 import AlgebraTileFormulas from "./common/1-1-polynomials/algebra-tile-formulas/AlgebraTileFormulas";
 import SyntheticDivPrinciple from "./common/1-1-polynomials/synthetic-div-principle/SyntheticDivPrinciple";
+import RemainderSameExpressions from "./common/1-1-polynomials/remainder-same-expressions/RemainderSameExpressions";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -117,6 +118,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/algebra_tile_formulas": AlgebraTileFormulas,
   "common/mini/gelosia_mul": GelosiaMul,
   "common/mini/synthetic_div_principle": SyntheticDivPrinciple,
+  "common/mini/remainder_same_expressions": RemainderSameExpressions,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

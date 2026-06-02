@@ -24,6 +24,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/algebra_tile_formulas",
       "common/mini/gelosia_mul",
       "common/mini/synthetic_div_principle",
+      "common/mini/remainder_same_expressions",
     ],
   },
   {
