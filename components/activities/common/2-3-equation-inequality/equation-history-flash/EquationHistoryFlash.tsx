@@ -54,6 +54,10 @@ function CinematicPlayer({
   const [playing, setPlaying] = useState(false);
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef<number>(0);
+  // 같은 페이지에 여러 CinematicPlayer 가 있을 때 SVG gradient id 충돌 방지.
+  // (Part 1 + Part 2 동시에 마운트되며, 숨김 player 의 defs 를 참조하면 fill 이 빈다.)
+  const rawId = useId();
+  const gradId = `cineProg-${rawId.replace(/:/g, "")}`;
 
   useEffect(() => {
     if (!playing) return;
@@ -174,13 +178,13 @@ function CinematicPlayer({
         >
           <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-white/10">
             <svg viewBox="0 0 100 1" preserveAspectRatio="none" className="h-full w-full">
-              <rect x="0" y="0" height="1" width={progPct} fill="url(#cineProg)" />
               <defs>
-                <linearGradient id="cineProg" x1="0" x2="1">
+                <linearGradient id={gradId} x1="0" x2="1">
                   <stop offset="0%" stopColor="#fcd34d" />
                   <stop offset="100%" stopColor="#c084fc" />
                 </linearGradient>
               </defs>
+              <rect x="0" y="0" height="1" width={progPct} fill={`url(#${gradId})`} />
             </svg>
           </div>
           {chapters.map((c, i) => (
@@ -243,6 +247,36 @@ function KenBurnsImg({
   );
 }
 
+// 루트(√/∛) — vinculum 가로선을 inline-block 안에 absolute 로 띄워 정확하게 렌더.
+// 중첩(∛ 안의 √)을 위해 outer 로 위쪽 padding 을 늘려 두 가로선이 분리되게 함.
+function Radical({
+  degree,
+  outer = false,
+  children,
+}: {
+  degree?: "3";
+  outer?: boolean;
+  children: ReactNode;
+}) {
+  const symbol = degree === "3" ? "∛" : "√";
+  return (
+    <span className="inline-flex items-baseline whitespace-nowrap">
+      <span aria-hidden>{symbol}</span>
+      <span
+        className={
+          "relative inline-block px-1 " + (outer ? "pt-[10px]" : "pt-[5px]")
+        }
+      >
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-current"
+        />
+        {children}
+      </span>
+    </span>
+  );
+}
+
 // 진짜 수식 레이아웃 — 분수 + √ 위 가로선 (vinculum) 까지 표현.
 function QuadraticFormulaProper({
   sizeClass = "text-2xl sm:text-3xl",
@@ -250,26 +284,62 @@ function QuadraticFormulaProper({
   sizeClass?: string;
 }) {
   return (
-    <div className={"inline-flex items-center gap-3 font-serif italic text-amber-100 " + sizeClass}>
+    <div
+      className={
+        "inline-flex items-center gap-3 font-serif italic text-amber-100 " + sizeClass
+      }
+    >
       <span>x</span>
       <span className="not-italic">=</span>
       <div className="flex flex-col items-center leading-tight">
         {/* 분자 */}
         <span className="whitespace-nowrap px-3 pb-1">
-          −b ± <span className="whitespace-nowrap">
-            √
-            <span className="border-t-2 border-current pl-0.5 pr-1">
-              b<sup className="text-[0.6em]">2</sup> − 4ac
-            </span>
-          </span>
+          <span className="not-italic">−</span>b <span className="not-italic">±</span>{" "}
+          <Radical>
+            b<sup className="text-[0.6em]">2</sup>{" "}
+            <span className="not-italic">−</span> 4ac
+          </Radical>
         </span>
         {/* 분수 가로선 */}
         <span aria-hidden className="block h-[2px] w-full self-stretch bg-current" />
         {/* 분모 */}
-        <span className="not-italic pt-1">
-          <span className="italic">2a</span>
-        </span>
+        <span className="pt-1">2a</span>
       </div>
+    </div>
+  );
+}
+
+// 카르다노 공식 — ∛ 와 중첩 √ 모두 Radical 로 vinculum 통일.
+function CardanoFormulaProper({
+  sizeClass = "text-base sm:text-xl",
+}: {
+  sizeClass?: string;
+}) {
+  const sqrtD = (
+    <Radical>
+      (q/2)<sup className="text-[0.6em]">2</sup>{" "}
+      <span className="not-italic">+</span> (p/3)
+      <sup className="text-[0.6em]">3</sup>
+    </Radical>
+  );
+  return (
+    <div
+      className={
+        "inline-flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 font-serif italic text-amber-100 " +
+        sizeClass
+      }
+    >
+      <span>x</span>
+      <span className="not-italic">=</span>
+      <Radical degree="3" outer>
+        <span className="not-italic">−</span>q/2 <span className="not-italic">+</span>{" "}
+        {sqrtD}
+      </Radical>
+      <span className="not-italic">+</span>
+      <Radical degree="3" outer>
+        <span className="not-italic">−</span>q/2 <span className="not-italic">−</span>{" "}
+        {sqrtD}
+      </Radical>
     </div>
   );
 }
@@ -1308,6 +1378,429 @@ const P2_CHARS: CharData[] = [
 ];
 const P2_TONE = "#fcd34d"; // amber-300
 
+// ─── PART 2 시네마틱 시퀀스 (≈ 84 초) ──────────────────────
+const PART2_SCENES: SceneDef[] = [
+  // Scene 1 — 타이틀 (5 s)
+  {
+    id: "p2-title",
+    duration: 5000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-amber-950/30 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={300} fadeMs={900}>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.45em] text-amber-300">
+            PART 02
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={900} fadeMs={1100}>
+          <h2 className="mt-3 bg-gradient-to-r from-amber-200 via-orange-300 to-amber-200 bg-clip-text font-serif text-3xl font-bold text-transparent sm:text-5xl">
+            삼·사차 쟁탈전
+          </h2>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={1800} fadeMs={900}>
+          <p className="mt-3 text-sm text-slate-300 sm:text-base">
+            16 세기 이탈리아 — 비밀·배신·드라마
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={2900} fadeMs={900}>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold">
+            <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-200">
+              1500
+            </span>
+            <span className="text-slate-500">→</span>
+            <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-200">
+              1535 공개 대결
+            </span>
+            <span className="text-slate-500">→</span>
+            <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-200">
+              1545 Ars Magna
+            </span>
+          </div>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 2 — 페로 (10 s, 초상화 없음 — 스타일 카드)
+  {
+    id: "p2-ferro",
+    duration: 10000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-amber-950/15 to-slate-950 px-6 text-center">
+        {/* 장식 그림자 */}
+        <FadeBlock sceneT={sceneT} start={0} fadeMs={1200}>
+          <div className="mb-4 text-5xl opacity-40">📜</div>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={400} fadeMs={700}>
+          <p className="font-serif text-sm italic text-amber-300">16 세기 초 · 볼로냐</p>
+        </FadeBlock>
+        <h3 className="mt-1 font-serif text-2xl text-amber-100 sm:text-3xl">
+          <TypedText sceneT={sceneT} start={1100} text="Scipione del Ferro — 페로" charMs={50} />
+        </h3>
+        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3300}
+            charMs={40}
+            text="삼차방정식의 해법을 최초로 발견."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={5800} fadeMs={700}>
+          <p className="mt-4 max-w-xl text-sm italic leading-7 text-amber-200/80">
+            그러나, 당시 수학 해법은 — <b className="text-amber-300">개인의 재산</b> 이었다.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={7600} fadeMs={700}>
+          <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">
+            그는 죽기 직전, <b className="text-amber-200">단 한 명의 제자</b> 에게만 비밀을
+            전수했다.
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 3 — 타르탈리아 (12 s)
+  {
+    id: "p2-tartag",
+    duration: 12000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/tartaglia.jpg`}
+        imgAlt="타르탈리아"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 22%"
+        from={{ scale: 1.0, tx: 0, ty: 0 }}
+        to={{ scale: 1.12, tx: 0, ty: 0 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-amber-300">1500 ~ 1557 · 브레샤</p>
+        </FadeBlock>
+        <h3 className="mt-1 font-serif text-2xl text-amber-100 sm:text-3xl">
+          <TypedText
+            sceneT={sceneT}
+            start={800}
+            text="Niccolò Fontana — 타르탈리아"
+            charMs={55}
+          />
+        </h3>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3500}
+            charMs={42}
+            text="어릴 적 프랑스 군의 칼에 다쳐 얼굴 흉터와 말더듬을 얻었다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={6500}
+            charMs={42}
+            text="‘타르탈리아 (말더듬이)’ — 그를 부른 이름."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={9200} fadeMs={800}>
+          <p className="mt-3 rounded-r-lg border-l-[3px] border-amber-300/60 bg-white/[0.05] px-3 py-2 text-sm leading-7 text-amber-100">
+            그러나 그는 — 독립적으로 삼차방정식의 해법을 발견했다.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 4 — 1535 공개 대결 (12 s)
+  {
+    id: "p2-battle",
+    duration: 12000,
+    render: ({ sceneT }) => {
+      // 카운트업: start at 1800ms, finish at 7800ms (6 s for 0→30)
+      const countStart = 1800;
+      const countDur = 6000;
+      const cu = clamp01((sceneT - countStart) / countDur);
+      const tartagScore = Math.floor(cu * 30);
+      const battleDone = sceneT > countStart + countDur + 200;
+
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-amber-950/30 to-slate-950 px-6">
+          <FadeBlock sceneT={sceneT} start={0} fadeMs={700}>
+            <p className="font-serif text-sm italic text-amber-300">1535 년 · 공개 수학 대결</p>
+          </FadeBlock>
+          <FadeBlock sceneT={sceneT} start={400} fadeMs={700}>
+            <p className="mt-1 text-center font-serif text-xl font-bold text-slate-100 sm:text-2xl">
+              피오르 <span className="text-amber-400">vs</span> 타르탈리아
+            </p>
+          </FadeBlock>
+          <FadeBlock sceneT={sceneT} start={900} fadeMs={700}>
+            <p className="mt-1 text-center text-xs text-slate-400">
+              각자 30 문제씩 내고 푸는 대결
+            </p>
+          </FadeBlock>
+
+          <div className="mt-6 flex w-full max-w-xl items-stretch justify-around gap-4">
+            <FadeBlock
+              sceneT={sceneT}
+              start={1300}
+              fadeMs={600}
+              className="flex-1 text-center"
+            >
+              <div className="mx-auto flex h-20 w-16 items-center justify-center rounded-lg border-2 border-rose-400/40 bg-rose-400/10 text-3xl sm:h-24 sm:w-20">
+                🧑‍🏫
+              </div>
+              <p className="mt-2 text-sm font-bold text-slate-100">피오르</p>
+              <p className="text-[11px] text-slate-500">페로의 제자</p>
+              <p
+                className={
+                  "mt-2 font-mono text-3xl font-bold tabular-nums sm:text-4xl " +
+                  (battleDone ? "text-rose-300" : "text-slate-300")
+                }
+              >
+                0
+              </p>
+            </FadeBlock>
+
+            <div className="flex flex-col items-center justify-center">
+              <p className="animate-pulse font-serif text-3xl font-extrabold text-amber-300 sm:text-4xl">
+                VS
+              </p>
+            </div>
+
+            <FadeBlock
+              sceneT={sceneT}
+              start={1300}
+              fadeMs={600}
+              className="flex-1 text-center"
+            >
+              <div className="mx-auto h-20 w-16 overflow-hidden rounded-lg border-2 border-emerald-400/40 sm:h-24 sm:w-20">
+                <img
+                  src={`${ASSET}/tartaglia.jpg`}
+                  alt="타르탈리아"
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: "50% 22%", filter: "sepia(0.12)" }}
+                />
+              </div>
+              <p className="mt-2 text-sm font-bold text-slate-100">타르탈리아</p>
+              <p className="text-[11px] text-slate-500">브레샤의 수학자</p>
+              <p
+                className={
+                  "mt-2 font-mono text-3xl font-bold tabular-nums sm:text-4xl " +
+                  (battleDone ? "text-emerald-300" : "text-amber-200")
+                }
+              >
+                {tartagScore}
+              </p>
+            </FadeBlock>
+          </div>
+
+          {battleDone ? (
+            <FadeBlock sceneT={sceneT} start={countStart + countDur + 200} fadeMs={700}>
+              <p className="mt-5 text-center">
+                <span className="text-2xl font-extrabold text-amber-300 sm:text-3xl">
+                  🏆 30 : 0
+                </span>
+                <br />
+                <span className="text-sm font-bold text-amber-200">
+                  타르탈리아 완승
+                </span>
+              </p>
+            </FadeBlock>
+          ) : null}
+        </div>
+      );
+    },
+  },
+
+  // Scene 5 — 카르다노 (12 s)
+  {
+    id: "p2-cardano",
+    duration: 12000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/cardano.jpg`}
+        imgAlt="카르다노"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 18%"
+        from={{ scale: 1.0, tx: 0, ty: 0 }}
+        to={{ scale: 1.1, tx: 0, ty: 0 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-amber-300">1539 · 밀라노</p>
+        </FadeBlock>
+        <h3 className="mt-1 font-serif text-2xl text-amber-100 sm:text-3xl">
+          <TypedText
+            sceneT={sceneT}
+            start={800}
+            text="Girolamo Cardano — 카르다노"
+            charMs={55}
+          />
+        </h3>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3400}
+            charMs={42}
+            text="이름난 의사이자 점성술사."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={5500}
+            charMs={40}
+            text="그는 타르탈리아를 끈질기게 설득한다."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={8000} fadeMs={800}>
+          <blockquote className="mt-3 rounded-r-lg border-l-[3px] border-amber-300/60 bg-white/[0.05] px-3 py-2 text-sm italic leading-7 text-amber-100">
+            “절대 발표하지 않겠다.”
+            <br />
+            <span className="text-xs text-slate-400">— 카르다노의 신성한 맹세, 1539</span>
+          </blockquote>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 6 — Ars Magna 1545 · 배신 (8 s)
+  {
+    id: "p2-arsmagna",
+    duration: 8000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-amber-950/40 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-amber-300">1545 년</p>
+        </FadeBlock>
+        {/* Ars Magna 책 */}
+        <FadeBlock sceneT={sceneT} start={700} fadeMs={1100}>
+          <div className="relative mx-auto mt-3 h-48 w-36 rounded-md bg-gradient-to-br from-amber-800 via-amber-900 to-amber-950 shadow-2xl shadow-amber-900/50">
+            <div className="absolute inset-2 flex flex-col items-center justify-between rounded border-2 border-amber-300/40 p-2 text-center">
+              <div className="text-[8px] tracking-[0.25em] text-amber-200/70">
+                GIROLAMO CARDANO
+              </div>
+              <div>
+                <div className="font-serif text-xl font-bold italic text-amber-100">ARS</div>
+                <div className="font-serif text-xl font-bold italic text-amber-100">MAGNA</div>
+                <div className="mt-1 text-[8px] text-amber-200/70">DE REGULIS ALGEBRAICIS</div>
+              </div>
+              <div className="text-[9px] tracking-widest text-amber-200/70">— MDXLV —</div>
+            </div>
+          </div>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={2500} fadeMs={700}>
+          <p className="mt-4 text-sm leading-7 text-slate-200 sm:text-base">
+            카르다노는 — <b className="text-rose-300">약속을 깨고</b> 해법을 출판한다.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={5000} fadeMs={700}>
+          <p className="mt-2 text-sm italic leading-7 text-amber-100">
+            300 년간 인류가 풀지 못한 문제 — 마침내 공개되다.
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 7 — 페라리 (10 s)
+  {
+    id: "p2-ferrari",
+    duration: 10000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/ferrari.jpg`}
+        imgAlt="페라리"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 18%"
+        from={{ scale: 1.0, tx: 0, ty: 0 }}
+        to={{ scale: 1.12, tx: 0, ty: 0 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-amber-300">1522 ~ 1565 · 볼로냐</p>
+        </FadeBlock>
+        <h3 className="mt-1 font-serif text-2xl text-amber-100 sm:text-3xl">
+          <TypedText sceneT={sceneT} start={800} text="Lodovico Ferrari — 페라리" charMs={55} />
+        </h3>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3300}
+            charMs={42}
+            text="카르다노의 천재 제자."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={5000}
+            charMs={40}
+            text="스승의 삼차 해법을 응용해, 사차방정식까지 풀어냈다."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={8000} fadeMs={700}>
+          <p className="mt-3 text-sm italic text-amber-100">
+            《Ars Magna》 한 권에 1 ~ 4 차 모두 완성.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 8 — 카르다노 공식 writing (10 s)
+  {
+    id: "p2-formula",
+    duration: 10000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-amber-950/30 to-slate-950 px-6">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.4em] text-amber-300">
+            카르다노 공식 — 삼차방정식의 근의 공식
+          </p>
+        </FadeBlock>
+        <div className="mt-5 flex w-full max-w-3xl items-center justify-center">
+          <CinematicReveal sceneT={sceneT} start={1200} drawMs={4000}>
+            <CardanoFormulaProper sizeClass="text-lg sm:text-2xl" />
+          </CinematicReveal>
+        </div>
+        <FadeBlock sceneT={sceneT} start={6000} fadeMs={800}>
+          <p className="mt-4 text-center text-sm leading-7 text-slate-300 sm:text-base">
+            삼차방정식{" "}
+            <span className="font-serif italic text-amber-200">x³ + px + q = 0</span> (2 차항
+            소거 후) 의 근의 공식.
+            <br />
+            300 년의 비밀 — 1545 년에 마침내 공개되었다.
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 9 — 엔드 카드 (5 s)
+  {
+    id: "p2-end",
+    duration: 5000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-amber-900/30 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={900}>
+          <p className="font-serif text-2xl font-bold text-slate-100 sm:text-3xl">
+            삼·사차 — 16 세기 이탈리아의 드라마
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={1500} fadeMs={900}>
+          <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">
+            페로의 비밀 → 타르탈리아의 발견 → 카르다노의 배신 → 페라리의 사차.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={2800} fadeMs={900}>
+          <p className="mt-5 rounded-full border border-violet-300/40 bg-violet-300/10 px-4 py-1.5 text-xs font-bold text-violet-200">
+            다음 → ③ 5 차 방정식의 벽 (아벨 · 갈루아)
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+];
+
 function Part2({
   onBack,
   onNext,
@@ -1331,22 +1824,14 @@ function Part2({
 
   return (
     <div className="space-y-5">
-      <PartHero
-        num="PART 02"
-        title="삼·사차방정식 쟁탈전"
-        subtitle={
-          <>
-            16세기 이탈리아, 수학자들이 명예를 걸고 벌인 공개 대결
-            <br />
-            비밀·배신·드라마 — 수학사에서 가장 극적인 이야기.
-          </>
-        }
-        tone="amber"
-      />
+      <CinematicPlayer scenes={PART2_SCENES} ariaLabel="삼·사차 쟁탈전 영상" />
 
-      <p className="text-center text-xs text-slate-400">
-        👇 인물 카드를 클릭해 자세한 이야기를 읽어 보세요
-      </p>
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <p className="text-center text-sm text-slate-300">
+          🔍 <b className="text-amber-200">영상에 등장한 인물</b> 을 직접 클릭해 더 자세한
+          이야기를 읽어 보세요.
+        </p>
+      </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {P2_CHARS.map((c) => (
           <CharCard
@@ -1402,12 +1887,7 @@ function Part2({
 
       <FormulaBox
         label="카르다노 공식 — 삼차방정식의 근의 공식 (1545)"
-        formula={
-          <span className="text-sm leading-7 sm:text-base">
-            x = ∛(−q/2 + √((q/2)² + (p/3)³))
-            <br />+ ∛(−q/2 − √((q/2)² + (p/3)³))
-          </span>
-        }
+        formula={<CardanoFormulaProper sizeClass="text-base sm:text-lg" />}
         desc={
           <>
             삼차방정식 <span className="font-serif italic">x³ + px + q = 0</span> (2차항
@@ -1661,41 +2141,644 @@ const P3_CHARS: CharData[] = [
 ];
 const P3_TONE = "#c4b5fd"; // violet-300
 
+// ─── PART 3 시네마틱 시퀀스 (≈ 123 초) ─────────────────────
+// 활동의 클라이맥스 — 아벨/갈루아 두 인물의 입체적 조명 + 5차 방정식 비가해성
+// 연구의 결정적 차이 강조 (Abel = 문이 잠겨있음을 증명 / Galois = 어느 문이
+// 잠겨있고 왜인지 보여줌).
+const PART3_SCENES: SceneDef[] = [
+  // Scene 1 — 타이틀 (5 s)
+  {
+    id: "p3-title",
+    duration: 5000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-violet-950/40 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={300} fadeMs={900}>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.45em] text-violet-300">
+            PART 03
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={900} fadeMs={1100}>
+          <h2 className="mt-3 bg-gradient-to-r from-violet-200 via-fuchsia-300 to-violet-200 bg-clip-text font-serif text-3xl font-bold text-transparent sm:text-5xl">
+            5차 방정식의 벽
+          </h2>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={1800} fadeMs={900}>
+          <p className="mt-3 text-sm text-slate-300 sm:text-base">
+            300 년의 도전 — 그리고 두 천재의 발견
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={2900} fadeMs={900}>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold">
+            <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-200">
+              Abel · 26 세 사망
+            </span>
+            <span className="text-slate-500">+</span>
+            <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-400/10 px-3 py-1 text-fuchsia-200">
+              Galois · 20 세 사망
+            </span>
+            <span className="text-slate-500">=</span>
+            <span className="rounded-full border border-violet-400/40 bg-violet-400/10 px-3 py-1 text-violet-200">
+              현대 대수학의 출발
+            </span>
+          </div>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 2 — 300 년의 장벽 (8 s)
+  {
+    id: "p3-wall",
+    duration: 8000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-violet-300">1545 ~ 1800 년대</p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={900} fadeMs={800}>
+          <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
+            카르다노가 삼차를, 페라리가 사차를 정복한 뒤 —
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={2400} fadeMs={800}>
+          <p className="font-serif text-2xl italic text-amber-200 sm:text-3xl">
+            x<sup className="text-[0.6em]">5</sup> + ax<sup className="text-[0.6em]">4</sup> + ...{" "}
+            = 0 &nbsp;<span className="text-rose-300">?</span>
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={4000} fadeMs={800}>
+          <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
+            300 년 동안 — 누구도 5 차 방정식의 근의 공식을 찾지 못했다.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={5800} fadeMs={800}>
+          <p className="mt-4 font-serif text-xl italic text-fuchsia-300 sm:text-2xl">
+            왜?
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 3 — 아벨 등장: 노르웨이의 천재 (12 s)
+  {
+    id: "p3-abel-intro",
+    duration: 12000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/abel.jpg`}
+        imgAlt="아벨"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 18%"
+        from={{ scale: 1.0, tx: 0, ty: 0 }}
+        to={{ scale: 1.12, tx: 0, ty: 0 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-violet-300">
+            1802 년 8 월 5 일 · 노르웨이 핀뇌이
+          </p>
+        </FadeBlock>
+        <h3 className="mt-1 font-serif text-2xl text-emerald-200 sm:text-3xl">
+          <TypedText
+            sceneT={sceneT}
+            start={900}
+            text="Niels Henrik Abel"
+            charMs={55}
+          />
+        </h3>
+        <p className="mt-1 font-serif text-base text-slate-300 sm:text-lg">
+          <TypedText sceneT={sceneT} start={2400} text="닐스 헨릭 아벨" charMs={60} />
+        </p>
+        <p className="mt-3 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={4500}
+            charMs={42}
+            text="가난한 루터교 목사의 아들. 일곱 형제."
+          />
+        </p>
+        <p className="text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={7400}
+            charMs={42}
+            text="아버지가 죽고 — 형제들을 홀로 부양하며 수학을 공부했다."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={10200} fadeMs={700}>
+          <p className="mt-2 rounded-r-lg border-l-[3px] border-emerald-300/60 bg-white/[0.05] px-3 py-2 text-xs italic leading-7 text-emerald-100">
+            스승 <b>홀름보에</b> 가 그의 천재성을 알아보고, 직접 모금하여 대학에 보냈다.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 4 — 아벨: 18세의 착각, 21세의 증명 (14 s)
+  {
+    id: "p3-abel-proof",
+    duration: 14000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/abel.jpg`}
+        imgAlt="아벨"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 22%"
+        from={{ scale: 1.12, tx: 0, ty: 0 }}
+        to={{ scale: 1.2, tx: 1, ty: -1 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-emerald-300">1821 ~ 1824</p>
+        </FadeBlock>
+        <p className="mt-1 text-sm leading-7 text-slate-100 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={700}
+            charMs={42}
+            text="19 세. 그는 5 차 방정식의 해를 찾았다고 믿었다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3700}
+            charMs={42}
+            text="덴마크의 수학자 데겐이 — ‘수치 예제로 보여달라’ 했다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={6700}
+            charMs={42}
+            text="그 과정에서 — 자신의 풀이가 틀렸음을 발견했다."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={9300} fadeMs={700}>
+          <p className="mt-3 text-sm italic leading-7 text-emerald-200">
+            그 실패가 — 그를 올바른 길로 이끌었다.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={11200} fadeMs={800}>
+          <p className="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/[0.08] px-3 py-2 text-sm leading-7 text-amber-100">
+            <b>1824 년, 21 세.</b> 일반 5 차 방정식은 <b>거듭제곱근으로 풀 수 없다</b> 는 것을
+            증명. 인쇄비 부족으로 <b>6 쪽</b> 자비 출판.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 5 — 아벨: 외면과 죽음 (12 s)
+  {
+    id: "p3-abel-death",
+    duration: 12000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/abel.jpg`}
+        imgAlt="아벨"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 18%"
+        from={{ scale: 1.05, tx: -1, ty: 0 }}
+        to={{ scale: 1.18, tx: 0, ty: -1 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-emerald-300">1826 ~ 1829</p>
+        </FadeBlock>
+        <p className="mt-1 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={700}
+            charMs={42}
+            text="가우스 — 읽지 않은 채 책장에 꽂아두었다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3300}
+            charMs={42}
+            text="코시 — 파리에서 받은 원고를 분실했다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-100 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={5800}
+            charMs={42}
+            text="베를린의 크렐레만이 그를 알아보았다."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={8200} fadeMs={700}>
+          <p className="mt-3 text-sm italic leading-7 text-emerald-100">
+            <b>1829 년 4 월 6 일</b> — 결핵으로 사망. 향년 26 세.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={9900} fadeMs={800}>
+          <p className="mt-2 rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm leading-7 text-rose-100">
+            <b>이틀 뒤 (4 월 8 일)</b> — 베를린 대학 교수 임명장이 도착했다.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 6 — 갈루아 등장: 파리의 청년 (12 s)
+  {
+    id: "p3-galois-intro",
+    duration: 12000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/galois.jpg`}
+        imgAlt="갈루아"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 22%"
+        from={{ scale: 1.0, tx: 0, ty: 0 }}
+        to={{ scale: 1.12, tx: 0, ty: 0 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-violet-300">
+            1811 년 10 월 25 일 · 파리 근교 부르라렌
+          </p>
+        </FadeBlock>
+        <h3 className="mt-1 font-serif text-2xl text-fuchsia-200 sm:text-3xl">
+          <TypedText sceneT={sceneT} start={900} text="Évariste Galois" charMs={55} />
+        </h3>
+        <p className="mt-1 font-serif text-base text-slate-300 sm:text-lg">
+          <TypedText sceneT={sceneT} start={2700} text="에바리스트 갈루아" charMs={60} />
+        </p>
+        <p className="mt-3 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={5100}
+            charMs={42}
+            text="공화주의 시장의 아들. 12 살에 수학에 눈을 떴다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={7900}
+            charMs={42}
+            text="에콜 폴리테크닉 입학 시험 — 두 번 낙방."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={10300} fadeMs={700}>
+          <p className="mt-2 rounded-r-lg border-l-[3px] border-rose-400/60 bg-rose-400/10 px-3 py-2 text-xs italic leading-7 text-rose-100">
+            1829 년 7 월 2 일 — 마을 신부가 시장 명의로 풍자시를 위조해 유포.
+            <br />
+            <b>아버지가 자살했다.</b> 두 번째 입시는 — 그 며칠 뒤였다.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 7 — 갈루아: 세 번의 거절 (12 s)
+  {
+    id: "p3-galois-rejection",
+    duration: 12000,
+    render: ({ sceneT, duration }) => (
+      <ScenePortraitNarration
+        imgSrc={`${ASSET}/galois.jpg`}
+        imgAlt="갈루아"
+        sceneT={sceneT}
+        duration={duration}
+        objectPosition="50% 22%"
+        from={{ scale: 1.12, tx: 0, ty: 0 }}
+        to={{ scale: 1.2, tx: -1, ty: -1 }}
+      >
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-fuchsia-300">1829 ~ 1831</p>
+        </FadeBlock>
+        <p className="mt-1 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={700}
+            charMs={42}
+            text="1829 · 코시에게 — 책상에 두고 잊혔다."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={3200}
+            charMs={42}
+            text="1830 · 푸리에에게 — 읽기 전에 사망. 원고는 분실."
+          />
+        </p>
+        <p className="mt-2 text-sm leading-7 text-slate-200 sm:text-base">
+          <TypedText
+            sceneT={sceneT}
+            start={5900}
+            charMs={42}
+            text="1831 · 푸아송에게 — ‘이해할 수 없다’ 며 거절."
+          />
+        </p>
+        <FadeBlock sceneT={sceneT} start={8800} fadeMs={800}>
+          <p className="mt-3 rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm leading-7 text-rose-100">
+            1831 년 — 정치 활동으로 두 차례 투옥. 8 개월의 감옥살이.
+          </p>
+        </FadeBlock>
+      </ScenePortraitNarration>
+    ),
+  },
+
+  // Scene 8 — 갈루아: 결투의 밤 (16 s)
+  {
+    id: "p3-galois-duel",
+    duration: 16000,
+    render: ({ sceneT }) => {
+      // 편지 타이핑 시작 시점
+      const letterStart = 3800;
+      const letter = `Mon cher ami,
+나는 결투를 앞두고 있다.
+시간이 없다 — Je n'ai pas le temps.
+
+방정식이 거듭제곱근으로 풀리는가 —
+그것을 결정하는 새로운 이론을 발견했다.
+방정식의 ‘군 (Group)’ 을 보는 것이다.
+
+이 정리들의 진리(眞理)가 아니라 —
+그 ‘중요성’ 에 대해
+가우스와 야코비에게 의견을 청해 다오.
+
+— Évariste Galois
+1832 년 5 월 29 일 새벽`;
+
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-violet-950/40 to-slate-950 px-6">
+          <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+            <p className="font-serif text-sm italic text-fuchsia-300">
+              1832 년 5 월 29 일 — 결투 전날 밤
+            </p>
+          </FadeBlock>
+          <FadeBlock sceneT={sceneT} start={900} fadeMs={700}>
+            <p className="mt-1 text-center text-sm leading-7 text-slate-300">
+              그는 친구 <b className="text-violet-200">오귀스트 슈발리에</b> 에게 편지를 쓴다.
+            </p>
+          </FadeBlock>
+          <FadeBlock sceneT={sceneT} start={2700} fadeMs={700}>
+            <div className="relative mt-4 max-w-md overflow-hidden rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-950/50 to-slate-950/70 p-5 shadow-2xl">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute right-1 top-0 select-none text-7xl opacity-[0.06]"
+              >
+                🌙
+              </span>
+              <pre className="min-h-[180px] whitespace-pre-wrap font-serif text-[12px] italic leading-6 text-violet-100 sm:text-[13px]">
+                <TypedText
+                  sceneT={sceneT}
+                  start={letterStart}
+                  text={letter}
+                  charMs={42}
+                  cursor
+                />
+              </pre>
+            </div>
+          </FadeBlock>
+          <FadeBlock sceneT={sceneT} start={14500} fadeMs={700}>
+            <p className="mt-3 text-center text-xs italic text-rose-300">
+              다음 날 새벽 결투에서 총상. 31 일 오전 사망 — 향년 20 세.
+            </p>
+          </FadeBlock>
+        </div>
+      );
+    },
+  },
+
+  // Scene 9 — 결정적 차이 (18 s)  ★ 클라이맥스 ★
+  {
+    id: "p3-difference",
+    duration: 18000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-stretch bg-gradient-to-br from-slate-950 via-slate-900/60 to-slate-950 px-4 py-4 sm:px-6">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={800}>
+          <p className="text-center font-serif text-xl font-bold text-slate-100 sm:text-2xl">
+            결정적 차이
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={1100} fadeMs={700}>
+          <p className="mt-1 text-center text-[11px] text-slate-400">
+            아벨과 갈루아 — 같은 결론, 다른 깊이.
+          </p>
+        </FadeBlock>
+        <div className="mt-3 grid flex-1 grid-cols-2 gap-3">
+          {/* Abel 쪽 */}
+          <FadeBlock sceneT={sceneT} start={2400} fadeMs={800}>
+            <div className="flex h-full flex-col items-stretch rounded-xl border border-emerald-400/30 bg-emerald-400/[0.06] p-3">
+              <div className="flex items-center gap-2">
+                <div className="h-12 w-10 overflow-hidden rounded border border-emerald-400/40">
+                  <img
+                    src={`${ASSET}/abel.jpg`}
+                    alt="아벨"
+                    className="h-full w-full object-cover"
+                    style={{ objectPosition: "50% 18%", filter: "sepia(0.1)" }}
+                  />
+                </div>
+                <div>
+                  <p className="font-serif text-sm font-bold text-emerald-200">Abel</p>
+                  <p className="text-[10px] text-emerald-300/70">1824</p>
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-white/10 bg-slate-950/40 p-2.5 text-[11px] leading-5 text-slate-200 sm:text-xs sm:leading-6">
+                <FadeBlock sceneT={sceneT} start={4200} fadeMs={700}>
+                  <p>
+                    “일반 5 차 방정식은 <b className="text-emerald-200">거듭제곱근으로 풀
+                    수 없다</b>.”
+                  </p>
+                </FadeBlock>
+              </div>
+              <div className="mt-2 space-y-1 text-[10px] leading-5 text-emerald-100/85 sm:text-[11px]">
+                <FadeBlock sceneT={sceneT} start={6200} fadeMs={600}>
+                  <p>
+                    <span className="text-emerald-300">방법</span> · 직접 증명 (가정에서
+                    모순)
+                  </p>
+                </FadeBlock>
+                <FadeBlock sceneT={sceneT} start={7100} fadeMs={600}>
+                  <p>
+                    <span className="text-emerald-300">범위</span> · 일반 5 차 방정식
+                  </p>
+                </FadeBlock>
+                <FadeBlock sceneT={sceneT} start={8000} fadeMs={600}>
+                  <p>
+                    <span className="text-emerald-300">한계</span> · 어떤 구체적 방정식이
+                    풀리는지는 답하지 못함
+                  </p>
+                </FadeBlock>
+              </div>
+            </div>
+          </FadeBlock>
+
+          {/* Galois 쪽 */}
+          <FadeBlock sceneT={sceneT} start={3200} fadeMs={800}>
+            <div className="flex h-full flex-col items-stretch rounded-xl border border-fuchsia-400/30 bg-fuchsia-400/[0.06] p-3">
+              <div className="flex items-center gap-2">
+                <div className="h-12 w-10 overflow-hidden rounded border border-fuchsia-400/40">
+                  <img
+                    src={`${ASSET}/galois.jpg`}
+                    alt="갈루아"
+                    className="h-full w-full object-cover"
+                    style={{ objectPosition: "50% 22%", filter: "sepia(0.1)" }}
+                  />
+                </div>
+                <div>
+                  <p className="font-serif text-sm font-bold text-fuchsia-200">Galois</p>
+                  <p className="text-[10px] text-fuchsia-300/70">1832 (사후 1846 출판)</p>
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-white/10 bg-slate-950/40 p-2.5 text-[11px] leading-5 text-slate-200 sm:text-xs sm:leading-6">
+                <FadeBlock sceneT={sceneT} start={5000} fadeMs={700}>
+                  <p>
+                    “어떤 다항식이 풀리는가 — 그 답은{" "}
+                    <b className="text-fuchsia-200">방정식의 군 (Group) 의 구조</b> 에 있다.”
+                  </p>
+                </FadeBlock>
+              </div>
+              <div className="mt-2 space-y-1 text-[10px] leading-5 text-fuchsia-100/85 sm:text-[11px]">
+                <FadeBlock sceneT={sceneT} start={7000} fadeMs={600}>
+                  <p>
+                    <span className="text-fuchsia-300">방법</span> · 군론 (Group Theory) 창시
+                  </p>
+                </FadeBlock>
+                <FadeBlock sceneT={sceneT} start={7900} fadeMs={600}>
+                  <p>
+                    <span className="text-fuchsia-300">범위</span> · <b>모든 다항식</b>
+                    에 적용
+                  </p>
+                </FadeBlock>
+                <FadeBlock sceneT={sceneT} start={8800} fadeMs={600}>
+                  <p>
+                    <span className="text-fuchsia-300">결과</span> · 풀이가능 ⇔ 갈루아군이{" "}
+                    <b>풀이가능군</b>
+                  </p>
+                </FadeBlock>
+              </div>
+            </div>
+          </FadeBlock>
+        </div>
+
+        {/* 마지막 비유 */}
+        <FadeBlock sceneT={sceneT} start={11000} fadeMs={900}>
+          <div className="mt-3 rounded-xl border border-amber-300/30 bg-amber-300/[0.08] px-4 py-2.5 text-center text-[11px] leading-6 text-amber-100 sm:text-xs sm:leading-7">
+            <b className="text-emerald-200">아벨</b> 은 — 문 하나가{" "}
+            <span className="text-rose-300">잠겨 있음</span> 을 증명했다.
+            <br />
+            <b className="text-fuchsia-200">갈루아</b> 는 —{" "}
+            <span className="text-amber-200">어느 문이 잠겨 있는지, 그리고 왜인지</span> 를
+            모두 보여주는 <b>마스터키 이론</b> 을 만들었다.
+          </div>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={14500} fadeMs={800}>
+          <p className="mt-2 text-center font-serif text-sm italic text-violet-200 sm:text-base">
+            Abel ⊂ Galois — 갈루아는 아벨의 결과를 포함하고, 그 너머로 갔다.
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 10 — 갈루아 군과 추상대수학 (8 s)
+  {
+    id: "p3-group",
+    duration: 8000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-violet-900/30 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={700}>
+          <p className="font-serif text-sm italic text-violet-300">갈루아의 발견</p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={900} fadeMs={800}>
+          <p className="mt-2 text-base leading-7 text-slate-200 sm:text-lg">
+            방정식의 ‘<span className="text-fuchsia-300">대칭</span>’ — 근들의{" "}
+            <span className="text-fuchsia-300">자리바꿈</span> 에 숨은 구조를 보는 것.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={2900} fadeMs={800}>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold sm:text-xs">
+            <span className="rounded-full border border-amber-300/40 bg-amber-300/10 px-3 py-1 text-amber-200">
+              방정식
+            </span>
+            <span className="text-slate-500">→</span>
+            <span className="rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-cyan-200">
+              근의 자리바꿈
+            </span>
+            <span className="text-slate-500">→</span>
+            <span className="rounded-full border border-fuchsia-300/40 bg-fuchsia-300/10 px-3 py-1 text-fuchsia-200">
+              군 (Group)
+            </span>
+            <span className="text-slate-500">→</span>
+            <span className="rounded-full border border-emerald-300/40 bg-emerald-300/10 px-3 py-1 text-emerald-200">
+              풀이가능 여부
+            </span>
+          </div>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={5400} fadeMs={800}>
+          <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">
+            그가 도입한 <b className="text-fuchsia-200">군</b> 은 —{" "}
+            <b>현대 추상대수학의 출발점</b> 이 되었다.
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+
+  // Scene 11 — 엔드 (6 s)
+  {
+    id: "p3-end",
+    duration: 6000,
+    render: ({ sceneT }) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-violet-950/40 to-slate-950 px-6 text-center">
+        <FadeBlock sceneT={sceneT} start={200} fadeMs={900}>
+          <p className="font-serif text-xl font-bold text-slate-100 sm:text-2xl">
+            수학은 — 두 천재의 짧은 생애로 완성되었다.
+          </p>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={1500} fadeMs={800}>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm">
+            <span className="rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 font-bold text-emerald-200">
+              Abel · 1802 ~ 1829
+            </span>
+            <span className="rounded-lg border border-fuchsia-400/40 bg-fuchsia-400/10 px-3 py-1.5 font-bold text-fuchsia-200">
+              Galois · 1811 ~ 1832
+            </span>
+          </div>
+        </FadeBlock>
+        <FadeBlock sceneT={sceneT} start={3000} fadeMs={800}>
+          <p className="mt-4 max-w-xl text-sm italic leading-7 text-amber-100 sm:text-base">
+            5 차 방정식의 ‘풀 수 없음’ 의 증명, 그리고 ‘풀이가능성’ 의 일반 이론 —
+            <br />
+            <b className="text-amber-200">이것이 현대 추상대수학의 출발이다.</b>
+          </p>
+        </FadeBlock>
+      </div>
+    ),
+  },
+];
+
 function Part3({ onBack }: { onBack: () => void }) {
   const [sel, setSel] = useState<string | null>(null);
   const cur = P3_CHARS.find((c) => c.id === sel);
 
   return (
     <div className="space-y-5">
-      <PartHero
-        num="PART 03"
-        title="5차 방정식의 벽"
-        subtitle={
-          <>
-            300 년간의 도전 끝에 “풀 수 없음” 을 증명한 두 천재
-            <br />
-            아벨과 갈루아의 비극적이고 위대한 이야기.
-          </>
-        }
-        tone="violet"
+      <CinematicPlayer
+        scenes={PART3_SCENES}
+        height={520}
+        ariaLabel="5차 방정식의 벽 — 아벨과 갈루아 영상"
       />
 
-      <div className="rounded-2xl border border-violet-400/30 bg-violet-400/[0.06] p-4">
-        <p className="text-xs font-bold text-violet-200">
-          1545 ~ 1800 년대 · 300 년간의 도전
-        </p>
-        <p className="mt-1.5 font-bold text-violet-100">🔒 아무도 풀지 못한 5차 방정식</p>
-        <p className="mt-2 text-sm leading-7 text-slate-300">
-          1 ~ 4 차까지 해법이 완성된 후 수학자들은{" "}
-          <Hl>5 차 방정식의 근의 공식</Hl> 을 찾기 시작했습니다. 그러나 300 년이 지나도
-          성공하지 못했습니다. 이유는 단 하나 —{" "}
-          <Hl>그런 공식이 애초에 존재하지 않았기 때문</Hl> 이었습니다.
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <p className="text-center text-sm text-slate-300">
+          🔍 영상 속 <b className="text-violet-200">두 인물의 삶</b> 을 카드 클릭으로 더
+          깊이 들여다보세요.
         </p>
       </div>
 
-      <p className="text-center text-xs text-slate-400">
-        👇 인물 카드를 클릭해 자세한 이야기를 읽어 보세요
-      </p>
       <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
         {P3_CHARS.map((c) => (
           <CharCard
@@ -1711,27 +2794,69 @@ function Part3({ onBack }: { onBack: () => void }) {
       {cur ? (
         cur.id === "abel" ? (
           <CharDetail c={cur} toneHex={P3_TONE}>
-            <p className="mt-1">
-              알코올 중독 아버지, 무책임한 어머니 아래 형제들을 홀로 부양하면서
-              연구했습니다. <Hl>21 살</Hl> 에 5차 방정식 대수적 해법 불가능을 증명. 베를린
-              대학 교수 임명장이 도착하기 <Hl>이틀 전</Hl> 결핵으로 사망. 향년 27 세.
+            <p className="mt-1 text-sm leading-7">
+              가난한 루터교 목사의 아들로 노르웨이 핀뇌이 섬에서 태어났다.
+              아버지가 죽은 뒤 형제들을 홀로 부양하며 수학을 공부했고, 스승{" "}
+              <Hl>홀름보에 (Bernt Holmboe)</Hl> 가 그의 천재성을 알아보고 직접
+              모금하여 그를 대학에 보냈다.
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              19 살, 5 차 방정식을 풀었다고 믿고 덴마크의 데겐에게 보냈다.
+              데겐이 “수치 예제로 보여달라” 요청하자 — 스스로 자신의 오류를
+              발견. 그 좌절이 발상을 바꾸었다 — “풀 수 있는가” 를 묻는 것으로.
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              <Hl>1824 년, 21 세</Hl> 에 <em className="text-emerald-200">
+                일반 5 차 방정식은 거듭제곱근으로 풀 수 없다
+              </em>{" "}
+              는 것을 증명. 인쇄비를 아끼려 <Hl>6 쪽</Hl> 으로 압축한 자비
+              출판이었다. 가우스는 읽지 않았고, 코시는 원고를 잃어버렸다.
+              베를린의 크렐레만이 그를 알아보고 자기 잡지에 그의 논문을
+              연달아 실었다.
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              <Hl>1829 년 4 월 6 일</Hl>, 결핵으로 사망. 향년 26 세. 베를린
+              대학의 교수 임명장은 — 그가 죽은 지 <Hl>이틀 뒤</Hl> 도착했다.
             </p>
             <Quote toneHex={P3_TONE}>
-              “나는 18 살에 5차 방정식을 푼 것으로 알았습니다. 그러나 틀렸습니다. 그
-              틀림이 올바른 길로 이끌었습니다.”
+              “나는 5 차 방정식을 푼 것으로 믿었다. 그러나 틀렸다.
+              그 틀림이 — 올바른 길로 나를 이끌었다.”
             </Quote>
           </CharDetail>
         ) : (
           <CharDetail c={cur} toneHex={P3_TONE}>
-            <p className="mt-1">
-              에꼴 폴리테크닉 두 번 낙방, 아버지 자살, 혁명 운동 참여로 투옥.{" "}
-              <Hl>19 살</Hl> 에 군론 (Group Theory) 으로 5차 이상의 비가해성을 완전 증명.
-              결투 전날 밤 편지 곳곳에 <Hl>“시간이 없다”</Hl> 고 적었습니다. 향년 21 세.
+            <p className="mt-1 text-sm leading-7">
+              공화주의 시장의 아들로 파리 근교 부르라렌에서 태어났다. 12 살에
+              수학에 눈을 떴고, 에콜 폴리테크닉 입학시험에 두 번 낙방.
+              두 번째 시험은 — <Hl>아버지가 자살한 며칠 뒤</Hl> 였다 (1829.7).
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              <Hl>1829 코시</Hl> 에게 첫 논문 → 책상에 묻혀 잊혔다.
+              <br />
+              <Hl>1830 푸리에</Hl> 에게 → 푸리에가 사망하며 원고도 함께 사라졌다.
+              <br />
+              <Hl>1831 푸아송</Hl> 에게 → ‘이해할 수 없다’ 며 거절.
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              1831 년 정치 활동으로 두 차례 투옥 — 약 8 개월의 감옥살이.
+              1832 년 4 월 출소. 5 월 30 일 새벽, 결투에서 복부에 총상.{" "}
+              <Hl>5 월 31 일 오전 사망 — 향년 20 세.</Hl>
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              결투 전날 밤, 친구 슈발리에에게 보낸 편지에 — 방정식이 거듭제곱근으로
+              풀리는가를 결정하는 <Hl>군 (Group)</Hl> 이론을 정리해 남겼다.
+              여백에 적힌 <Hl>“Je n'ai pas le temps”</Hl> (시간이 없다) 는 — 한
+              정리의 증명 옆에 적힌 메모였다.
+            </p>
+            <p className="mt-2 text-sm leading-7">
+              그의 원고는 <Hl>14 년 뒤 1846 년</Hl>, 리우빌에 의해 마침내 출판
+              되었다. 그것이 — 현대 군론과 갈루아 이론의 출발점이었다.
             </p>
             <Quote toneHex={P3_TONE}>
-              “나에게는 시간이 없다.”
+              “이 정리들의 진리 (眞理) 가 아니라 — 그 ‘중요성’ 에 대해
+              가우스와 야코비에게 의견을 청해 다오.”
               <br />
-              <span className="text-xs text-slate-400">— 결투 전날 밤 편지, 1832 년 5 월</span>
+              <span className="text-xs text-slate-400">— 슈발리에에게 보낸 편지, 1832 년 5 월 29 일</span>
             </Quote>
           </CharDetail>
         )
@@ -1740,32 +2865,51 @@ function Part3({ onBack }: { onBack: () => void }) {
       {/* 비교 테이블 */}
       <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.03] p-4">
         <p className="mb-3 text-center text-xs text-slate-400">
-          📊 아벨 vs 갈루아 비교
+          📊 아벨 vs 갈루아 — 핵심 비교
         </p>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-white/10 text-slate-400">
               <th className="px-2 py-2 text-left font-normal">항목</th>
-              <th className="px-2 py-2 text-center font-bold text-violet-300">아벨</th>
-              <th className="px-2 py-2 text-center font-bold text-violet-300">갈루아</th>
+              <th className="px-2 py-2 text-center font-bold text-emerald-300">아벨</th>
+              <th className="px-2 py-2 text-center font-bold text-fuchsia-300">갈루아</th>
             </tr>
           </thead>
           <tbody className="text-slate-300">
             {[
-              ["국적", "🇳🇴 노르웨이", "🇫🇷 프랑스"],
-              ["증명 나이", "21 세", "19 세"],
-              ["사망 나이", "27 세 (결핵)", "21 세 (결투)"],
-              ["접근 방법", "직접 불가능 증명", "군론 (Group Theory)"],
-              ["사후 인정", "크렐 저널 게재", "11 년 후 리우빌이 발표"],
+              ["국적·생몰", "🇳🇴 노르웨이 1802 ~ 1829", "🇫🇷 프랑스 1811 ~ 1832"],
+              ["증명·발견 나이", "21 세 (1824)", "19 ~ 20 세 (1830~32)"],
+              ["사망 나이·원인", "26 세 · 결핵", "20 세 · 결투"],
+              [
+                "핵심 결과",
+                "일반 5 차 = 거듭제곱근으로 풀 수 없음",
+                "어떤 다항식이 풀리는가의 필요충분조건 = 갈루아군이 풀이가능군",
+              ],
+              [
+                "방법",
+                "직접 증명 (가정에서 모순)",
+                "군 (Group) 이라는 새 대수 구조 창시",
+              ],
+              [
+                "적용 범위",
+                "일반 5 차 한정",
+                "모든 다항식 — 일반 이론",
+              ],
+              ["사후 출판·인정", "홀름보에 1839 / Crelle 게재", "14 년 뒤 1846 — Liouville 출판"],
             ].map((row, i) => (
-              <tr key={i} className="border-b border-white/5 last:border-0">
-                <td className="px-2 py-2">{row[0]}</td>
-                <td className="px-2 py-2 text-center">{row[1]}</td>
-                <td className="px-2 py-2 text-center">{row[2]}</td>
+              <tr key={i} className="border-b border-white/5 last:border-0 align-top">
+                <td className="px-2 py-2 font-bold text-slate-400">{row[0]}</td>
+                <td className="px-2 py-2 text-center text-emerald-100/90">{row[1]}</td>
+                <td className="px-2 py-2 text-center text-fuchsia-100/90">{row[2]}</td>
               </tr>
             ))}
           </tbody>
         </table>
+        <p className="mt-4 rounded-lg border border-amber-300/30 bg-amber-300/[0.06] px-3 py-2 text-xs leading-7 text-amber-100">
+          📌 <b>아벨</b> 은 — 문 하나가 잠겨 있음을 증명했다.{" "}
+          <b>갈루아</b> 는 — 어느 문이 잠겨 있는지, 그리고 왜인지를 모두 보여주는{" "}
+          <b className="text-amber-200">마스터키 이론</b> 을 만들었다.
+        </p>
       </div>
 
       {/* 갈루아 편지 */}
