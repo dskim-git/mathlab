@@ -86,6 +86,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/dice_counting_explorer",
       "common/mini/addition_multiplication_rule",
       "common/mini/permutation_reallife_explorer",
+      "common/mini/permutation_identity_explorer",
       "common/mini/perm_comb_growth_race",
     ],
   },
