@@ -91,6 +91,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/perm_comb_growth_race",
       "common/mini/combination_identity_explorer",
       "common/mini/combination_application_explorer",
+      "common/mini/counting_daily_sumin",
     ],
   },
   {
