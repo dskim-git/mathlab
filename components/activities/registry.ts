@@ -51,6 +51,7 @@ import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/Perm
 import CombinationIdentityExplorer from "./common/3-1-counting/combination-identity-explorer/CombinationIdentityExplorer";
 import CombinationApplicationExplorer from "./common/3-1-counting/combination-application-explorer/CombinationApplicationExplorer";
 import CountingDailySumin from "./common/3-1-counting/counting-daily-sumin/CountingDailySumin";
+import MapColoringExplorer from "./common/3-1-counting/map-coloring-explorer/MapColoringExplorer";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -197,6 +198,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/combination_identity_explorer": CombinationIdentityExplorer,
   "common/mini/combination_application_explorer": CombinationApplicationExplorer,
   "common/mini/counting_daily_sumin": CountingDailySumin,
+  "common/mini/map_coloring_explorer": MapColoringExplorer,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

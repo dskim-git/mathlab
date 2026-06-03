@@ -112,6 +112,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/combination_identity_explorer": "조합 등식 탐구",
   "common/mini/combination_application_explorer": "조합 활용 탐구",
   "common/mini/counting_daily_sumin": "경우의 수로 바라본 하루",
+  "common/mini/map_coloring_explorer": "지도 색칠 경우의 수",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

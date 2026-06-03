@@ -92,6 +92,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/combination_identity_explorer",
       "common/mini/combination_application_explorer",
       "common/mini/counting_daily_sumin",
+      "common/mini/map_coloring_explorer",
     ],
   },
   {
