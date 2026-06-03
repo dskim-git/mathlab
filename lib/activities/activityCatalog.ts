@@ -84,6 +84,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     unit: "3-1 경우의 수",
     slugs: [
       "common/mini/dice_counting_explorer",
+      "common/mini/addition_multiplication_rule",
       "common/mini/perm_comb_growth_race",
     ],
   },
