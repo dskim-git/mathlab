@@ -35,6 +35,7 @@ import QuadBridgeCurveFit from "./common/2-2-quadratic-function/quad-bridge-curv
 import CubicQuarticEquationExplorer from "./common/2-3-equation-inequality/cubic-quartic-equation-explorer/CubicQuarticEquationExplorer";
 import EquationHistoryFlash from "./common/2-3-equation-inequality/equation-history-flash/EquationHistoryFlash";
 import OmegaLawExplorer from "./common/2-3-equation-inequality/omega-law-explorer/OmegaLawExplorer";
+import BabylonianCubicSolver from "./common/2-3-equation-inequality/babylonian-cubic-solver/BabylonianCubicSolver";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -168,6 +169,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/cubic_quartic_equation_explorer": CubicQuarticEquationExplorer,
   "common/mini/equation_history_flash": EquationHistoryFlash,
   "common/mini/omega_law_explorer": OmegaLawExplorer,
+  "common/mini/babylonian_cubic_solver": BabylonianCubicSolver,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
