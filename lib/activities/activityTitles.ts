@@ -103,6 +103,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/linear_ineq_system_explorer": "연립일차부등식 수직선 탐구",
   "common/mini/abs_value_ineq_explorer": "절댓값 부등식 탐구",
   "common/mini/quad_ineq_graph_explorer": "이차부등식과 그래프 탐구",
+  "common/mini/quad_ineq_maxmin_reallife": "최댓값 찾기 — 표 vs 수식",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
