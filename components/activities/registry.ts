@@ -46,6 +46,7 @@ import DiceCountingExplorer from "./common/3-1-counting/dice-counting-explorer/D
 import AdditionMultiplicationRule from "./common/3-1-counting/addition-multiplication-rule/AdditionMultiplicationRule";
 import PermutationReallifeExplorer from "./common/3-1-counting/permutation-reallife-explorer/PermutationReallifeExplorer";
 import PermutationIdentityExplorer from "./common/3-1-counting/permutation-identity-explorer/PermutationIdentityExplorer";
+import CombinationReallifeExplorer from "./common/3-1-counting/combination-reallife-explorer/CombinationReallifeExplorer";
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
 // ─── 확률과통계 ────────────────────────────────────────────
@@ -188,6 +189,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/addition_multiplication_rule": AdditionMultiplicationRule,
   "common/mini/permutation_reallife_explorer": PermutationReallifeExplorer,
   "common/mini/permutation_identity_explorer": PermutationIdentityExplorer,
+  "common/mini/combination_reallife_explorer": CombinationReallifeExplorer,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

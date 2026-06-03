@@ -108,6 +108,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/addition_multiplication_rule": "합·곱 법칙 판별 챌린지",
   "common/mini/permutation_reallife_explorer": "순열 실생활 탐구",
   "common/mini/permutation_identity_explorer": "순열 등식 탐구",
+  "common/mini/combination_reallife_explorer": "조합 실생활 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
