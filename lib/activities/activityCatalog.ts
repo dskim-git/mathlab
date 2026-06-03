@@ -72,6 +72,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/equation_history_flash",
       "common/mini/omega_law_explorer",
       "common/mini/babylonian_cubic_solver",
+      "common/mini/simultaneous_quadratic_quiz",
     ],
   },
   {

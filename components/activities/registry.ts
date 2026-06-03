@@ -36,6 +36,7 @@ import CubicQuarticEquationExplorer from "./common/2-3-equation-inequality/cubic
 import EquationHistoryFlash from "./common/2-3-equation-inequality/equation-history-flash/EquationHistoryFlash";
 import OmegaLawExplorer from "./common/2-3-equation-inequality/omega-law-explorer/OmegaLawExplorer";
 import BabylonianCubicSolver from "./common/2-3-equation-inequality/babylonian-cubic-solver/BabylonianCubicSolver";
+import SimultaneousQuadraticQuiz from "./common/2-3-equation-inequality/simultaneous-quadratic-quiz/SimultaneousQuadraticQuiz";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -170,6 +171,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/equation_history_flash": EquationHistoryFlash,
   "common/mini/omega_law_explorer": OmegaLawExplorer,
   "common/mini/babylonian_cubic_solver": BabylonianCubicSolver,
+  "common/mini/simultaneous_quadratic_quiz": SimultaneousQuadraticQuiz,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──
