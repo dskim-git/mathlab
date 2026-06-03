@@ -42,6 +42,7 @@ import AbsValueIneqExplorer from "./common/2-3-equation-inequality/abs-value-ine
 import QuadIneqGraphExplorer from "./common/2-3-equation-inequality/quad-ineq-graph-explorer/QuadIneqGraphExplorer";
 import QuadIneqMaxminReallife from "./common/2-3-equation-inequality/quad-ineq-maxmin-reallife/QuadIneqMaxminReallife";
 // [3] 경우의 수 — (1) 경우의 수
+import DiceCountingExplorer from "./common/3-1-counting/dice-counting-explorer/DiceCountingExplorer";
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
 // ─── 확률과통계 ────────────────────────────────────────────
@@ -180,6 +181,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/abs_value_ineq_explorer": AbsValueIneqExplorer,
   "common/mini/quad_ineq_graph_explorer": QuadIneqGraphExplorer,
   "common/mini/quad_ineq_maxmin_reallife": QuadIneqMaxminReallife,
+  "common/mini/dice_counting_explorer": DiceCountingExplorer,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

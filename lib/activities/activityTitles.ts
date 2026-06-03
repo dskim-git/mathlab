@@ -104,6 +104,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/abs_value_ineq_explorer": "절댓값 부등식 탐구",
   "common/mini/quad_ineq_graph_explorer": "이차부등식과 그래프 탐구",
   "common/mini/quad_ineq_maxmin_reallife": "최댓값 찾기 — 표 vs 수식",
+  "common/mini/dice_counting_explorer": "주사위로 경우의 수 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
