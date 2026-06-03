@@ -74,6 +74,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/babylonian_cubic_solver",
       "common/mini/simultaneous_quadratic_quiz",
       "common/mini/linear_ineq_system_explorer",
+      "common/mini/abs_value_ineq_explorer",
     ],
   },
   {

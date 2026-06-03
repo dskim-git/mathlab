@@ -38,6 +38,7 @@ import OmegaLawExplorer from "./common/2-3-equation-inequality/omega-law-explore
 import BabylonianCubicSolver from "./common/2-3-equation-inequality/babylonian-cubic-solver/BabylonianCubicSolver";
 import SimultaneousQuadraticQuiz from "./common/2-3-equation-inequality/simultaneous-quadratic-quiz/SimultaneousQuadraticQuiz";
 import LinearIneqSystemExplorer from "./common/2-3-equation-inequality/linear-ineq-system-explorer/LinearIneqSystemExplorer";
+import AbsValueIneqExplorer from "./common/2-3-equation-inequality/abs-value-ineq-explorer/AbsValueIneqExplorer";
 // [3] 경우의 수 — (1) 경우의 수
 import PermCombGrowthRace from "./common/3-1-counting/perm-comb-growth-race/PermCombGrowthRace";
 
@@ -174,6 +175,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/babylonian_cubic_solver": BabylonianCubicSolver,
   "common/mini/simultaneous_quadratic_quiz": SimultaneousQuadraticQuiz,
   "common/mini/linear_ineq_system_explorer": LinearIneqSystemExplorer,
+  "common/mini/abs_value_ineq_explorer": AbsValueIneqExplorer,
   "common/mini/perm_comb_growth_race": PermCombGrowthRace,
 
   // ── 확률과통계 ──

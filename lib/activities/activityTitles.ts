@@ -101,6 +101,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/babylonian_cubic_solver": "바빌로니아인의 방정식 풀이",
   "common/mini/simultaneous_quadratic_quiz": "연립이차방정식 해의 개수 스피드퀴즈",
   "common/mini/linear_ineq_system_explorer": "연립일차부등식 수직선 탐구",
+  "common/mini/abs_value_ineq_explorer": "절댓값 부등식 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
