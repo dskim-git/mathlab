@@ -52,6 +52,7 @@ import CombinationIdentityExplorer from "./common/3-1-counting/combination-ident
 import CombinationApplicationExplorer from "./common/3-1-counting/combination-application-explorer/CombinationApplicationExplorer";
 import CountingDailySumin from "./common/3-1-counting/counting-daily-sumin/CountingDailySumin";
 import MapColoringExplorer from "./common/3-1-counting/map-coloring-explorer/MapColoringExplorer";
+import MatrixPixelExplorer from "./common/4-1-matrix/matrix-pixel-explorer/MatrixPixelExplorer";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -199,6 +200,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/combination_application_explorer": CombinationApplicationExplorer,
   "common/mini/counting_daily_sumin": CountingDailySumin,
   "common/mini/map_coloring_explorer": MapColoringExplorer,
+  "common/mini/matrix_pixel_explorer": MatrixPixelExplorer,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

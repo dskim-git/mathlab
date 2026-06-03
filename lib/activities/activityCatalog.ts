@@ -96,6 +96,13 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     ],
   },
   {
+    subject: "공통수학1",
+    unit: "4-1 행렬",
+    slugs: [
+      "common/mini/matrix_pixel_explorer",
+    ],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
