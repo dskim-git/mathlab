@@ -90,6 +90,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/combination_reallife_explorer",
       "common/mini/perm_comb_growth_race",
       "common/mini/combination_identity_explorer",
+      "common/mini/combination_application_explorer",
     ],
   },
   {
