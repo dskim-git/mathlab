@@ -105,6 +105,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common/mini/matrix_mul_reallife",
       "common/mini/matrix_card_dice_game",
       "common/mini/matrix_cipher_explorer",
+      "common/mini/matrix_population_migration",
     ],
   },
   {
