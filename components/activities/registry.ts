@@ -57,6 +57,7 @@ import MatrixEqualityGame from "./common/4-1-matrix/matrix-equality-game/MatrixE
 import MatrixOpsExplore from "./common/4-1-matrix/matrix-ops-explore/MatrixOpsExplore";
 import MatrixMulReallife from "./common/4-1-matrix/matrix-mul-reallife/MatrixMulReallife";
 import MatrixCardDiceGame from "./common/4-1-matrix/matrix-card-dice-game/MatrixCardDiceGame";
+import MatrixCipherExplorer from "./common/4-1-matrix/matrix-cipher-explorer/MatrixCipherExplorer";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -209,6 +210,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/matrix_ops_explore": MatrixOpsExplore,
   "common/mini/matrix_mul_reallife": MatrixMulReallife,
   "common/mini/matrix_card_dice_game": MatrixCardDiceGame,
+  "common/mini/matrix_cipher_explorer": MatrixCipherExplorer,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
