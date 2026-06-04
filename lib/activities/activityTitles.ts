@@ -116,6 +116,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/matrix_pixel_explorer": "사진 속 행렬 탐험",
   "common/mini/matrix_equality_game": "행렬 상등 탐정 게임",
   "common/mini/matrix_ops_explore": "행렬 연산 탐험",
+  "common/mini/matrix_mul_reallife": "행렬 곱셈 실생활 탐구",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
