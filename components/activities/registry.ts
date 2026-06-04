@@ -54,6 +54,7 @@ import CountingDailySumin from "./common/3-1-counting/counting-daily-sumin/Count
 import MapColoringExplorer from "./common/3-1-counting/map-coloring-explorer/MapColoringExplorer";
 import MatrixPixelExplorer from "./common/4-1-matrix/matrix-pixel-explorer/MatrixPixelExplorer";
 import MatrixEqualityGame from "./common/4-1-matrix/matrix-equality-game/MatrixEqualityGame";
+import MatrixOpsExplore from "./common/4-1-matrix/matrix-ops-explore/MatrixOpsExplore";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -203,6 +204,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/map_coloring_explorer": MapColoringExplorer,
   "common/mini/matrix_pixel_explorer": MatrixPixelExplorer,
   "common/mini/matrix_equality_game": MatrixEqualityGame,
+  "common/mini/matrix_ops_explore": MatrixOpsExplore,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

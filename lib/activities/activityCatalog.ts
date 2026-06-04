@@ -101,6 +101,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: [
       "common/mini/matrix_pixel_explorer",
       "common/mini/matrix_equality_game",
+      "common/mini/matrix_ops_explore",
     ],
   },
   {
