@@ -100,6 +100,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     unit: "4-1 행렬",
     slugs: [
       "common/mini/matrix_pixel_explorer",
+      "common/mini/matrix_equality_game",
     ],
   },
   {
