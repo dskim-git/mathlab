@@ -120,6 +120,9 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/matrix_card_dice_game": "행렬 카드 주사위 게임",
   "common/mini/matrix_cipher_explorer": "행렬 암호 탐구",
   "common/mini/matrix_population_migration": "행렬로 보는 두 도시 인구 이동",
+
+  // ── 영재 ──
+  "gifted/euclidea_warmup": "작도 몸풀기 게임",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

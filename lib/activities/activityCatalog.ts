@@ -228,6 +228,13 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "probability/mini/polygon_edge_arrangements_p5",
     ],
   },
+  {
+    subject: "영재",
+    unit: "4 작도 게임",
+    slugs: [
+      "gifted/euclidea_warmup",
+    ],
+  },
 ];
 
 /** 카탈로그 전체에서 등록된 슬러그 set. */

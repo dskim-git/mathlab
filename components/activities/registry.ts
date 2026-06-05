@@ -155,6 +155,10 @@ import CiProportionNewsLab from "./probability/3-2-statistical-estimation/ci-pro
 import CircularPermAnchor from "./probability/X-extracurricular/circular-perm-anchor/CircularPermAnchor";
 import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edge-arrangements/PolygonEdgeArrangements";
 
+// ─── 영재 ──────────────────────────────────────────────────
+// [4] 작도 게임
+import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
+
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
 // (probability-simulator 는 제출 props 가 많아 ActivityRenderer 에서 별도 처리한다.)
@@ -285,4 +289,9 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   // 교육과정 외(X) — subject="probability"(구) 슬러그로 임포트됨
   "probability/mini/circular_perm_anchor_p5": CircularPermAnchor,
   "probability/mini/polygon_edge_arrangements_p5": PolygonEdgeArrangements,
+
+  // ── 영재 ──
+  // ⚠️ 영재 _units.py 는 slug 가 평문(예: "euclidea_warmup") 이라 SQL 임포트 결과가
+  // "gifted/<slug>" 형식 (확통·공통수학의 "<subject>/mini/<slug>" 와 다름).
+  "gifted/euclidea_warmup": EuclideaWarmup,
 };
