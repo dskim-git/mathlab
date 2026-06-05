@@ -379,6 +379,150 @@ function findVariants7(board: Board): number[] {
   return [];
 }
 
+// ─── 문제 8: 점을 지나 직선에 접하는 원 (3L 6E) ──────────────
+// 시드: 직선 ℓ + 직선 위 접점 T + 직선 밖 점 P.
+// 목표: T 에서 ℓ 에 접하고 P 를 지나는 원.
+// 중심 = T 에서 ℓ 에 수직인 선 ∩ TP 의 수직이등분선.
+const PROBLEM_8_SEED: Seed = {
+  points: [
+    { id: "L1", x: 60, y: 280, hidden: true },
+    { id: "L2", x: 560, y: 280, hidden: true },
+    { id: "T", x: 320, y: 280, label: "T" },
+    { id: "P", x: 460, y: 110, label: "P" },
+  ],
+  lines: [{ id: "ell", a: "L1", b: "L2", extend: true }],
+  circles: [],
+};
+
+function findVariants8(board: Board): number[] {
+  const T = board.points.find((p) => p.id === "T");
+  const P = board.points.find((p) => p.id === "P");
+  const L1 = board.points.find((p) => p.id === "L1");
+  const L2 = board.points.find((p) => p.id === "L2");
+  if (!T || !P || !L1 || !L2) return [];
+  // ℓ 방향
+  const lx = L2.x - L1.x;
+  const ly = L2.y - L1.y;
+  const llen = Math.hypot(lx, ly) || 1;
+  // ℓ 의 T 에서의 수선 방향(법선) (-ly, lx)/llen
+  const nx = -ly / llen;
+  const ny = lx / llen;
+  // 중심 C = T + t * (nx, ny). |C - P| = |C - T| = |t|.
+  // |C - P|² = |t|² 풀면 t = ((P - T) · (P - T)) / (2 (P - T) · n).
+  const tx = P.x - T.x;
+  const ty = P.y - T.y;
+  const denom = 2 * (tx * nx + ty * ny);
+  if (Math.abs(denom) < 1e-9) return [];
+  const t = (tx * tx + ty * ty) / denom;
+  const C = { x: T.x + t * nx, y: T.y + t * ny };
+  const r = Math.abs(t);
+  for (const cr of board.circles) {
+    const cc = board.points.find((p) => p.id === cr.center);
+    const ct = board.points.find((p) => p.id === cr.through);
+    if (!cc || !ct) continue;
+    const cR = dist(cc, ct);
+    if (dist(cc, C) < 8 && Math.abs(cR - r) < 8) return [0];
+  }
+  return [];
+}
+
+// ─── 문제 9: 45° (2L 5E 2V) ────────────────────────────────
+// 시드 변 AB 의 끝점 A 를 꼭짓점으로 하여 45° 각을 작도. 두 방향(위/아래) = V=2.
+const PROBLEM_9_SEED: Seed = {
+  points: [
+    { id: "A", x: 240, y: 220 },
+    { id: "B", x: 440, y: 220 },
+  ],
+  lines: [{ id: "AB", a: "A", b: "B" }],
+  circles: [],
+};
+
+function findVariants9(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  if (!A || !B) return [];
+  const dx = B.x - A.x;
+  const dy = B.y - A.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const s = Math.SQRT1_2;
+  // 두 정답 방향 (단위벡터)
+  const d1x = (s * (dx - dy)) / len;
+  const d1y = (s * (dx + dy)) / len;
+  const d2x = (s * (dx + dy)) / len;
+  const d2y = (s * (-dx + dy)) / len;
+
+  const studentLines = board.lines.filter((l) => l.id !== "AB");
+  const found = new Set<number>();
+  for (const line of studentLines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (!isPointOnLine(A, lp1, lp2)) continue;
+    const lDx = lp2.x - lp1.x;
+    const lDy = lp2.y - lp1.y;
+    const lLen = Math.hypot(lDx, lDy) || 1;
+    const ux = lDx / lLen;
+    const uy = lDy / lLen;
+    const c1 = Math.abs(ux * d1x + uy * d1y);
+    const c2 = Math.abs(ux * d2x + uy * d2y);
+    if (c1 > 0.995) found.add(0);
+    if (c2 > 0.995) found.add(1);
+  }
+  return Array.from(found).sort();
+}
+
+// ─── 문제 10: 외접 정사각형 (6L 11E) ────────────────────────
+// 시드: 원(O, r) + 직선 ℓ (원 외부). 원에 외접하고 두 변이 ℓ 과 평행한 정사각형.
+// 정사각형 변 길이 = 2r. 4 꼭짓점 위치 미리 계산 후 학생 점 매칭.
+const PROBLEM_10_R = 70;
+const PROBLEM_10_OX = 320;
+const PROBLEM_10_OY = 200;
+const PROBLEM_10_SEED: Seed = {
+  points: [
+    { id: "O", x: PROBLEM_10_OX, y: PROBLEM_10_OY, label: "O" },
+    { id: "Onb", x: PROBLEM_10_OX + PROBLEM_10_R, y: PROBLEM_10_OY, hidden: true },
+    { id: "L1", x: 60, y: 360, hidden: true },
+    { id: "L2", x: 560, y: 360, hidden: true },
+  ],
+  lines: [{ id: "ell", a: "L1", b: "L2", extend: true }],
+  circles: [{ id: "given", center: "O", through: "Onb" }],
+};
+
+function findVariants10(board: Board): number[] {
+  const O = board.points.find((p) => p.id === "O");
+  const Onb = board.points.find((p) => p.id === "Onb");
+  const L1 = board.points.find((p) => p.id === "L1");
+  const L2 = board.points.find((p) => p.id === "L2");
+  if (!O || !Onb || !L1 || !L2) return [];
+  const r = dist(O, Onb);
+  // ℓ 의 단위 방향 u 와 법선 n
+  const lx = L2.x - L1.x;
+  const ly = L2.y - L1.y;
+  const llen = Math.hypot(lx, ly) || 1;
+  const ux = lx / llen;
+  const uy = ly / llen;
+  const nx = -uy;
+  const ny = ux;
+  // 정답 정사각형 4 꼭짓점 = O ± r*u ± r*n
+  const corners = [
+    { x: O.x + r * ux + r * nx, y: O.y + r * uy + r * ny },
+    { x: O.x + r * ux - r * nx, y: O.y + r * uy - r * ny },
+    { x: O.x - r * ux + r * nx, y: O.y - r * uy + r * ny },
+    { x: O.x - r * ux - r * nx, y: O.y - r * uy - r * ny },
+  ];
+  const seedIds = new Set(["O", "Onb", "L1", "L2"]);
+  let foundCount = 0;
+  for (const c of corners) {
+    const matched = board.points.some((p) => {
+      if (p.hidden) return false;
+      if (seedIds.has(p.id)) return false;
+      return dist(p, c) < 8;
+    });
+    if (matched) foundCount++;
+  }
+  return foundCount === 4 ? [0] : [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -438,5 +582,31 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_7_SEED,
     variantCount: 1,
     findVariants: findVariants7,
+  },
+  8: {
+    num: 8,
+    title: "점을 지나 직선에 접하는 원",
+    description:
+      "직선 밖의 점 P 를 지나고 주어진 직선 위의 점 T 에서 접하는 원을 작도하세요.",
+    seed: PROBLEM_8_SEED,
+    variantCount: 1,
+    findVariants: findVariants8,
+  },
+  9: {
+    num: 9,
+    title: "45°",
+    description: "주어진 변에서 45° 각도를 작도하세요.",
+    seed: PROBLEM_9_SEED,
+    variantCount: 2,
+    findVariants: findVariants9,
+  },
+  10: {
+    num: 10,
+    title: "외접 정사각형",
+    description:
+      "원에 외접하는 정사각형을 작도하세요. 단 주어진 직선과 두 변은 평행해야 합니다.",
+    seed: PROBLEM_10_SEED,
+    variantCount: 1,
+    findVariants: findVariants10,
   },
 };
