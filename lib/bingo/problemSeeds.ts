@@ -72,7 +72,7 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     num: 1,
     title: "세 꼭짓점을 통한 평행사변형",
     description:
-      "4개의 꼭짓점 중 3개의 꼭짓점이 주어진 평행사변형을 작도하세요. 어느 쌍이 대각선이 되느냐에 따라 4번째 꼭짓점 D 의 위치가 달라져 모두 3가지 평행사변형이 가능합니다.",
+      "4개의 꼭짓점 중 3개의 꼭짓점이 주어진 평행사변형을 작도하세요.",
     seed: PROBLEM_1_SEED,
     variantCount: 3,
     findVariants: findVariants1,
