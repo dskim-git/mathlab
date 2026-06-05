@@ -79,12 +79,13 @@ type Tool =
   | "perpBisector"
   | "perpLine"
   | "parallel"
-  | "angleBisector";
+  | "angleBisector"
+  | "pan";
 
 // 3점 입력이 필요한 도구 — 직선 정의 2점 + 추가 1점.
 function inputCount(tool: Tool): number {
   if (tool === "perpLine" || tool === "parallel" || tool === "angleBisector") return 3;
-  if (tool === "point") return 0; // SVG 핸들러가 처리
+  if (tool === "point" || tool === "pan") return 0; // SVG/마우스 핸들러가 처리
   return 2;
 }
 
@@ -202,14 +203,49 @@ export default function ConstructionBoard({
   );
 
   const [board, setBoard] = useState<Board>(initial);
+  const [history, setHistory] = useState<Board[]>([]);
   const [tool, setTool] = useState<Tool>(allowedTools[0] ?? "line");
   const [pending, setPending] = useState<string[]>([]); // 선택된 점 ID 큐
   const [hover, setHover] = useState<string | null>(null);
+  // 손바닥 도구로 작도판을 이동했을 때의 viewBox 오프셋.
+  const [viewOffset, setViewOffset] = useState({ x: 0, y: 0 });
+  const [panDrag, setPanDrag] = useState<
+    | { startX: number; startY: number; baseX: number; baseY: number; rect: DOMRect }
+    | null
+  >(null);
+
+  // board 변경 커밋 — 이전 board 를 history 에 push 후 새 board 적용.
+  function commit(next: Board) {
+    if (next === board) return;
+    setHistory((h) => [...h, board]);
+    setBoard(next);
+    onChange?.(next);
+  }
+
+  function undo() {
+    setHistory((h) => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setBoard(prev);
+      onChange?.(prev);
+      setPending([]);
+      return h.slice(0, -1);
+    });
+  }
+
+  function clearAll() {
+    setHistory((h) => (board === initial ? h : [...h, board]));
+    setBoard(initial);
+    setPending([]);
+    onChange?.(initial);
+  }
 
   function reset() {
     setBoard(initial);
+    setHistory([]);
     setPending([]);
     setHover(null);
+    setViewOffset({ x: 0, y: 0 });
   }
 
   // 가까운 객체(직선/원) 위로 좌표 snap — 임계 SNAP_PX 안이면 객체 위로 끌어당김
@@ -254,8 +290,7 @@ export default function ConstructionBoard({
     if (snapped.x < 0 || snapped.x > width || snapped.y < 0 || snapped.y > height) return;
     const { board: nb } = addPoint(board, snapped);
     if (nb === board) return; // 기존 점과 EPS 내라 변화 없음
-    setBoard(nb);
-    onChange?.(nb);
+    commit(nb);
   }
 
   function pickPoint(id: string) {
@@ -396,9 +431,8 @@ export default function ConstructionBoard({
         newBoard = addIntersections(newBoard, "line", M, N);
       }
     }
-    setBoard(newBoard);
+    commit(newBoard);
     setPending([]);
-    onChange?.(newBoard);
   }
 
   // 직선을 viewBox 끝까지 연장한 두 끝점 계산
@@ -552,6 +586,24 @@ export default function ConstructionBoard({
             ∠ 각이등분선
           </button>
         ) : null}
+        {allowedTools.includes("pan") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTool("pan");
+              setPending([]);
+            }}
+            className={
+              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              (tool === "pan"
+                ? "bg-sky-500/25 text-sky-200 ring-1 ring-sky-400/50"
+                : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
+            }
+            title="손바닥: 작도판을 드래그해 이동 (작도 안 함)"
+          >
+            ✋ 손바닥
+          </button>
+        ) : null}
 
         <span className="ml-3 text-xs font-semibold text-slate-400">
           사용:{" "}
@@ -560,13 +612,33 @@ export default function ConstructionBoard({
           <span className="text-violet-300">{eCount}E</span>
         </span>
 
-        <button
-          type="button"
-          onClick={reset}
-          className="ml-auto rounded-md border border-rose-400/40 bg-rose-500/15 px-3 py-1.5 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/25"
-        >
-          ↺ 초기화
-        </button>
+        <span className="ml-auto flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={undo}
+            disabled={history.length === 0}
+            className="rounded-md border border-white/15 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
+            title="실행취소 — 마지막 작도 한 단계 되돌리기"
+          >
+            ↶ 실행취소
+          </button>
+          <button
+            type="button"
+            onClick={clearAll}
+            className="rounded-md border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/25"
+            title="지우기 — 학생이 작도한 모든 도형 삭제 (시드는 유지)"
+          >
+            🧹 지우기
+          </button>
+          <button
+            type="button"
+            onClick={reset}
+            className="rounded-md border border-rose-400/40 bg-rose-500/15 px-3 py-1.5 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/25"
+            title="초기화 — 작도 + 화면 위치 모두 처음으로"
+          >
+            ↺ 초기화
+          </button>
+        </span>
       </div>
 
       <p className="mb-3 text-xs text-slate-400">
@@ -582,7 +654,9 @@ export default function ConstructionBoard({
           ? "직선의 두 점을 차례로 클릭한 뒤, 수선이 통과할 점을 클릭하세요 (1L 3E)."
           : tool === "parallel"
           ? "직선의 두 점을 차례로 클릭한 뒤, 평행선이 통과할 점을 클릭하세요 (1L 4E)."
-          : "각의 꼭짓점을 클릭한 뒤, 한 변 위 점 → 다른 변 위 점을 순서대로 클릭하세요 (1L 4E)."}
+          : tool === "angleBisector"
+          ? "각의 꼭짓점을 클릭한 뒤, 한 변 위 점 → 다른 변 위 점을 순서대로 클릭하세요 (1L 4E)."
+          : "작도판을 드래그해 화면을 이동합니다 (작도 안 함)."}
         {pending.length > 0 && pending.length < inputCount(tool) ? (
           <span className="ml-2 text-amber-300">
             · {pending.length}개 선택됨 — {inputCount(tool) - pending.length}개 더 클릭하세요
@@ -593,12 +667,39 @@ export default function ConstructionBoard({
       {solvedBadge ? <div className="mb-2">{solvedBadge}</div> : null}
 
       <svg
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`${viewOffset.x} ${viewOffset.y} ${width} ${height}`}
         className={
-          "block w-full rounded-lg border border-white/10 bg-slate-950 " +
-          (tool === "point" ? "cursor-crosshair" : "")
+          "block w-full select-none rounded-lg border border-white/10 bg-slate-950 " +
+          (tool === "pan"
+            ? panDrag
+              ? "cursor-grabbing"
+              : "cursor-grab"
+            : tool === "point"
+            ? "cursor-crosshair"
+            : "")
         }
         onClick={handleSvgClick}
+        onMouseDown={(e) => {
+          if (tool !== "pan") return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          setPanDrag({
+            startX: e.clientX,
+            startY: e.clientY,
+            baseX: viewOffset.x,
+            baseY: viewOffset.y,
+            rect,
+          });
+        }}
+        onMouseMove={(e) => {
+          if (!panDrag) return;
+          const scaleX = width / panDrag.rect.width;
+          const scaleY = height / panDrag.rect.height;
+          const dx = (e.clientX - panDrag.startX) * scaleX;
+          const dy = (e.clientY - panDrag.startY) * scaleY;
+          setViewOffset({ x: panDrag.baseX - dx, y: panDrag.baseY - dy });
+        }}
+        onMouseUp={() => setPanDrag(null)}
+        onMouseLeave={() => setPanDrag(null)}
         role="img"
         aria-label="작도판"
       >

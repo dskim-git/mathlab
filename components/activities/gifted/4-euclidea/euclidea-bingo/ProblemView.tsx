@@ -24,6 +24,7 @@ const ALL_TOOLS = [
   "perpLine",
   "parallel",
   "angleBisector",
+  "pan",
 ] as const;
 
 const EMPTY_SEED: Seed = { points: [], lines: [], circles: [] };
@@ -49,7 +50,6 @@ export default function ProblemView({ num, onBack }: Props) {
             {spec ? spec.title : "작도"}
             <span className="rounded-md border border-cyan-400/40 bg-cyan-500/15 px-2 py-0.5 text-xs font-extrabold text-cyan-200">
               목표 {problem.L}L · {problem.E}E
-              {spec ? ` · ${spec.variantCount}V` : ""}
             </span>
           </h3>
         </div>
@@ -102,13 +102,9 @@ function ProblemBody({ spec, problemL, problemE }: { spec: ProblemSpec; problemL
 
   const targetL = problemL;
   const targetE = problemE;
-  const targetV = spec.variantCount;
 
   const lOk = usedL <= targetL && usedL > 0;
   const eOk = usedE <= targetE && usedE > 0;
-  const vOk = usedV === targetV;
-
-  const fullSolved = lOk && eOk && vOk;
 
   return (
     <section className="rounded-xl border border-white/10 bg-slate-900/40 p-5">
@@ -117,7 +113,6 @@ function ProblemBody({ spec, problemL, problemE }: { spec: ProblemSpec; problemL
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <CountChip label="L" used={usedL} target={targetL} active={board != null} />
         <CountChip label="E" used={usedE} target={targetE} active={board != null} />
-        <CountChip label="V" used={usedV} target={targetV} active={board != null} />
       </div>
 
       <ConstructionBoard
@@ -125,14 +120,14 @@ function ProblemBody({ spec, problemL, problemE }: { spec: ProblemSpec; problemL
         allowedTools={[...ALL_TOOLS]}
         onChange={setBoard}
         solvedBadge={
-          fullSolved ? (
+          lOk && eOk ? (
             <div className="rounded-lg border border-emerald-400/50 bg-emerald-500/15 px-3 py-2 text-sm font-bold text-emerald-200">
-              🏆 완전 정답! {targetL}L · {targetE}E · {targetV}V 조건을 모두 만족합니다.
+              🟢 L · E 조건 만족!
+              {usedV > 0 ? <span className="ml-2 font-semibold text-amber-200">✨ 변형 {usedV}개 발견</span> : null}
             </div>
           ) : usedV > 0 ? (
             <div className="rounded-lg border border-amber-400/50 bg-amber-500/15 px-3 py-2 text-sm font-semibold text-amber-200">
-              ✨ 변형 {usedV}/{targetV} 발견 — {lOk ? "L✓" : "L"} · {eOk ? "E✓" : "E"} ·{" "}
-              {vOk ? "V✓" : "V"}
+              ✨ 변형 {usedV}개 발견
             </div>
           ) : null
         }
@@ -202,7 +197,7 @@ function ToolTable() {
   return (
     <section className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
       <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
-        📐 작도 도구표 (PDF p.8)
+        📐 작도 도구표
       </h4>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
