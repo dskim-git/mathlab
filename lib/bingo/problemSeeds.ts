@@ -1097,6 +1097,201 @@ function findVariants22(board: Board): number[] {
   return [];
 }
 
+// ─── 문제 23: 3개의 합동 선분 (4L 6E 2V) ────────────────────
+// 시드: 각 ∠ABC + 내부 점 M. BD=DM=ME 가 되도록 BA 위 D, BC 위 E 작도.
+// 풀이의 수학: d = BD = DM. |BM|² - 2d·(u_BA·BM) = 0 → d = |BM|²/(2 u_BA·BM)
+// (B-M 방향 부호 보정). E 는 두 해 가능 (V=2): |EM|=d, E ∈ BC line.
+const PROBLEM_23_SEED: Seed = {
+  points: [
+    { id: "B", x: 160, y: 320, label: "B" },
+    { id: "A", x: 520, y: 80, label: "A" },
+    { id: "C", x: 560, y: 320, label: "C" },
+    { id: "M", x: 380, y: 240, label: "M" },
+  ],
+  lines: [
+    { id: "ray_BA", a: "B", b: "A" },
+    { id: "ray_BC", a: "B", b: "C" },
+  ],
+  circles: [],
+};
+
+function findVariants23(board: Board): number[] {
+  const B = board.points.find((p) => p.id === "B");
+  const FA = board.points.find((p) => p.id === "A");
+  const FC = board.points.find((p) => p.id === "C");
+  const M = board.points.find((p) => p.id === "M");
+  if (!B || !FA || !FC || !M) return [];
+  const uAx = FA.x - B.x;
+  const uAy = FA.y - B.y;
+  const lenA = Math.hypot(uAx, uAy) || 1;
+  const uAnx = uAx / lenA;
+  const uAny = uAy / lenA;
+  const uCx = FC.x - B.x;
+  const uCy = FC.y - B.y;
+  const lenC = Math.hypot(uCx, uCy) || 1;
+  const uCnx = uCx / lenC;
+  const uCny = uCy / lenC;
+  // d = |BM|² / (2 * uA·(M-B))   (D 가 BD = DM 조건 만족)
+  const mbx = M.x - B.x;
+  const mby = M.y - B.y;
+  const bmSq = mbx * mbx + mby * mby;
+  const proj = uAnx * mbx + uAny * mby;
+  if (Math.abs(proj) < 1e-6) return [];
+  const d = bmSq / (2 * proj);
+  if (d <= 0) return [];
+  // D 정답
+  const D = { x: B.x + d * uAnx, y: B.y + d * uAny };
+  // E 두 해 — E = B + t·uC, |E-M| = d
+  // (B + t·uC - M).(B + t·uC - M) = d²
+  // bmSq - 2 t (uC·(M-B)) + t² = d²
+  const projC = uCnx * mbx + uCny * mby;
+  const A2 = 1;
+  const B2 = -2 * projC;
+  const C2 = bmSq - d * d;
+  const disc = B2 * B2 - 4 * A2 * C2;
+  if (disc < 0) return [];
+  const sq = Math.sqrt(disc);
+  const t1 = (-B2 + sq) / 2;
+  const t2 = (-B2 - sq) / 2;
+  const E1 = { x: B.x + t1 * uCnx, y: B.y + t1 * uCny };
+  const E2 = { x: B.x + t2 * uCnx, y: B.y + t2 * uCny };
+  const seedIds = new Set(["B", "A", "C", "M"]);
+  function has(target: { x: number; y: number }) {
+    return board.points.some(
+      (p) => !p.hidden && !seedIds.has(p.id) && dist(p, target) < 8,
+    );
+  }
+  const hasD = has(D);
+  const variants: number[] = [];
+  if (hasD && has(E1)) variants.push(0);
+  if (hasD && has(E2)) variants.push(1);
+  return variants;
+}
+
+// ─── 문제 24: 2배각 (3L 3E 2V) ───────────────────────────────
+// 시드: 각 (V + 변 FA, 변 FC). 같은 각도 + 한 변 공유 = 새 변 작도.
+// V=2: 변 1(VFA) 공유 vs 변 2(VFC) 공유. 새 변 방향은 회전 매트릭스로 계산.
+const PROBLEM_24_SEED: Seed = {
+  points: [
+    { id: "V", x: 280, y: 280, label: "V" },
+    { id: "FA", x: 520, y: 100, hidden: true },
+    { id: "FC", x: 560, y: 280, hidden: true },
+  ],
+  lines: [
+    { id: "side1", a: "V", b: "FA" },
+    { id: "side2", a: "V", b: "FC" },
+  ],
+  circles: [],
+};
+
+function findVariants24(board: Board): number[] {
+  const V = board.points.find((p) => p.id === "V");
+  const FA = board.points.find((p) => p.id === "FA");
+  const FC = board.points.find((p) => p.id === "FC");
+  if (!V || !FA || !FC) return [];
+  const u1x = FA.x - V.x;
+  const u1y = FA.y - V.y;
+  const l1 = Math.hypot(u1x, u1y) || 1;
+  const u1nx = u1x / l1;
+  const u1ny = u1y / l1;
+  const u2x = FC.x - V.x;
+  const u2y = FC.y - V.y;
+  const l2 = Math.hypot(u2x, u2y) || 1;
+  const u2nx = u2x / l2;
+  const u2ny = u2y / l2;
+  const cosT = u1nx * u2nx + u1ny * u2ny;
+  const sinT = u1nx * u2ny - u1ny * u2nx;
+  // 변 1 공유 → R(θ)·u2 (θ = ∠(u1→u2))
+  // 그러나 회전 일관성 위해 R(θ)·u1 = u2 정의를 따른다면
+  // 새 변 (변 1 공유) = R(-θ)·u2? 단순화 — u2 를 한 번 더 (u1→u2 만큼) 회전.
+  // R 의 부호: u1 을 (cosT, sinT) 회전하면 u2 이므로 R = (cosT, -sinT; sinT, cosT)
+  // 새 변 1 (변 1 공유) = R · u2 = (cosT*u2x - sinT*u2y, sinT*u2x + cosT*u2y)
+  const n1x = cosT * u2nx - sinT * u2ny;
+  const n1y = sinT * u2nx + cosT * u2ny;
+  // 새 변 2 (변 2 공유) = R^(-1) · u1 = (cosT*u1 + sinT 회전 반대)
+  const n2x = cosT * u1nx + sinT * u1ny;
+  const n2y = -sinT * u1nx + cosT * u1ny;
+  const seedLineIds = new Set(["side1", "side2"]);
+  const studentLines = board.lines.filter((l) => !seedLineIds.has(l.id));
+  const found = new Set<number>();
+  for (const line of studentLines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (!isPointOnLine(V, lp1, lp2)) continue;
+    const ldx = lp2.x - lp1.x;
+    const ldy = lp2.y - lp1.y;
+    const lLen = Math.hypot(ldx, ldy) || 1;
+    const ux = ldx / lLen;
+    const uy = ldy / lLen;
+    if (Math.abs(ux * n1x + uy * n1y) > 0.995) found.add(0);
+    if (Math.abs(ux * n2x + uy * n2y) > 0.995) found.add(1);
+  }
+  return Array.from(found).sort();
+}
+
+// ─── 문제 25: 정육각형 (7L 8E 2V) ───────────────────────────
+// 시드: 한 변 AB. AB 를 한 변으로 하는 정육각형. V=2 (위/아래).
+// 정육각형 중심 O = AB 중점 ± √3/2 · |AB| 의 수직 단위벡터.
+// 6 꼭짓점 = O + R(k·60°)·(A - O), k=0..5.
+const PROBLEM_25_SEED: Seed = {
+  points: [
+    { id: "A", x: 250, y: 220 },
+    { id: "B", x: 390, y: 220 },
+  ],
+  lines: [{ id: "AB", a: "A", b: "B" }],
+  circles: [],
+};
+
+function findVariants25(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  if (!A || !B) return [];
+  const dx = B.x - A.x;
+  const dy = B.y - A.y;
+  const s = Math.hypot(dx, dy);
+  const Mid = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
+  const nx = -dy / s;
+  const ny = dx / s;
+  const h = (Math.sqrt(3) / 2) * s;
+  const seedIds = new Set(["A", "B"]);
+  const ax = A.x;
+  const ay = A.y;
+  function variantCorners(sign: number) {
+    const O = { x: Mid.x + nx * h * sign, y: Mid.y + ny * h * sign };
+    const corners: { x: number; y: number }[] = [];
+    const oAx = ax - O.x;
+    const oAy = ay - O.y;
+    for (let k = 1; k <= 5; k++) {
+      const theta = (k * Math.PI) / 3;
+      const c = Math.cos(theta);
+      const sn = Math.sin(theta);
+      corners.push({
+        x: O.x + c * oAx - sn * oAy,
+        y: O.y + sn * oAx + c * oAy,
+      });
+    }
+    // corners 5 개 = A 제외 5 꼭짓점. 첫 번째 = B (k=1 이 인접 꼭짓점이지만 6각형이라 k=5 가 B 와 가까움)
+    // 실제 — A 의 k=1 회전이 인접 (그게 정확히 B 인지 확인)
+    return corners;
+  }
+  const variants: number[] = [];
+  for (let v = 0; v < 2; v++) {
+    const sign = v === 0 ? 1 : -1;
+    const corners = variantCorners(sign);
+    // corners 5 개 중 하나는 B 이미 시드, 나머지 4 개는 학생이 작도해야 함.
+    // 단순화: B 와 매칭되는 corner 제외하고 나머지 4 개 매칭 검사.
+    const newCorners = corners.filter((c) => dist(c, B) > 8);
+    const allFound = newCorners.every((c) =>
+      board.points.some(
+        (p) => !p.hidden && !seedIds.has(p.id) && dist(p, c) < 8,
+      ),
+    );
+    if (allFound) variants.push(v);
+  }
+  return variants;
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -1283,5 +1478,30 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_22_SEED,
     variantCount: 1,
     findVariants: findVariants22,
+  },
+  23: {
+    num: 23,
+    title: "3개의 합동 선분",
+    description:
+      "각 ∠ABC 와 내부의 점 M 이 주어져 있습니다. BA 위의 점 D 와 BC 위의 점 E 를 확인한 다음 BD = DM = ME 가 되도록 선분 DM 과 ME 를 작도하세요.",
+    seed: PROBLEM_23_SEED,
+    variantCount: 2,
+    findVariants: findVariants23,
+  },
+  24: {
+    num: 24,
+    title: "2배각",
+    description: "주어진 각과 동일하고 한 변을 공유하는 각을 작도하세요.",
+    seed: PROBLEM_24_SEED,
+    variantCount: 2,
+    findVariants: findVariants24,
+  },
+  25: {
+    num: 25,
+    title: "정육각형",
+    description: "주어진 변을 포함하는 정육각형을 작도하세요.",
+    seed: PROBLEM_25_SEED,
+    variantCount: 2,
+    findVariants: findVariants25,
   },
 };
