@@ -848,12 +848,13 @@ export default function ConstructionBoard({
         role="img"
         aria-label="작도판"
       >
-        {/* 직선 */}
+        {/* 직선 — 시드 line 은 두 점 사이 segment 로만 시각화(정사각형 등이 깔끔하게 보이게).
+            학생 작도 line 은 무한 연장. 도구·자동 교점·snap 은 모두 무한 직선 기준. */}
         {board.lines.map((l) => {
           const a = board.points.find((p) => p.id === l.a)!;
           const b = board.points.find((p) => p.id === l.b)!;
-          const seg = lineSegment(a, b);
           const isSeed = seed.lines.some((sl) => sl.id === l.id);
+          const seg = isSeed ? { x1: a.x, y1: a.y, x2: b.x, y2: b.y } : lineSegment(a, b);
           const isPicked = pending.some((x) => x.kind === "line" && x.id === l.id);
           const isClickable = tool === "erase" || tool === "perpLine" || tool === "parallel";
           return (
@@ -863,9 +864,9 @@ export default function ConstructionBoard({
                 y1={seg.y1}
                 x2={seg.x2}
                 y2={seg.y2}
-                stroke={isPicked ? "#fbbf24" : isSeed ? "#94a3b8" : "#67e8f9"}
-                strokeWidth={isPicked ? 2.5 : isSeed ? 1.5 : 1.8}
-                strokeOpacity={isSeed ? 0.7 : 0.95}
+                stroke={isPicked ? "#fbbf24" : isSeed ? "#cbd5e1" : "#67e8f9"}
+                strokeWidth={isPicked ? 2.5 : isSeed ? 1.8 : 1.8}
+                strokeOpacity={1}
               />
               {isClickable ? (
                 <line

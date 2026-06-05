@@ -67,6 +67,49 @@ function findVariants1(board: Board): number[] {
   return Array.from(found).sort();
 }
 
+// ─── 문제 2: 정사각형 내 원 (3L 5E) ────────────────────────
+// 정사각형 ABCD 가 주어진 상태에서 내접하는 원을 작도.
+// 정답 1개 — 중심 = 정사각형 중심, 반지름 = 변 길이 / 2.
+// 시드: 변 길이 200 의 정사각형, viewBox(640x420) 중앙 부근.
+const PROBLEM_2_SEED: Seed = {
+  points: [
+    { id: "A", x: 220, y: 110 },
+    { id: "B", x: 420, y: 110 },
+    { id: "C", x: 420, y: 310 },
+    { id: "D", x: 220, y: 310 },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+const EPS_CIRCLE_CENTER = 6;
+const EPS_CIRCLE_RADIUS = 6;
+
+function findVariants2(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  if (!A || !B || !C) return [];
+  // 정사각형 중심 = 대각선 AC 의 중점
+  const center = { x: (A.x + C.x) / 2, y: (A.y + C.y) / 2 };
+  const targetR = dist(A, B) / 2;
+  for (const cr of board.circles) {
+    const cc = board.points.find((p) => p.id === cr.center);
+    const ct = board.points.find((p) => p.id === cr.through);
+    if (!cc || !ct) continue;
+    const r = dist(cc, ct);
+    if (dist(cc, center) < EPS_CIRCLE_CENTER && Math.abs(r - targetR) < EPS_CIRCLE_RADIUS) {
+      return [0];
+    }
+  }
+  return [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -76,5 +119,13 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_1_SEED,
     variantCount: 3,
     findVariants: findVariants1,
+  },
+  2: {
+    num: 2,
+    title: "정사각형 내 원",
+    description: "정사각형에 내접하는 원을 작도하세요.",
+    seed: PROBLEM_2_SEED,
+    variantCount: 1,
+    findVariants: findVariants2,
   },
 };
