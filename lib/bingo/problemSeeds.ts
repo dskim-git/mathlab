@@ -806,6 +806,149 @@ function findVariants16(board: Board): number[] {
   return [];
 }
 
+// ─── 문제 17: 원 위의 점을 지나는 접선 (2L 3E) ──────────────
+// 시드: 원 + 원 위 점 P. P 를 지나고 OP 에 수직인 직선이 정답.
+const PROBLEM_17_OX = 320;
+const PROBLEM_17_OY = 220;
+const PROBLEM_17_R = 100;
+const PROBLEM_17_SEED: Seed = {
+  points: [
+    { id: "O", x: PROBLEM_17_OX, y: PROBLEM_17_OY, label: "O" },
+    {
+      id: "P",
+      x: PROBLEM_17_OX + PROBLEM_17_R,
+      y: PROBLEM_17_OY,
+      label: "P",
+    },
+  ],
+  lines: [],
+  circles: [{ id: "given", center: "O", through: "P" }],
+};
+
+function findVariants17(board: Board): number[] {
+  const O = board.points.find((p) => p.id === "O");
+  const P = board.points.find((p) => p.id === "P");
+  if (!O || !P) return [];
+  // 접선 방향 = OP 의 수직
+  const opx = P.x - O.x;
+  const opy = P.y - O.y;
+  const tx = -opy;
+  const ty = opx;
+  const tLen = Math.hypot(tx, ty) || 1;
+  for (const line of board.lines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (!isPointOnLine(P, lp1, lp2)) continue;
+    const ldx = lp2.x - lp1.x;
+    const ldy = lp2.y - lp1.y;
+    const lLen = Math.hypot(ldx, ldy) || 1;
+    if (Math.abs((ldx * tx + ldy * ty) / (lLen * tLen)) > 0.995) return [0];
+  }
+  return [];
+}
+
+// ─── 문제 18: 외접 정삼각형 (5L 6E) ────────────────────────
+// 시드: 원(중심 O, 반지름 r) + 원 위 점 P. 정삼각형의 한 변이 P 에서 원에 접
+// (정삼각형이 원에 외접). 정삼각형의 3 꼭짓점은 O 에서 거리 2r 위치 —
+// 한 꼭짓점은 O + 2·(O-P)/r·r = O + 2·OP 의 반대 방향, 다른 두 꼭짓점은 그것을
+// O 기준 ±120° 회전.
+const PROBLEM_18_R = 70;
+const PROBLEM_18_OX = 280;
+const PROBLEM_18_OY = 220;
+const PROBLEM_18_SEED: Seed = {
+  points: [
+    { id: "O", x: PROBLEM_18_OX, y: PROBLEM_18_OY, label: "O" },
+    // P 는 원 위 한 점 — 정삼각형 한 변과의 접점.
+    { id: "P", x: PROBLEM_18_OX + PROBLEM_18_R, y: PROBLEM_18_OY, label: "P" },
+  ],
+  lines: [],
+  circles: [{ id: "given", center: "O", through: "P" }],
+};
+
+function findVariants18(board: Board): number[] {
+  const O = board.points.find((p) => p.id === "O");
+  const P = board.points.find((p) => p.id === "P");
+  if (!O || !P) return [];
+  // P 의 반대편(거리 2r) 이 정삼각형 첫 꼭짓점 V1
+  const opx = P.x - O.x;
+  const opy = P.y - O.y;
+  const v1 = { x: O.x - 2 * opx, y: O.y - 2 * opy };
+  // 다른 두 꼭짓점 = V1 을 O 기준 ±120° 회전
+  const cos120 = -0.5;
+  const sin120 = Math.sqrt(3) / 2;
+  const v1ox = v1.x - O.x;
+  const v1oy = v1.y - O.y;
+  const v2 = {
+    x: O.x + cos120 * v1ox - sin120 * v1oy,
+    y: O.y + sin120 * v1ox + cos120 * v1oy,
+  };
+  const v3 = {
+    x: O.x + cos120 * v1ox + sin120 * v1oy,
+    y: O.y - sin120 * v1ox + cos120 * v1oy,
+  };
+  const seedIds = new Set(["O", "P"]);
+  let count = 0;
+  for (const v of [v1, v2, v3]) {
+    const matched = board.points.some(
+      (p) => !p.hidden && !seedIds.has(p.id) && dist(p, v) < 8,
+    );
+    if (matched) count++;
+  }
+  return count === 3 ? [0] : [];
+}
+
+// ─── 문제 19: 각과 수심을 통한 삼각형 (3L 6E) ───────────────
+// 시드: 각의 꼭짓점 V + 양 변 두 line + 점 O(수심 후보). 학생이 양 변에서 한 점씩
+// 잡아 line(=삼각형 세 번째 변) 작도. 그 삼각형의 수심 = O 이면 정답.
+const PROBLEM_19_SEED: Seed = {
+  points: [
+    { id: "V", x: 160, y: 320, label: "V" },
+    { id: "F1", x: 520, y: 80, hidden: true },
+    { id: "F2", x: 540, y: 320, hidden: true },
+    { id: "O", x: 360, y: 240, label: "O" },
+  ],
+  lines: [
+    { id: "side1", a: "V", b: "F1" },
+    { id: "side2", a: "V", b: "F2" },
+  ],
+  circles: [],
+};
+
+function findVariants19(board: Board): number[] {
+  const V = board.points.find((p) => p.id === "V");
+  const F1 = board.points.find((p) => p.id === "F1");
+  const F2 = board.points.find((p) => p.id === "F2");
+  const O = board.points.find((p) => p.id === "O");
+  if (!V || !F1 || !F2 || !O) return [];
+  // 학생 line 중 시드 두 변과 모두 교차 + 그 교점들로 삼각형 형성 + 수심 = O
+  const seedLineIds = new Set(["side1", "side2"]);
+  const studentLines = board.lines.filter((l) => !seedLineIds.has(l.id));
+  for (const line of studentLines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (isPointOnLine(V, lp1, lp2)) continue; // V 지나면 삼각형 X
+    // 두 시드 변과의 교점 — 삼각형의 두 꼭짓점.
+    const P1 = lineLineIntersect(lp1, lp2, V, F1);
+    const P2 = lineLineIntersect(lp1, lp2, V, F2);
+    if (!P1 || !P2) continue;
+    // 삼각형 V·P1·P2 의 수심 — V 에서 P1P2 에 수직 + P1 에서 V P2 에 수직 교점.
+    // 직선 1: V 통과, P1P2 방향에 수직.
+    const p12dx = P2.x - P1.x;
+    const p12dy = P2.y - P1.y;
+    const vp12End = { x: V.x - p12dy, y: V.y + p12dx };
+    // 직선 2: P1 통과, V P2 방향에 수직.
+    const vp2dx = P2.x - V.x;
+    const vp2dy = P2.y - V.y;
+    const p1vp2End = { x: P1.x - vp2dy, y: P1.y + vp2dx };
+    const H = lineLineIntersect(V, vp12End, P1, p1vp2End);
+    if (!H) continue;
+    if (dist(H, O) < 10) return [0];
+  }
+  return [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -941,5 +1084,30 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_16_SEED,
     variantCount: 1,
     findVariants: findVariants16,
+  },
+  17: {
+    num: 17,
+    title: "원 위의 점을 지나는 접선",
+    description: "원 위의 점 P 에서 원에 접하는 접선을 작도하세요.",
+    seed: PROBLEM_17_SEED,
+    variantCount: 1,
+    findVariants: findVariants17,
+  },
+  18: {
+    num: 18,
+    title: "외접 정삼각형",
+    description: "원에 외접하고 주어진 점 P 를 한 꼭짓점으로 포함하는 정삼각형을 작도하세요.",
+    seed: PROBLEM_18_SEED,
+    variantCount: 1,
+    findVariants: findVariants18,
+  },
+  19: {
+    num: 19,
+    title: "각과 수심을 통한 삼각형",
+    description:
+      "점 O 가 수심인 삼각형을 얻을 수 있도록 각의 양 변에서 한 점씩 잡아 연결하는 선분(삼각형의 한 변)을 작도하세요.",
+    seed: PROBLEM_19_SEED,
+    variantCount: 1,
+    findVariants: findVariants19,
   },
 };
