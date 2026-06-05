@@ -342,6 +342,43 @@ function findVariants6(board: Board): number[] {
   return count === 3 ? [0] : [];
 }
 
+// ─── 문제 7: 사각형의 중심 (4L 10E) ─────────────────────────
+// 일반 사각형 ABCD. 대각선 AC 의 중점 M1, 대각선 BD 의 중점 M2,
+// 선분 M1M2 의 중점 P 가 정답.
+const PROBLEM_7_SEED: Seed = {
+  points: [
+    { id: "A", x: 200, y: 130 },
+    { id: "B", x: 440, y: 100 },
+    { id: "C", x: 480, y: 290 },
+    { id: "D", x: 180, y: 330 },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+function findVariants7(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  const D = board.points.find((p) => p.id === "D");
+  if (!A || !B || !C || !D) return [];
+  const M1 = { x: (A.x + C.x) / 2, y: (A.y + C.y) / 2 };
+  const M2 = { x: (B.x + D.x) / 2, y: (B.y + D.y) / 2 };
+  const P = { x: (M1.x + M2.x) / 2, y: (M1.y + M2.y) / 2 };
+  const seedIds = new Set(["A", "B", "C", "D"]);
+  for (const p of board.points) {
+    if (p.hidden) continue;
+    if (seedIds.has(p.id)) continue;
+    if (dist(p, P) < 8) return [0];
+  }
+  return [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -393,5 +430,13 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_6_SEED,
     variantCount: 1,
     findVariants: findVariants6,
+  },
+  7: {
+    num: 7,
+    title: "사각형의 중심",
+    description: "사각형의 두 대각선의 중점들을 연결한 선분의 중점을 작도하세요.",
+    seed: PROBLEM_7_SEED,
+    variantCount: 1,
+    findVariants: findVariants7,
   },
 };
