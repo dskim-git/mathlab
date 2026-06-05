@@ -215,6 +215,47 @@ function findVariants3(board: Board): number[] {
   return Array.from(new Set(found));
 }
 
+// ─── 문제 4: 사각형 절단 (3L 3E) ────────────────────────────
+// 사각형(직사각형) + 외부 점 P. P 를 지나고 사각형을 등면적으로 분할하는 직선.
+// 정답: 사각형 중심(대각선 교점)을 지나는 직선만이 등면적 분할.
+const PROBLEM_4_SEED: Seed = {
+  points: [
+    { id: "A", x: 200, y: 210 },
+    { id: "B", x: 440, y: 210 },
+    { id: "C", x: 440, y: 330 },
+    { id: "D", x: 200, y: 330 },
+    { id: "P", x: 430, y: 110, label: "P" },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+const PROBLEM_4_SEED_LINE_IDS = new Set(["AB", "BC", "CD", "DA"]);
+
+function findVariants4(board: Board): number[] {
+  const P = board.points.find((p) => p.id === "P");
+  const A = board.points.find((p) => p.id === "A");
+  const C = board.points.find((p) => p.id === "C");
+  if (!P || !A || !C) return [];
+  // 사각형 중심 = 대각선 AC 의 중점
+  const center = { x: (A.x + C.x) / 2, y: (A.y + C.y) / 2 };
+  const studentLines = board.lines.filter((l) => !PROBLEM_4_SEED_LINE_IDS.has(l.id));
+  for (const line of studentLines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (isPointOnLine(P, lp1, lp2) && isPointOnLine(center, lp1, lp2)) {
+      return [0];
+    }
+  }
+  return [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -241,5 +282,13 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_3_SEED,
     variantCount: 2,
     findVariants: findVariants3,
+  },
+  4: {
+    num: 4,
+    title: "사각형 절단",
+    description: "주어진 점 P 를 지나고 사각형을 등면적으로 분할하는 직선을 작도하세요.",
+    seed: PROBLEM_4_SEED,
+    variantCount: 1,
+    findVariants: findVariants4,
   },
 };
