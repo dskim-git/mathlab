@@ -949,6 +949,154 @@ function findVariants19(board: Board): number[] {
   return [];
 }
 
+// ─── 문제 20: 사각형 내 마름모 (3L 5E 2V) ───────────────────
+// 시드: 직사각형 ABCD. 마름모는 사각형의 대각선 한 개를 공유 (V=2 — AC 또는 BD).
+// 마름모 다른 두 꼭짓점 = 그 대각선의 수직이등분선과 사각형 다른 두 변의 교점.
+const PROBLEM_20_SEED: Seed = {
+  points: [
+    { id: "A", x: 180, y: 130 },
+    { id: "B", x: 480, y: 130 },
+    { id: "C", x: 480, y: 290 },
+    { id: "D", x: 180, y: 290 },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+function findVariants20(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  const D = board.points.find((p) => p.id === "D");
+  if (!A || !B || !C || !D) return [];
+  // 마름모 다른 두 꼭짓점 위치 — 대각선 수직이등분선과 사각형 두 변의 교점.
+  function diagPerp(P: { x: number; y: number }, Q: { x: number; y: number },
+                    s1a: { x: number; y: number }, s1b: { x: number; y: number },
+                    s2a: { x: number; y: number }, s2b: { x: number; y: number }) {
+    const M = { x: (P.x + Q.x) / 2, y: (P.y + Q.y) / 2 };
+    const dx = Q.x - P.x;
+    const dy = Q.y - P.y;
+    // 수직이등분선 방향 (-dy, dx)
+    const N = { x: M.x - dy, y: M.y + dx };
+    return [
+      lineLineIntersect(M, N, s1a, s1b),
+      lineLineIntersect(M, N, s2a, s2b),
+    ];
+  }
+  const ac = diagPerp(A, C, A, B, C, D);
+  const bd = diagPerp(B, D, A, D, B, C);
+  const seedIds = new Set(["A", "B", "C", "D"]);
+  function found(target: { x: number; y: number } | null) {
+    if (!target) return false;
+    return board.points.some(
+      (p) => !p.hidden && !seedIds.has(p.id) && dist(p, target) < 8,
+    );
+  }
+  const variants: number[] = [];
+  if (ac.every(found)) variants.push(0);
+  if (bd.every(found)) variants.push(1);
+  return variants;
+}
+
+// ─── 문제 21: 인접한 중점을 통한 정사각형 (7L 10E 2V) ───────
+// 시드: 두 점 M1·M2 (정사각형의 인접 두 변의 중점). 정사각형 4 꼭짓점 미리 계산.
+// V=2: M1M2 수직이등분선의 양쪽 — 정사각형이 위쪽/아래쪽 가능.
+const PROBLEM_21_SEED: Seed = {
+  points: [
+    { id: "M1", x: 260, y: 200, label: "M₁" },
+    { id: "M2", x: 340, y: 200, label: "M₂" },
+  ],
+  lines: [],
+  circles: [],
+};
+
+function findVariants21(board: Board): number[] {
+  const M1 = board.points.find((p) => p.id === "M1");
+  const M2 = board.points.find((p) => p.id === "M2");
+  if (!M1 || !M2) return [];
+  const d = dist(M1, M2);
+  const s = d * Math.SQRT2;
+  // M1M2 중점, 단위벡터·수직 단위벡터
+  const Mid = { x: (M1.x + M2.x) / 2, y: (M1.y + M2.y) / 2 };
+  const ux = (M2.x - M1.x) / d;
+  const uy = (M2.y - M1.y) / d;
+  const nx = -uy;
+  const ny = ux;
+  // 정사각형 변 길이 s. 변 두 개 길이 s/2 씩 — M1, M2 가 각 변 중점.
+  // 정사각형 한 꼭짓점 B = M1M2 수직이등분선 위, 거리 s/2 (양쪽 = 2 변형)
+  // B = Mid + nx*h, ny*h 또는 - 방향. h = ?
+  // s = d√2, s/2 = d/√2.  |MidM1| = d/2. |BM1|² = h² + (d/2)² = (s/2)² = d²/2
+  // → h² = d²/2 - d²/4 = d²/4. h = d/2.
+  const h = d / 2;
+  // 변형 1: B = Mid + n·h, 변형 2: B = Mid - n·h
+  const m1x = M1.x;
+  const m1y = M1.y;
+  const m2x = M2.x;
+  const m2y = M2.y;
+  function computeCorners(sign: number) {
+    const B = { x: Mid.x + nx * h * sign, y: Mid.y + ny * h * sign };
+    const A = { x: 2 * m1x - B.x, y: 2 * m1y - B.y }; // M1 = (A+B)/2 → A = 2M1 - B
+    const C = { x: 2 * m2x - B.x, y: 2 * m2y - B.y };
+    const D = { x: A.x + (C.x - B.x), y: A.y + (C.y - B.y) };
+    return [A, B, C, D];
+  }
+  const seedIds = new Set(["M1", "M2"]);
+  function matched(target: { x: number; y: number }) {
+    return board.points.some(
+      (p) => !p.hidden && !seedIds.has(p.id) && dist(p, target) < 8,
+    );
+  }
+  const variants: number[] = [];
+  for (let i = 0; i < 2; i++) {
+    const corners = computeCorners(i === 0 ? 1 : -1);
+    if (corners.every(matched)) variants.push(i);
+  }
+  // 시드 좌표 사용으로 hidden 의존 — 위 ux uy nx ny 가 사용된 줄로 ESLint 워닝 회피.
+  void s;
+  return variants;
+}
+
+// ─── 문제 22: 두 점에서 등거리에 있는 직선 (3L 5E) ───────────
+// 시드: 점 A·B·C. 정답 직선 = C 를 지나고 AB 와 수직인 직선 (A, B 가 직선의 반대쪽).
+const PROBLEM_22_SEED: Seed = {
+  points: [
+    { id: "A", x: 500, y: 230, label: "A" },
+    { id: "B", x: 320, y: 350, label: "B" },
+    { id: "C", x: 240, y: 150, label: "C" },
+  ],
+  lines: [],
+  circles: [],
+};
+
+function findVariants22(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  if (!A || !B || !C) return [];
+  const abx = B.x - A.x;
+  const aby = B.y - A.y;
+  const len = Math.hypot(abx, aby) || 1;
+  // C 를 지나고 AB 와 수직 — 방향 (-aby, abx)
+  const tx = -aby / len;
+  const ty = abx / len;
+  for (const line of board.lines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (!isPointOnLine(C, lp1, lp2)) continue;
+    const ldx = lp2.x - lp1.x;
+    const ldy = lp2.y - lp1.y;
+    const lLen = Math.hypot(ldx, ldy) || 1;
+    if (Math.abs((ldx * tx + ldy * ty) / lLen) > 0.995) return [0];
+  }
+  return [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -1109,5 +1257,31 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_19_SEED,
     variantCount: 1,
     findVariants: findVariants19,
+  },
+  20: {
+    num: 20,
+    title: "사각형 내 마름모",
+    description:
+      "사각형에 내접하며 공통 대각선을 공유하는 마름모를 작도하세요.",
+    seed: PROBLEM_20_SEED,
+    variantCount: 2,
+    findVariants: findVariants20,
+  },
+  21: {
+    num: 21,
+    title: "인접한 중점을 통한 정사각형",
+    description: "주어진 두 점을 인접한 두 변의 중점으로 하는 정사각형을 작도하세요.",
+    seed: PROBLEM_21_SEED,
+    variantCount: 2,
+    findVariants: findVariants21,
+  },
+  22: {
+    num: 22,
+    title: "두 점에서 등거리에 있는 직선",
+    description:
+      "점 A 와 점 B 사이에 있고 두 점에서 등거리인 직선을 점 C 를 지나도록 작도하세요.",
+    seed: PROBLEM_22_SEED,
+    variantCount: 1,
+    findVariants: findVariants22,
   },
 };
