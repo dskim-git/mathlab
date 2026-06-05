@@ -12,7 +12,16 @@ export type Pt = {
   /** 학생에게 표시하지 않음 (정답 검증용 좌표 보관). 클릭 불가. */
   hidden?: boolean;
 };
-export type Ln = { id: string; a: string; b: string }; // 두 점 ID 로 정의된 무한 직선
+export type Ln = {
+  id: string;
+  a: string;
+  b: string;
+  /**
+   * 시드 line 의 시각화 — true 면 무한 직선 (viewBox 끝까지 연장),
+   * false 또는 undefined 면 두 점 사이 segment 만. 학생 작도 line 은 항상 무한 직선.
+   */
+  extend?: boolean;
+};
 export type Cr = { id: string; center: string; through: string }; // 중심 + 원 위 한 점
 
 export type Seed = { points: Pt[]; lines: Ln[]; circles: Cr[] };
@@ -550,12 +559,12 @@ export default function ConstructionBoard({
     setPending([]);
   }
 
-  // 직선을 viewBox 끝까지 연장한 두 끝점 계산
+  // 직선을 viewBox(zoom 반영) 끝까지 연장한 두 끝점 계산.
   function lineSegment(a: V, b: V): { x1: number; y1: number; x2: number; y2: number } {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
-    // 매우 큰 t 로 양쪽 연장
-    const T = Math.max(width, height) * 4;
+    // viewBox 크기·zoom 기준 충분히 큰 T — 어느 zoom·offset 에서도 화면 끝까지.
+    const T = Math.max(vbW, vbH) * 8;
     const len = Math.hypot(dx, dy) || 1;
     const ux = dx / len;
     const uy = dy / len;
@@ -854,7 +863,12 @@ export default function ConstructionBoard({
           const a = board.points.find((p) => p.id === l.a)!;
           const b = board.points.find((p) => p.id === l.b)!;
           const isSeed = seed.lines.some((sl) => sl.id === l.id);
-          const seg = isSeed ? { x1: a.x, y1: a.y, x2: b.x, y2: b.y } : lineSegment(a, b);
+          // 시드 line 의 extend=true 이면 무한 직선, 아니면 두 점 사이 segment.
+          // 학생 작도 line 은 항상 무한 직선.
+          const seg =
+            isSeed && !l.extend
+              ? { x1: a.x, y1: a.y, x2: b.x, y2: b.y }
+              : lineSegment(a, b);
           const isPicked = pending.some((x) => x.kind === "line" && x.id === l.id);
           const isClickable = tool === "erase" || tool === "perpLine" || tool === "parallel";
           return (
