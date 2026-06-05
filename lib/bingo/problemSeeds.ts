@@ -523,6 +523,165 @@ function findVariants10(board: Board): number[] {
   return foundCount === 4 ? [0] : [];
 }
 
+// ─── 문제 11: 정사각형 내 정사각형 (6L 7E) ──────────────────
+// 시드: 정사각형 ABCD + 변 AB 위 임의 점 P. P 가 꼭짓점인 내접 정사각형.
+// 변 a 길이의 정사각형 안, |AP|=t 인 점 P 에서 시작 → Q on BC, R on CD, S on DA
+//   각 |BQ|=t, |CR|=t, |DS|=t. 정답 3 점 위치 미리 계산.
+const PROBLEM_11_S = 200;
+const PROBLEM_11_AX = 200;
+const PROBLEM_11_AY = 110;
+const PROBLEM_11_PT = 70; // |AP|
+const PROBLEM_11_SEED: Seed = {
+  points: [
+    { id: "A", x: PROBLEM_11_AX, y: PROBLEM_11_AY },
+    { id: "B", x: PROBLEM_11_AX + PROBLEM_11_S, y: PROBLEM_11_AY },
+    { id: "C", x: PROBLEM_11_AX + PROBLEM_11_S, y: PROBLEM_11_AY + PROBLEM_11_S },
+    { id: "D", x: PROBLEM_11_AX, y: PROBLEM_11_AY + PROBLEM_11_S },
+    { id: "P", x: PROBLEM_11_AX + PROBLEM_11_PT, y: PROBLEM_11_AY, label: "P" },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+function findVariants11(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  const D = board.points.find((p) => p.id === "D");
+  const P = board.points.find((p) => p.id === "P");
+  if (!A || !B || !C || !D || !P) return [];
+  const t = dist(A, P);
+  // BC 방향 단위벡터 등
+  function pointAlong(from: { x: number; y: number }, to: { x: number; y: number }, d: number) {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.hypot(dx, dy) || 1;
+    return { x: from.x + (dx / len) * d, y: from.y + (dy / len) * d };
+  }
+  const Q = pointAlong(B, C, t);
+  const R = pointAlong(C, D, t);
+  const S = pointAlong(D, A, t);
+  const seedIds = new Set(["A", "B", "C", "D", "P"]);
+  let count = 0;
+  for (const target of [Q, R, S]) {
+    const matched = board.points.some((p) => {
+      if (p.hidden) return false;
+      if (seedIds.has(p.id)) return false;
+      return dist(p, target) < 8;
+    });
+    if (matched) count++;
+  }
+  return count === 3 ? [0] : [];
+}
+
+// ─── 문제 12: 삼각형의 내심 (2L 6E) ─────────────────────────
+// 시드: 일반 삼각형 ABC. 내심 I = (a·A + b·B + c·C)/(a+b+c). 학생 점 매칭.
+const PROBLEM_12_SEED: Seed = {
+  points: [
+    { id: "A", x: 200, y: 130 },
+    { id: "B", x: 480, y: 200 },
+    { id: "C", x: 250, y: 320 },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CA", a: "C", b: "A" },
+  ],
+  circles: [],
+};
+
+function findVariants12(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  if (!A || !B || !C) return [];
+  const a = dist(B, C);
+  const b = dist(C, A);
+  const c = dist(A, B);
+  const sum = a + b + c || 1;
+  const I = {
+    x: (a * A.x + b * B.x + c * C.x) / sum,
+    y: (a * A.y + b * B.y + c * C.y) / sum,
+  };
+  const seedIds = new Set(["A", "B", "C"]);
+  for (const p of board.points) {
+    if (p.hidden || seedIds.has(p.id)) continue;
+    if (dist(p, I) < 8) return [0];
+  }
+  return [];
+}
+
+// ─── 문제 13: 정사각형의 한 변에 접하는 원 (3L 6E 4V) ──────
+// 시드: 정사각형. 4 변 각각 — 한 변의 양 끝점을 지나고 마주보는 변에 접하는 원.
+// 4 변형: 변마다 다른 원. 중심은 변의 수직이등분선 위 3s/8 깊이, 반지름 5s/8.
+const PROBLEM_13_S = 200;
+const PROBLEM_13_AX = 180;
+const PROBLEM_13_AY = 110;
+const PROBLEM_13_SEED: Seed = {
+  points: [
+    { id: "A", x: PROBLEM_13_AX, y: PROBLEM_13_AY },
+    { id: "B", x: PROBLEM_13_AX + PROBLEM_13_S, y: PROBLEM_13_AY },
+    { id: "C", x: PROBLEM_13_AX + PROBLEM_13_S, y: PROBLEM_13_AY + PROBLEM_13_S },
+    { id: "D", x: PROBLEM_13_AX, y: PROBLEM_13_AY + PROBLEM_13_S },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+function findVariants13(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  const D = board.points.find((p) => p.id === "D");
+  if (!A || !B || !C || !D) return [];
+  const s = dist(A, B);
+  const h = (3 * s) / 8;
+  const r = (5 * s) / 8;
+  // 한 변의 중점에서 변에 수직(다음 변 방향) h 만큼 들어간 곳이 중심
+  function targetCenter(p1: { x: number; y: number }, p2: { x: number; y: number }, opp: { x: number; y: number }) {
+    const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    // 마주보는 변 방향 단위벡터
+    const oppM = { x: M.x, y: M.y }; // placeholder
+    void oppM;
+    const dx = opp.x - M.x;
+    const dy = opp.y - M.y;
+    const len = Math.hypot(dx, dy) || 1;
+    return { x: M.x + (dx / len) * h, y: M.y + (dy / len) * h };
+  }
+  // 변 AB 시작 → 마주보는 변의 중점은 CD 의 중점
+  const Mcd = { x: (C.x + D.x) / 2, y: (C.y + D.y) / 2 };
+  const Mab = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
+  const Mbc = { x: (B.x + C.x) / 2, y: (B.y + C.y) / 2 };
+  const Mda = { x: (D.x + A.x) / 2, y: (D.y + A.y) / 2 };
+  const centers = [
+    targetCenter(A, B, Mcd),
+    targetCenter(B, C, Mda),
+    targetCenter(C, D, Mab),
+    targetCenter(D, A, Mbc),
+  ];
+  const found = new Set<number>();
+  for (const cr of board.circles) {
+    const cc = board.points.find((p) => p.id === cr.center);
+    const ct = board.points.find((p) => p.id === cr.through);
+    if (!cc || !ct) continue;
+    const cR = dist(cc, ct);
+    centers.forEach((tc, i) => {
+      if (dist(cc, tc) < 8 && Math.abs(cR - r) < 8) found.add(i);
+    });
+  }
+  return Array.from(found).sort();
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -608,5 +767,31 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_10_SEED,
     variantCount: 1,
     findVariants: findVariants10,
+  },
+  11: {
+    num: 11,
+    title: "정사각형 내 정사각형",
+    description:
+      "정사각형의 한 변 위의 점 P 를 꼭짓점으로 하는 정사각형에 내접하는 정사각형을 작도하세요.",
+    seed: PROBLEM_11_SEED,
+    variantCount: 1,
+    findVariants: findVariants11,
+  },
+  12: {
+    num: 12,
+    title: "삼각형의 내심",
+    description: "주어진 삼각형의 내심을 작도하세요.",
+    seed: PROBLEM_12_SEED,
+    variantCount: 1,
+    findVariants: findVariants12,
+  },
+  13: {
+    num: 13,
+    title: "정사각형의 한 변에 접하는 원",
+    description:
+      "정사각형의 한 변의 양 끝점을 지나고 그 변을 마주보는 변에 접하는 원을 작도하세요.",
+    seed: PROBLEM_13_SEED,
+    variantCount: 4,
+    findVariants: findVariants13,
   },
 };
