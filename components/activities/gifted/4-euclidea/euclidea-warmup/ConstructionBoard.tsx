@@ -72,7 +72,21 @@ function circleCircle(c1: V, r1: number, c2: V, r2: number): V[] {
 }
 
 // ─── 보드 상태 ────────────────────────────────────────────────
-type Tool = "point" | "line" | "circle" | "perpBisector";
+type Tool =
+  | "point"
+  | "line"
+  | "circle"
+  | "perpBisector"
+  | "perpLine"
+  | "parallel"
+  | "angleBisector";
+
+// 3점 입력이 필요한 도구 — 직선 정의 2점 + 추가 1점.
+function inputCount(tool: Tool): number {
+  if (tool === "perpLine" || tool === "parallel" || tool === "angleBisector") return 3;
+  if (tool === "point") return 0; // SVG 핸들러가 처리
+  return 2;
+}
 
 // 빈 공간/도형 위 클릭으로 점을 추가하기 위한 보조 — 가까운 객체로 snap
 const SNAP_PX = 10;
@@ -249,17 +263,20 @@ export default function ConstructionBoard({
     const p = board.points.find((pp) => pp.id === id);
     if (!p || p.hidden) return; // 숨김 점은 선택 불가
     const nextPending = [...pending, id];
-    if (nextPending.length < 2) {
+    const needed = inputCount(tool);
+    if (nextPending.length < needed) {
       setPending(nextPending);
       return;
     }
-    const [a, b] = nextPending;
-    if (a === b) {
+    // 중복 입력 방지 (같은 점 두 번)
+    if (new Set(nextPending).size !== nextPending.length) {
       setPending([]);
       return;
     }
+    const [a, b, c] = nextPending;
     const pa = board.points.find((p) => p.id === a)!;
     const pb = board.points.find((p) => p.id === b)!;
+    const pc = c ? board.points.find((p) => p.id === c)! : null;
     let newBoard: Board = board;
     if (tool === "line") {
       // 동일 직선 중복 방지
@@ -314,6 +331,70 @@ export default function ConstructionBoard({
         events: board.events + 3, // 수직이등분선 도구 = 3E
       };
       newBoard = addIntersections(newBoard, "line", M, N);
+    } else if (tool === "perpLine" && pc) {
+      // 수선 도구 (1L 3E): 직선 ab 위 두 점 + 평면 위 점 c → c 를 지나고 ab 에 수직인 직선.
+      const dx = pb.x - pa.x;
+      const dy = pb.y - pa.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      const M = { x: pc.x, y: pc.y };
+      const N = { x: pc.x + nx * 100, y: pc.y + ny * 100 };
+      const idTaken = new Set(board.points.map((p) => p.id));
+      const nId = nextId("N", idTaken);
+      const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
+      newBoard = {
+        ...board,
+        points: [...board.points, { id: nId, x: N.x, y: N.y, hidden: true }],
+        // 직선 = c (visible) + N (hidden) — c 가 visible 이라 후속 작도에 재사용 가능
+        lines: [...board.lines, { id: lid, a: c, b: nId }],
+        events: board.events + 3, // 수선 도구 = 3E
+      };
+      newBoard = addIntersections(newBoard, "line", M, N);
+    } else if (tool === "parallel" && pc) {
+      // 평행선 도구 (1L 4E): 직선 ab 위 두 점 + 평면 위 점 c → c 를 지나고 ab 와 평행한 직선.
+      const dx = pb.x - pa.x;
+      const dy = pb.y - pa.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      const M = { x: pc.x, y: pc.y };
+      const N = { x: pc.x + ux * 100, y: pc.y + uy * 100 };
+      const idTaken = new Set(board.points.map((p) => p.id));
+      const nId = nextId("N", idTaken);
+      const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
+      newBoard = {
+        ...board,
+        points: [...board.points, { id: nId, x: N.x, y: N.y, hidden: true }],
+        lines: [...board.lines, { id: lid, a: c, b: nId }],
+        events: board.events + 4, // 평행선 도구 = 4E
+      };
+      newBoard = addIntersections(newBoard, "line", M, N);
+    } else if (tool === "angleBisector" && pc) {
+      // 각의 이등분선 도구 (1L 4E): 꼭짓점 a, 변 위 점 b, 다른 변 위 점 c → 각 bac 의 이등분선.
+      const dxA = pb.x - pa.x;
+      const dyA = pb.y - pa.y;
+      const dxB = pc.x - pa.x;
+      const dyB = pc.y - pa.y;
+      const lenA = Math.hypot(dxA, dyA) || 1;
+      const lenB = Math.hypot(dxB, dyB) || 1;
+      const ux = dxA / lenA + dxB / lenB;
+      const uy = dyA / lenA + dyB / lenB;
+      // 두 단위벡터가 정반대(180°) 면 합이 0 — 이등분선 미정. 안전상 무시.
+      if (Math.hypot(ux, uy) > 1e-6) {
+        const M = { x: pa.x, y: pa.y };
+        const N = { x: pa.x + ux * 100, y: pa.y + uy * 100 };
+        const idTaken = new Set(board.points.map((p) => p.id));
+        const nId = nextId("N", idTaken);
+        const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
+        newBoard = {
+          ...board,
+          points: [...board.points, { id: nId, x: N.x, y: N.y, hidden: true }],
+          lines: [...board.lines, { id: lid, a, b: nId }],
+          events: board.events + 4, // 각 이등분선 도구 = 4E
+        };
+        newBoard = addIntersections(newBoard, "line", M, N);
+      }
     }
     setBoard(newBoard);
     setPending([]);
@@ -417,6 +498,60 @@ export default function ConstructionBoard({
             📏 수직이등분선
           </button>
         ) : null}
+        {allowedTools.includes("perpLine") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTool("perpLine");
+              setPending([]);
+            }}
+            className={
+              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              (tool === "perpLine"
+                ? "bg-rose-500/25 text-rose-200 ring-1 ring-rose-400/50"
+                : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
+            }
+            title="수선: 직선 위 두 점 + 평면 위 한 점 (1L 3E)"
+          >
+            ⊥ 수선
+          </button>
+        ) : null}
+        {allowedTools.includes("parallel") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTool("parallel");
+              setPending([]);
+            }}
+            className={
+              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              (tool === "parallel"
+                ? "bg-teal-500/25 text-teal-200 ring-1 ring-teal-400/50"
+                : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
+            }
+            title="평행선: 직선 위 두 점 + 평면 위 한 점 (1L 4E)"
+          >
+            ∥ 평행선
+          </button>
+        ) : null}
+        {allowedTools.includes("angleBisector") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTool("angleBisector");
+              setPending([]);
+            }}
+            className={
+              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              (tool === "angleBisector"
+                ? "bg-orange-500/25 text-orange-200 ring-1 ring-orange-400/50"
+                : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
+            }
+            title="각의 이등분선: 꼭짓점 → 한 변 위 점 → 다른 변 위 점 (1L 4E)"
+          >
+            ∠ 각이등분선
+          </button>
+        ) : null}
 
         <span className="ml-3 text-xs font-semibold text-slate-400">
           사용:{" "}
@@ -441,9 +576,17 @@ export default function ConstructionBoard({
           ? "두 점을 차례로 클릭하면 직선이 그려져요."
           : tool === "circle"
           ? "첫 점이 중심, 둘째 점이 원 위를 지납니다."
-          : "두 점 사이의 수직이등분선이 그려져요 (직선 한 개, 동작 3번)."}
-        {pending.length === 1 ? (
-          <span className="ml-2 text-amber-300">· 한 점 선택됨 — 두 번째 점을 클릭하세요</span>
+          : tool === "perpBisector"
+          ? "두 점 사이의 수직이등분선이 그려져요 (1L 3E)."
+          : tool === "perpLine"
+          ? "직선의 두 점을 차례로 클릭한 뒤, 수선이 통과할 점을 클릭하세요 (1L 3E)."
+          : tool === "parallel"
+          ? "직선의 두 점을 차례로 클릭한 뒤, 평행선이 통과할 점을 클릭하세요 (1L 4E)."
+          : "각의 꼭짓점을 클릭한 뒤, 한 변 위 점 → 다른 변 위 점을 순서대로 클릭하세요 (1L 4E)."}
+        {pending.length > 0 && pending.length < inputCount(tool) ? (
+          <span className="ml-2 text-amber-300">
+            · {pending.length}개 선택됨 — {inputCount(tool) - pending.length}개 더 클릭하세요
+          </span>
         ) : null}
       </p>
 
