@@ -29,6 +29,7 @@ import {
   isCellComplete,
 } from "@/lib/bingo/state";
 import { type BingoRoom, updateRoomState } from "@/lib/bingo/rooms";
+import ProblemView from "./ProblemView";
 
 type Props = {
   room: BingoRoom;
@@ -43,6 +44,7 @@ export default function BingoBoard({ room, canEdit }: Props) {
 
   const [state, setState] = useState<BingoState>(initialState);
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
+  const [problemNum, setProblemNum] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   // ── Realtime 구독: 이 방의 state 변경을 모든 참여자에게 전파 ────────
@@ -105,6 +107,11 @@ export default function BingoBoard({ room, canEdit }: Props) {
 
   const lines = useMemo(() => getBingoLines(state), [state]);
 
+  // 교사 전용 작도 화면 — 학생에겐 진입 경로 자체가 없음 (모달 버튼이 안 보임).
+  if (canEdit && problemNum != null) {
+    return <ProblemView num={problemNum} onBack={() => setProblemNum(null)} />;
+  }
+
   return (
     <div className="space-y-4">
       {error ? (
@@ -144,6 +151,10 @@ export default function BingoBoard({ room, canEdit }: Props) {
           canEdit={canEdit}
           onClose={() => setSelectedCell(null)}
           onChangeCond={changeCond}
+          onOpenProblem={(n) => {
+            setProblemNum(n);
+            setSelectedCell(null);
+          }}
         />
       ) : null}
     </div>
@@ -322,12 +333,14 @@ function CellModal({
   canEdit,
   onClose,
   onChangeCond,
+  onOpenProblem,
 }: {
   num: number;
   state: BingoState;
   canEdit: boolean;
   onClose: () => void;
   onChangeCond: (num: number, key: CondKey, team: TeamId | null) => Promise<void>;
+  onOpenProblem: (num: number) => void;
 }) {
   const cell = getCell(state, num);
   const problem = PROBLEMS[num];
@@ -365,15 +378,14 @@ function CellModal({
           </button>
         </header>
 
-        {problem.geogebraUrl ? (
-          <a
-            href={problem.geogebraUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-bold text-emerald-200 transition hover:bg-emerald-500/25"
+        {canEdit ? (
+          <button
+            type="button"
+            onClick={() => onOpenProblem(num)}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-cyan-400/50 bg-cyan-500/20 px-3 py-1.5 text-xs font-bold text-cyan-100 transition hover:bg-cyan-500/30"
           >
-            🔗 GeoGebra 풀이 페이지로
-          </a>
+            🛠️ 작도 화면으로
+          </button>
         ) : null}
 
         {cell.locked && ownerTeam ? (
