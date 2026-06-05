@@ -256,6 +256,51 @@ function findVariants4(board: Board): number[] {
   return [];
 }
 
+// ─── 문제 5: 마름모 (5L 7E 4V) ──────────────────────────────
+// 시드 변 AB 가 주어진 상태. 그 변을 한 변으로 하고 한 꼭짓점이 45° 인 마름모.
+// 4 변형 = ∠A=45° 두 방향 + ∠B=45° 두 방향. 학생이 작도한 4번째 꼭짓점 D 의
+// 위치가 그 변형의 정답 좌표와 일치하면 발견.
+const PROBLEM_5_SEED: Seed = {
+  points: [
+    { id: "A", x: 250, y: 230 },
+    { id: "B", x: 430, y: 230 },
+  ],
+  lines: [{ id: "AB", a: "A", b: "B" }],
+  circles: [],
+};
+
+const EPS_RHOMBUS = 8;
+
+function findVariants5(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  if (!A || !B) return [];
+  const dx = B.x - A.x;
+  const dy = B.y - A.y;
+  const s = Math.SQRT1_2;
+  // 마름모의 4번째 꼭짓점 D 의 4 가지 위치 (시드와 인접한 꼭짓점):
+  //   0: ∠A=45°, D = A + R(+45°)·(B-A)
+  //   1: ∠A=45°, D = A + R(-45°)·(B-A)
+  //   2: ∠B=45°, D 가 A 의 반대편 위 — A + Rot(B->A)·R(-45°) 위치
+  //   3: ∠B=45°, 반대 방향
+  const targets = [
+    { x: A.x + (dx - dy) * s, y: A.y + (dx + dy) * s },
+    { x: A.x + (dx + dy) * s, y: A.y + (-dx + dy) * s },
+    { x: A.x - (dx + dy) * s, y: A.y + (dx - dy) * s },
+    { x: A.x - (dx - dy) * s, y: A.y - (dx + dy) * s },
+  ];
+  const seedIds = new Set(["A", "B"]);
+  const found = new Set<number>();
+  for (const p of board.points) {
+    if (p.hidden) continue;
+    if (seedIds.has(p.id)) continue;
+    targets.forEach((t, i) => {
+      if (dist(p, t) < EPS_RHOMBUS) found.add(i);
+    });
+  }
+  return Array.from(found).sort();
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -290,5 +335,13 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_4_SEED,
     variantCount: 1,
     findVariants: findVariants4,
+  },
+  5: {
+    num: 5,
+    title: "마름모",
+    description: "주어진 변을 한 변으로 하고 한 꼭짓점이 45° 인 마름모를 작도하세요.",
+    seed: PROBLEM_5_SEED,
+    variantCount: 4,
+    findVariants: findVariants5,
   },
 };
