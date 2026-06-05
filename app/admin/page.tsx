@@ -264,6 +264,13 @@ export default function AdminHomePage() {
           href="/admin/roster"
           hoverBorderClass={theme.hoverBorder}
         />
+        <DashboardCard
+          icon="👨‍👩‍👧"
+          title="수업 그룹"
+          description="영재 등 별도 수업 단위"
+          href="/admin/groups"
+          hoverBorderClass={theme.hoverBorder}
+        />
       </div>
 
       {/* 3행 — 교과 3. 2행과 같은 5컬럼 그리드라 카드 크기 일정. 우측 2칸은 빈 공간(후속). */}
