@@ -10,10 +10,11 @@ function distinct(values: (string | null | undefined)[]): string[] {
 
 // 로그인 사용자가 접근 가능한 교과명을 역할별로 산출한다.
 //  - admin   : 전체 교과
-//  - teacher : 내 teacher_permissions 의 과목(담당 학급 기준)
-//  - student : 내 학급에 부여된 class_subject_permissions (RLS가 본인 학급으로 제한)
-//  - general : 내게 부여된 general_subject_permissions (RLS가 본인으로 제한)
+//  - teacher : 내 teacher_permissions 의 과목(담당 학급 기준) + 그룹 멤버 교과
+//  - student : 내 학급에 부여된 class_subject_permissions + 그룹 멤버 교과
+//  - general : 내게 부여된 general_subject_permissions + 그룹 멤버 교과
 // 학생/일반인 권한 테이블은 RLS('본인만 읽기')가 이미 행을 제한하므로 전체 select 후 distinct 한다.
+// study_group_subjects 도 RLS('자기 그룹만') 로 제한되어 같은 방식.
 async function getAccessibleSubjectNames(
   supabase: SupabaseClient,
   user: User,
@@ -24,33 +25,41 @@ async function getAccessibleSubjectNames(
     return distinct((data ?? []).map((r) => (r as { name: string }).name));
   }
 
+  let base: string[] = [];
+
   if (profile.role === "teacher") {
     const { data: teacherRow } = await supabase
       .from("teachers")
       .select("id")
       .eq("profile_id", user.id)
       .maybeSingle();
-    if (!teacherRow) return [];
-
-    const { data } = await supabase
-      .from("teacher_permissions")
-      .select("subject")
-      .eq("teacher_id", (teacherRow as { id: string }).id);
-    return distinct((data ?? []).map((r) => (r as { subject: string }).subject));
-  }
-
-  if (profile.role === "student") {
+    if (teacherRow) {
+      const { data } = await supabase
+        .from("teacher_permissions")
+        .select("subject")
+        .eq("teacher_id", (teacherRow as { id: string }).id);
+      base = (data ?? []).map((r) => (r as { subject: string }).subject);
+    }
+  } else if (profile.role === "student") {
     const { data } = await supabase
       .from("class_subject_permissions")
       .select("subject");
-    return distinct((data ?? []).map((r) => (r as { subject: string }).subject));
+    base = (data ?? []).map((r) => (r as { subject: string }).subject);
+  } else {
+    // general
+    const { data } = await supabase
+      .from("general_subject_permissions")
+      .select("subject");
+    base = (data ?? []).map((r) => (r as { subject: string }).subject);
   }
 
-  // general
-  const { data } = await supabase
-    .from("general_subject_permissions")
+  // 그룹 멤버이면 그룹의 교과도 합산 (RLS 가 자기 그룹으로 제한).
+  const { data: groupSubjects } = await supabase
+    .from("study_group_subjects")
     .select("subject");
-  return distinct((data ?? []).map((r) => (r as { subject: string }).subject));
+  const groupNames = (groupSubjects ?? []).map((r) => (r as { subject: string }).subject);
+
+  return distinct([...base, ...groupNames]);
 }
 
 // 접근 교과를 교육과정 순서(order_index)로 정렬해 반환.
