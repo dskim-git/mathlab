@@ -25,6 +25,7 @@ const ALL_TOOLS = [
   "parallel",
   "angleBisector",
   "pan",
+  "erase",
 ] as const;
 
 const EMPTY_SEED: Seed = { points: [], lines: [], circles: [] };

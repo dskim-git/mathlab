@@ -80,13 +80,47 @@ type Tool =
   | "perpLine"
   | "parallel"
   | "angleBisector"
-  | "pan";
+  | "pan"
+  | "erase";
 
-// 3점 입력이 필요한 도구 — 직선 정의 2점 + 추가 1점.
-function inputCount(tool: Tool): number {
-  if (tool === "perpLine" || tool === "parallel" || tool === "angleBisector") return 3;
-  if (tool === "point" || tool === "pan") return 0; // SVG/마우스 핸들러가 처리
-  return 2;
+// 도구가 받는 입력 항목 — 점 또는 직선.
+type PickKind = "point" | "line";
+type Picked = { kind: PickKind; id: string };
+
+// 도구별 입력 시그니처 — 점 N개·선 M개 모이면 발화.
+function inputSpec(tool: Tool): { points: number; lines: number } {
+  switch (tool) {
+    case "line":
+    case "circle":
+    case "perpBisector":
+      return { points: 2, lines: 0 };
+    case "angleBisector":
+      return { points: 3, lines: 0 };
+    case "perpLine":
+    case "parallel":
+      return { points: 1, lines: 1 };
+    default:
+      return { points: 0, lines: 0 }; // SVG/마우스 핸들러 처리
+  }
+}
+
+function isReady(tool: Tool, picked: Picked[]): boolean {
+  const spec = inputSpec(tool);
+  const pts = picked.filter((x) => x.kind === "point").length;
+  const lns = picked.filter((x) => x.kind === "line").length;
+  return pts >= spec.points && lns >= spec.lines;
+}
+
+function neededLabel(tool: Tool, picked: Picked[]): string {
+  const spec = inputSpec(tool);
+  const ptsHave = picked.filter((x) => x.kind === "point").length;
+  const lnsHave = picked.filter((x) => x.kind === "line").length;
+  const ptsNeed = spec.points - ptsHave;
+  const lnsNeed = spec.lines - lnsHave;
+  const parts: string[] = [];
+  if (ptsNeed > 0) parts.push(`점 ${ptsNeed}개`);
+  if (lnsNeed > 0) parts.push(`선 ${lnsNeed}개`);
+  return parts.join(" + ");
 }
 
 // 빈 공간/도형 위 클릭으로 점을 추가하기 위한 보조 — 가까운 객체로 snap
@@ -205,14 +239,30 @@ export default function ConstructionBoard({
   const [board, setBoard] = useState<Board>(initial);
   const [history, setHistory] = useState<Board[]>([]);
   const [tool, setTool] = useState<Tool>(allowedTools[0] ?? "line");
-  const [pending, setPending] = useState<string[]>([]); // 선택된 점 ID 큐
+  const [pending, setPending] = useState<Picked[]>([]); // 선택된 점/선 큐
   const [hover, setHover] = useState<string | null>(null);
   // 손바닥 도구로 작도판을 이동했을 때의 viewBox 오프셋.
   const [viewOffset, setViewOffset] = useState({ x: 0, y: 0 });
+  // 확대/축소 — 1 = 기본, 작으면 확대, 크면 축소.
+  const [zoomScale, setZoomScale] = useState(1);
   const [panDrag, setPanDrag] = useState<
     | { startX: number; startY: number; baseX: number; baseY: number; rect: DOMRect }
     | null
   >(null);
+
+  const vbW = width * zoomScale;
+  const vbH = height * zoomScale;
+
+  function zoomBy(factor: number) {
+    const cx = viewOffset.x + vbW / 2;
+    const cy = viewOffset.y + vbH / 2;
+    const newScale = Math.max(0.2, Math.min(5, zoomScale * factor));
+    setViewOffset({
+      x: cx - (width * newScale) / 2,
+      y: cy - (height * newScale) / 2,
+    });
+    setZoomScale(newScale);
+  }
 
   // board 변경 커밋 — 이전 board 를 history 에 push 후 새 board 적용.
   function commit(next: Board) {
@@ -233,11 +283,27 @@ export default function ConstructionBoard({
     });
   }
 
-  function clearAll() {
-    setHistory((h) => (board === initial ? h : [...h, board]));
-    setBoard(initial);
-    setPending([]);
-    onChange?.(initial);
+  // 지우개 도구: 클릭한 점·선·원만 삭제.
+  // - 점이 시드(given) 또는 hidden(도구가 만든 내부 점) 이면 삭제 X.
+  // - 점을 삭제하면 그 점을 참조하는 선·원도 함께 삭제.
+  function eraseElement(kind: "point" | "line" | "circle", id: string) {
+    if (kind === "point") {
+      const p = board.points.find((x) => x.id === id);
+      if (!p || p.given || p.hidden) return;
+      const next: Board = {
+        ...board,
+        points: board.points.filter((x) => x.id !== id),
+        lines: board.lines.filter((l) => l.a !== id && l.b !== id),
+        circles: board.circles.filter((c) => c.center !== id && c.through !== id),
+      };
+      commit(next);
+    } else if (kind === "line") {
+      const next: Board = { ...board, lines: board.lines.filter((l) => l.id !== id) };
+      commit(next);
+    } else {
+      const next: Board = { ...board, circles: board.circles.filter((c) => c.id !== id) };
+      commit(next);
+    }
   }
 
   function reset() {
@@ -246,6 +312,7 @@ export default function ConstructionBoard({
     setPending([]);
     setHover(null);
     setViewOffset({ x: 0, y: 0 });
+    setZoomScale(1);
   }
 
   // 가까운 객체(직선/원) 위로 좌표 snap — 임계 SNAP_PX 안이면 객체 위로 끌어당김
@@ -287,69 +354,104 @@ export default function ConstructionBoard({
     if (!ctm) return;
     const t = pt.matrixTransform(ctm.inverse());
     const snapped = snapToObjects({ x: t.x, y: t.y });
-    if (snapped.x < 0 || snapped.x > width || snapped.y < 0 || snapped.y > height) return;
+    // 현재 보이는 viewBox 영역 안인지 확인
+    if (
+      snapped.x < viewOffset.x ||
+      snapped.x > viewOffset.x + vbW ||
+      snapped.y < viewOffset.y ||
+      snapped.y > viewOffset.y + vbH
+    )
+      return;
     const { board: nb } = addPoint(board, snapped);
     if (nb === board) return; // 기존 점과 EPS 내라 변화 없음
     commit(nb);
   }
 
   function pickPoint(id: string) {
-    if (tool === "point") return; // 점 도구 활성 시 점 클릭은 무시 (svg 핸들러가 처리)
+    if (tool === "point" || tool === "pan") return; // SVG/마우스 핸들러가 처리
+    if (tool === "erase") {
+      eraseElement("point", id);
+      return;
+    }
     const p = board.points.find((pp) => pp.id === id);
-    if (!p || p.hidden) return; // 숨김 점은 선택 불가
-    const nextPending = [...pending, id];
-    const needed = inputCount(tool);
-    if (nextPending.length < needed) {
-      setPending(nextPending);
+    if (!p || p.hidden) return;
+    addPick({ kind: "point", id });
+  }
+
+  function pickLine(id: string) {
+    if (tool === "erase") {
+      eraseElement("line", id);
       return;
     }
-    // 중복 입력 방지 (같은 점 두 번)
-    if (new Set(nextPending).size !== nextPending.length) {
-      setPending([]);
+    if (tool !== "perpLine" && tool !== "parallel") return;
+    addPick({ kind: "line", id });
+  }
+
+  function pickCircle(id: string) {
+    if (tool === "erase") eraseElement("circle", id);
+    // 원은 작도 도구의 직접 입력 대상 아님 — erase 에서만 활용.
+  }
+
+  // pending 큐에 새 항목 push. 시그니처(점N+선M) 충족되면 발화.
+  function addPick(item: Picked) {
+    const next = [...pending, item];
+    if (!isReady(tool, next)) {
+      setPending(next);
       return;
     }
-    const [a, b, c] = nextPending;
-    const pa = board.points.find((p) => p.id === a)!;
-    const pb = board.points.find((p) => p.id === b)!;
-    const pc = c ? board.points.find((p) => p.id === c)! : null;
+    fireTool(next);
+  }
+
+  function fireTool(picks: Picked[]) {
+    const pts = picks.filter((x) => x.kind === "point");
+    const lns = picks.filter((x) => x.kind === "line");
     let newBoard: Board = board;
+
     if (tool === "line") {
-      // 동일 직선 중복 방지
-      const dup = board.lines.some(
-        (l) => (l.a === a && l.b === b) || (l.a === b && l.b === a),
-      );
+      const [pa, pb] = pts.map((x) => board.points.find((p) => p.id === x.id)!);
+      const [a, b] = pts.map((x) => x.id);
+      if (a === b) {
+        setPending([]);
+        return;
+      }
+      const dup = board.lines.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a));
       if (!dup) {
         const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
         newBoard = {
           ...board,
           lines: [...board.lines, { id: lid, a, b }],
-          events: board.events + 1, // 선 도구 = 1E
+          events: board.events + 1,
         };
         newBoard = addIntersections(newBoard, "line", pa, pb);
       }
     } else if (tool === "circle") {
-      const dup = board.circles.some(
-        (c) => c.center === a && c.through === b,
-      );
+      const [pa, pb] = pts.map((x) => board.points.find((p) => p.id === x.id)!);
+      const [a, b] = pts.map((x) => x.id);
+      if (a === b) {
+        setPending([]);
+        return;
+      }
+      const dup = board.circles.some((c) => c.center === a && c.through === b);
       if (!dup) {
         const cid = nextId("C", new Set(board.circles.map((c) => c.id)));
         newBoard = {
           ...board,
           circles: [...board.circles, { id: cid, center: a, through: b }],
-          events: board.events + 1, // 원 도구 = 1E
+          events: board.events + 1,
         };
         newBoard = addIntersections(newBoard, "circle", pa, pb);
       }
     } else if (tool === "perpBisector") {
-      // 수직이등분선 도구 (1L 3E): PQ 중점을 지나고 PQ 에 수직인 직선 1개를 결과로.
-      // 내부적으로 두 hidden 점 M, N 으로 line(M, N) 등록. M·N 은 보이지 않지만 line 표시는 됨.
+      const [pa, pb] = pts.map((x) => board.points.find((p) => p.id === x.id)!);
+      if (pts[0].id === pts[1].id) {
+        setPending([]);
+        return;
+      }
       const M = { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 };
       const dx = pb.x - pa.x;
       const dy = pb.y - pa.y;
       const len = Math.hypot(dx, dy) || 1;
-      const nx = -dy / len;
-      const ny = dx / len;
-      const N = { x: M.x + nx * 100, y: M.y + ny * 100 };
+      const N = { x: M.x - (dy / len) * 100, y: M.y + (dx / len) * 100 };
       const idTaken = new Set(board.points.map((p) => p.id));
       const mId = nextId("M", idTaken);
       idTaken.add(mId);
@@ -363,70 +465,83 @@ export default function ConstructionBoard({
           { id: nId, x: N.x, y: N.y, hidden: true },
         ],
         lines: [...board.lines, { id: lid, a: mId, b: nId }],
-        events: board.events + 3, // 수직이등분선 도구 = 3E
+        events: board.events + 3,
       };
       newBoard = addIntersections(newBoard, "line", M, N);
-    } else if (tool === "perpLine" && pc) {
-      // 수선 도구 (1L 3E): 직선 ab 위 두 점 + 평면 위 점 c → c 를 지나고 ab 에 수직인 직선.
-      const dx = pb.x - pa.x;
-      const dy = pb.y - pa.y;
+    } else if (tool === "perpLine") {
+      // 점 + 선 → 점을 지나고 선에 수직인 직선 (1L 3E)
+      const ppt = board.points.find((p) => p.id === pts[0].id)!;
+      const ln = board.lines.find((l) => l.id === lns[0].id);
+      if (!ln) {
+        setPending([]);
+        return;
+      }
+      const lp1 = board.points.find((p) => p.id === ln.a)!;
+      const lp2 = board.points.find((p) => p.id === ln.b)!;
+      const dx = lp2.x - lp1.x;
+      const dy = lp2.y - lp1.y;
       const len = Math.hypot(dx, dy) || 1;
-      const nx = -dy / len;
-      const ny = dx / len;
-      const M = { x: pc.x, y: pc.y };
-      const N = { x: pc.x + nx * 100, y: pc.y + ny * 100 };
+      const M = { x: ppt.x, y: ppt.y };
+      const N = { x: ppt.x - (dy / len) * 100, y: ppt.y + (dx / len) * 100 };
       const idTaken = new Set(board.points.map((p) => p.id));
       const nId = nextId("N", idTaken);
       const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
       newBoard = {
         ...board,
         points: [...board.points, { id: nId, x: N.x, y: N.y, hidden: true }],
-        // 직선 = c (visible) + N (hidden) — c 가 visible 이라 후속 작도에 재사용 가능
-        lines: [...board.lines, { id: lid, a: c, b: nId }],
-        events: board.events + 3, // 수선 도구 = 3E
+        lines: [...board.lines, { id: lid, a: pts[0].id, b: nId }],
+        events: board.events + 3,
       };
       newBoard = addIntersections(newBoard, "line", M, N);
-    } else if (tool === "parallel" && pc) {
-      // 평행선 도구 (1L 4E): 직선 ab 위 두 점 + 평면 위 점 c → c 를 지나고 ab 와 평행한 직선.
-      const dx = pb.x - pa.x;
-      const dy = pb.y - pa.y;
+    } else if (tool === "parallel") {
+      // 점 + 선 → 점을 지나고 선에 평행한 직선 (1L 4E)
+      const ppt = board.points.find((p) => p.id === pts[0].id)!;
+      const ln = board.lines.find((l) => l.id === lns[0].id);
+      if (!ln) {
+        setPending([]);
+        return;
+      }
+      const lp1 = board.points.find((p) => p.id === ln.a)!;
+      const lp2 = board.points.find((p) => p.id === ln.b)!;
+      const dx = lp2.x - lp1.x;
+      const dy = lp2.y - lp1.y;
       const len = Math.hypot(dx, dy) || 1;
-      const ux = dx / len;
-      const uy = dy / len;
-      const M = { x: pc.x, y: pc.y };
-      const N = { x: pc.x + ux * 100, y: pc.y + uy * 100 };
+      const M = { x: ppt.x, y: ppt.y };
+      const N = { x: ppt.x + (dx / len) * 100, y: ppt.y + (dy / len) * 100 };
       const idTaken = new Set(board.points.map((p) => p.id));
       const nId = nextId("N", idTaken);
       const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
       newBoard = {
         ...board,
         points: [...board.points, { id: nId, x: N.x, y: N.y, hidden: true }],
-        lines: [...board.lines, { id: lid, a: c, b: nId }],
-        events: board.events + 4, // 평행선 도구 = 4E
+        lines: [...board.lines, { id: lid, a: pts[0].id, b: nId }],
+        events: board.events + 4,
       };
       newBoard = addIntersections(newBoard, "line", M, N);
-    } else if (tool === "angleBisector" && pc) {
-      // 각의 이등분선 도구 (1L 4E): 꼭짓점 a, 변 위 점 b, 다른 변 위 점 c → 각 bac 의 이등분선.
-      const dxA = pb.x - pa.x;
-      const dyA = pb.y - pa.y;
-      const dxB = pc.x - pa.x;
-      const dyB = pc.y - pa.y;
+    } else if (tool === "angleBisector") {
+      // A, B, C 순서 클릭 — 꼭짓점은 가운데 B. ∠ABC 의 이등분선.
+      const A = board.points.find((p) => p.id === pts[0].id)!;
+      const B = board.points.find((p) => p.id === pts[1].id)!;
+      const C = board.points.find((p) => p.id === pts[2].id)!;
+      const dxA = A.x - B.x;
+      const dyA = A.y - B.y;
+      const dxC = C.x - B.x;
+      const dyC = C.y - B.y;
       const lenA = Math.hypot(dxA, dyA) || 1;
-      const lenB = Math.hypot(dxB, dyB) || 1;
-      const ux = dxA / lenA + dxB / lenB;
-      const uy = dyA / lenA + dyB / lenB;
-      // 두 단위벡터가 정반대(180°) 면 합이 0 — 이등분선 미정. 안전상 무시.
+      const lenC = Math.hypot(dxC, dyC) || 1;
+      const ux = dxA / lenA + dxC / lenC;
+      const uy = dyA / lenA + dyC / lenC;
       if (Math.hypot(ux, uy) > 1e-6) {
-        const M = { x: pa.x, y: pa.y };
-        const N = { x: pa.x + ux * 100, y: pa.y + uy * 100 };
+        const M = { x: B.x, y: B.y };
+        const N = { x: B.x + ux * 100, y: B.y + uy * 100 };
         const idTaken = new Set(board.points.map((p) => p.id));
         const nId = nextId("N", idTaken);
         const lid = nextId("L", new Set(board.lines.map((l) => l.id)));
         newBoard = {
           ...board,
           points: [...board.points, { id: nId, x: N.x, y: N.y, hidden: true }],
-          lines: [...board.lines, { id: lid, a, b: nId }],
-          events: board.events + 4, // 각 이등분선 도구 = 4E
+          lines: [...board.lines, { id: lid, a: pts[1].id, b: nId }],
+          events: board.events + 4,
         };
         newBoard = addIntersections(newBoard, "line", M, N);
       }
@@ -604,6 +719,24 @@ export default function ConstructionBoard({
             ✋ 손바닥
           </button>
         ) : null}
+        {allowedTools.includes("erase") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTool("erase");
+              setPending([]);
+            }}
+            className={
+              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              (tool === "erase"
+                ? "bg-rose-500/25 text-rose-200 ring-1 ring-rose-400/50"
+                : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
+            }
+            title="지우개: 특정 점·선·원을 클릭해 삭제"
+          >
+            🧹 지우개
+          </button>
+        ) : null}
 
         <span className="ml-3 text-xs font-semibold text-slate-400">
           사용:{" "}
@@ -615,20 +748,30 @@ export default function ConstructionBoard({
         <span className="ml-auto flex flex-wrap items-center gap-2">
           <button
             type="button"
+            onClick={() => zoomBy(0.8)}
+            disabled={zoomScale <= 0.2}
+            className="rounded-md border border-white/15 bg-slate-800 px-2.5 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
+            title="확대"
+          >
+            🔍+
+          </button>
+          <button
+            type="button"
+            onClick={() => zoomBy(1.25)}
+            disabled={zoomScale >= 5}
+            className="rounded-md border border-white/15 bg-slate-800 px-2.5 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
+            title="축소"
+          >
+            🔍−
+          </button>
+          <button
+            type="button"
             onClick={undo}
             disabled={history.length === 0}
             className="rounded-md border border-white/15 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
             title="실행취소 — 마지막 작도 한 단계 되돌리기"
           >
             ↶ 실행취소
-          </button>
-          <button
-            type="button"
-            onClick={clearAll}
-            className="rounded-md border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/25"
-            title="지우기 — 학생이 작도한 모든 도형 삭제 (시드는 유지)"
-          >
-            🧹 지우기
           </button>
           <button
             type="button"
@@ -645,35 +788,37 @@ export default function ConstructionBoard({
         {tool === "point"
           ? "빈 공간 또는 도형 위를 클릭하면 점이 생겨요 (도형 근처는 자동 정렬)."
           : tool === "line"
-          ? "두 점을 차례로 클릭하면 직선이 그려져요."
+          ? "두 점을 차례로 클릭하면 직선이 그려져요 (1L 1E)."
           : tool === "circle"
-          ? "첫 점이 중심, 둘째 점이 원 위를 지납니다."
+          ? "첫 점이 중심, 둘째 점이 원 위를 지납니다 (1L 1E)."
           : tool === "perpBisector"
           ? "두 점 사이의 수직이등분선이 그려져요 (1L 3E)."
           : tool === "perpLine"
-          ? "직선의 두 점을 차례로 클릭한 뒤, 수선이 통과할 점을 클릭하세요 (1L 3E)."
+          ? "점 하나와 직선 하나를 클릭하면, 그 점을 지나고 직선에 수직인 직선이 그려져요 (1L 3E)."
           : tool === "parallel"
-          ? "직선의 두 점을 차례로 클릭한 뒤, 평행선이 통과할 점을 클릭하세요 (1L 4E)."
+          ? "점 하나와 직선 하나를 클릭하면, 그 점을 지나고 직선과 평행한 직선이 그려져요 (1L 4E)."
           : tool === "angleBisector"
-          ? "각의 꼭짓점을 클릭한 뒤, 한 변 위 점 → 다른 변 위 점을 순서대로 클릭하세요 (1L 4E)."
+          ? "A → B → C 순서로 점을 클릭하면 가운데 B 가 꼭짓점인 ∠ABC 의 이등분선이 그려져요 (1L 4E)."
+          : tool === "erase"
+          ? "지우고 싶은 점·직선·원을 클릭하면 삭제됩니다 (시드는 보호)."
           : "작도판을 드래그해 화면을 이동합니다 (작도 안 함)."}
-        {pending.length > 0 && pending.length < inputCount(tool) ? (
-          <span className="ml-2 text-amber-300">
-            · {pending.length}개 선택됨 — {inputCount(tool) - pending.length}개 더 클릭하세요
-          </span>
+        {pending.length > 0 && !isReady(tool, pending) ? (
+          <span className="ml-2 text-amber-300">· 더 클릭해야 할 항목: {neededLabel(tool, pending)}</span>
         ) : null}
       </p>
 
       {solvedBadge ? <div className="mb-2">{solvedBadge}</div> : null}
 
       <svg
-        viewBox={`${viewOffset.x} ${viewOffset.y} ${width} ${height}`}
+        viewBox={`${viewOffset.x} ${viewOffset.y} ${vbW} ${vbH}`}
         className={
           "block w-full select-none rounded-lg border border-white/10 bg-slate-950 " +
           (tool === "pan"
             ? panDrag
               ? "cursor-grabbing"
               : "cursor-grab"
+            : tool === "erase"
+            ? "cursor-cell"
             : tool === "point"
             ? "cursor-crosshair"
             : "")
@@ -692,8 +837,8 @@ export default function ConstructionBoard({
         }}
         onMouseMove={(e) => {
           if (!panDrag) return;
-          const scaleX = width / panDrag.rect.width;
-          const scaleY = height / panDrag.rect.height;
+          const scaleX = vbW / panDrag.rect.width;
+          const scaleY = vbH / panDrag.rect.height;
           const dx = (e.clientX - panDrag.startX) * scaleX;
           const dy = (e.clientY - panDrag.startY) * scaleY;
           setViewOffset({ x: panDrag.baseX - dx, y: panDrag.baseY - dy });
@@ -709,17 +854,35 @@ export default function ConstructionBoard({
           const b = board.points.find((p) => p.id === l.b)!;
           const seg = lineSegment(a, b);
           const isSeed = seed.lines.some((sl) => sl.id === l.id);
+          const isPicked = pending.some((x) => x.kind === "line" && x.id === l.id);
+          const isClickable = tool === "erase" || tool === "perpLine" || tool === "parallel";
           return (
-            <line
-              key={l.id}
-              x1={seg.x1}
-              y1={seg.y1}
-              x2={seg.x2}
-              y2={seg.y2}
-              stroke={isSeed ? "#94a3b8" : "#67e8f9"}
-              strokeWidth={isSeed ? 1.5 : 1.8}
-              strokeOpacity={isSeed ? 0.7 : 0.95}
-            />
+            <g key={l.id}>
+              <line
+                x1={seg.x1}
+                y1={seg.y1}
+                x2={seg.x2}
+                y2={seg.y2}
+                stroke={isPicked ? "#fbbf24" : isSeed ? "#94a3b8" : "#67e8f9"}
+                strokeWidth={isPicked ? 2.5 : isSeed ? 1.5 : 1.8}
+                strokeOpacity={isSeed ? 0.7 : 0.95}
+              />
+              {isClickable ? (
+                <line
+                  x1={seg.x1}
+                  y1={seg.y1}
+                  x2={seg.x2}
+                  y2={seg.y2}
+                  stroke="transparent"
+                  strokeWidth={14}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    pickLine(l.id);
+                  }}
+                  style={{ cursor: "pointer", pointerEvents: "stroke" }}
+                />
+              ) : null}
+            </g>
           );
         })}
         {/* 원 */}
@@ -728,23 +891,40 @@ export default function ConstructionBoard({
           const ct = board.points.find((p) => p.id === c.through)!;
           const r = distance(cc, ct);
           const isSeed = seed.circles.some((sc) => sc.id === c.id);
+          const isClickable = tool === "erase";
           return (
-            <circle
-              key={c.id}
-              cx={cc.x}
-              cy={cc.y}
-              r={r}
-              fill="none"
-              stroke={isSeed ? "#94a3b8" : "#c4b5fd"}
-              strokeWidth={isSeed ? 1.5 : 1.8}
-              strokeOpacity={isSeed ? 0.7 : 0.95}
-            />
+            <g key={c.id}>
+              <circle
+                cx={cc.x}
+                cy={cc.y}
+                r={r}
+                fill="none"
+                stroke={isSeed ? "#94a3b8" : "#c4b5fd"}
+                strokeWidth={isSeed ? 1.5 : 1.8}
+                strokeOpacity={isSeed ? 0.7 : 0.95}
+              />
+              {isClickable ? (
+                <circle
+                  cx={cc.x}
+                  cy={cc.y}
+                  r={r}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={14}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    pickCircle(c.id);
+                  }}
+                  style={{ cursor: "pointer", pointerEvents: "stroke" }}
+                />
+              ) : null}
+            </g>
           );
         })}
         {/* 점 */}
         {board.points.map((p) => {
           if (p.hidden) return null;
-          const isPending = pending.includes(p.id);
+          const isPending = pending.some((x) => x.kind === "point" && x.id === p.id);
           const isHover = hover === p.id;
           const isGiven = p.given;
           const r = isHover || isPending ? 6 : isGiven ? 5 : 3.5;
