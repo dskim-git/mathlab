@@ -124,6 +124,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   // ── 영재 ──
   "gifted/euclidea_warmup": "작도 몸풀기 게임",
   "gifted/euclidea_tool_steps": "작도 도구 — E값의 이유",
+  "gifted/euclidea_bingo": "작도 게임 (빙고)",
 };
 
 /** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */

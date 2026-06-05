@@ -234,6 +234,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: [
       "gifted/euclidea_tool_steps",
       "gifted/euclidea_warmup",
+      "gifted/euclidea_bingo",
     ],
   },
 ];

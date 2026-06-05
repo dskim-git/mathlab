@@ -159,6 +159,7 @@ import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edg
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
+import EuclideaBingo from "./gifted/4-euclidea/euclidea-bingo/EuclideaBingo";
 
 // 이식 완료된 미니활동: activitySlug(임포트된 "<folder>/<slug>") → React 컴포넌트.
 // 자체 렌더(추가 props 불필요). 등록되지 않은 슬러그는 ActivityRenderer 가 '준비 중'으로 표시.
@@ -296,4 +297,5 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   // "gifted/<slug>" 형식 (확통·공통수학의 "<subject>/mini/<slug>" 와 다름).
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
+  "gifted/euclidea_bingo": EuclideaBingo,
 };
