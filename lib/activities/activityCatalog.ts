@@ -232,6 +232,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     subject: "영재",
     unit: "4 작도 게임",
     slugs: [
+      "gifted/euclidea_tool_steps",
       "gifted/euclidea_warmup",
     ],
   },
