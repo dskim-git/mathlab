@@ -11,6 +11,7 @@ export type BingoRoom = {
   created_by: string;
   grade: number | null;
   class_number: number | null;
+  group_id: string | null;
   status: "active" | "ended";
   state: Record<string, unknown>;
   created_at: string;
@@ -39,12 +40,53 @@ export async function findActiveClassRoom(
     .select("*")
     .eq("grade", grade)
     .eq("class_number", classNumber)
+    .is("group_id", null)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw error;
   return (data as BingoRoom | null) ?? null;
+}
+
+// 그룹의 활성 방 1개 조회.
+export async function findActiveGroupRoom(
+  supabase: SupabaseClient,
+  groupId: string,
+): Promise<BingoRoom | null> {
+  const { data, error } = await supabase
+    .from("bingo_rooms")
+    .select("*")
+    .eq("group_id", groupId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as BingoRoom | null) ?? null;
+}
+
+// 본인이 접근 가능한 모든 활성 방 (학급별 + 그룹별).
+// 학급별 방은 RLS 가 SELECT all 이라 전체 보일 수 있어 클라이언트에서 학급 매칭으로 필터.
+// 그룹별 방은 자기가 멤버인 그룹의 활성 방만 모음.
+export async function findMyActiveRooms(
+  supabase: SupabaseClient,
+  ctx: {
+    grade: number | null;
+    classNumber: number | null;
+    groupIds: string[];
+  },
+): Promise<BingoRoom[]> {
+  const out: BingoRoom[] = [];
+  if (ctx.grade != null && ctx.classNumber != null) {
+    const r = await findActiveClassRoom(supabase, ctx.grade, ctx.classNumber);
+    if (r) out.push(r);
+  }
+  for (const gid of ctx.groupIds) {
+    const r = await findActiveGroupRoom(supabase, gid);
+    if (r) out.push(r);
+  }
+  return out;
 }
 
 // 방 코드로 방 1개 조회 (대소문자 구분 없음). 없거나 ended 면 null.
@@ -72,7 +114,6 @@ export async function createClassRoom(
   supabase: SupabaseClient,
   opts: { teacherProfileId: string; grade: number; classNumber: number },
 ): Promise<BingoRoom> {
-  // 기존 활성 방 ended 로 마감
   const prev = await findActiveClassRoom(supabase, opts.grade, opts.classNumber);
   if (prev) {
     const { error: endErr } = await supabase
@@ -81,23 +122,62 @@ export async function createClassRoom(
       .eq("id", prev.id);
     if (endErr) throw endErr;
   }
+  return insertRoomWithCode(supabase, {
+    teacherProfileId: opts.teacherProfileId,
+    grade: opts.grade,
+    classNumber: opts.classNumber,
+    groupId: null,
+  });
+}
 
+// 그룹용 방 생성. 그룹 안 teacher 역할자가 호출.
+//  - 같은 그룹의 활성 방이 있으면 ended.
+export async function createGroupRoom(
+  supabase: SupabaseClient,
+  opts: { teacherProfileId: string; groupId: string },
+): Promise<BingoRoom> {
+  const prev = await findActiveGroupRoom(supabase, opts.groupId);
+  if (prev) {
+    const { error: endErr } = await supabase
+      .from("bingo_rooms")
+      .update({ status: "ended" })
+      .eq("id", prev.id);
+    if (endErr) throw endErr;
+  }
+  return insertRoomWithCode(supabase, {
+    teacherProfileId: opts.teacherProfileId,
+    grade: null,
+    classNumber: null,
+    groupId: opts.groupId,
+  });
+}
+
+// 내부 헬퍼 — 코드 충돌 재시도 포함 INSERT.
+async function insertRoomWithCode(
+  supabase: SupabaseClient,
+  fields: {
+    teacherProfileId: string;
+    grade: number | null;
+    classNumber: number | null;
+    groupId: string | null;
+  },
+): Promise<BingoRoom> {
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = generateRoomCode();
     const { data, error } = await supabase
       .from("bingo_rooms")
       .insert({
         room_code: code,
-        created_by: opts.teacherProfileId,
-        grade: opts.grade,
-        class_number: opts.classNumber,
+        created_by: fields.teacherProfileId,
+        grade: fields.grade,
+        class_number: fields.classNumber,
+        group_id: fields.groupId,
         status: "active",
         state: { probs: {} },
       })
       .select("*")
       .single();
     if (!error && data) return data as BingoRoom;
-    // unique 충돌이면 다음 코드로 재시도 (23505)
     if (error && (error as { code?: string }).code !== "23505") throw error;
   }
   throw new Error("방 코드 발급에 실패했습니다. 잠시 후 다시 시도해 주세요.");

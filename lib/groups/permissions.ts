@@ -21,10 +21,17 @@ export type GroupMembership = {
 export async function getMyGroups(
   supabase: SupabaseClient,
 ): Promise<GroupMembership[]> {
-  // RLS: profile_id = auth.uid() 행만 읽음.
+  // study_group_members 의 RLS 는 "자기 행 OR 같은 그룹 동료" — 후자 때문에
+  // 한 그룹에 멤버 N 명이면 같은 group_id 가 N+1 번 반환됨.
+  // 자기 행만 필요하므로 명시 필터 추가.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
   const { data: members } = await supabase
     .from("study_group_members")
-    .select("group_id, role");
+    .select("group_id, role")
+    .eq("profile_id", user.id);
   const rows = (members ?? []) as { group_id: string; role: GroupRole }[];
   if (rows.length === 0) return [];
 
