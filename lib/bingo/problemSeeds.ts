@@ -682,6 +682,130 @@ function findVariants13(board: Board): number[] {
   return Array.from(found).sort();
 }
 
+// ─── 문제 14: 30° (3L 3E 2V) ────────────────────────────────
+// 시드 변 AB. A 에서 30° 각 작도. 위/아래 = V=2.
+const PROBLEM_14_SEED: Seed = {
+  points: [
+    { id: "A", x: 240, y: 220 },
+    { id: "B", x: 440, y: 220 },
+  ],
+  lines: [{ id: "AB", a: "A", b: "B" }],
+  circles: [],
+};
+
+function findVariants14(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  if (!A || !B) return [];
+  const dx = B.x - A.x;
+  const dy = B.y - A.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const cos30 = Math.cos(Math.PI / 6);
+  const sin30 = Math.sin(Math.PI / 6);
+  // R(+30°)(unit) / R(-30°)(unit)
+  const u = { x: dx / len, y: dy / len };
+  const d1x = u.x * cos30 - u.y * sin30;
+  const d1y = u.x * sin30 + u.y * cos30;
+  const d2x = u.x * cos30 + u.y * sin30;
+  const d2y = -u.x * sin30 + u.y * cos30;
+  const studentLines = board.lines.filter((l) => l.id !== "AB");
+  const found = new Set<number>();
+  for (const line of studentLines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (!isPointOnLine(A, lp1, lp2)) continue;
+    const lDx = lp2.x - lp1.x;
+    const lDy = lp2.y - lp1.y;
+    const lLen = Math.hypot(lDx, lDy) || 1;
+    const ux = lDx / lLen;
+    const uy = lDy / lLen;
+    if (Math.abs(ux * d1x + uy * d1y) > 0.995) found.add(0);
+    if (Math.abs(ux * d2x + uy * d2y) > 0.995) found.add(1);
+  }
+  return Array.from(found).sort();
+}
+
+// ─── 문제 15: 대변의 중점을 통한 정사각형 (6L 10E) ──────────
+// 시드: 두 점 M1, M2 (대변의 두 중점). 정사각형 변 = |M1M2|.
+// 4 꼭짓점 = M1 ± n·s/2, M2 ± n·s/2 (n = M1M2 의 수직 단위벡터).
+const PROBLEM_15_SEED: Seed = {
+  points: [
+    { id: "M1", x: 240, y: 200, label: "M₁" },
+    { id: "M2", x: 400, y: 200, label: "M₂" },
+  ],
+  lines: [],
+  circles: [],
+};
+
+function findVariants15(board: Board): number[] {
+  const M1 = board.points.find((p) => p.id === "M1");
+  const M2 = board.points.find((p) => p.id === "M2");
+  if (!M1 || !M2) return [];
+  const dx = M2.x - M1.x;
+  const dy = M2.y - M1.y;
+  const s = Math.hypot(dx, dy);
+  const nx = -dy / s;
+  const ny = dx / s;
+  const h = s / 2;
+  const corners = [
+    { x: M1.x + nx * h, y: M1.y + ny * h },
+    { x: M1.x - nx * h, y: M1.y - ny * h },
+    { x: M2.x + nx * h, y: M2.y + ny * h },
+    { x: M2.x - nx * h, y: M2.y - ny * h },
+  ];
+  const seedIds = new Set(["M1", "M2"]);
+  let count = 0;
+  for (const c of corners) {
+    const matched = board.points.some((p) => {
+      if (p.hidden) return false;
+      if (seedIds.has(p.id)) return false;
+      return dist(p, c) < 8;
+    });
+    if (matched) count++;
+  }
+  return count === 4 ? [0] : [];
+}
+
+// ─── 문제 16: 사다리꼴 밑변·윗변의 중점 (3L 5E) ─────────────
+// 시드: 사다리꼴 ABCD (AB ∥ CD). 윗변 AB 의 중점 M1, 밑변 CD 의 중점 M2 를 지나는 직선.
+const PROBLEM_16_SEED: Seed = {
+  points: [
+    { id: "A", x: 200, y: 130 },
+    { id: "B", x: 440, y: 130 },
+    { id: "C", x: 480, y: 320 },
+    { id: "D", x: 160, y: 320 },
+  ],
+  lines: [
+    { id: "AB", a: "A", b: "B" },
+    { id: "BC", a: "B", b: "C" },
+    { id: "CD", a: "C", b: "D" },
+    { id: "DA", a: "D", b: "A" },
+  ],
+  circles: [],
+};
+
+function findVariants16(board: Board): number[] {
+  const A = board.points.find((p) => p.id === "A");
+  const B = board.points.find((p) => p.id === "B");
+  const C = board.points.find((p) => p.id === "C");
+  const D = board.points.find((p) => p.id === "D");
+  if (!A || !B || !C || !D) return [];
+  const M1 = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
+  const M2 = { x: (C.x + D.x) / 2, y: (C.y + D.y) / 2 };
+  const seedLineIds = new Set(["AB", "BC", "CD", "DA"]);
+  const studentLines = board.lines.filter((l) => !seedLineIds.has(l.id));
+  for (const line of studentLines) {
+    const lp1 = board.points.find((p) => p.id === line.a);
+    const lp2 = board.points.find((p) => p.id === line.b);
+    if (!lp1 || !lp2) continue;
+    if (isPointOnLine(M1, lp1, lp2) && isPointOnLine(M2, lp1, lp2)) {
+      return [0];
+    }
+  }
+  return [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -793,5 +917,29 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_13_SEED,
     variantCount: 4,
     findVariants: findVariants13,
+  },
+  14: {
+    num: 14,
+    title: "30°",
+    description: "주어진 변에서 30° 각도를 작도하세요.",
+    seed: PROBLEM_14_SEED,
+    variantCount: 2,
+    findVariants: findVariants14,
+  },
+  15: {
+    num: 15,
+    title: "대변의 중점을 통한 정사각형",
+    description: "마주보는 대변의 두 중점으로 정사각형을 작도하세요.",
+    seed: PROBLEM_15_SEED,
+    variantCount: 1,
+    findVariants: findVariants15,
+  },
+  16: {
+    num: 16,
+    title: "사다리꼴 밑변·윗변의 중점",
+    description: "사다리꼴 윗변·밑변의 중점을 지나는 직선을 작도하세요.",
+    seed: PROBLEM_16_SEED,
+    variantCount: 1,
+    findVariants: findVariants16,
   },
 };
