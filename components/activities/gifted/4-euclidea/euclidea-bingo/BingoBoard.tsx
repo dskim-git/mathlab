@@ -1,14 +1,12 @@
 "use client";
 
-// 빙고판 + 팀 카드 + 셀 제어 모달 + Realtime 동기화.
+// 빙고판 (presentational) — state·Realtime 은 부모(EuclideaBingo.RoomView) 에서 관리.
 //
-// - 방의 state(JSONB) 가 진실 source. 교사가 update → DB → Realtime postgres_changes
-//   이벤트 → 모든 참여자 화면 자동 갱신.
-// - 셀 클릭: 교사·관리자만 모달 열림 + 편집 가능. 학생은 클릭해도 모달은 보기 전용.
-// - 모달 내 변경 시 즉시 DB save (낙관적 update — 실패하면 alert).
+// 학생 연습 모드 (state.practiceMode=true):
+//   학생도 셀을 자유 클릭해 작도 화면에 들어갈 수 있음. 진입은 자기 local studentLocalNav.
+//   교사 nav 강제 따라가기는 비활성. 연습 모드 OFF 가 되면 학생 local nav 자동 reset.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { useEffect, useMemo, useState } from "react";
 import {
   GRID,
   PROBLEMS,
@@ -20,129 +18,78 @@ import {
 import {
   type BingoState,
   type CondKey,
-  applyCondChange,
   effectiveOwner,
-  emptyState,
   getBingoLines,
   getCell,
   getNav,
   getTeamStats,
   isCellComplete,
+  isPractice,
 } from "@/lib/bingo/state";
-import { type BingoRoom, updateRoomState } from "@/lib/bingo/rooms";
+import { type BingoRoom } from "@/lib/bingo/rooms";
 import ProblemView from "./ProblemView";
 
 type Props = {
   room: BingoRoom;
   canEdit: boolean;
+  state: BingoState;
+  onChangeCond: (num: number, key: CondKey, team: TeamId | null) => Promise<void>;
+  onGoToProblem: (num: number | null) => Promise<void>;
+  onReset: () => Promise<void>;
 };
 
-export default function BingoBoard({ room, canEdit }: Props) {
-  const initialState = useMemo<BingoState>(() => {
-    const s = room.state as Partial<BingoState>;
-    return s && typeof s === "object" && "probs" in s ? (s as BingoState) : emptyState();
-  }, [room.state]);
-
-  const [state, setState] = useState<BingoState>(initialState);
+export default function BingoBoard({
+  room: _room,
+  canEdit,
+  state,
+  onChangeCond,
+  onGoToProblem,
+  onReset,
+}: Props) {
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
-  const [error, setError] = useState("");
-  const navProblemNum = getNav(state).problemNum;
+  const [studentLocalNav, setStudentLocalNav] = useState<number | null>(null);
 
-  // ── Realtime 구독: 이 방의 state 변경을 모든 참여자에게 전파 ────────
+  const serverNav = getNav(state).problemNum;
+  const practice = isPractice(state);
+
+  // 연습 모드 OFF 시 학생 local nav 강제 reset → 교사 화면을 따라감.
   useEffect(() => {
-    const channel = supabase
-      .channel(`bingo_room_${room.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "bingo_rooms",
-          filter: `id=eq.${room.id}`,
-        },
-        (payload) => {
-          const newRow = payload.new as { state?: BingoState };
-          if (newRow?.state && typeof newRow.state === "object") {
-            setState(newRow.state);
-          }
-        },
-      )
-      .subscribe();
+    if (!canEdit && !practice) setStudentLocalNav(null);
+  }, [canEdit, practice]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room.id]);
-
-  // ── 조건 변경(L/E/V): applyCondChange 가 lastTeam·locked 자동 처리.
-  const changeCond = useCallback(
-    async (num: number, key: CondKey, team: TeamId | null) => {
-      const prev = getCell(state, num);
-      const nextCell = applyCondChange(prev, key, team);
-      if (nextCell === prev) return; // 잠금 등 변화 없음
-      const nextState: BingoState = {
-        ...state,
-        probs: { ...state.probs, [num]: nextCell },
-      };
-      setState(nextState);
-      try {
-        await updateRoomState(supabase, room.id, nextState as unknown as Record<string, unknown>);
-      } catch (e) {
-        setError((e as Error).message);
-        setState(state);
-      }
-    },
-    [room.id, state],
-  );
-
-  // ── 화면 이동 (방장만 호출 — RLS 가 UPDATE 막아도 학생 측 호출은 의미 없음).
-  const goToProblem = useCallback(
-    async (num: number | null) => {
-      if (!canEdit) return;
-      const nextState: BingoState = { ...state, nav: { problemNum: num } };
-      setState(nextState);
-      try {
-        await updateRoomState(supabase, room.id, nextState as unknown as Record<string, unknown>);
-      } catch (e) {
-        setError((e as Error).message);
-        setState(state);
-      }
-    },
-    [canEdit, room.id, state],
-  );
-
-  const handleReset = useCallback(async () => {
-    if (!confirm("이 빙고 방의 모든 진행 상태를 초기화하시겠어요?")) return;
-    const empty = emptyState();
-    setState(empty);
-    try {
-      await updateRoomState(supabase, room.id, empty as unknown as Record<string, unknown>);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [room.id]);
+  // 현재 보여줄 작도 화면 번호 — 교사·기본 학생은 server nav, 연습 모드 학생만 local.
+  const effectiveProblemNum: number | null = canEdit
+    ? serverNav
+    : practice
+    ? studentLocalNav
+    : serverNav;
 
   const lines = useMemo(() => getBingoLines(state), [state]);
 
-  // 작도 화면 — state.nav 가 가리키면 모든 참여자(교사·학생) 동시 진입.
-  // 학생은 onBack 이 없어 "빙고판으로" 버튼이 숨겨짐 (교사가 nav 를 풀어야 복귀).
-  if (navProblemNum != null) {
-    return (
-      <ProblemView
-        num={navProblemNum}
-        onBack={canEdit ? () => goToProblem(null) : undefined}
-      />
-    );
+  // 작도 화면 — 교사/학생 분기:
+  //   교사: onBack = onGoToProblem(null) (서버 nav 해제, 학생 동시 복귀)
+  //   학생 + practice: onBack = setStudentLocalNav(null) (자기만 복귀)
+  //   학생 + 비practice: onBack undefined → "교사 화면 따라가는 중" 배지
+  if (effectiveProblemNum != null) {
+    const handleBack = canEdit
+      ? () => onGoToProblem(null)
+      : practice
+      ? () => setStudentLocalNav(null)
+      : undefined;
+    return <ProblemView num={effectiveProblemNum} onBack={handleBack} />;
   }
+
+  // 셀의 작도 화면 진입 — 교사는 서버 nav, 학생+연습은 자기 local.
+  function openProblem(num: number) {
+    setSelectedCell(null);
+    if (canEdit) onGoToProblem(num);
+    else if (practice) setStudentLocalNav(num);
+  }
+
+  const canOpenProblem = canEdit || practice;
 
   return (
     <div className="space-y-4">
-      {error ? (
-        <div className="rounded-lg border border-rose-400/40 bg-rose-500/15 px-3 py-2 text-sm text-rose-200">
-          ⚠️ {error}
-        </div>
-      ) : null}
-
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         {/* 빙고판 + 라인 */}
         <div className="space-y-3">
@@ -158,7 +105,7 @@ export default function BingoBoard({ room, canEdit }: Props) {
           {canEdit ? (
             <button
               type="button"
-              onClick={handleReset}
+              onClick={() => onReset()}
               className="mt-2 w-full rounded-lg border border-rose-400/40 bg-rose-500/15 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/25"
             >
               🗑 빙고 초기화
@@ -172,12 +119,10 @@ export default function BingoBoard({ room, canEdit }: Props) {
           num={selectedCell}
           state={state}
           canEdit={canEdit}
+          canOpenProblem={canOpenProblem}
           onClose={() => setSelectedCell(null)}
-          onChangeCond={changeCond}
-          onOpenProblem={(n) => {
-            goToProblem(n);
-            setSelectedCell(null);
-          }}
+          onChangeCond={onChangeCond}
+          onOpenProblem={openProblem}
         />
       ) : null}
     </div>
@@ -354,6 +299,7 @@ function CellModal({
   num,
   state,
   canEdit,
+  canOpenProblem,
   onClose,
   onChangeCond,
   onOpenProblem,
@@ -361,6 +307,7 @@ function CellModal({
   num: number;
   state: BingoState;
   canEdit: boolean;
+  canOpenProblem: boolean;
   onClose: () => void;
   onChangeCond: (num: number, key: CondKey, team: TeamId | null) => Promise<void>;
   onOpenProblem: (num: number) => void;
@@ -401,7 +348,7 @@ function CellModal({
           </button>
         </header>
 
-        {canEdit ? (
+        {canOpenProblem ? (
           <button
             type="button"
             onClick={() => onOpenProblem(num)}

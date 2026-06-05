@@ -33,10 +33,19 @@ export type BingoState = {
   probs: Record<number, CellState>;
   /** 방장이 어느 화면을 보고 있는지 — Realtime 으로 모든 참여자에게 전파. */
   nav?: BingoNav;
+  /**
+   * true 이면 학생도 셀을 자유롭게 클릭해 작도 화면에 들어갈 수 있음 (각자 local nav).
+   * false(기본) 이면 학생은 방장 nav 강제 따라감.
+   */
+  practiceMode?: boolean;
 };
 
 export function emptyState(): BingoState {
-  return { probs: {}, nav: { problemNum: null } };
+  return { probs: {}, nav: { problemNum: null }, practiceMode: false };
+}
+
+export function isPractice(state: BingoState): boolean {
+  return state.practiceMode === true;
 }
 
 export function getNav(state: BingoState): BingoNav {

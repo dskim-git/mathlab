@@ -8,7 +8,7 @@
 //   - 방 코드 입장: 그대로
 //   - 입장 후 방 정보 표시만 (빙고판은 라운드 C-2).
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import {
   type BingoRoom,
@@ -17,8 +17,18 @@ import {
   endRoom,
   findMyActiveRooms,
   findRoomByCode,
+  updateRoomState,
 } from "@/lib/bingo/rooms";
 import { getMyGroups, type GroupMembership } from "@/lib/groups/permissions";
+import {
+  type BingoState,
+  type CondKey,
+  applyCondChange,
+  emptyState,
+  getCell,
+  isPractice,
+} from "@/lib/bingo/state";
+import { type TeamId } from "@/lib/bingo/data";
 import BingoBoard from "./BingoBoard";
 
 type Role = "teacher" | "student" | "admin" | "general" | "unknown";
@@ -456,6 +466,84 @@ function CodeEntry({
 function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () => void }) {
   const isOwner = room.created_by === me.profileId;
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  // 진실 source — 방장 update 가 DB 에 저장되고 Realtime 으로 모든 참여자에게 전파.
+  const initialState = useMemo<BingoState>(() => {
+    const s = room.state as Partial<BingoState>;
+    return s && typeof s === "object" && "probs" in s ? (s as BingoState) : emptyState();
+  }, [room.state]);
+  const [state, setState] = useState<BingoState>(initialState);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`bingo_room_${room.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "bingo_rooms",
+          filter: `id=eq.${room.id}`,
+        },
+        (payload) => {
+          const newRow = payload.new as { state?: BingoState };
+          if (newRow?.state && typeof newRow.state === "object") {
+            setState(newRow.state);
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room.id]);
+
+  // ── 낙관적 update + DB save 헬퍼 ── 방장만 호출 (RLS 가 학생 호출 거부).
+  const persistState = useCallback(
+    async (next: BingoState) => {
+      if (!isOwner) return;
+      const prev = state;
+      setState(next);
+      try {
+        await updateRoomState(supabase, room.id, next as unknown as Record<string, unknown>);
+      } catch (e) {
+        setError((e as Error).message);
+        setState(prev);
+      }
+    },
+    [isOwner, room.id, state],
+  );
+
+  // 셀 조건(L/E/V) 변경
+  const handleChangeCond = useCallback(
+    async (num: number, key: CondKey, team: TeamId | null) => {
+      const prev = getCell(state, num);
+      const nextCell = applyCondChange(prev, key, team);
+      if (nextCell === prev) return;
+      await persistState({ ...state, probs: { ...state.probs, [num]: nextCell } });
+    },
+    [state, persistState],
+  );
+
+  // 방장 화면 이동 (학생 동시 따라감)
+  const handleGoToProblem = useCallback(
+    async (num: number | null) => {
+      await persistState({ ...state, nav: { problemNum: num } });
+    },
+    [state, persistState],
+  );
+
+  // 전체 초기화
+  const handleReset = useCallback(async () => {
+    if (!confirm("이 빙고 방의 모든 진행 상태를 초기화하시겠어요?")) return;
+    await persistState({ ...emptyState(), practiceMode: state.practiceMode });
+  }, [state.practiceMode, persistState]);
+
+  // 연습 모드 토글 — 방장만
+  const handleTogglePractice = useCallback(async () => {
+    await persistState({ ...state, practiceMode: !isPractice(state) });
+  }, [state, persistState]);
 
   async function handleEnd() {
     if (!confirm("이 방을 종료하시겠어요? 학생들이 더 이상 들어올 수 없습니다.")) return;
@@ -474,6 +562,8 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
     ? `${room.grade}학년 ${room.class_number}반`
     : "—";
 
+  const practice = isPractice(state);
+
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950 p-6 text-slate-100">
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -482,6 +572,11 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
           <p className="mt-1 text-xs text-slate-400">
             5×5 빙고판 · 25 작도 문제 · 4팀 점수 — {scopeLabel}{" "}
             <span className="font-mono ml-2 text-cyan-300">{room.room_code}</span>
+            {practice ? (
+              <span className="ml-2 rounded-md border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold text-emerald-200">
+                🟢 연습 모드 ON
+              </span>
+            ) : null}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -505,6 +600,21 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
           {isOwner ? (
             <button
               type="button"
+              onClick={handleTogglePractice}
+              className={
+                "rounded-lg border px-3 py-1 text-xs font-semibold transition " +
+                (practice
+                  ? "border-emerald-400/60 bg-emerald-500/25 text-emerald-100 hover:bg-emerald-500/35"
+                  : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20")
+              }
+              title="학생이 빙고 칸을 자유롭게 클릭해 풀어보도록 허용"
+            >
+              ✏️ 연습하기 {practice ? "(켜짐)" : ""}
+            </button>
+          ) : null}
+          {isOwner ? (
+            <button
+              type="button"
               onClick={handleEnd}
               disabled={busy}
               className="rounded-lg border border-rose-400/40 bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/25 disabled:opacity-40"
@@ -515,7 +625,20 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
         </div>
       </header>
 
-      <BingoBoard room={room} canEdit={isOwner} />
+      {error ? (
+        <div className="mb-3 rounded-lg border border-rose-400/40 bg-rose-500/15 px-3 py-2 text-sm text-rose-200">
+          ⚠️ {error}
+        </div>
+      ) : null}
+
+      <BingoBoard
+        room={room}
+        canEdit={isOwner}
+        state={state}
+        onChangeCond={handleChangeCond}
+        onGoToProblem={handleGoToProblem}
+        onReset={handleReset}
+      />
     </div>
   );
 }
