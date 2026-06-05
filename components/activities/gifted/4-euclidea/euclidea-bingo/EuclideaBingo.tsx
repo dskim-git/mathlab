@@ -19,6 +19,7 @@ import {
   findRoomByCode,
 } from "@/lib/bingo/rooms";
 import { getMyGroups, type GroupMembership } from "@/lib/groups/permissions";
+import BingoBoard from "./BingoBoard";
 
 type Role = "teacher" | "student" | "admin" | "general" | "unknown";
 
@@ -451,7 +452,7 @@ function CodeEntry({
   );
 }
 
-// ─── 방 내부 (placeholder) ─────────────────────────────────
+// ─── 방 내부 ─────────────────────────────────
 function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () => void }) {
   const isOwner = room.created_by === me.profileId;
   const [busy, setBusy] = useState(false);
@@ -475,65 +476,47 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
 
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950 p-6 text-slate-100">
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-white">🎯 작도 게임 (빙고)</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            방 입장 완료 — 빙고판은 다음 단계에서 추가됩니다.
+          <p className="mt-1 text-xs text-slate-400">
+            5×5 빙고판 · 25 작도 문제 · 4팀 점수 — {scopeLabel}{" "}
+            <span className="font-mono ml-2 text-cyan-300">{room.room_code}</span>
           </p>
         </div>
-        <span
-          className={
-            "rounded-md px-3 py-1 text-xs font-bold " +
-            (isOwner
-              ? "border border-amber-400/50 bg-amber-500/20 text-amber-200"
-              : "border border-cyan-400/40 bg-cyan-500/15 text-cyan-200")
-          }
-        >
-          {isOwner ? "방장" : "참여자"}
-        </span>
-      </header>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <InfoCard label="방 코드" value={room.room_code} mono />
-        <InfoCard label={room.group_id ? "그룹" : "학급"} value={scopeLabel} />
-        <InfoCard label="상태" value={room.status === "active" ? "🟢 활성" : "🔘 종료"} />
-      </div>
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onLeave}
-          className="rounded-lg border border-white/10 bg-slate-900 px-4 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
-        >
-          ◀ 입구로
-        </button>
-        {isOwner ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={
+              "rounded-md px-3 py-1 text-xs font-bold " +
+              (isOwner
+                ? "border border-amber-400/50 bg-amber-500/20 text-amber-200"
+                : "border border-cyan-400/40 bg-cyan-500/15 text-cyan-200")
+            }
+          >
+            {isOwner ? "방장" : "참여자"}
+          </span>
           <button
             type="button"
-            onClick={handleEnd}
-            disabled={busy}
-            className="rounded-lg border border-rose-400/40 bg-rose-500/15 px-4 py-1.5 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/25 disabled:opacity-40"
+            onClick={onLeave}
+            className="rounded-lg border border-white/10 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800"
           >
-            🗑 방 종료
+            ◀ 입구
           </button>
-        ) : null}
-      </div>
+          {isOwner ? (
+            <button
+              type="button"
+              onClick={handleEnd}
+              disabled={busy}
+              className="rounded-lg border border-rose-400/40 bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/25 disabled:opacity-40"
+            >
+              방 종료
+            </button>
+          ) : null}
+        </div>
+      </header>
 
-      <div className="mt-6 rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-6 text-center text-sm text-slate-500">
-        🚧 빙고판은 다음 단계 (C-2) 에서 추가됩니다 (5×5 그리드, L/E/V 컨트롤, 실시간 동기화).
-      </div>
+      <BingoBoard room={room} canEdit={isOwner} />
     </div>
   );
 }
 
-function InfoCard({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-slate-900/60 p-3">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
-      <div className={"mt-1 text-base font-bold text-slate-100 " + (mono ? "font-mono tracking-widest" : "")}>
-        {value}
-      </div>
-    </div>
-  );
-}
