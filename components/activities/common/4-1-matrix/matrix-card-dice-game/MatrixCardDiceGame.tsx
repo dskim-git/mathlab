@@ -234,39 +234,47 @@ function RulePanel({ onStart }: { onStart: () => void }) {
 
         {/* 규칙 */}
         <ol className="mt-3 space-y-3">
-          <RuleItem n="①">
-            매 라운드, <b className="text-sky-300">나</b> 와{" "}
-            <b className="text-pink-300">친구</b> 가 행렬 카드를 각각 1 장씩
-            선택한다. 한 번 선택한 카드는 다시 선택할 수 없다.
-          </RuleItem>
-          <RuleItem n="②">
-            주사위를 굴려 <b className="text-amber-300">+, −, ×</b> 중 하나가 나오면
-            행렬 연산을 수행한다.
-            <ul className="mt-2 ml-3 space-y-1 text-xs">
-              <li>
-                <b className="text-amber-300">+</b>: 양쪽 모두 A+B 결과의 성분 합을
-                점수로 한다.
-              </li>
-              <li>
-                <b className="text-amber-300">−</b>: 나 = A−B, 친구 = B−A 결과의
-                성분 합을 점수로 한다.
-              </li>
-              <li>
-                <b className="text-amber-300">×</b>: 나 = A×B, 친구 = B×A 결과의
-                성분 합을 점수로 한다.
-              </li>
-              <li>연산이 불가능하거나 음수 합이 나오면 0 점.</li>
-            </ul>
-          </RuleItem>
-          <RuleItem n="③">
-            주사위가 <b className="text-violet-300">0, ½, 2</b> 중 하나가 나오면 각자
-            자신의 카드에 그 수를 실수배 한다.
-            <br />나: k × (내 카드 성분 합), 친구: k × (친구 카드 성분 합)
-          </RuleItem>
-          <RuleItem n="④">
-            이 과정을 <b className="text-amber-300">6 라운드</b> 반복하여{" "}
-            <b className="text-amber-300">최종 합산 점수가 큰 쪽</b> 이 이긴다!
-          </RuleItem>
+          <li className="flex items-start gap-2 text-xs leading-7 text-slate-300">
+            <RuleItem n="①">
+              매 라운드, <b className="text-sky-300">나</b> 와{" "}
+              <b className="text-pink-300">친구</b> 가 행렬 카드를 각각 1 장씩
+              선택한다. 한 번 선택한 카드는 다시 선택할 수 없다.
+            </RuleItem>
+          </li>
+          <li className="flex items-start gap-2 text-xs leading-7 text-slate-300">
+            <RuleItem n="②">
+              주사위를 굴려 <b className="text-amber-300">+, −, ×</b> 중 하나가 나오면
+              행렬 연산을 수행한다.
+              <ul className="mt-2 ml-3 space-y-1 text-xs">
+                <li>
+                  <b className="text-amber-300">+</b>: 양쪽 모두 A+B 결과의 성분 합을
+                  점수로 한다.
+                </li>
+                <li>
+                  <b className="text-amber-300">−</b>: 나 = A−B, 친구 = B−A 결과의
+                  성분 합을 점수로 한다.
+                </li>
+                <li>
+                  <b className="text-amber-300">×</b>: 나 = A×B, 친구 = B×A 결과의
+                  성분 합을 점수로 한다.
+                </li>
+                <li>연산이 불가능하거나 음수 합이 나오면 0 점.</li>
+              </ul>
+            </RuleItem>
+          </li>
+          <li className="flex items-start gap-2 text-xs leading-7 text-slate-300">
+            <RuleItem n="③">
+              주사위가 <b className="text-violet-300">0, ½, 2</b> 중 하나가 나오면 각자
+              자신의 카드에 그 수를 실수배 한다.
+              <br />나: k × (내 카드 성분 합), 친구: k × (친구 카드 성분 합)
+            </RuleItem>
+          </li>
+          <li className="flex items-start gap-2 text-xs leading-7 text-slate-300">
+            <RuleItem n="④">
+              이 과정을 <b className="text-amber-300">6 라운드</b> 반복하여{" "}
+              <b className="text-amber-300">최종 합산 점수가 큰 쪽</b> 이 이긴다!
+            </RuleItem>
+          </li>
         </ol>
 
         <div className="mt-3 rounded-lg border border-cyan-400/30 bg-cyan-400/[0.06] px-3 py-2 text-xs leading-7 text-slate-200">
@@ -354,13 +362,14 @@ function DieFace({ children, kind }: { children: ReactNode; kind: "op" | "num" }
 }
 
 function RuleItem({ n, children }: { n: string; children: ReactNode }) {
+  // 호출처에서 <li> 로 감싸 사용 — axe/structure 정적 분석이 <ol> 의 직접 자식을 <li> 로 인식하게 함.
   return (
-    <li className="flex items-start gap-2 text-xs leading-7 text-slate-300">
+    <>
       <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-300/20 font-bold text-amber-200">
         {n}
       </span>
       <div>{children}</div>
-    </li>
+    </>
   );
 }
 
