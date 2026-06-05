@@ -24,12 +24,23 @@ export type CellState = {
   locked: boolean;
 };
 
+export type BingoNav = {
+  /** null = 빙고판, number = 그 문제의 작도 화면. 모든 참여자가 같은 화면을 봄. */
+  problemNum: number | null;
+};
+
 export type BingoState = {
   probs: Record<number, CellState>;
+  /** 방장이 어느 화면을 보고 있는지 — Realtime 으로 모든 참여자에게 전파. */
+  nav?: BingoNav;
 };
 
 export function emptyState(): BingoState {
-  return { probs: {} };
+  return { probs: {}, nav: { problemNum: null } };
+}
+
+export function getNav(state: BingoState): BingoNav {
+  return state.nav ?? { problemNum: null };
 }
 
 export function emptyCell(): CellState {

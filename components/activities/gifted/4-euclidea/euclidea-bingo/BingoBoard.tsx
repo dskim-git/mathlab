@@ -25,6 +25,7 @@ import {
   emptyState,
   getBingoLines,
   getCell,
+  getNav,
   getTeamStats,
   isCellComplete,
 } from "@/lib/bingo/state";
@@ -44,8 +45,8 @@ export default function BingoBoard({ room, canEdit }: Props) {
 
   const [state, setState] = useState<BingoState>(initialState);
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
-  const [problemNum, setProblemNum] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const navProblemNum = getNav(state).problemNum;
 
   // ── Realtime 구독: 이 방의 state 변경을 모든 참여자에게 전파 ────────
   useEffect(() => {
@@ -94,6 +95,22 @@ export default function BingoBoard({ room, canEdit }: Props) {
     [room.id, state],
   );
 
+  // ── 화면 이동 (방장만 호출 — RLS 가 UPDATE 막아도 학생 측 호출은 의미 없음).
+  const goToProblem = useCallback(
+    async (num: number | null) => {
+      if (!canEdit) return;
+      const nextState: BingoState = { ...state, nav: { problemNum: num } };
+      setState(nextState);
+      try {
+        await updateRoomState(supabase, room.id, nextState as unknown as Record<string, unknown>);
+      } catch (e) {
+        setError((e as Error).message);
+        setState(state);
+      }
+    },
+    [canEdit, room.id, state],
+  );
+
   const handleReset = useCallback(async () => {
     if (!confirm("이 빙고 방의 모든 진행 상태를 초기화하시겠어요?")) return;
     const empty = emptyState();
@@ -107,9 +124,15 @@ export default function BingoBoard({ room, canEdit }: Props) {
 
   const lines = useMemo(() => getBingoLines(state), [state]);
 
-  // 교사 전용 작도 화면 — 학생에겐 진입 경로 자체가 없음 (모달 버튼이 안 보임).
-  if (canEdit && problemNum != null) {
-    return <ProblemView num={problemNum} onBack={() => setProblemNum(null)} />;
+  // 작도 화면 — state.nav 가 가리키면 모든 참여자(교사·학생) 동시 진입.
+  // 학생은 onBack 이 없어 "빙고판으로" 버튼이 숨겨짐 (교사가 nav 를 풀어야 복귀).
+  if (navProblemNum != null) {
+    return (
+      <ProblemView
+        num={navProblemNum}
+        onBack={canEdit ? () => goToProblem(null) : undefined}
+      />
+    );
   }
 
   return (
@@ -152,7 +175,7 @@ export default function BingoBoard({ room, canEdit }: Props) {
           onClose={() => setSelectedCell(null)}
           onChangeCond={changeCond}
           onOpenProblem={(n) => {
-            setProblemNum(n);
+            goToProblem(n);
             setSelectedCell(null);
           }}
         />

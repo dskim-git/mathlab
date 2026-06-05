@@ -17,7 +17,8 @@ const EMPTY_SEED: Seed = { points: [], lines: [], circles: [] };
 
 type Props = {
   num: number;
-  onBack: () => void;
+  /** 방장(교사)일 때만 전달 — 학생은 undefined → "빙고판으로" 버튼이 안 보임. */
+  onBack?: () => void;
 };
 
 export default function ProblemView({ num, onBack }: Props) {
@@ -37,13 +38,19 @@ export default function ProblemView({ num, onBack }: Props) {
             </span>
           </h3>
         </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800"
-        >
-          ◀ 빙고판으로
-        </button>
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800"
+          >
+            ◀ 빙고판으로
+          </button>
+        ) : (
+          <span className="rounded-md border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[11px] font-bold text-cyan-300">
+            교사 화면 따라가는 중
+          </span>
+        )}
       </header>
 
       <ConstructionBoard seed={EMPTY_SEED} allowedTools={["point", "line", "circle", "perpBisector"]} />
