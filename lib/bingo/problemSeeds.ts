@@ -301,6 +301,47 @@ function findVariants5(board: Board): number[] {
   return Array.from(found).sort();
 }
 
+// ─── 문제 6: 원에 내접하는 정사각형 (6L 7E) ─────────────────
+// 원 + 원 위 점 P 시드. P 가 정사각형 한 꼭짓점이 되도록 내접 정사각형 작도.
+// 다른 세 꼭짓점 = P 를 원 중심 기준 90°/180°/270° 회전 위치 — 3 점 모두 발견시 V=1.
+const PROBLEM_6_CX = 320;
+const PROBLEM_6_CY = 220;
+const PROBLEM_6_SEED: Seed = {
+  points: [
+    { id: "O", x: PROBLEM_6_CX, y: PROBLEM_6_CY, label: "O" },
+    { id: "P", x: PROBLEM_6_CX + 120, y: PROBLEM_6_CY, label: "P" },
+  ],
+  lines: [],
+  circles: [{ id: "given", center: "O", through: "P" }],
+};
+
+const EPS_INSCRIBED = 8;
+
+function findVariants6(board: Board): number[] {
+  const O = board.points.find((p) => p.id === "O");
+  const P = board.points.find((p) => p.id === "P");
+  if (!O || !P) return [];
+  const dx = P.x - O.x;
+  const dy = P.y - O.y;
+  // P 의 O 기준 90° (시계반대), 180°, 270° 회전 좌표 — 정사각형 다른 세 꼭짓점.
+  const targets = [
+    { x: O.x - dy, y: O.y + dx },
+    { x: O.x - dx, y: O.y - dy },
+    { x: O.x + dy, y: O.y - dx },
+  ];
+  const seedIds = new Set(["O", "P"]);
+  let count = 0;
+  for (const t of targets) {
+    const matched = board.points.some((p) => {
+      if (p.hidden) return false;
+      if (seedIds.has(p.id)) return false;
+      return dist(p, t) < EPS_INSCRIBED;
+    });
+    if (matched) count++;
+  }
+  return count === 3 ? [0] : [];
+}
+
 export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   1: {
     num: 1,
@@ -343,5 +384,14 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
     seed: PROBLEM_5_SEED,
     variantCount: 4,
     findVariants: findVariants5,
+  },
+  6: {
+    num: 6,
+    title: "원에 내접하는 정사각형",
+    description:
+      "원 위의 점 P 가 한 꼭짓점이 되도록 원에 내접하는 정사각형을 작도하세요.",
+    seed: PROBLEM_6_SEED,
+    variantCount: 1,
+    findVariants: findVariants6,
   },
 };
