@@ -160,6 +160,7 @@ import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edg
 import SieveEratosthenes from "./gifted/1-primes/sieve-eratosthenes/SieveEratosthenes";
 import MultiplicativeFunctions from "./gifted/1-primes/multiplicative-functions/MultiplicativeFunctions";
 import ZetaExplorer from "./gifted/1-primes/zeta-explorer/ZetaExplorer";
+import ZetaArithmetic from "./gifted/1-primes/zeta-arithmetic/ZetaArithmetic";
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
@@ -302,6 +303,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "gifted/sieve_eratosthenes": SieveEratosthenes,
   "gifted/multiplicative_functions": MultiplicativeFunctions,
   "gifted/zeta_explorer": ZetaExplorer,
+  "gifted/zeta_arithmetic": ZetaArithmetic,
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
   "gifted/euclidea_bingo": EuclideaBingo,

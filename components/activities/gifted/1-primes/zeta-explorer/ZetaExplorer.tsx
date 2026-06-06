@@ -1242,14 +1242,29 @@ function EulerChallengeCard() {
   const [goalPct, setGoalPct] = useState<number>(0.95);
   const [guess, setGuess] = useState<string>("");
   const [result, setResult] = useState<{
-    kind: "ok" | "close" | "far";
+    kind: "ok" | "close" | "far" | "invalid";
     needed: number;
     msg: string;
   } | null>(null);
 
   function check() {
     const g = parseInt(guess, 10);
-    if (Number.isNaN(g) || g < 1 || g > 50) return;
+    if (Number.isNaN(g)) {
+      setResult({
+        kind: "invalid",
+        needed: 0,
+        msg: "숫자를 입력해주세요!",
+      });
+      return;
+    }
+    if (g < 1 || g > 20) {
+      setResult({
+        kind: "invalid",
+        needed: 0,
+        msg: `1 ~ 20 사이의 숫자를 입력해주세요! (시뮬레이션은 처음 20 개 소수만 사용)`,
+      });
+      return;
+    }
     const target = PRECOMP[2] * goalPct;
     let needed = 0;
     let prod = 1;
@@ -1310,12 +1325,12 @@ function EulerChallengeCard() {
         <input
           type="number"
           min={1}
-          max={50}
+          max={20}
           value={guess}
           onChange={(e) => setGuess(e.target.value)}
-          placeholder="예측 개수"
+          placeholder="1 ~ 20"
           className="w-24 rounded-md border border-white/10 bg-slate-900 px-2 py-1 text-center text-slate-100"
-          aria-label="예측 개수"
+          aria-label="예측 개수 (1 ~ 20)"
         />
         <button
           type="button"
@@ -1333,7 +1348,9 @@ function EulerChallengeCard() {
               ? "bg-emerald-500/15 text-emerald-100"
               : result.kind === "close"
                 ? "bg-amber-500/15 text-amber-100"
-                : "bg-rose-500/15 text-rose-100")
+                : result.kind === "invalid"
+                  ? "bg-slate-500/15 text-slate-200"
+                  : "bg-rose-500/15 text-rose-100")
           }
         >
           {result.msg}
