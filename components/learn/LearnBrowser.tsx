@@ -72,6 +72,9 @@ export default function LearnBrowser({
   const searchParams = useSearchParams();
   const qsSubject = searchParams.get("subject");
   const qsUnit = searchParams.get("unit");
+  // ?activity=<slug> — 잎 안의 interactive_activity 블록 중 슬러그 매칭되는 것을 자동 선택.
+  // 마운트 시 1회만 사용(이하 초기 pendingBlockId 결정에 쓰임). 이후엔 사용자 클릭이 덮어씀.
+  const qsActivity = searchParams.get("activity");
 
   // ?subject= 가 접근 가능한 교과명이면 그걸로, 아니면 첫 번째 교과로.
   const [subject, setSubject] = useState(() => {
@@ -108,7 +111,27 @@ export default function LearnBrowser({
   const [query, setQuery] = useState("");
   // 검색 결과의 활동 칩 클릭으로 점프할 때, 잎 안에서 열어 줄 블록 id.
   // ActivityRenderer 가 마운트/업데이트 시 이 블록을 선택 + 콘텐츠 영역으로 스크롤한다.
-  const [pendingBlockId, setPendingBlockId] = useState<string | undefined>();
+  // 마운트 시 ?subject=&unit=&activity= 딥링크가 있으면 해당 블록 id 로 초기화.
+  const [pendingBlockId, setPendingBlockId] = useState<string | undefined>(
+    () => {
+      if (!qsUnit || !qsActivity) return undefined;
+      const sub =
+        qsSubject && subjects.some((s) => s.name === qsSubject)
+          ? qsSubject
+          : subjects[0]?.name;
+      if (!sub) return undefined;
+      const target = units.find(
+        (u) => u.subject === sub && u.unit_key === qsUnit
+      );
+      if (!target) return undefined;
+      const blk = (target.content_blocks ?? []).find(
+        (b) =>
+          b.type === "interactive_activity" &&
+          b.content.activitySlug === qsActivity
+      );
+      return blk?.id;
+    }
+  );
 
   // 모든 교과의 잎(소단원)을 가로질러 [단원 라벨 + 부모 경로 + 포함 활동 짧은 제목]을
   // 한 줄 문자열로 합쳐 검색 인덱스를 만든다. units 가 변하지 않는 한 1회 계산.
@@ -282,6 +305,30 @@ export default function LearnBrowser({
   const lastId = effectiveChain[effectiveChain.length - 1];
   const lastNode = lastId ? byId.get(lastId) : undefined;
   const selectedLeaf = lastNode && isLeaf(lastNode) ? lastNode : undefined;
+
+  // URL 동기화 — 선택 잎(과 pendingBlockId 가 가리키는 활동 슬러그)을 주소창에 반영.
+  // window.history.replaceState 로 RSC 재요청 없이 URL 만 갱신(scroll 영향 없음).
+  // 학생/교사 누구나 현재 화면을 그대로 재현하는 URL 을 주소창에서 바로 복사 가능.
+  useEffect(() => {
+    if (!selectedLeaf) return;
+    let activitySlug: string | undefined;
+    if (pendingBlockId) {
+      const blk = (selectedLeaf.content_blocks ?? []).find(
+        (b) => b.id === pendingBlockId
+      );
+      if (blk?.type === "interactive_activity") {
+        activitySlug = blk.content.activitySlug;
+      }
+    }
+    const params = new URLSearchParams();
+    params.set("subject", selectedLeaf.subject);
+    params.set("unit", selectedLeaf.unit_key);
+    if (activitySlug) params.set("activity", activitySlug);
+    const newUrl = `/learn?${params.toString()}`;
+    if (window.location.pathname + window.location.search !== newUrl) {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [selectedLeaf, pendingBlockId]);
 
   // 잎(소단원)이 바뀔 때마다 본인 진도(learning_progress)를 upsert.
   // 로그인된 사용자만 — 모든 역할 공통. 실패는 조용히 무시.
