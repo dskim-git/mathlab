@@ -10,7 +10,7 @@ import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
    🎂 생일 역설 탐구  (3 tabs)
    1) 원리 이해 — 365일 원형 시뮬 + 수식 빈칸 + n-P(A) 곡선
    2) 예시 분석 — 34명 생일 표 + MCQ 5
-   3) 우리 반 탐구 — Supabase 배선은 단계 B (현재 placeholder)
+   3) 우리 반 탐구 — Supabase RPC(get_class_birthday_stats) 연동, 학생/교사/관리자 phase 분기
    ────────────────────────────────────────────────────────────── */
 
 // ============================================================
