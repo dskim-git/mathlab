@@ -678,7 +678,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "point"
                 ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -696,7 +696,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "line"
                 ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -714,7 +714,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "circle"
                 ? "bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -732,7 +732,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "perpBisector"
                 ? "bg-fuchsia-500/25 text-fuchsia-200 ring-1 ring-fuchsia-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -750,7 +750,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "perpLine"
                 ? "bg-rose-500/25 text-rose-200 ring-1 ring-rose-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -768,7 +768,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "parallel"
                 ? "bg-teal-500/25 text-teal-200 ring-1 ring-teal-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -786,7 +786,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "angleBisector"
                 ? "bg-orange-500/25 text-orange-200 ring-1 ring-orange-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -804,7 +804,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "pan"
                 ? "bg-sky-500/25 text-sky-200 ring-1 ring-sky-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -822,7 +822,7 @@ export default function ConstructionBoard({
               setPending([]);
             }}
             className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition " +
+              "rounded-md px-2 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 sm:text-sm " +
               (tool === "erase"
                 ? "bg-rose-500/25 text-rose-200 ring-1 ring-rose-400/50"
                 : "bg-slate-800 text-slate-400 ring-1 ring-white/10 hover:text-slate-200")
@@ -833,19 +833,19 @@ export default function ConstructionBoard({
           </button>
         ) : null}
 
-        <span className="ml-3 text-xs font-semibold text-slate-400">
+        <span className="ml-1 text-[11px] font-semibold text-slate-400 sm:ml-3 sm:text-xs">
           사용:{" "}
           <span className="text-cyan-300">{lCount}L</span>
           <span className="mx-1 text-slate-600">·</span>
           <span className="text-violet-300">{eCount}E</span>
         </span>
 
-        <span className="ml-auto flex flex-wrap items-center gap-2">
+        <span className="ml-auto flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => zoomBy(0.8)}
             disabled={zoomScale <= 0.2}
-            className="rounded-md border border-white/15 bg-slate-800 px-2.5 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
+            className="rounded-md border border-white/15 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30 sm:px-2.5 sm:py-1.5 sm:text-sm"
             title="확대"
           >
             🔍+
@@ -854,7 +854,7 @@ export default function ConstructionBoard({
             type="button"
             onClick={() => zoomBy(1.25)}
             disabled={zoomScale >= 5}
-            className="rounded-md border border-white/15 bg-slate-800 px-2.5 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
+            className="rounded-md border border-white/15 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30 sm:px-2.5 sm:py-1.5 sm:text-sm"
             title="축소"
           >
             🔍−
@@ -863,7 +863,7 @@ export default function ConstructionBoard({
             type="button"
             onClick={undo}
             disabled={history.length === 0}
-            className="rounded-md border border-white/15 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30"
+            className="rounded-md border border-white/15 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-default disabled:opacity-30 sm:px-3 sm:py-1.5 sm:text-sm"
             title="실행취소 — 마지막 작도 한 단계 되돌리기"
           >
             ↶ 실행취소
@@ -871,7 +871,7 @@ export default function ConstructionBoard({
           <button
             type="button"
             onClick={reset}
-            className="rounded-md border border-rose-400/40 bg-rose-500/15 px-3 py-1.5 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/25"
+            className="rounded-md border border-rose-400/40 bg-rose-500/15 px-2 py-1 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/25 sm:px-3 sm:py-1.5 sm:text-sm"
             title="초기화 — 작도 + 화면 위치 모두 처음으로"
           >
             ↺ 초기화

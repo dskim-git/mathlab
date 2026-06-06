@@ -201,17 +201,17 @@ function Cell({
       type="button"
       onClick={onClick}
       className={
-        "flex aspect-square min-h-[78px] flex-col items-stretch justify-between rounded-lg border-2 border-cyan-900/60 bg-slate-950 p-1.5 text-left transition " +
+        "flex min-h-[74px] flex-col items-stretch justify-between rounded-lg border-2 border-cyan-900/60 bg-slate-950 p-1.5 text-left transition sm:aspect-square sm:min-h-[78px] " +
         (canEdit ? "cursor-pointer hover:border-cyan-400" : "cursor-pointer hover:border-cyan-500")
       }
       style={style}
       aria-label={`문제 ${num}`}
     >
       <div className="flex items-start justify-between gap-1">
-        <span className="text-[10px] font-bold text-slate-500">{num}</span>
+        <span className="text-[11px] font-bold text-slate-500">{num}</span>
         {ownerTeam ? (
           <span
-            className="rounded px-1 text-[9px] font-extrabold"
+            className="rounded px-1 text-[10px] font-extrabold leading-tight"
             style={{ background: ownerTeam.bg, color: ownerTeam.color }}
           >
             {ownerTeam.name}
@@ -219,9 +219,9 @@ function Cell({
           </span>
         ) : null}
       </div>
-      <div className="flex flex-col items-center justify-center text-center">
-        <span className="text-base font-extrabold text-sky-300">{problem.L}L</span>
-        <span className="text-[11px] font-bold text-slate-400">{problem.E}E</span>
+      <div className="flex flex-col items-center justify-center text-center leading-none">
+        <span className="text-lg font-extrabold text-sky-300">{problem.L}L</span>
+        <span className="mt-0.5 text-xs font-bold text-slate-400">{problem.E}E</span>
       </div>
       <div className="flex items-center justify-center gap-0.5">
         {(["L", "E", "V"] as CondKey[]).map((k) => (
