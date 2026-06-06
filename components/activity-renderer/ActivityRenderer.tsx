@@ -30,6 +30,12 @@ type ActivityRendererProps = {
    */
   initialBlockId?: string;
 
+  /**
+   * (옵션) 학생의 성찰 제출이 있는 활동 슬러그 집합. 상단 수업블록 목차 칩에서
+   * 해당 interactive_activity 블록 옆에 ⭐ 표시. 비우면(undefined) 인디케이터 비표시.
+   */
+  reflectedSlugs?: Set<string>;
+
   activityId?: string;
   activitySlug?: string;
   activitySubject?: string | null;
@@ -122,6 +128,7 @@ export default function ActivityRenderer({
   studentClassNumber,
   studentCode,
   initialBlockId,
+  reflectedSlugs,
 }: ActivityRendererProps) {
   // initialBlockId 가 유효(블록 목록에 있음)하면 그걸 첫 선택으로, 아니면 첫 블록.
   const firstSelectedId = useMemo(() => {
@@ -315,6 +322,9 @@ export default function ActivityRenderer({
           <div className="flex min-w-max gap-2 pb-1">
             {blocks.map((block, index) => {
               const isSelected = block.id === selectedBlock.id;
+              const reflected =
+                block.type === "interactive_activity" &&
+                reflectedSlugs?.has(block.content.activitySlug);
 
               return (
                 <button
@@ -326,12 +336,16 @@ export default function ActivityRenderer({
                       ? "min-w-[170px] rounded-xl border border-cyan-300/50 bg-cyan-300/10 px-4 py-3 text-left text-sm font-semibold text-cyan-100"
                       : "min-w-[170px] rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-slate-300 transition hover:bg-white/10"
                   }
+                  title={reflected ? "성찰 제출 완료" : undefined}
                 >
                   <span className="block text-xs text-slate-400">
                     {String(index + 1).padStart(2, "0")} ·{" "}
                     {getBlockTypeLabel(block.type)}
                   </span>
                   <span className="mt-1 block whitespace-nowrap">
+                    {reflected ? (
+                      <span className="mr-1 text-amber-300">⭐</span>
+                    ) : null}
                     {displayBlockTitle(block)}
                   </span>
                 </button>

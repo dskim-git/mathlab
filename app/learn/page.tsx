@@ -51,6 +51,18 @@ export default async function LearnPage() {
   // LearnBrowser 가 OT 버튼·콘텐츠를 모두 숨긴다.
   const otMaterials = isAdmin ? OT_MATERIALS : {};
 
+  // 학생일 때 students.id 를 미리 해석해 LearnBrowser 로 전달.
+  // 학생만 진척(✓/⭐) 인디케이터를 보고, 교사·관리자는 미리보기 동선이라 노이즈 회피.
+  let studentId: string | null = null;
+  if (profile.role === "student") {
+    const { data: row } = await supabase
+      .from("students")
+      .select("id")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    studentId = (row as { id: string } | null)?.id ?? null;
+  }
+
   return (
     <main className="min-h-screen px-6 py-10">
       <div className="mx-auto max-w-6xl">
@@ -73,6 +85,7 @@ export default async function LearnPage() {
             units={units}
             otMaterials={otMaterials}
             overrideEntries={overrideEntries}
+            studentId={studentId}
           />
         </div>
       </div>

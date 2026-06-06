@@ -46,6 +46,7 @@ export default function LearnBrowser({
   units,
   otMaterials = {},
   overrideEntries = [],
+  studentId = null,
 }: {
   subjects: AccessibleSubject[];
   units: CurriculumUnit[];
@@ -56,6 +57,11 @@ export default function LearnBrowser({
    * 학생 = 자기 학급 담당 교사의 편집, 교사 = 본인 편집, 그 외 = 빈 배열.
    */
   overrideEntries?: LessonOverrideEntry[];
+  /**
+   * 학생일 때만 진척(✓ 방문 / ⭐ 성찰 제출) 인디케이터 활성화.
+   * null 이면 교사·관리자 미리보기 동선 — 인디케이터 비표시.
+   */
+  studentId?: string | null;
 }) {
   const overrideMap = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -155,6 +161,60 @@ export default function LearnBrowser({
     [subjects]
   );
 
+  // 학생 진척 인디케이터 — ✓(방문) / ⭐(성찰 제출).
+  // 방문 = learning_progress 에 (subject, unit_key) 행 존재(잎 진입 시 upsert 됨).
+  // 성찰 = activity_responses 에 그 잎이 포함한 활동 슬러그 중 하나라도 응답 존재.
+  // studentId 가 없으면(교사·관리자) fetch 자체 안 함 → 두 set 모두 빈 채 유지.
+  const [visitedLeafKeys, setVisitedLeafKeys] = useState<Set<string>>(new Set());
+  const [reflectedSlugs, setReflectedSlugs] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!studentId) return;
+    let active = true;
+    (async () => {
+      const [progRes, reflRes] = await Promise.all([
+        supabase
+          .from("learning_progress")
+          .select("subject, unit_key"),
+        supabase
+          .from("activity_responses")
+          .select("activity_slug")
+          .eq("student_id", studentId),
+      ]);
+      if (!active) return;
+      const vis = new Set<string>();
+      for (const r of (progRes.data ?? []) as Array<{
+        subject: string;
+        unit_key: string;
+      }>) {
+        vis.add(`${r.subject}::${r.unit_key}`);
+      }
+      const refl = new Set<string>();
+      for (const r of (reflRes.data ?? []) as Array<{
+        activity_slug: string;
+      }>) {
+        refl.add(r.activity_slug);
+      }
+      setVisitedLeafKeys(vis);
+      setReflectedSlugs(refl);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [studentId]);
+
+  // 잎의 진척 상태 → 표시할 아이콘. studentId 없으면 항상 null.
+  function leafStatusIcon(leaf: CurriculumUnit): "star" | "check" | null {
+    if (!studentId) return null;
+    const hasReflection = (leaf.content_blocks ?? []).some(
+      (b) =>
+        b.type === "interactive_activity" &&
+        reflectedSlugs.has(b.content.activitySlug)
+    );
+    if (hasReflection) return "star";
+    if (visitedLeafKeys.has(`${leaf.subject}::${leaf.unit_key}`)) return "check";
+    return null;
+  }
+
   const trimmedQuery = query.trim();
   const searchResults = useMemo<SearchEntry[]>(() => {
     if (trimmedQuery.length === 0) return [];
@@ -246,11 +306,20 @@ export default function LearnBrowser({
         },
         { onConflict: "profile_id,subject,unit_key" }
       );
+      // 학생이면 방문 set 도 즉시 갱신 → 새로고침 없이 ✓ 노출.
+      if (!studentId) return;
+      setVisitedLeafKeys((prev) => {
+        const key = `${leafSubject}::${leafKey}`;
+        if (prev.has(key)) return prev;
+        const next = new Set(prev);
+        next.add(key);
+        return next;
+      });
     })();
     return () => {
       active = false;
     };
-  }, [leafKey, leafSubject, leafTitle]);
+  }, [leafKey, leafSubject, leafTitle, studentId]);
 
   // 어떤 레벨의 칩을 누르면: 그 레벨까지 잘라 붙이고, 컨테이너면 첫 잎까지 자동으로 더 내려간다.
   function selectAt(level: number, id: string) {
@@ -359,7 +428,20 @@ export default function LearnBrowser({
                         className="block w-full text-left focus:outline-none"
                       >
                         <div className="text-sm font-semibold text-white">
-                          📄 {e.leaf.label}
+                          📄{" "}
+                          {(() => {
+                            const s = leafStatusIcon(e.leaf);
+                            if (s === "star")
+                              return (
+                                <span className="mr-1 text-amber-300">⭐</span>
+                              );
+                            if (s === "check")
+                              return (
+                                <span className="mr-1 text-emerald-300">✓</span>
+                              );
+                            return null;
+                          })()}
+                          {e.leaf.label}
                         </div>
                         <div className="mt-0.5 text-xs text-slate-400">
                           {e.path}
@@ -448,6 +530,7 @@ export default function LearnBrowser({
               {row.options.map((u) => {
                 const active = u.id === row.selectedId;
                 const leaf = isLeaf(u);
+                const status = leaf ? leafStatusIcon(u) : null;
                 return (
                   <button
                     key={u.id}
@@ -458,8 +541,20 @@ export default function LearnBrowser({
                         ? "shrink-0 rounded-lg border border-cyan-300/60 bg-cyan-300/15 px-3 py-1.5 text-sm font-semibold text-cyan-100"
                         : "shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300 transition hover:bg-white/10"
                     }
+                    title={
+                      status === "star"
+                        ? "성찰 제출 완료"
+                        : status === "check"
+                        ? "방문함"
+                        : undefined
+                    }
                   >
                     {leaf ? "📄 " : ""}
+                    {status === "star" ? (
+                      <span className="mr-1 text-amber-300">⭐</span>
+                    ) : status === "check" ? (
+                      <span className="mr-1 text-emerald-300">✓</span>
+                    ) : null}
                     {u.label}
                   </button>
                 );
@@ -521,6 +616,8 @@ export default function LearnBrowser({
                 activitySubject={selectedLeaf.subject}
                 // 검색 → 활동 칩으로 점프해 들어온 경우 그 블록을 열고 스크롤.
                 initialBlockId={pendingBlockId}
+                // 학생일 때만 — 상단 블록 칩에 ⭐ (성찰 제출 완료) 인디케이터.
+                reflectedSlugs={studentId ? reflectedSlugs : undefined}
               />
             );
           })()
