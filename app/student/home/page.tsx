@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -52,6 +52,12 @@ export default function StudentHomePage() {
   const [lastUnit, setLastUnit] = useState<
     { subject: string; unit_key: string; unit_title: string } | null
   >(null);
+  // ⭐ 일관성 — /learn 에서처럼 "이어보기" 카드에도 그 잎의 활동 중 성찰 제출이 있으면 ⭐ 표시.
+  // 본인 응답 슬러그 set + lastUnit 잎의 활동 슬러그 list 두 개 필요.
+  const [reflectedSlugs, setReflectedSlugs] = useState<Set<string>>(new Set());
+  const [lastUnitActivitySlugs, setLastUnitActivitySlugs] = useState<string[]>(
+    []
+  );
 
   useEffect(() => {
     let active = true;
@@ -142,10 +148,11 @@ export default function StudentHomePage() {
         .from("activity_visits")
         .select("id", { count: "exact", head: true })
         .gte("visited_at", weekStartIso),
-      // 내 성찰 총수(제출한 응답 개수) — activity_responses.
+      // 내 응답 — count + 슬러그 목록을 한 번에. count 는 length 로 산출하고
+      // 슬러그 set 은 이어보기 카드 ⭐ 판정에 사용.
       supabase
         .from("activity_responses")
-        .select("id", { count: "exact", head: true })
+        .select("activity_slug")
         .eq("student_id", studentId),
       // 별표 성찰 — 본인이 마킹한 reflection_priority.
       supabase
@@ -165,7 +172,11 @@ export default function StudentHomePage() {
     void user;
     setTotalCount(totalRes.count ?? 0);
     setWeeklyCount(weeklyRes.count ?? 0);
-    setReflectionCount(reflectionRes.count ?? 0);
+    const reflRows = (reflectionRes.data ?? []) as Array<{
+      activity_slug: string;
+    }>;
+    setReflectionCount(reflRows.length);
+    setReflectedSlugs(new Set(reflRows.map((r) => r.activity_slug)));
     setMarkedCount(markedRes.count ?? 0);
     setRecent((recentRes.data ?? []) as RecentVisitRow[]);
   }, [studentId]);
@@ -232,6 +243,48 @@ export default function StudentHomePage() {
       setLastUnit(row);
     })();
   }, []);
+
+  // lastUnit 의 활동 슬러그 set — curriculum_units 한 행만 가져와 content_blocks 의
+  // interactive_activity 슬러그 추출. reflectedSlugs 와 교집합으로 ⭐ 판정.
+  const lastUnitKey = lastUnit?.unit_key;
+  const lastUnitSubject = lastUnit?.subject;
+  useEffect(() => {
+    if (!lastUnitKey || !lastUnitSubject) {
+      setLastUnitActivitySlugs([]);
+      return;
+    }
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("curriculum_units")
+        .select("content_blocks")
+        .eq("subject", lastUnitSubject)
+        .eq("unit_key", lastUnitKey)
+        .maybeSingle();
+      if (!active) return;
+      const blocks =
+        (data as { content_blocks: unknown[] | null } | null)?.content_blocks ??
+        [];
+      const slugs: string[] = [];
+      for (const b of blocks as Array<{
+        type?: string;
+        content?: { activitySlug?: string };
+      }>) {
+        if (b.type === "interactive_activity" && b.content?.activitySlug) {
+          slugs.push(b.content.activitySlug);
+        }
+      }
+      setLastUnitActivitySlugs(slugs);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [lastUnitKey, lastUnitSubject]);
+
+  const lastUnitHasReflection = useMemo(() => {
+    if (lastUnitActivitySlugs.length === 0) return false;
+    return lastUnitActivitySlugs.some((s) => reflectedSlugs.has(s));
+  }, [lastUnitActivitySlugs, reflectedSlugs]);
 
   if (!authChecked) {
     return (
@@ -344,6 +397,9 @@ export default function StudentHomePage() {
           value={
             lastUnit ? (
               <span className="block break-keep text-lg leading-snug sm:text-xl">
+                {lastUnitHasReflection ? (
+                  <span className="mr-1 text-amber-300">⭐</span>
+                ) : null}
                 {lastUnit.unit_title}
               </span>
             ) : (
