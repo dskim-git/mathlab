@@ -1373,7 +1373,7 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   9: {
     num: 9,
     title: "45°",
-    description: "주어진 변에서 45° 각도를 작도하세요.",
+    description: "주어진 반직선에서 45° 각도를 작도하세요.",
     seed: PROBLEM_9_SEED,
     variantCount: 2,
     findVariants: findVariants9,
@@ -1416,7 +1416,7 @@ export const PROBLEM_SEEDS: Record<number, ProblemSpec> = {
   14: {
     num: 14,
     title: "30°",
-    description: "주어진 변에서 30° 각도를 작도하세요.",
+    description: "주어진 반직선에서 30° 각도를 작도하세요.",
     seed: PROBLEM_14_SEED,
     variantCount: 2,
     findVariants: findVariants14,
