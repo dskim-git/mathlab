@@ -22,14 +22,18 @@ import {
 } from "@/lib/bingo/rooms";
 import { getMyGroups, type GroupMembership } from "@/lib/groups/permissions";
 import {
+  type BingoEvent,
   type BingoState,
   type CondKey,
+  type LineEvent,
   applyCondChange,
   emptyState,
+  getBingoLines,
   getCell,
+  getHistory,
   isPractice,
 } from "@/lib/bingo/state";
-import { type TeamId } from "@/lib/bingo/data";
+import { TEAMS, type TeamId } from "@/lib/bingo/data";
 import BingoBoard from "./BingoBoard";
 
 type Role = "teacher" | "student" | "admin" | "general" | "unknown";
@@ -645,6 +649,131 @@ function ParticipantsGroup({
   );
 }
 
+// ─── 진행 히스토리 배지·패널 ─────────────────────
+// 방장의 cond 변경 + 새 빙고 라인 발생을 시간순으로 누적. 학생도 자기·다른 팀 진행을
+// 한 눈에 볼 수 있게 모두에게 표시 (방 코드 알면 누구나 참여 가능한 게임 운영 특성상
+// 정보 공개).
+function HistoryBadge({ history }: { history: BingoEvent[] }) {
+  const [open, setOpen] = useState(false);
+  const count = history.length;
+  if (count === 0) {
+    return (
+      <div
+        className="rounded-md border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-xs font-bold text-slate-500"
+        title="아직 진행 이벤트 없음"
+      >
+        📜 0건
+      </div>
+    );
+  }
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="rounded-md border border-purple-400/40 bg-purple-500/15 px-2.5 py-1 text-xs font-bold text-purple-200 transition hover:bg-purple-500/25"
+        title="진행 히스토리 보기"
+      >
+        📜 {count}건
+      </button>
+      {open ? (
+        <div className="absolute right-0 top-full z-20 mt-1 w-80 rounded-xl border border-white/10 bg-slate-950 p-3 text-xs shadow-2xl sm:w-96">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-bold text-slate-200">진행 히스토리 ({count})</span>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="text-slate-500 hover:text-slate-300"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+          </div>
+          <HistoryList history={history} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HistoryList({ history }: { history: BingoEvent[] }) {
+  // 최신 위 (시간 역순) — 최근 변화가 한눈에 보임.
+  const sorted = useMemo(() => [...history].sort((a, b) => b.ts - a.ts), [history]);
+  return (
+    <div className="max-h-[60vh] space-y-1.5 overflow-y-auto pr-1">
+      {sorted.map((e, i) => (
+        <HistoryRow key={`${e.ts}-${i}`} event={e} />
+      ))}
+    </div>
+  );
+}
+
+function HistoryRow({ event }: { event: BingoEvent }) {
+  const time = formatTimeHMS(event.ts);
+  if (event.kind === "line") {
+    const team = TEAMS[event.team];
+    return (
+      <div
+        className="flex items-center justify-between rounded-md border px-2 py-1.5"
+        style={{ borderColor: team.color, background: `${team.color}1f` }}
+      >
+        <div className="flex items-center gap-1.5">
+          <span>🎯</span>
+          <span className="font-bold" style={{ color: team.color }}>
+            {team.name}
+          </span>
+          <span className="font-bold text-amber-300">{event.lineType} 빙고!</span>
+        </div>
+        <span className="text-[10px] font-mono text-slate-500">{time}</span>
+      </div>
+    );
+  }
+  // cond — 차지(team!=null) 또는 취소(team=null).
+  const team = event.team != null ? TEAMS[event.team] : null;
+  const isCancel = event.team == null;
+  return (
+    <div className="flex items-center justify-between rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1">
+      <div className="flex items-center gap-1.5">
+        {team ? (
+          <span
+            className="rounded px-1.5 py-0.5 text-[10px] font-bold"
+            style={{ background: team.bg, color: team.color, border: `1px solid ${team.color}` }}
+          >
+            {team.name}
+          </span>
+        ) : event.prevTeam != null ? (
+          <span
+            className="rounded px-1.5 py-0.5 text-[10px] font-bold line-through opacity-60"
+            style={{
+              background: TEAMS[event.prevTeam].bg,
+              color: TEAMS[event.prevTeam].color,
+              border: `1px solid ${TEAMS[event.prevTeam].color}`,
+            }}
+          >
+            {TEAMS[event.prevTeam].name}
+          </span>
+        ) : null}
+        <span className="text-slate-300">
+          문제 <b className="text-slate-100">#{event.num}</b>{" "}
+          <b style={{ color: team?.color ?? "#94a3b8" }}>{event.cond}</b>{" "}
+          <span className={isCancel ? "text-rose-300" : "text-slate-400"}>
+            {isCancel ? "취소" : "차지"}
+          </span>
+        </span>
+      </div>
+      <span className="text-[10px] font-mono text-slate-500">{time}</span>
+    </div>
+  );
+}
+
+function formatTimeHMS(ts: number): string {
+  const d = new Date(ts);
+  const h = d.getHours().toString().padStart(2, "0");
+  const m = d.getMinutes().toString().padStart(2, "0");
+  const s = d.getSeconds().toString().padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
 // ─── 방 내부 ─────────────────────────────────
 function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () => void }) {
   const isOwner = room.created_by === me.profileId;
@@ -844,13 +973,31 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
     [isOwner, room.id, state],
   );
 
-  // 셀 조건(L/E/V) 변경
+  // 셀 조건(L/E/V) 변경 — 변경 이벤트 + 새 빙고 라인 발생 이벤트를 history 에 함께 누적.
   const handleChangeCond = useCallback(
     async (num: number, key: CondKey, team: TeamId | null) => {
-      const prev = getCell(state, num);
-      const nextCell = applyCondChange(prev, key, team);
-      if (nextCell === prev) return;
-      await persistState({ ...state, probs: { ...state.probs, [num]: nextCell } });
+      const prevCell = getCell(state, num);
+      const nextCell = applyCondChange(prevCell, key, team);
+      if (nextCell === prevCell) return;
+
+      const ts = Date.now();
+      const nextStateBase: BingoState = {
+        ...state,
+        probs: { ...state.probs, [num]: nextCell },
+      };
+
+      // 변경 직전·직후 라인 비교 → 새로 추가된 라인만 line 이벤트로 기록.
+      const prevLineKeys = new Set(getBingoLines(state).map((l) => `${l.team}-${l.type}`));
+      const newLineEvents: LineEvent[] = getBingoLines(nextStateBase)
+        .filter((l) => !prevLineKeys.has(`${l.team}-${l.type}`))
+        .map((l) => ({ kind: "line", ts, team: l.team, lineType: l.type }));
+
+      const newEvents: BingoEvent[] = [
+        { kind: "cond", ts, num, cond: key, team, prevTeam: prevCell[key] },
+        ...newLineEvents,
+      ];
+
+      await persistState({ ...nextStateBase, history: [...getHistory(state), ...newEvents] });
     },
     [state, persistState],
   );
@@ -925,6 +1072,7 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
             isOwner={isOwner}
             myId={me.profileId}
           />
+          <HistoryBadge history={getHistory(state)} />
           <button
             type="button"
             onClick={onLeave}

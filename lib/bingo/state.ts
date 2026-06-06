@@ -38,10 +38,38 @@ export type BingoState = {
    * false(기본) 이면 학생은 방장 nav 강제 따라감.
    */
   practiceMode?: boolean;
+  /** 게임 진행 타임라인 (방장 cond 변경 + 새 빙고 라인 발생). 옛 방은 undefined → 빈 배열로 취급. */
+  history?: BingoEvent[];
 };
 
+/** 방장이 한 cond(L/E/V) 슬롯에 팀을 할당/취소한 이벤트. */
+export type CondEvent = {
+  kind: "cond";
+  ts: number;
+  num: number;
+  cond: CondKey;
+  team: TeamId | null;
+  /** 변경 직전 그 cond 의 팀(되돌리기·재할당 식별용). */
+  prevTeam: TeamId | null;
+};
+
+/** 새 빙고 라인이 완성된 이벤트. 같은 ts 의 cond 이벤트 직후에 발생. */
+export type LineEvent = {
+  kind: "line";
+  ts: number;
+  team: TeamId;
+  /** "1행" / "3열" / "↘대각선" / "↗대각선" — getBingoLines 의 BingoLine.type 그대로. */
+  lineType: string;
+};
+
+export type BingoEvent = CondEvent | LineEvent;
+
 export function emptyState(): BingoState {
-  return { probs: {}, nav: { problemNum: null }, practiceMode: false };
+  return { probs: {}, nav: { problemNum: null }, practiceMode: false, history: [] };
+}
+
+export function getHistory(state: BingoState): BingoEvent[] {
+  return state.history ?? [];
 }
 
 export function isPractice(state: BingoState): boolean {
