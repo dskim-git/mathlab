@@ -122,6 +122,31 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common/mini/matrix_population_migration": "행렬로 보는 두 도시 인구 이동",
 
   // ── 영재 ──
+  // 단원 ① 기이한 소수
+  "gifted/sieve_eratosthenes": "에라토스테네스의 체와 소수정리",
+  "gifted/multiplicative_functions": "산술함수와 곱셈함수 탐구",
+  "gifted/zeta_explorer": "리만 제타함수 탐험",
+  "gifted/zeta_arithmetic": "제타함수와 산술함수의 관계",
+  // 단원 ② 시어핀스키·카오스
+  "gifted/double_pendulum": "이중진자와 카오스",
+  "gifted/lorenz_butterfly": "나비효과와 로렌츠",
+  "gifted/lorenz_attractor": "로렌츠 끌개",
+  "gifted/fractal_dimensions": "프랙털과 차원 탐구",
+  "gifted/sierpinski_props": "시에르핀스키 삼각형의 성질",
+  "gifted/chaosgame_address": "카오스 게임과 시에르핀스키",
+  "etc/chaosgame": "카오스 게임 (BU)",
+  // 단원 ② 의 확통 공유 활동 — gifted slug 에도 동일 짧은 이름.
+  "gifted/galton_board": "갈튼 보드",
+  "gifted/pascal_triangle_props": "파스칼 삼각형의 성질",
+  "gifted/pascal_fractal": "파스칼 삼각형 속 프랙털",
+  // 단원 ③ 사진·시선
+  "gifted/vanishing_point_draw": "소실점 찾기",
+  "gifted/measuring_point_distance": "거리점과 화가까지의 거리",
+  "gifted/ambassadors_skull": "대사들의 숨겨진 해골",
+  "gifted/perspective_projection": "실제 사물과 그림의 관계식",
+  "gifted/harmonic_perspective": "등간격 사물과 조화수열",
+  "gifted/trinity_distance": "성삼위일체 인물 거리",
+  // 단원 ④ 작도 게임
   "gifted/euclidea_warmup": "작도 몸풀기 게임",
   "gifted/euclidea_tool_steps": "작도 도구 — E값의 이유",
   "gifted/euclidea_bingo": "작도 게임 (빙고)",
