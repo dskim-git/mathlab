@@ -158,6 +158,7 @@ import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edg
 // ─── 영재 ──────────────────────────────────────────────────
 // [1] 기이한 소수의 세계
 import SieveEratosthenes from "./gifted/1-primes/sieve-eratosthenes/SieveEratosthenes";
+import MultiplicativeFunctions from "./gifted/1-primes/multiplicative-functions/MultiplicativeFunctions";
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
@@ -298,6 +299,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   // ⚠️ 영재 _units.py 는 slug 가 평문(예: "euclidea_warmup") 이라 SQL 임포트 결과가
   // "gifted/<slug>" 형식 (확통·공통수학의 "<subject>/mini/<slug>" 와 다름).
   "gifted/sieve_eratosthenes": SieveEratosthenes,
+  "gifted/multiplicative_functions": MultiplicativeFunctions,
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
   "gifted/euclidea_bingo": EuclideaBingo,
