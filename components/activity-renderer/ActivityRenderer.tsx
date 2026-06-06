@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ProbabilitySimulator from "@/components/activities/ProbabilitySimulator";
 import { ACTIVITY_REGISTRY } from "@/components/activities/registry";
 import { ActivityContextProvider } from "@/components/activities/ActivityContext";
@@ -22,6 +22,13 @@ type ActivityRendererProps = {
    */
   enableReflectionSave?: boolean;
   sessionId?: string;
+
+  /**
+   * 외부(예: /learn 검색)에서 특정 블록을 바로 열어 줄 때 사용. 마운트 시 그 블록을
+   * 선택하고, 이후에도 prop 이 새 값으로 바뀌면 그 블록으로 전환 + 콘텐츠 영역으로 스크롤한다.
+   * 알 수 없는 id 면 무시.
+   */
+  initialBlockId?: string;
 
   activityId?: string;
   activitySlug?: string;
@@ -114,8 +121,18 @@ export default function ActivityRenderer({
   studentGrade,
   studentClassNumber,
   studentCode,
+  initialBlockId,
 }: ActivityRendererProps) {
-  const [selectedBlockId, setSelectedBlockId] = useState(blocks[0]?.id ?? "");
+  // initialBlockId 가 유효(블록 목록에 있음)하면 그걸 첫 선택으로, 아니면 첫 블록.
+  const firstSelectedId = useMemo(() => {
+    if (initialBlockId && blocks.some((b) => b.id === initialBlockId)) {
+      return initialBlockId;
+    }
+    return blocks[0]?.id ?? "";
+    // 마운트 1회 — 이후 변경은 아래 useEffect 가 처리.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [selectedBlockId, setSelectedBlockId] = useState(firstSelectedId);
 
   const selectedBlock = useMemo(() => {
     return blocks.find((block) => block.id === selectedBlockId) ?? blocks[0];
@@ -124,8 +141,27 @@ export default function ActivityRenderer({
   // 방문한 블록은 언마운트하지 않고 숨김 유지 → iframe(PPT/PDF) 상태가 보존된다.
   // 처음 본 블록만 마운트(지연 로드)하고, 이후 전환 시엔 hidden 으로 숨겨 둔다.
   const [visitedIds, setVisitedIds] = useState<Set<string>>(
-    () => new Set(blocks[0]?.id ? [blocks[0].id] : [])
+    () => new Set(firstSelectedId ? [firstSelectedId] : [])
   );
+
+  // 검색 → 활동 칩 클릭처럼 외부에서 initialBlockId 가 새 값으로 바뀌면 그 블록으로 전환.
+  // 같은 ActivityRenderer 인스턴스 안에서 활동만 바꾸는 경우(같은 잎)도 커버.
+  const rootRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!initialBlockId) return;
+    if (!blocks.some((b) => b.id === initialBlockId)) return;
+    setSelectedBlockId(initialBlockId);
+    setVisitedIds((prev) => {
+      if (prev.has(initialBlockId)) return prev;
+      const next = new Set(prev);
+      next.add(initialBlockId);
+      return next;
+    });
+    // 다음 프레임에 콘텐츠 영역으로 스크롤(레이아웃이 자리잡은 뒤).
+    requestAnimationFrame(() => {
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [initialBlockId, blocks]);
 
   function selectBlock(id: string) {
     setSelectedBlockId(id);
@@ -254,7 +290,10 @@ export default function ActivityRenderer({
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-5">
+    <section
+      ref={rootRef}
+      className="mt-8 scroll-mt-4 rounded-2xl border border-white/10 bg-slate-900 p-5"
+    >
       <div className="border-b border-white/10 pb-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>

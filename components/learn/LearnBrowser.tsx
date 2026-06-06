@@ -100,6 +100,9 @@ export default function LearnBrowser({
   const [otOpen, setOtOpen] = useState(false);
   // 검색어 — 단원명/활동명 가로 검색. 비어 있으면 검색 모드 OFF.
   const [query, setQuery] = useState("");
+  // 검색 결과의 활동 칩 클릭으로 점프할 때, 잎 안에서 열어 줄 블록 id.
+  // ActivityRenderer 가 마운트/업데이트 시 이 블록을 선택 + 콘텐츠 영역으로 스크롤한다.
+  const [pendingBlockId, setPendingBlockId] = useState<string | undefined>();
 
   // 모든 교과의 잎(소단원)을 가로질러 [단원 라벨 + 부모 경로 + 포함 활동 짧은 제목]을
   // 한 줄 문자열로 합쳐 검색 인덱스를 만든다. units 가 변하지 않는 한 1회 계산.
@@ -109,8 +112,8 @@ export default function LearnBrowser({
     path: string;
     /** 매칭에 사용할 소문자 합성 문자열(단원 라벨 + 활동 제목들) */
     haystack: string;
-    /** 잎 안의 interactive_activity 활동 짧은 제목들 */
-    activityTitles: string[];
+    /** 잎 안의 interactive_activity 활동 (짧은 제목 + 슬러그) */
+    activities: { slug: string; title: string }[];
   };
   const allUnitsById = useMemo(() => {
     const m = new Map<string, CurriculumUnit>();
@@ -128,15 +131,20 @@ export default function LearnBrowser({
         labels.unshift(p.label);
         p = p.parent_id ? allUnitsById.get(p.parent_id) : undefined;
       }
-      const activityTitles: string[] = [];
+      const activities: { slug: string; title: string }[] = [];
       for (const b of u.content_blocks ?? []) {
         if (b.type === "interactive_activity") {
-          activityTitles.push(shortActivityTitle(b.content.activitySlug));
+          activities.push({
+            slug: b.content.activitySlug,
+            title: shortActivityTitle(b.content.activitySlug),
+          });
         }
       }
       const path = [u.subject, ...labels].join(" › ");
-      const haystack = [path, ...activityTitles].join(" ").toLowerCase();
-      out.push({ leaf: u, path, haystack, activityTitles });
+      const haystack = [path, ...activities.map((a) => a.title)]
+        .join(" ")
+        .toLowerCase();
+      out.push({ leaf: u, path, haystack, activities });
     }
     return out;
   }, [units, allUnitsById]);
@@ -265,7 +273,9 @@ export default function LearnBrowser({
   }
 
   // 검색 결과에서 잎을 선택하면: 교과 전환 + 그 잎까지의 부모 체인을 한 번에 설정.
-  function jumpToLeaf(leaf: CurriculumUnit) {
+  // 활동 슬러그가 주어지면 잎의 블록들 중 해당 슬러그를 가진 interactive_activity 블록을
+  // 찾아 pendingBlockId 로 저장 → ActivityRenderer 가 그 블록을 열고 스크롤한다.
+  function jumpToLeaf(leaf: CurriculumUnit, activitySlug?: string) {
     const path: string[] = [];
     let node: CurriculumUnit | undefined = leaf;
     while (node) {
@@ -276,6 +286,16 @@ export default function LearnBrowser({
     setChain(path);
     setOtOpen(false);
     setQuery("");
+    if (activitySlug) {
+      const target = (leaf.content_blocks ?? []).find(
+        (b) =>
+          b.type === "interactive_activity" &&
+          b.content.activitySlug === activitySlug
+      );
+      setPendingBlockId(target ? target.id : undefined);
+    } else {
+      setPendingBlockId(undefined);
+    }
   }
 
   if (subjects.length === 0) {
@@ -320,15 +340,23 @@ export default function LearnBrowser({
               <ul className="max-h-80 space-y-1 overflow-y-auto pr-1">
                 {searchResults.map((e) => {
                   const q = trimmedQuery.toLowerCase();
-                  const matchedActs = e.activityTitles.filter((t) =>
-                    t.toLowerCase().includes(q)
+                  const matchedActs = e.activities.filter((a) =>
+                    a.title.toLowerCase().includes(q)
                   );
+                  // 활동 칩 클릭 = 잎 점프 + 그 활동 블록 열기.
+                  // 카드 영역(div) 클릭 = 잎 점프(첫 블록).
+                  // nested button 회피 위해 카드는 div, 활동 칩만 button.
+                  // 카드 = 평범한 div, 안에 (a) 잎 점프 헤더 button 과
+                  // (b) 매칭된 활동 칩 button 들을 형제로 배치 — nested control 회피.
                   return (
-                    <li key={e.leaf.id}>
+                    <li
+                      key={e.leaf.id}
+                      className="rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 transition hover:border-cyan-300/40 hover:bg-slate-950"
+                    >
                       <button
                         type="button"
                         onClick={() => jumpToLeaf(e.leaf)}
-                        className="block w-full rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-left transition hover:border-cyan-300/40 hover:bg-slate-950"
+                        className="block w-full text-left focus:outline-none"
                       >
                         <div className="text-sm font-semibold text-white">
                           📄 {e.leaf.label}
@@ -336,24 +364,27 @@ export default function LearnBrowser({
                         <div className="mt-0.5 text-xs text-slate-400">
                           {e.path}
                         </div>
-                        {matchedActs.length > 0 && (
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {matchedActs.slice(0, 4).map((t) => (
-                              <span
-                                key={t}
-                                className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-xs text-cyan-100"
-                              >
-                                {t}
-                              </span>
-                            ))}
-                            {matchedActs.length > 4 && (
-                              <span className="text-xs text-slate-500">
-                                +{matchedActs.length - 4}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </button>
+                      {matchedActs.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {matchedActs.slice(0, 4).map((a) => (
+                            <button
+                              key={a.slug}
+                              type="button"
+                              onClick={() => jumpToLeaf(e.leaf, a.slug)}
+                              className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-xs text-cyan-100 transition hover:bg-cyan-300/25"
+                              title="이 활동으로 바로 이동"
+                            >
+                              {a.title}
+                            </button>
+                          ))}
+                          {matchedActs.length > 4 && (
+                            <span className="text-xs text-slate-500">
+                              +{matchedActs.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </li>
                   );
                 })}
@@ -488,6 +519,8 @@ export default function LearnBrowser({
                 mode="teacher"
                 enableReflectionSave
                 activitySubject={selectedLeaf.subject}
+                // 검색 → 활동 칩으로 점프해 들어온 경우 그 블록을 열고 스크롤.
+                initialBlockId={pendingBlockId}
               />
             );
           })()
