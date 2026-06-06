@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import ActivityRenderer from "@/components/activity-renderer/ActivityRenderer";
 import { supabase } from "@/lib/supabase/client";
 import type { ContentBlock } from "@/lib/activities/activityBlocks";
+import { shortActivityTitle } from "@/lib/activities/activityTitles";
 import type { AccessibleSubject } from "@/lib/curriculum/accessibleSubjects";
 import {
   applyOverrideToBlocks,
@@ -97,6 +98,67 @@ export default function LearnBrowser({
   const [chain, setChain] = useState<string[]>(() => initialChain);
   // OT 모드 — 켜지면 단원 콘텐츠 자리에 OT 자료 iframe 을 보여준다.
   const [otOpen, setOtOpen] = useState(false);
+  // 검색어 — 단원명/활동명 가로 검색. 비어 있으면 검색 모드 OFF.
+  const [query, setQuery] = useState("");
+
+  // 모든 교과의 잎(소단원)을 가로질러 [단원 라벨 + 부모 경로 + 포함 활동 짧은 제목]을
+  // 한 줄 문자열로 합쳐 검색 인덱스를 만든다. units 가 변하지 않는 한 1회 계산.
+  type SearchEntry = {
+    leaf: CurriculumUnit;
+    /** 교과 > 대 > 중 > 소 */
+    path: string;
+    /** 매칭에 사용할 소문자 합성 문자열(단원 라벨 + 활동 제목들) */
+    haystack: string;
+    /** 잎 안의 interactive_activity 활동 짧은 제목들 */
+    activityTitles: string[];
+  };
+  const allUnitsById = useMemo(() => {
+    const m = new Map<string, CurriculumUnit>();
+    units.forEach((u) => m.set(u.id, u));
+    return m;
+  }, [units]);
+  const searchIndex = useMemo<SearchEntry[]>(() => {
+    const out: SearchEntry[] = [];
+    for (const u of units) {
+      if (!isLeaf(u)) continue;
+      // 부모 체인 — 교과명 + 모든 조상 라벨 + 본인.
+      const labels: string[] = [u.label];
+      let p = u.parent_id ? allUnitsById.get(u.parent_id) : undefined;
+      while (p) {
+        labels.unshift(p.label);
+        p = p.parent_id ? allUnitsById.get(p.parent_id) : undefined;
+      }
+      const activityTitles: string[] = [];
+      for (const b of u.content_blocks ?? []) {
+        if (b.type === "interactive_activity") {
+          activityTitles.push(shortActivityTitle(b.content.activitySlug));
+        }
+      }
+      const path = [u.subject, ...labels].join(" › ");
+      const haystack = [path, ...activityTitles].join(" ").toLowerCase();
+      out.push({ leaf: u, path, haystack, activityTitles });
+    }
+    return out;
+  }, [units, allUnitsById]);
+
+  // 접근 가능한 교과명 집합 — 검색 결과는 권한 있는 교과로만 제한.
+  const accessibleSubjectNames = useMemo(
+    () => new Set(subjects.map((s) => s.name)),
+    [subjects]
+  );
+
+  const trimmedQuery = query.trim();
+  const searchResults = useMemo<SearchEntry[]>(() => {
+    if (trimmedQuery.length === 0) return [];
+    const q = trimmedQuery.toLowerCase();
+    const out: SearchEntry[] = [];
+    for (const e of searchIndex) {
+      if (!accessibleSubjectNames.has(e.leaf.subject)) continue;
+      if (e.haystack.includes(q)) out.push(e);
+      if (out.length >= 30) break;
+    }
+    return out;
+  }, [trimmedQuery, searchIndex, accessibleSubjectNames]);
 
   const { roots, childrenOf, byId } = useMemo(() => {
     const inSubject = units
@@ -202,6 +264,20 @@ export default function LearnBrowser({
     setOtOpen(false);
   }
 
+  // 검색 결과에서 잎을 선택하면: 교과 전환 + 그 잎까지의 부모 체인을 한 번에 설정.
+  function jumpToLeaf(leaf: CurriculumUnit) {
+    const path: string[] = [];
+    let node: CurriculumUnit | undefined = leaf;
+    while (node) {
+      path.unshift(node.id);
+      node = node.parent_id ? allUnitsById.get(node.parent_id) : undefined;
+    }
+    if (leaf.subject !== subject) setSubject(leaf.subject);
+    setChain(path);
+    setOtOpen(false);
+    setQuery("");
+  }
+
   if (subjects.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-slate-300">
@@ -212,6 +288,81 @@ export default function LearnBrowser({
 
   return (
     <div>
+      {/* 가로 검색 — 모든 교과의 소단원 라벨 + 그 안에 포함된 활동 짧은 제목을
+          동시에 매칭한다. 결과 클릭 → 교과 전환 + 잎까지 chain 점프. */}
+      <div className="mb-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+        <label className="flex items-center gap-2">
+          <span aria-hidden className="text-base">🔎</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="단원 또는 활동 이름으로 검색 (예: 정규분포, 갈튼 보드)"
+            className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-300/60 focus:outline-none"
+          />
+          {trimmedQuery && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="shrink-0 rounded-md border border-white/15 px-2 py-1 text-xs text-slate-300 transition hover:bg-white/10"
+            >
+              지우기
+            </button>
+          )}
+        </label>
+        {trimmedQuery && (
+          <div className="mt-3">
+            {searchResults.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                일치하는 단원·활동이 없습니다.
+              </p>
+            ) : (
+              <ul className="max-h-80 space-y-1 overflow-y-auto pr-1">
+                {searchResults.map((e) => {
+                  const q = trimmedQuery.toLowerCase();
+                  const matchedActs = e.activityTitles.filter((t) =>
+                    t.toLowerCase().includes(q)
+                  );
+                  return (
+                    <li key={e.leaf.id}>
+                      <button
+                        type="button"
+                        onClick={() => jumpToLeaf(e.leaf)}
+                        className="block w-full rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-left transition hover:border-cyan-300/40 hover:bg-slate-950"
+                      >
+                        <div className="text-sm font-semibold text-white">
+                          📄 {e.leaf.label}
+                        </div>
+                        <div className="mt-0.5 text-xs text-slate-400">
+                          {e.path}
+                        </div>
+                        {matchedActs.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {matchedActs.slice(0, 4).map((t) => (
+                              <span
+                                key={t}
+                                className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-xs text-cyan-100"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                            {matchedActs.length > 4 && (
+                              <span className="text-xs text-slate-500">
+                                +{matchedActs.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* 단원 선택 — 상단 가로 배치 */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         {/* 교과 */}
