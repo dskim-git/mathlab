@@ -39,7 +39,7 @@ type Props = {
 };
 
 export default function BingoBoard({
-  room: _room,
+  room,
   canEdit,
   state,
   onChangeCond,
@@ -76,7 +76,13 @@ export default function BingoBoard({
       : practice
       ? () => setStudentLocalNav(null)
       : undefined;
-    return <ProblemView num={effectiveProblemNum} onBack={handleBack} />;
+    return (
+      <ProblemView
+        num={effectiveProblemNum}
+        onBack={handleBack}
+        roomId={room.id}
+      />
+    );
   }
 
   // 셀의 작도 화면 진입 — 교사는 서버 nav, 학생+연습은 자기 local.

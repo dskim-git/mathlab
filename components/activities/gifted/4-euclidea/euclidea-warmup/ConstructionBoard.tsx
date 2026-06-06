@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // ─── 기하 모델 ────────────────────────────────────────────────
 export type Pt = {
@@ -221,6 +221,32 @@ function addIntersections(
   return cur;
 }
 
+// localStorage 에서 board 읽기 — 형식 검증 후 반환. 실패 시 fallback.
+function readSavedBoard(key: string | undefined, fallback: Board): Board {
+  if (!key || typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      Array.isArray(parsed.points) &&
+      Array.isArray(parsed.lines) &&
+      Array.isArray(parsed.circles)
+    ) {
+      return {
+        points: parsed.points,
+        lines: parsed.lines,
+        circles: parsed.circles,
+        events: typeof parsed.events === "number" ? parsed.events : 0,
+      };
+    }
+  } catch {
+    /* 무시 */
+  }
+  return fallback;
+}
+
 // ─── 컴포넌트 ─────────────────────────────────────────────────
 type Props = {
   seed: Seed;
@@ -232,6 +258,12 @@ type Props = {
   solvedBadge?: React.ReactNode;
   /** 허용 도구 — 기본 ["line","circle"]. 예: 컴퍼스 전용이면 ["circle"]. */
   allowedTools?: Tool[];
+  /**
+   * 있으면 localStorage[storageKey] 로 board 자동 저장·복원.
+   * 새로고침/잠시 다른 화면 갔다 와도 작도가 유지됨.
+   * 키가 바뀌면(다른 문제) 자동으로 해당 키 보드로 전환 (없으면 seed 로 시작).
+   */
+  storageKey?: string;
 };
 
 export default function ConstructionBoard({
@@ -241,6 +273,7 @@ export default function ConstructionBoard({
   onChange,
   solvedBadge,
   allowedTools = ["line", "circle"],
+  storageKey,
 }: Props) {
   const initial: Board = useMemo(
     () => ({
@@ -252,8 +285,25 @@ export default function ConstructionBoard({
     [seed],
   );
 
-  const [board, setBoard] = useState<Board>(initial);
+  const [board, setBoard] = useState<Board>(() => readSavedBoard(storageKey, initial));
   const [history, setHistory] = useState<Board[]>([]);
+
+  // 키가 바뀌면 (다른 문제) → 그 키 저장본 / 없으면 seed 로 다시 시작.
+  useEffect(() => {
+    setBoard(readSavedBoard(storageKey, initial));
+    setHistory([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  // 변경마다 저장 (디바운스 없음 — 작도 빈도 낮음).
+  useEffect(() => {
+    if (!storageKey || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(board));
+    } catch {
+      /* 용량 초과 등 무시 */
+    }
+  }, [board, storageKey]);
   const [tool, setTool] = useState<Tool>(allowedTools[0] ?? "line");
   const [pending, setPending] = useState<Picked[]>([]); // 선택된 점/선 큐
   const [hover, setHover] = useState<string | null>(null);
@@ -874,14 +924,15 @@ export default function ConstructionBoard({
           // 마우스 우클릭 / 보조 버튼 무시.
           if (e.pointerType === "mouse" && e.button !== 0) return;
           pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-          try {
-            e.currentTarget.setPointerCapture(e.pointerId);
-          } catch {
-            /* 무시 */
-          }
           // 두 손가락 → pinch zoom 시작 (도구 무관, pan 우선 종료).
           if (pointersRef.current.size === 2) {
             setPanDrag(null);
+            // pinch 도중에만 캡처 — child(점/선/원) onClick 보존.
+            try {
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+              /* 무시 */
+            }
             const ps = Array.from(pointersRef.current.values());
             const ddx = ps[1].x - ps[0].x;
             const ddy = ps[1].y - ps[0].y;
@@ -899,6 +950,12 @@ export default function ConstructionBoard({
               cy: viewOffset.y + (midClientY - rect.top) * sy,
             };
           } else if (tool === "pan" && pointersRef.current.size === 1) {
+            // pan 도구 일 때만 캡처 — 다른 도구(점/선/원/…) 는 child onClick 으로 작동.
+            try {
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+              /* 무시 */
+            }
             const rect = e.currentTarget.getBoundingClientRect();
             setPanDrag({
               startX: e.clientX,

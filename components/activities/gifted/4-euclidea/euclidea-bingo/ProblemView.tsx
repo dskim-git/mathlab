@@ -34,11 +34,14 @@ type Props = {
   num: number;
   /** 방장(교사)일 때만 전달 — 학생은 undefined → "빙고판으로" 버튼이 안 보임. */
   onBack?: () => void;
+  /** 있으면 학생 작도가 localStorage 에 자동 저장·복원. (room id 단위) */
+  roomId?: string;
 };
 
-export default function ProblemView({ num, onBack }: Props) {
+export default function ProblemView({ num, onBack, roomId }: Props) {
   const problem = PROBLEMS[num];
   const spec: ProblemSpec | undefined = PROBLEM_SEEDS[num];
+  const storageKey = roomId ? `mathlab.bingo.board.${roomId}.${num}` : undefined;
 
   return (
     <div className="space-y-4">
@@ -69,7 +72,16 @@ export default function ProblemView({ num, onBack }: Props) {
         )}
       </header>
 
-      {spec ? <ProblemBody spec={spec} problemL={problem.L} problemE={problem.E} /> : <UnimplementedBody />}
+      {spec ? (
+        <ProblemBody
+          spec={spec}
+          problemL={problem.L}
+          problemE={problem.E}
+          storageKey={storageKey}
+        />
+      ) : (
+        <UnimplementedBody storageKey={storageKey} />
+      )}
 
       <ToolTable />
 
@@ -93,7 +105,17 @@ export default function ProblemView({ num, onBack }: Props) {
 }
 
 // ─── 본문: spec 기반 ───────────────────────────────────────
-function ProblemBody({ spec, problemL, problemE }: { spec: ProblemSpec; problemL: number; problemE: number }) {
+function ProblemBody({
+  spec,
+  problemL,
+  problemE,
+  storageKey,
+}: {
+  spec: ProblemSpec;
+  problemL: number;
+  problemE: number;
+  storageKey?: string;
+}) {
   const [board, setBoard] = useState<Board | null>(null);
 
   const found = board ? spec.findVariants(board) : [];
@@ -120,6 +142,7 @@ function ProblemBody({ spec, problemL, problemE }: { spec: ProblemSpec; problemL
         seed={spec.seed}
         allowedTools={[...ALL_TOOLS]}
         onChange={setBoard}
+        storageKey={storageKey}
         solvedBadge={
           lOk && eOk ? (
             <div className="rounded-lg border border-emerald-400/50 bg-emerald-500/15 px-3 py-2 text-sm font-bold text-emerald-200">
@@ -171,13 +194,17 @@ function CountChip({
 }
 
 // ─── 본문: spec 없는 문제 ────────────────────────────────────
-function UnimplementedBody() {
+function UnimplementedBody({ storageKey }: { storageKey?: string }) {
   return (
     <section className="rounded-xl border border-white/10 bg-slate-900/40 p-5">
       <p className="mb-3 text-sm text-slate-400">
         🚧 이 문제는 자체 시드/검증이 아직 추가되지 않았습니다 (점진적으로 추가 중). 지금은 자유 작도 모드입니다.
       </p>
-      <ConstructionBoard seed={EMPTY_SEED} allowedTools={[...ALL_TOOLS]} />
+      <ConstructionBoard
+        seed={EMPTY_SEED}
+        allowedTools={[...ALL_TOOLS]}
+        storageKey={storageKey}
+      />
     </section>
   );
 }
