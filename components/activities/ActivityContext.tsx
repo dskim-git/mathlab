@@ -30,6 +30,12 @@ export type ActivityContextValue = {
    * 익명 체험만 허용하는 동선에서 사용 — 활동 컴포넌트 코드는 그대로 둔 채 폼만 숨긴다.
    */
   hideReflection?: boolean;
+  /**
+   * 학생이 ReflectionForm 으로 성찰을 성공적으로 제출했을 때 호출. 슬러그를 인자로 받는다.
+   * /learn 동선의 LearnBrowser 가 이걸 받아 reflectedSlugs set 에 즉시 추가 →
+   * 잎 칩·검색 카드·블록 칩의 ⭐ 인디케이터가 새로고침 없이 갱신된다.
+   */
+  onReflectionSaved?: (slug: string) => void;
 };
 
 const Ctx = createContext<ActivityContextValue | null>(null);

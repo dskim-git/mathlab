@@ -68,6 +68,8 @@ export default function ReflectionForm({ questions, onSubmit }: ReflectionFormPr
         });
         if (res.ok) {
           setMessage("성찰을 제출했습니다. 학생 활동 기록에 저장됩니다.");
+          // /learn 동선에 즉시 ⭐ 인디케이터 갱신 알림. 콜백 없으면 무시(세션 동선 등).
+          activityCtx.onReflectionSaved?.(activityCtx.activitySlug);
         } else {
           setError(`제출 중 오류가 발생했습니다: ${res.error}`);
         }

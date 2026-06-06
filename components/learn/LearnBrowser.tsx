@@ -673,6 +673,20 @@ export default function LearnBrowser({
                 reflectedSlugs={studentId ? reflectedSlugs : undefined}
                 // 관리자 — 활동 블록 본문 우측 상단에 공개 링크 복사 버튼.
                 enableShareButton={isAdmin}
+                // 학생이 성찰 제출 성공 시 ⭐ 인디케이터 즉시 갱신(새로고침 X).
+                // studentId 가 있을 때만 의미 — 그 외엔 reflectedSlugs 자체가 표시 안 됨.
+                onReflectionSaved={
+                  studentId
+                    ? (slug) => {
+                        setReflectedSlugs((prev) => {
+                          if (prev.has(slug)) return prev;
+                          const next = new Set(prev);
+                          next.add(slug);
+                          return next;
+                        });
+                      }
+                    : undefined
+                }
               />
             );
           })()

@@ -58,6 +58,12 @@ type ActivityRendererProps = {
    * 클릭 시 /public/activity/<slug> URL 을 클립보드에 복사.
    */
   enableShareButton?: boolean;
+  /**
+   * 학생이 성찰 제출에 성공했을 때 호출 — 슬러그를 전달. ActivityContext 를 통해
+   * 활동 안의 ReflectionForm 에서 흘러나온다. LearnBrowser 가 이걸 받아 ⭐ 인디케이터를
+   * 즉시 갱신한다. Provider 가 켜진 동선(student/enableReflectionSave)에서만 의미 있음.
+   */
+  onReflectionSaved?: (slug: string) => void;
 };
 
 // 미니활동 제목 짧은 이름 매핑은 lib/activities/activityTitles.ts.
@@ -142,6 +148,7 @@ export default function ActivityRenderer({
   reflectedSlugs,
   publicMode = false,
   enableShareButton = false,
+  onReflectionSaved,
 }: ActivityRendererProps) {
   // initialBlockId 가 유효(블록 목록에 있음)하면 그걸 첫 선택으로, 아니면 첫 블록.
   const firstSelectedId = useMemo(() => {
@@ -299,6 +306,7 @@ export default function ActivityRenderer({
                   activitySlug: slug,
                   subject: activitySubject ?? null,
                   reflectionDepth,
+                  onReflectionSaved,
                 }}
               >
                 <Ported />
