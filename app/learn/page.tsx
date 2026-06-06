@@ -86,6 +86,7 @@ export default async function LearnPage() {
             otMaterials={otMaterials}
             overrideEntries={overrideEntries}
             studentId={studentId}
+            isAdmin={isAdmin}
           />
         </div>
       </div>

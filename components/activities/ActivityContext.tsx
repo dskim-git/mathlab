@@ -25,6 +25,11 @@ export type ActivityContextValue = {
   subject: string | null;
   /** 블록의 reflectionType — ReflectionForm 이 공통 마무리 질문 깊이 결정에 사용. */
   reflectionDepth?: "simple" | "deep";
+  /**
+   * true 면 ReflectionForm 자체가 렌더되지 않는다. 공개 페이지(/public/activity)처럼
+   * 익명 체험만 허용하는 동선에서 사용 — 활동 컴포넌트 코드는 그대로 둔 채 폼만 숨긴다.
+   */
+  hideReflection?: boolean;
 };
 
 const Ctx = createContext<ActivityContextValue | null>(null);

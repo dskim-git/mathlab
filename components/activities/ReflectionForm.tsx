@@ -20,6 +20,8 @@ type ReflectionFormProps = {
 
 export default function ReflectionForm({ questions, onSubmit }: ReflectionFormProps) {
   const activityCtx = useActivityContext();
+  // 공개 페이지 등 명시적으로 성찰 폼을 숨기는 동선이면 렌더 자체 생략.
+  if (activityCtx?.hideReflection) return null;
   // 영재 활동은 성찰 폼 생략 (정책: activity-reflection-policy).
   // slug 가 'gifted/' 로 시작하면 영재 단원 활동.
   if (activityCtx?.activitySlug.startsWith("gifted/")) return null;

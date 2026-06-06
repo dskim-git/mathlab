@@ -47,6 +47,17 @@ type ActivityRendererProps = {
   studentGrade?: string;
   studentClassNumber?: string;
   studentCode?: string;
+
+  /**
+   * 공개 페이지 동선 — ActivityContext 를 hideReflection=true 로 켜서 활동 컴포넌트
+   * 안의 ReflectionForm 을 숨긴다. mode/enableReflectionSave 와는 독립.
+   */
+  publicMode?: boolean;
+  /**
+   * 관리자 전용. interactive_activity 블록 본문 위에 "🔗 공개 링크 복사" 버튼 표시.
+   * 클릭 시 /public/activity/<slug> URL 을 클립보드에 복사.
+   */
+  enableShareButton?: boolean;
 };
 
 // 미니활동 제목 짧은 이름 매핑은 lib/activities/activityTitles.ts.
@@ -129,6 +140,8 @@ export default function ActivityRenderer({
   studentCode,
   initialBlockId,
   reflectedSlugs,
+  publicMode = false,
+  enableShareButton = false,
 }: ActivityRendererProps) {
   // initialBlockId 가 유효(블록 목록에 있음)하면 그걸 첫 선택으로, 아니면 첫 블록.
   const firstSelectedId = useMemo(() => {
@@ -263,6 +276,22 @@ export default function ActivityRenderer({
           // 블록 설정의 reflectionType 을 Context 에 흘려 ReflectionForm 이 공통 질문 깊이를 결정.
           const reflectionDepth: "simple" | "deep" =
             block.content.reflectionType === "deep" ? "deep" : "simple";
+          // 공개 페이지 동선이면 Provider 를 hideReflection=true 로 켜서 폼 자체 숨김.
+          // (자동 저장 분기보다 먼저 처리 — publicMode 가 모든 옵션을 덮어쓴다.)
+          if (publicMode) {
+            return (
+              <ActivityContextProvider
+                value={{
+                  activitySlug: slug,
+                  subject: activitySubject ?? null,
+                  reflectionDepth,
+                  hideReflection: true,
+                }}
+              >
+                <Ported />
+              </ActivityContextProvider>
+            );
+          }
           if (mode === "student" || enableReflectionSave) {
             return (
               <ActivityContextProvider
@@ -362,11 +391,47 @@ export default function ActivityRenderer({
               key={block.id}
               className={block.id === selectedBlock.id ? undefined : "hidden"}
             >
+              {block.type === "interactive_activity" && enableShareButton ? (
+                <ShareLinkBar slug={block.content.activitySlug} />
+              ) : null}
               {renderBlockContent(block)}
             </div>
           ) : null
         )}
       </div>
     </section>
+  );
+}
+
+// 관리자 전용 — interactive_activity 블록 본문 우측 상단에 떠 있는 작은 액션 바.
+// /public/activity/<slug> URL 을 클립보드에 복사. HTTPS 또는 localhost 에서만 동작.
+function ShareLinkBar({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(false);
+  async function copy() {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/public/activity/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setError(false);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // 권한 거부 등 — fallback 으로 prompt 띄움.
+      setError(true);
+      window.prompt("이 URL 을 복사하세요:", url);
+    }
+  }
+  return (
+    <div className="mb-2 flex justify-end">
+      <button
+        type="button"
+        onClick={copy}
+        className="rounded-md border border-amber-300/45 px-3 py-1 text-xs font-semibold text-amber-200 transition hover:bg-amber-300/10"
+        title="비로그인도 열 수 있는 활동 공개 URL 을 클립보드에 복사 (관리자 전용)"
+      >
+        🔗 {copied ? "복사됨!" : error ? "복사 실패 — 수동 복사" : "공개 링크 복사"}
+      </button>
+    </div>
   );
 }

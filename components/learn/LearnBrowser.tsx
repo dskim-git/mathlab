@@ -47,6 +47,7 @@ export default function LearnBrowser({
   otMaterials = {},
   overrideEntries = [],
   studentId = null,
+  isAdmin = false,
 }: {
   subjects: AccessibleSubject[];
   units: CurriculumUnit[];
@@ -62,6 +63,11 @@ export default function LearnBrowser({
    * null 이면 교사·관리자 미리보기 동선 — 인디케이터 비표시.
    */
   studentId?: string | null;
+  /**
+   * 관리자면 ActivityRenderer 의 interactive_activity 블록 우측 상단에
+   * "🔗 공개 링크 복사" 버튼을 노출한다.
+   */
+  isAdmin?: boolean;
 }) {
   const overrideMap = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -665,6 +671,8 @@ export default function LearnBrowser({
                 initialBlockId={pendingBlockId}
                 // 학생일 때만 — 상단 블록 칩에 ⭐ (성찰 제출 완료) 인디케이터.
                 reflectedSlugs={studentId ? reflectedSlugs : undefined}
+                // 관리자 — 활동 블록 본문 우측 상단에 공개 링크 복사 버튼.
+                enableShareButton={isAdmin}
               />
             );
           })()
