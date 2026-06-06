@@ -169,6 +169,13 @@ import FractalDimensions from "./gifted/2-sierpinski-chaos/fractal-dimensions/Fr
 import SierpinskiProps from "./gifted/2-sierpinski-chaos/sierpinski-props/SierpinskiProps";
 import ChaosgameAddress from "./gifted/2-sierpinski-chaos/chaosgame-address/ChaosgameAddress";
 import ChaosgameBu from "./gifted/2-sierpinski-chaos/chaosgame-bu/ChaosgameBu";
+// [3] 사진과 그림을 활용한 시선
+import VanishingPointDraw from "./gifted/3-perspective-art/vanishing-point-draw/VanishingPointDraw";
+import MeasuringPointDistance from "./gifted/3-perspective-art/measuring-point-distance/MeasuringPointDistance";
+import AmbassadorsSkull from "./gifted/3-perspective-art/ambassadors-skull/AmbassadorsSkull";
+import PerspectiveProjection from "./gifted/3-perspective-art/perspective-projection/PerspectiveProjection";
+import HarmonicPerspective from "./gifted/3-perspective-art/harmonic-perspective/HarmonicPerspective";
+import TrinityDistance from "./gifted/3-perspective-art/trinity-distance/TrinityDistance";
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
@@ -325,6 +332,12 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "gifted/galton_board": GaltonBoard,
   "gifted/pascal_triangle_props": PascalTriangleProperties,
   "gifted/pascal_fractal": PascalFractal,
+  "gifted/vanishing_point_draw": VanishingPointDraw,
+  "gifted/measuring_point_distance": MeasuringPointDistance,
+  "gifted/ambassadors_skull": AmbassadorsSkull,
+  "gifted/perspective_projection": PerspectiveProjection,
+  "gifted/harmonic_perspective": HarmonicPerspective,
+  "gifted/trinity_distance": TrinityDistance,
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
   "gifted/euclidea_bingo": EuclideaBingo,
