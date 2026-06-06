@@ -11,16 +11,23 @@ export type Pt = {
   label?: string;
   /** 학생에게 표시하지 않음 (정답 검증용 좌표 보관). 클릭 불가. */
   hidden?: boolean;
+  /** 라벨 위치 오프셋. 기본 (dx=8, dy=-8) — 점 오른쪽 위. */
+  labelOffset?: { dx: number; dy: number };
 };
 export type Ln = {
   id: string;
   a: string;
   b: string;
   /**
-   * 시드 line 의 시각화 — true 면 무한 직선 (viewBox 끝까지 연장),
-   * false 또는 undefined 면 두 점 사이 segment 만. 학생 작도 line 은 항상 무한 직선.
+   * 시드 line 의 시각화 — true 면 무한 직선 (viewBox 양쪽 끝까지 연장),
+   * false 또는 undefined 면 두 점 사이 segment. 학생 작도 line 은 항상 무한 직선.
    */
   extend?: boolean;
+  /**
+   * 시드 line 의 시각화 — true 면 반직선 (점 a 가 끝점, a→b 방향으로만 연장).
+   * extend 와 동시에 true 면 extend 가 우선.
+   */
+  ray?: boolean;
 };
 export type Cr = { id: string; center: string; through: string }; // 중심 + 원 위 한 점
 
@@ -576,6 +583,22 @@ export default function ConstructionBoard({
     };
   }
 
+  // 반직선 — a 가 끝점, a→b 방향으로만 viewBox 끝까지 연장.
+  function raySegment(a: V, b: V): { x1: number; y1: number; x2: number; y2: number } {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const T = Math.max(vbW, vbH) * 8;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len;
+    const uy = dy / len;
+    return {
+      x1: a.x,
+      y1: a.y,
+      x2: a.x + ux * T,
+      y2: a.y + uy * T,
+    };
+  }
+
   // L = 학생이 작도한 결과 도형(선+원) 총 개수, E = 학생이 사용한 도구 동작 수.
   const lCount =
     board.lines.length - seed.lines.length + (board.circles.length - seed.circles.length);
@@ -863,12 +886,16 @@ export default function ConstructionBoard({
           const a = board.points.find((p) => p.id === l.a)!;
           const b = board.points.find((p) => p.id === l.b)!;
           const isSeed = seed.lines.some((sl) => sl.id === l.id);
-          // 시드 line 의 extend=true 이면 무한 직선, 아니면 두 점 사이 segment.
+          // 시드 line: extend=true 면 무한 직선, ray=true 면 반직선(a 끝점), 아니면 segment.
           // 학생 작도 line 은 항상 무한 직선.
-          const seg =
-            isSeed && !l.extend
-              ? { x1: a.x, y1: a.y, x2: b.x, y2: b.y }
-              : lineSegment(a, b);
+          let seg: { x1: number; y1: number; x2: number; y2: number };
+          if (!isSeed || l.extend) {
+            seg = lineSegment(a, b);
+          } else if (l.ray) {
+            seg = raySegment(a, b);
+          } else {
+            seg = { x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+          }
           const isPicked = pending.some((x) => x.kind === "line" && x.id === l.id);
           const isClickable = tool === "erase" || tool === "perpLine" || tool === "parallel";
           return (
@@ -962,7 +989,14 @@ export default function ConstructionBoard({
               />
               <circle cx={p.x} cy={p.y} r={r} fill={fill} stroke="#0f172a" strokeWidth={1.5} pointerEvents="none" />
               {p.label ? (
-                <text x={p.x + 8} y={p.y - 8} fill="#e2e8f0" fontSize={13} fontWeight={700} pointerEvents="none">
+                <text
+                  x={p.x + (p.labelOffset?.dx ?? 8)}
+                  y={p.y + (p.labelOffset?.dy ?? -8)}
+                  fill="#e2e8f0"
+                  fontSize={13}
+                  fontWeight={700}
+                  pointerEvents="none"
+                >
                   {p.label}
                 </text>
               ) : null}

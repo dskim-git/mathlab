@@ -37,9 +37,9 @@ function dist(a: { x: number; y: number }, b: { x: number; y: number }) {
 //   D3 = A + B - C  (C 의 반대편)
 const PROBLEM_1_SEED: Seed = {
   points: [
-    { id: "A", x: 430, y: 140, label: "A" },
-    { id: "B", x: 460, y: 290, label: "B" },
-    { id: "C", x: 200, y: 270, label: "C" },
+    { id: "A", x: 320, y: 180 },
+    { id: "B", x: 180, y: 290 },
+    { id: "C", x: 460, y: 290 },
   ],
   lines: [],
   circles: [],
@@ -220,11 +220,11 @@ function findVariants3(board: Board): number[] {
 // 정답: 사각형 중심(대각선 교점)을 지나는 직선만이 등면적 분할.
 const PROBLEM_4_SEED: Seed = {
   points: [
-    { id: "A", x: 200, y: 210 },
-    { id: "B", x: 440, y: 210 },
-    { id: "C", x: 440, y: 330 },
-    { id: "D", x: 200, y: 330 },
-    { id: "P", x: 430, y: 110, label: "P" },
+    { id: "A", x: 80, y: 200 },
+    { id: "B", x: 280, y: 200 },
+    { id: "C", x: 280, y: 350 },
+    { id: "D", x: 80, y: 350 },
+    { id: "P", x: 560, y: 60, label: "P" },
   ],
   lines: [
     { id: "AB", a: "A", b: "B" },
@@ -347,10 +347,10 @@ function findVariants6(board: Board): number[] {
 // 선분 M1M2 의 중점 P 가 정답.
 const PROBLEM_7_SEED: Seed = {
   points: [
-    { id: "A", x: 200, y: 130 },
-    { id: "B", x: 440, y: 100 },
-    { id: "C", x: 480, y: 290 },
-    { id: "D", x: 180, y: 330 },
+    { id: "A", x: 180, y: 130 },
+    { id: "B", x: 400, y: 150 },
+    { id: "C", x: 560, y: 350 },
+    { id: "D", x: 100, y: 350 },
   ],
   lines: [
     { id: "AB", a: "A", b: "B" },
@@ -385,10 +385,10 @@ function findVariants7(board: Board): number[] {
 // 중심 = T 에서 ℓ 에 수직인 선 ∩ TP 의 수직이등분선.
 const PROBLEM_8_SEED: Seed = {
   points: [
-    { id: "L1", x: 60, y: 280, hidden: true },
-    { id: "L2", x: 560, y: 280, hidden: true },
-    { id: "T", x: 320, y: 280, label: "T" },
-    { id: "P", x: 460, y: 110, label: "P" },
+    { id: "L1", x: 60, y: 300, hidden: true },
+    { id: "L2", x: 560, y: 300, hidden: true },
+    { id: "T", x: 440, y: 300, label: "T" },
+    { id: "P", x: 220, y: 130, label: "P" },
   ],
   lines: [{ id: "ell", a: "L1", b: "L2", extend: true }],
   circles: [],
@@ -430,10 +430,10 @@ function findVariants8(board: Board): number[] {
 // 시드 변 AB 의 끝점 A 를 꼭짓점으로 하여 45° 각을 작도. 두 방향(위/아래) = V=2.
 const PROBLEM_9_SEED: Seed = {
   points: [
-    { id: "A", x: 240, y: 220 },
-    { id: "B", x: 440, y: 220 },
+    { id: "A", x: 220, y: 290 },
+    { id: "B", x: 420, y: 290, hidden: true },
   ],
-  lines: [{ id: "AB", a: "A", b: "B" }],
+  lines: [{ id: "AB", a: "A", b: "B", ray: true }],
   circles: [],
 };
 
@@ -583,9 +583,9 @@ function findVariants11(board: Board): number[] {
 // 시드: 일반 삼각형 ABC. 내심 I = (a·A + b·B + c·C)/(a+b+c). 학생 점 매칭.
 const PROBLEM_12_SEED: Seed = {
   points: [
-    { id: "A", x: 200, y: 130 },
-    { id: "B", x: 480, y: 200 },
-    { id: "C", x: 250, y: 320 },
+    { id: "A", x: 240, y: 130 },
+    { id: "B", x: 100, y: 340 },
+    { id: "C", x: 520, y: 340 },
   ],
   lines: [
     { id: "AB", a: "A", b: "B" },
@@ -686,10 +686,10 @@ function findVariants13(board: Board): number[] {
 // 시드 변 AB. A 에서 30° 각 작도. 위/아래 = V=2.
 const PROBLEM_14_SEED: Seed = {
   points: [
-    { id: "A", x: 240, y: 220 },
-    { id: "B", x: 440, y: 220 },
+    { id: "A", x: 220, y: 290 },
+    { id: "B", x: 420, y: 290, hidden: true },
   ],
-  lines: [{ id: "AB", a: "A", b: "B" }],
+  lines: [{ id: "AB", a: "A", b: "B", ray: true }],
   circles: [],
 };
 
@@ -731,8 +731,8 @@ function findVariants14(board: Board): number[] {
 // 4 꼭짓점 = M1 ± n·s/2, M2 ± n·s/2 (n = M1M2 의 수직 단위벡터).
 const PROBLEM_15_SEED: Seed = {
   points: [
-    { id: "M1", x: 240, y: 200, label: "M₁" },
-    { id: "M2", x: 400, y: 200, label: "M₂" },
+    { id: "M1", x: 260, y: 290 },
+    { id: "M2", x: 380, y: 170 },
   ],
   lines: [],
   circles: [],
@@ -954,10 +954,10 @@ function findVariants19(board: Board): number[] {
 // 마름모 다른 두 꼭짓점 = 그 대각선의 수직이등분선과 사각형 다른 두 변의 교점.
 const PROBLEM_20_SEED: Seed = {
   points: [
-    { id: "A", x: 180, y: 130 },
-    { id: "B", x: 480, y: 130 },
+    { id: "A", x: 240, y: 110 },
+    { id: "B", x: 480, y: 110 },
     { id: "C", x: 480, y: 290 },
-    { id: "D", x: 180, y: 290 },
+    { id: "D", x: 240, y: 290 },
   ],
   lines: [
     { id: "AB", a: "A", b: "B" },
@@ -974,32 +974,41 @@ function findVariants20(board: Board): number[] {
   const C = board.points.find((p) => p.id === "C");
   const D = board.points.find((p) => p.id === "D");
   if (!A || !B || !C || !D) return [];
-  // 마름모 다른 두 꼭짓점 위치 — 대각선 수직이등분선과 사각형 두 변의 교점.
-  function diagPerp(P: { x: number; y: number }, Q: { x: number; y: number },
-                    s1a: { x: number; y: number }, s1b: { x: number; y: number },
-                    s2a: { x: number; y: number }, s2b: { x: number; y: number }) {
+  // 대각선 PQ 의 수직이등분선이 사각형 4 변 segment 위에서 만나는 교점 모두 반환.
+  function diagPerpHits(P: { x: number; y: number }, Q: { x: number; y: number }) {
     const M = { x: (P.x + Q.x) / 2, y: (P.y + Q.y) / 2 };
     const dx = Q.x - P.x;
     const dy = Q.y - P.y;
-    // 수직이등분선 방향 (-dy, dx)
     const N = { x: M.x - dy, y: M.y + dx };
-    return [
-      lineLineIntersect(M, N, s1a, s1b),
-      lineLineIntersect(M, N, s2a, s2b),
+    const sides: [{ x: number; y: number }, { x: number; y: number }][] = [
+      [A!, B!],
+      [B!, C!],
+      [C!, D!],
+      [D!, A!],
     ];
+    const hits: { x: number; y: number }[] = [];
+    for (const [s1, s2] of sides) {
+      const it = lineLineIntersect(M, N, s1, s2);
+      if (!it) continue;
+      const sx = s2.x - s1.x;
+      const sy = s2.y - s1.y;
+      const len2 = sx * sx + sy * sy;
+      const t = ((it.x - s1.x) * sx + (it.y - s1.y) * sy) / len2;
+      if (t >= -0.001 && t <= 1.001) hits.push(it);
+    }
+    return hits;
   }
-  const ac = diagPerp(A, C, A, B, C, D);
-  const bd = diagPerp(B, D, A, D, B, C);
+  const ac = diagPerpHits(A, C);
+  const bd = diagPerpHits(B, D);
   const seedIds = new Set(["A", "B", "C", "D"]);
-  function found(target: { x: number; y: number } | null) {
-    if (!target) return false;
+  function found(target: { x: number; y: number }) {
     return board.points.some(
       (p) => !p.hidden && !seedIds.has(p.id) && dist(p, target) < 8,
     );
   }
   const variants: number[] = [];
-  if (ac.every(found)) variants.push(0);
-  if (bd.every(found)) variants.push(1);
+  if (ac.length === 2 && ac.every(found)) variants.push(0);
+  if (bd.length === 2 && bd.every(found)) variants.push(1);
   return variants;
 }
 
@@ -1103,14 +1112,14 @@ function findVariants22(board: Board): number[] {
 // (B-M 방향 부호 보정). E 는 두 해 가능 (V=2): |EM|=d, E ∈ BC line.
 const PROBLEM_23_SEED: Seed = {
   points: [
-    { id: "B", x: 160, y: 320, label: "B" },
-    { id: "A", x: 520, y: 80, label: "A" },
-    { id: "C", x: 560, y: 320, label: "C" },
-    { id: "M", x: 380, y: 240, label: "M" },
+    { id: "B", x: 60, y: 340, label: "B" },
+    { id: "A", x: 380, y: 170, label: "A" },
+    { id: "C", x: 540, y: 340, label: "C" },
+    { id: "M", x: 320, y: 280, label: "M" },
   ],
   lines: [
-    { id: "ray_BA", a: "B", b: "A" },
-    { id: "ray_BC", a: "B", b: "C" },
+    { id: "ray_BA", a: "B", b: "A", ray: true },
+    { id: "ray_BC", a: "B", b: "C", ray: true },
   ],
   circles: [],
 };
@@ -1173,7 +1182,7 @@ function findVariants23(board: Board): number[] {
 // V=2: 변 1(VFA) 공유 vs 변 2(VFC) 공유. 새 변 방향은 회전 매트릭스로 계산.
 const PROBLEM_24_SEED: Seed = {
   points: [
-    { id: "V", x: 280, y: 280, label: "V" },
+    { id: "V", x: 280, y: 280, label: "V", labelOffset: { dx: -4, dy: 22 } },
     { id: "FA", x: 520, y: 100, hidden: true },
     { id: "FC", x: 560, y: 280, hidden: true },
   ],
