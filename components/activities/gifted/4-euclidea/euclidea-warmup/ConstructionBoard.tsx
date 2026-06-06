@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 // ─── 기하 모델 ────────────────────────────────────────────────
 export type Pt = {
@@ -263,6 +263,19 @@ export default function ConstructionBoard({
   const [zoomScale, setZoomScale] = useState(1);
   const [panDrag, setPanDrag] = useState<
     | { startX: number; startY: number; baseX: number; baseY: number; rect: DOMRect }
+    | null
+  >(null);
+
+  // pinch zoom + multi-touch 추적
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchRef = useRef<
+    | {
+        startDist: number;
+        baseScale: number;
+        rect: DOMRect;
+        cx: number; // viewBox 좌표상 핀치 중심 (시작 시점 고정)
+        cy: number;
+      }
     | null
   >(null);
 
@@ -856,27 +869,90 @@ export default function ConstructionBoard({
             : "")
         }
         onClick={handleSvgClick}
-        onMouseDown={(e) => {
-          if (tool !== "pan") return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          setPanDrag({
-            startX: e.clientX,
-            startY: e.clientY,
-            baseX: viewOffset.x,
-            baseY: viewOffset.y,
-            rect,
-          });
+        style={{ touchAction: "none" }}
+        onPointerDown={(e) => {
+          // 마우스 우클릭 / 보조 버튼 무시.
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+          } catch {
+            /* 무시 */
+          }
+          // 두 손가락 → pinch zoom 시작 (도구 무관, pan 우선 종료).
+          if (pointersRef.current.size === 2) {
+            setPanDrag(null);
+            const ps = Array.from(pointersRef.current.values());
+            const ddx = ps[1].x - ps[0].x;
+            const ddy = ps[1].y - ps[0].y;
+            const startDist = Math.hypot(ddx, ddy) || 1;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const midClientX = (ps[0].x + ps[1].x) / 2;
+            const midClientY = (ps[0].y + ps[1].y) / 2;
+            const sx = vbW / rect.width;
+            const sy = vbH / rect.height;
+            pinchRef.current = {
+              startDist,
+              baseScale: zoomScale,
+              rect,
+              cx: viewOffset.x + (midClientX - rect.left) * sx,
+              cy: viewOffset.y + (midClientY - rect.top) * sy,
+            };
+          } else if (tool === "pan" && pointersRef.current.size === 1) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setPanDrag({
+              startX: e.clientX,
+              startY: e.clientY,
+              baseX: viewOffset.x,
+              baseY: viewOffset.y,
+              rect,
+            });
+          }
         }}
-        onMouseMove={(e) => {
-          if (!panDrag) return;
-          const scaleX = vbW / panDrag.rect.width;
-          const scaleY = vbH / panDrag.rect.height;
-          const dx = (e.clientX - panDrag.startX) * scaleX;
-          const dy = (e.clientY - panDrag.startY) * scaleY;
-          setViewOffset({ x: panDrag.baseX - dx, y: panDrag.baseY - dy });
+        onPointerMove={(e) => {
+          if (!pointersRef.current.has(e.pointerId)) return;
+          pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          // pinch zoom 진행 중.
+          if (pointersRef.current.size === 2 && pinchRef.current) {
+            const ps = Array.from(pointersRef.current.values());
+            const dx = ps[1].x - ps[0].x;
+            const dy = ps[1].y - ps[0].y;
+            const dist = Math.hypot(dx, dy) || 1;
+            // 손가락 멀어지면 ratio<1 → newScale < baseScale → viewBox 축소 = 확대.
+            const ratio = pinchRef.current.startDist / dist;
+            const newScale = Math.max(0.2, Math.min(5, pinchRef.current.baseScale * ratio));
+            const newW = width * newScale;
+            const newH = height * newScale;
+            const midClientX = (ps[0].x + ps[1].x) / 2;
+            const midClientY = (ps[0].y + ps[1].y) / 2;
+            const sx = newW / pinchRef.current.rect.width;
+            const sy = newH / pinchRef.current.rect.height;
+            setZoomScale(newScale);
+            setViewOffset({
+              x: pinchRef.current.cx - (midClientX - pinchRef.current.rect.left) * sx,
+              y: pinchRef.current.cy - (midClientY - pinchRef.current.rect.top) * sy,
+            });
+            return;
+          }
+          // pan 도구 single-pointer 드래그.
+          if (panDrag) {
+            const scaleX = vbW / panDrag.rect.width;
+            const scaleY = vbH / panDrag.rect.height;
+            const dx = (e.clientX - panDrag.startX) * scaleX;
+            const dy = (e.clientY - panDrag.startY) * scaleY;
+            setViewOffset({ x: panDrag.baseX - dx, y: panDrag.baseY - dy });
+          }
         }}
-        onMouseUp={() => setPanDrag(null)}
-        onMouseLeave={() => setPanDrag(null)}
+        onPointerUp={(e) => {
+          pointersRef.current.delete(e.pointerId);
+          if (pointersRef.current.size < 2) pinchRef.current = null;
+          if (pointersRef.current.size === 0) setPanDrag(null);
+        }}
+        onPointerCancel={(e) => {
+          pointersRef.current.delete(e.pointerId);
+          if (pointersRef.current.size < 2) pinchRef.current = null;
+          if (pointersRef.current.size === 0) setPanDrag(null);
+        }}
         role="img"
         aria-label="작도판"
       >
