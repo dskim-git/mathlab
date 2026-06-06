@@ -463,6 +463,14 @@ function CodeEntry({
   );
 }
 
+// ─── Presence ─────────────────────────────────
+type PresenceEntry = {
+  profileId: string;
+  name: string;
+  role: "owner" | "participant";
+  problemNum: number | null;
+};
+
 // ─── 연결 상태 배지 ────────────────────────────
 function ConnBadge({
   conn,
@@ -510,6 +518,133 @@ function ConnBadge({
   );
 }
 
+// ─── 참여자 카운트 배지 (교사는 클릭 시 분포 패널) ───────────
+function ParticipantsBadge({
+  participants,
+  isOwner,
+  myId,
+}: {
+  participants: PresenceEntry[];
+  isOwner: boolean;
+  myId: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const others = participants.filter((p) => p.profileId !== myId);
+  const total = participants.length;
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => isOwner && setOpen((o) => !o)}
+        className={
+          "rounded-md border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-200 " +
+          (isOwner ? "hover:bg-emerald-500/25 cursor-pointer" : "cursor-default")
+        }
+        title={isOwner ? "참여자 분포 보기" : "현재 접속 참여자 수"}
+      >
+        👥 {total}명
+      </button>
+      {isOwner && open ? (
+        <div className="absolute right-0 top-full z-20 mt-1 w-72 rounded-xl border border-white/10 bg-slate-950 p-3 text-xs shadow-2xl">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-bold text-slate-200">접속 참여자 ({total})</span>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="text-slate-500 hover:text-slate-300"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+          </div>
+          <ParticipantsList participants={participants} myId={myId} />
+        </div>
+      ) : null}
+      {/* 학생 화면용 hidden — 추후 본인 카운트 외 정보 보이게 할지 결정 */}
+      {!isOwner && others.length > 0 ? null : null}
+    </div>
+  );
+}
+
+function ParticipantsList({
+  participants,
+  myId,
+}: {
+  participants: PresenceEntry[];
+  myId: string;
+}) {
+  // 위치별 그룹핑: 빙고판 / 문제별
+  const groups = new Map<string, PresenceEntry[]>();
+  for (const p of participants) {
+    const key = p.problemNum == null ? "board" : `prob:${p.problemNum}`;
+    const arr = groups.get(key) ?? [];
+    arr.push(p);
+    groups.set(key, arr);
+  }
+  const boardList = groups.get("board") ?? [];
+  const problemKeys = Array.from(groups.keys())
+    .filter((k) => k !== "board")
+    .sort((a, b) => Number(a.slice(5)) - Number(b.slice(5)));
+
+  return (
+    <div className="space-y-2">
+      <ParticipantsGroup
+        title={`🟦 빙고판 (${boardList.length})`}
+        list={boardList}
+        myId={myId}
+      />
+      {problemKeys.map((k) => {
+        const num = Number(k.slice(5));
+        const list = groups.get(k) ?? [];
+        return (
+          <ParticipantsGroup
+            key={k}
+            title={`📐 문제 #${num} (${list.length})`}
+            list={list}
+            myId={myId}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function ParticipantsGroup({
+  title,
+  list,
+  myId,
+}: {
+  title: string;
+  list: PresenceEntry[];
+  myId: string;
+}) {
+  if (list.length === 0) return null;
+  return (
+    <div>
+      <div className="mb-1 text-[11px] font-bold text-slate-400">{title}</div>
+      <div className="flex flex-wrap gap-1">
+        {list.map((p) => (
+          <span
+            key={p.profileId}
+            className={
+              "rounded-full border px-2 py-0.5 text-[11px] font-semibold " +
+              (p.role === "owner"
+                ? "border-amber-400/40 bg-amber-500/15 text-amber-200"
+                : p.profileId === myId
+                  ? "border-cyan-400/40 bg-cyan-500/15 text-cyan-200"
+                  : "border-white/10 bg-slate-900/80 text-slate-300")
+            }
+          >
+            {p.role === "owner" ? "👑 " : ""}
+            {p.name}
+            {p.profileId === myId ? " (나)" : ""}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── 방 내부 ─────────────────────────────────
 function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () => void }) {
   const isOwner = room.created_by === me.profileId;
@@ -529,6 +664,11 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
   useEffect(() => {
     connRef.current = conn;
   }, [conn]);
+
+  // 학생 effective nav (BingoBoard 에서 lift up) + presence 참여자 목록.
+  const [effectiveNav, setEffectiveNav] = useState<number | null>(null);
+  const [participants, setParticipants] = useState<PresenceEntry[]>([]);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // 최신 state 를 DB 에서 한 번 더 가져와 동기화 (구독 사이 누락분·visibility 복귀 시).
   const refetchState = useCallback(async () => {
@@ -550,10 +690,27 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
     let disposed = false;
     let backoff = 1000; // 1s → 30s 까지 증가
 
+    function syncPresence(ch: ReturnType<typeof supabase.channel>) {
+      const raw = ch.presenceState();
+      const list: PresenceEntry[] = [];
+      // raw: { presence_ref: [{...metas}] } — 같은 profileId 가 여러 ref 로 나올 수 있어 마지막만 유지.
+      const seen = new Set<string>();
+      for (const arr of Object.values(raw)) {
+        for (const m of arr as unknown as PresenceEntry[]) {
+          if (!m || !m.profileId || seen.has(m.profileId)) continue;
+          seen.add(m.profileId);
+          list.push(m);
+        }
+      }
+      setParticipants(list);
+    }
+
     function subscribe() {
       setConn((c) => (c === "live" ? "reconnecting" : c === "offline" ? "reconnecting" : "connecting"));
       channel = supabase
-        .channel(`bingo_room_${room.id}`)
+        .channel(`bingo_room_${room.id}`, {
+          config: { presence: { key: me.profileId } },
+        })
         .on(
           "postgres_changes",
           {
@@ -569,13 +726,27 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
             }
           },
         )
-        .subscribe((status) => {
+        .on("presence", { event: "sync" }, () => {
+          if (channel) syncPresence(channel);
+        })
+        .subscribe(async (status) => {
           if (disposed) return;
           if (status === "SUBSCRIBED") {
             setConn("live");
             backoff = 1000;
             // 구독 사이 도착했을 수 있는 update 를 한 번 더 동기화.
             void refetchState();
+            // 자기 위치 publish.
+            try {
+              await channel?.track({
+                profileId: me.profileId,
+                name: me.name,
+                role: isOwner ? "owner" : "participant",
+                problemNum: effectiveNav,
+              } satisfies PresenceEntry);
+            } catch (e) {
+              console.warn("presence track failed:", (e as Error).message);
+            }
           } else if (
             status === "CHANNEL_ERROR" ||
             status === "TIMED_OUT" ||
@@ -585,6 +756,7 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
             scheduleReconnect();
           }
         });
+      channelRef.current = channel;
     }
 
     function scheduleReconnect() {
@@ -599,6 +771,7 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
             /* 무시 */
           }
           channel = null;
+          channelRef.current = null;
         }
         backoff = Math.min(backoff * 2, 30000);
         subscribe();
@@ -618,6 +791,7 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
           /* 무시 */
         }
         channel = null;
+        channelRef.current = null;
       }
       subscribe();
     }
@@ -634,10 +808,25 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
         } catch {
           /* 무시 */
         }
+        channelRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room.id, refetchState]);
+  }, [room.id, refetchState, me.profileId, me.name, isOwner]);
+
+  // effective nav 변경 시 presence 다시 publish.
+  useEffect(() => {
+    const ch = channelRef.current;
+    if (!ch || conn !== "live") return;
+    void ch
+      .track({
+        profileId: me.profileId,
+        name: me.name,
+        role: isOwner ? "owner" : "participant",
+        problemNum: effectiveNav,
+      } satisfies PresenceEntry)
+      .catch((e) => console.warn("presence track update failed:", (e as Error).message));
+  }, [effectiveNav, conn, me.profileId, me.name, isOwner]);
 
   // ── 낙관적 update + DB save 헬퍼 ── 방장만 호출 (RLS 가 학생 호출 거부).
   const persistState = useCallback(
@@ -731,6 +920,11 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
             {isOwner ? "방장" : "참여자"}
           </span>
           <ConnBadge conn={conn} onRetry={refetchState} />
+          <ParticipantsBadge
+            participants={participants}
+            isOwner={isOwner}
+            myId={me.profileId}
+          />
           <button
             type="button"
             onClick={onLeave}
@@ -779,6 +973,7 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
         onChangeCond={handleChangeCond}
         onGoToProblem={handleGoToProblem}
         onReset={handleReset}
+        onEffectiveNavChange={setEffectiveNav}
       />
     </div>
   );

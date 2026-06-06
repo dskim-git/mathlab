@@ -6,7 +6,7 @@
 //   학생도 셀을 자유 클릭해 작도 화면에 들어갈 수 있음. 진입은 자기 local studentLocalNav.
 //   교사 nav 강제 따라가기는 비활성. 연습 모드 OFF 가 되면 학생 local nav 자동 reset.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   GRID,
   PROBLEMS,
@@ -16,6 +16,7 @@ import {
   type TeamId,
 } from "@/lib/bingo/data";
 import {
+  type BingoLine,
   type BingoState,
   type CondKey,
   effectiveOwner,
@@ -36,6 +37,8 @@ type Props = {
   onChangeCond: (num: number, key: CondKey, team: TeamId | null) => Promise<void>;
   onGoToProblem: (num: number | null) => Promise<void>;
   onReset: () => Promise<void>;
+  /** 현재 학생이 보고 있는 nav 가 결정될 때마다 호출 — RoomView 가 presence track 에 활용. */
+  onEffectiveNavChange?: (num: number | null) => void;
 };
 
 export default function BingoBoard({
@@ -45,6 +48,7 @@ export default function BingoBoard({
   onChangeCond,
   onGoToProblem,
   onReset,
+  onEffectiveNavChange,
 }: Props) {
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [studentLocalNav, setStudentLocalNav] = useState<number | null>(null);
@@ -64,7 +68,15 @@ export default function BingoBoard({
     ? studentLocalNav
     : serverNav;
 
+  // RoomView 에 effective nav 보고 (presence 용).
+  useEffect(() => {
+    onEffectiveNavChange?.(effectiveProblemNum);
+  }, [effectiveProblemNum, onEffectiveNavChange]);
+
   const lines = useMemo(() => getBingoLines(state), [state]);
+
+  // 새 빙고 라인 발생 감지 → 토스트 (hook 은 early return 이전에 호출돼야 함).
+  const newLine = useNewLineToast(lines);
 
   // 작도 화면 — 교사/학생 분기:
   //   교사: onBack = onGoToProblem(null) (서버 nav 해제, 학생 동시 복귀)
@@ -96,6 +108,7 @@ export default function BingoBoard({
 
   return (
     <div className="space-y-4">
+      {newLine ? <BingoLineToast line={newLine} /> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         {/* 빙고판 + 라인 */}
         <div className="space-y-3">
@@ -467,5 +480,58 @@ function TeamPill({
     >
       {label}
     </button>
+  );
+}
+
+// ─── 새 빙고 라인 토스트 ────────────────────────────────────
+function useNewLineToast(lines: BingoLine[]): BingoLine | null {
+  const [toast, setToast] = useState<BingoLine | null>(null);
+  const prevKeysRef = useRef<Set<string>>(new Set());
+  const seededRef = useRef(false);
+
+  useEffect(() => {
+    const keys = new Set(lines.map((l) => `${l.team}-${l.type}`));
+    if (!seededRef.current) {
+      // 첫 mount — 이미 있던 라인들은 알림 X.
+      prevKeysRef.current = keys;
+      seededRef.current = true;
+      return;
+    }
+    const newOne = lines.find((l) => !prevKeysRef.current.has(`${l.team}-${l.type}`));
+    prevKeysRef.current = keys;
+    if (newOne) {
+      setToast(newOne);
+      const timer = setTimeout(() => setToast(null), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [lines]);
+
+  return toast;
+}
+
+function BingoLineToast({ line }: { line: BingoLine }) {
+  const team = TEAMS[line.team];
+  return (
+    <div
+      className="pointer-events-none fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-pulse"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        className="rounded-2xl border-4 px-6 py-3 text-center shadow-2xl"
+        style={{
+          borderColor: team.color,
+          background: `${team.color}22`,
+          color: team.color,
+        }}
+      >
+        <div className="text-xs font-bold uppercase tracking-widest opacity-80">
+          🎉 BINGO!
+        </div>
+        <div className="text-xl font-extrabold">
+          {team.name} · {line.type}
+        </div>
+      </div>
+    </div>
   );
 }
