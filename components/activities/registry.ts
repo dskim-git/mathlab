@@ -159,6 +159,7 @@ import PolygonEdgeArrangements from "./probability/X-extracurricular/polygon-edg
 // [1] 기이한 소수의 세계
 import SieveEratosthenes from "./gifted/1-primes/sieve-eratosthenes/SieveEratosthenes";
 import MultiplicativeFunctions from "./gifted/1-primes/multiplicative-functions/MultiplicativeFunctions";
+import ZetaExplorer from "./gifted/1-primes/zeta-explorer/ZetaExplorer";
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
@@ -300,6 +301,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   // "gifted/<slug>" 형식 (확통·공통수학의 "<subject>/mini/<slug>" 와 다름).
   "gifted/sieve_eratosthenes": SieveEratosthenes,
   "gifted/multiplicative_functions": MultiplicativeFunctions,
+  "gifted/zeta_explorer": ZetaExplorer,
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
   "gifted/euclidea_bingo": EuclideaBingo,
