@@ -184,6 +184,21 @@ async function insertRoomWithCode(
 }
 
 // 방 종료 (교사·관리자).
+// 단일 방의 state 만 다시 가져오기 — Realtime 재구독·visibilitychange 후 동기화용.
+export async function fetchRoomState(
+  supabase: SupabaseClient,
+  roomId: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase
+    .from("bingo_rooms")
+    .select("state")
+    .eq("id", roomId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return (data as { state: Record<string, unknown> }).state;
+}
+
 export async function endRoom(supabase: SupabaseClient, roomId: string): Promise<void> {
   const { error } = await supabase
     .from("bingo_rooms")

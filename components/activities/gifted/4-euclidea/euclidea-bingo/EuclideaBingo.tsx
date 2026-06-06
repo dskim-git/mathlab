@@ -8,13 +8,14 @@
 //   - 방 코드 입장: 그대로
 //   - 입장 후 방 정보 표시만 (빙고판은 라운드 C-2).
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import {
   type BingoRoom,
   createClassRoom,
   createGroupRoom,
   endRoom,
+  fetchRoomState,
   findMyActiveRooms,
   findRoomByCode,
   updateRoomState,
@@ -462,6 +463,53 @@ function CodeEntry({
   );
 }
 
+// ─── 연결 상태 배지 ────────────────────────────
+function ConnBadge({
+  conn,
+  onRetry,
+}: {
+  conn: "connecting" | "live" | "reconnecting" | "offline";
+  onRetry: () => void;
+}) {
+  if (conn === "live") {
+    return (
+      <span
+        className="rounded-md border border-emerald-400/40 bg-emerald-500/15 px-2 py-1 text-[10px] font-bold text-emerald-200"
+        title="실시간 동기화 중"
+      >
+        🟢 LIVE
+      </span>
+    );
+  }
+  if (conn === "connecting") {
+    return (
+      <span className="rounded-md border border-slate-400/40 bg-slate-500/15 px-2 py-1 text-[10px] font-bold text-slate-300">
+        ⏳ 연결 중…
+      </span>
+    );
+  }
+  if (conn === "reconnecting") {
+    return (
+      <span
+        className="rounded-md border border-amber-400/40 bg-amber-500/15 px-2 py-1 text-[10px] font-bold text-amber-200"
+        title="네트워크 일시 끊김 — 자동 재연결 중"
+      >
+        🟡 재연결 중…
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      className="rounded-md border border-rose-400/50 bg-rose-500/15 px-2 py-1 text-[10px] font-bold text-rose-200 hover:bg-rose-500/25"
+      title="실시간 동기화 끊김 — 클릭해 새로고침"
+    >
+      🔴 오프라인 · 새로고침
+    </button>
+  );
+}
+
 // ─── 방 내부 ─────────────────────────────────
 function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () => void }) {
   const isOwner = room.created_by === me.profileId;
@@ -474,30 +522,122 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
     return s && typeof s === "object" && "probs" in s ? (s as BingoState) : emptyState();
   }, [room.state]);
   const [state, setState] = useState<BingoState>(initialState);
-
+  const [conn, setConn] = useState<"connecting" | "live" | "reconnecting" | "offline">(
+    "connecting",
+  );
+  const connRef = useRef(conn);
   useEffect(() => {
-    const channel = supabase
-      .channel(`bingo_room_${room.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "bingo_rooms",
-          filter: `id=eq.${room.id}`,
-        },
-        (payload) => {
-          const newRow = payload.new as { state?: BingoState };
-          if (newRow?.state && typeof newRow.state === "object") {
-            setState(newRow.state);
-          }
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    connRef.current = conn;
+  }, [conn]);
+
+  // 최신 state 를 DB 에서 한 번 더 가져와 동기화 (구독 사이 누락분·visibility 복귀 시).
+  const refetchState = useCallback(async () => {
+    try {
+      const s = await fetchRoomState(supabase, room.id);
+      if (s && typeof s === "object" && "probs" in s) {
+        setState(s as BingoState);
+      }
+    } catch (e) {
+      // 일시적 네트워크 — 다음 재구독에서 다시 시도
+      console.warn("bingo refetchState failed:", (e as Error).message);
+    }
   }, [room.id]);
+
+  // Realtime 구독 — 자동 재구독 + 가시성 복귀 시 refetch.
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let disposed = false;
+    let backoff = 1000; // 1s → 30s 까지 증가
+
+    function subscribe() {
+      setConn((c) => (c === "live" ? "reconnecting" : c === "offline" ? "reconnecting" : "connecting"));
+      channel = supabase
+        .channel(`bingo_room_${room.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "bingo_rooms",
+            filter: `id=eq.${room.id}`,
+          },
+          (payload) => {
+            const newRow = payload.new as { state?: BingoState };
+            if (newRow?.state && typeof newRow.state === "object") {
+              setState(newRow.state);
+            }
+          },
+        )
+        .subscribe((status) => {
+          if (disposed) return;
+          if (status === "SUBSCRIBED") {
+            setConn("live");
+            backoff = 1000;
+            // 구독 사이 도착했을 수 있는 update 를 한 번 더 동기화.
+            void refetchState();
+          } else if (
+            status === "CHANNEL_ERROR" ||
+            status === "TIMED_OUT" ||
+            status === "CLOSED"
+          ) {
+            setConn("offline");
+            scheduleReconnect();
+          }
+        });
+    }
+
+    function scheduleReconnect() {
+      if (disposed || retryTimer) return;
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        if (disposed) return;
+        if (channel) {
+          try {
+            supabase.removeChannel(channel);
+          } catch {
+            /* 무시 */
+          }
+          channel = null;
+        }
+        backoff = Math.min(backoff * 2, 30000);
+        subscribe();
+      }, backoff);
+    }
+
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      void refetchState();
+      if (connRef.current === "live" || retryTimer) return;
+      // 백그라운드에서 채널이 끊겼다면 곧장 재구독 시도.
+      backoff = 1000;
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch {
+          /* 무시 */
+        }
+        channel = null;
+      }
+      subscribe();
+    }
+
+    subscribe();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      disposed = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      if (retryTimer) clearTimeout(retryTimer);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch {
+          /* 무시 */
+        }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.id, refetchState]);
 
   // ── 낙관적 update + DB save 헬퍼 ── 방장만 호출 (RLS 가 학생 호출 거부).
   const persistState = useCallback(
@@ -590,6 +730,7 @@ function RoomView({ room, me, onLeave }: { room: BingoRoom; me: Me; onLeave: () 
           >
             {isOwner ? "방장" : "참여자"}
           </span>
+          <ConnBadge conn={conn} onRetry={refetchState} />
           <button
             type="button"
             onClick={onLeave}
