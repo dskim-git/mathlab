@@ -163,6 +163,7 @@ import ZetaExplorer from "./gifted/1-primes/zeta-explorer/ZetaExplorer";
 import ZetaArithmetic from "./gifted/1-primes/zeta-arithmetic/ZetaArithmetic";
 // [2] 시어핀스키 삼각형과 카오스 게임
 import DoublePendulum from "./gifted/2-sierpinski-chaos/double-pendulum/DoublePendulum";
+import LorenzButterfly from "./gifted/2-sierpinski-chaos/lorenz-butterfly/LorenzButterfly";
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
@@ -307,6 +308,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "gifted/zeta_explorer": ZetaExplorer,
   "gifted/zeta_arithmetic": ZetaArithmetic,
   "gifted/double_pendulum": DoublePendulum,
+  "gifted/lorenz_butterfly": LorenzButterfly,
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
   "gifted/euclidea_bingo": EuclideaBingo,
