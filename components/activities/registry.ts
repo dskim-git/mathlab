@@ -168,6 +168,7 @@ import LorenzAttractor from "./gifted/2-sierpinski-chaos/lorenz-attractor/Lorenz
 import FractalDimensions from "./gifted/2-sierpinski-chaos/fractal-dimensions/FractalDimensions";
 import SierpinskiProps from "./gifted/2-sierpinski-chaos/sierpinski-props/SierpinskiProps";
 import ChaosgameAddress from "./gifted/2-sierpinski-chaos/chaosgame-address/ChaosgameAddress";
+import ChaosgameBu from "./gifted/2-sierpinski-chaos/chaosgame-bu/ChaosgameBu";
 // [4] 작도 게임
 import EuclideaWarmup from "./gifted/4-euclidea/euclidea-warmup/EuclideaWarmup";
 import EuclideaToolSteps from "./gifted/4-euclidea/euclidea-tool-steps/EuclideaToolSteps";
@@ -317,6 +318,9 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "gifted/fractal_dimensions": FractalDimensions,
   "gifted/sierpinski_props": SierpinskiProps,
   "gifted/chaosgame_address": ChaosgameAddress,
+  // 카오스 게임(BU) — 영재 _units.py 에서 subject="etc", slug="chaosgame"
+  // → SQL 임포트 결과 슬러그 "etc/chaosgame".
+  "etc/chaosgame": ChaosgameBu,
   // 확률통계와 컴포넌트 공유 — ReflectionForm 이 gifted/ slug 면 자동 생략.
   "gifted/galton_board": GaltonBoard,
   "gifted/pascal_triangle_props": PascalTriangleProperties,
