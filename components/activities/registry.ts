@@ -315,6 +315,10 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "gifted/lorenz_attractor": LorenzAttractor,
   "gifted/fractal_dimensions": FractalDimensions,
   "gifted/sierpinski_props": SierpinskiProps,
+  // 확률통계와 컴포넌트 공유 — ReflectionForm 이 gifted/ slug 면 자동 생략.
+  "gifted/galton_board": GaltonBoard,
+  "gifted/pascal_triangle_props": PascalTriangleProperties,
+  "gifted/pascal_fractal": PascalFractal,
   "gifted/euclidea_warmup": EuclideaWarmup,
   "gifted/euclidea_tool_steps": EuclideaToolSteps,
   "gifted/euclidea_bingo": EuclideaBingo,

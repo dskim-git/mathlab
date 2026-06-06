@@ -20,6 +20,9 @@ type ReflectionFormProps = {
 
 export default function ReflectionForm({ questions, onSubmit }: ReflectionFormProps) {
   const activityCtx = useActivityContext();
+  // 영재 활동은 성찰 폼 생략 (정책: activity-reflection-policy).
+  // slug 가 'gifted/' 로 시작하면 영재 단원 활동.
+  if (activityCtx?.activitySlug.startsWith("gifted/")) return null;
   // 블록의 reflectionType(Context 로 흘려옴) 에 따라 공통 마무리 질문 깊이 결정.
   // Context 없으면(교사 미리보기 등) 기본 simple.
   const all = withCommonReflection(questions, activityCtx?.reflectionDepth);
