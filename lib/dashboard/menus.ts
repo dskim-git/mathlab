@@ -34,6 +34,7 @@ const studentMenu: MenuItem[] = [
     icon: "📈",
     href: "/student/growth",
   },
+  { key: "surveys", label: "설문", icon: "📝", href: "/student/surveys" },
   {
     key: "feedback",
     label: "건의 보내기",
@@ -143,6 +144,7 @@ const adminMenu: MenuItem[] = [
 const generalMenu: MenuItem[] = [
   { key: "home", label: "홈", icon: "🏠", href: "/general", inTabBar: true },
   { key: "learn", label: "교과 학습", icon: "📚", href: "/learn", inTabBar: true },
+  { key: "surveys", label: "설문", icon: "📝", href: "/general/surveys" },
   {
     key: "feedback",
     label: "건의 보내기",
@@ -217,6 +219,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/student/activity": "내 활동",
   "/student/reflections": "내 성찰",
   "/student/growth": "내 성장",
+  "/student/surveys": "설문",
   // (구) /student/records 는 /student/reflections 로 흡수·리다이렉트.
   "/student/feedback": "건의 보내기",
   "/student/profile": "내 정보",
@@ -226,6 +229,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/general": "일반인 홈",
   "/general/feedback": "건의 보내기",
   "/general/profile": "내 정보",
+  "/general/surveys": "설문",
 };
 
 /**
