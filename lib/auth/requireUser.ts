@@ -7,6 +7,7 @@ export type UserProfile = {
   name: string;
   role: string;
   status: string;
+  must_change_password?: boolean;
 };
 
 // 역할 무관 공통 가드 — 승인된 로그인 사용자면 통과(학생/교사/일반인/관리자).
@@ -24,7 +25,7 @@ export async function requireUser() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("id, login_id, name, role, status")
+    .select("id, login_id, name, role, status, must_change_password")
     .eq("id", user.id)
     .maybeSingle();
 
