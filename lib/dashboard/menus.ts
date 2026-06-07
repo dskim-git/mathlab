@@ -68,6 +68,13 @@ const teacherMenu: MenuItem[] = [
     href: "/teacher/records",
   },
   {
+    // 담당 학급 학생 한 명 선택 → 그 학생의 옛+새 성찰 모아 보기.
+    key: "students",
+    label: "학생 활동 기록",
+    icon: "🎒",
+    href: "/teacher/students",
+  },
+  {
     // 단원 안의 수업 블록(콘텐츠) 을 교사별로 편집 — /teacher/activities 의 공유 템플릿과는 다른 개념.
     key: "lesson-blocks",
     label: "수업활동 편집",
@@ -211,6 +218,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/teacher": "교사 홈",
   "/teacher/sessions": "세션 관리",
   "/teacher/records": "응답 기록",
+  "/teacher/students": "학생 활동 기록",
   "/teacher/activities": "콘텐츠 블록",
   "/teacher/lesson-blocks": "수업활동 편집",
   "/teacher/progress": "진도표",
