@@ -112,6 +112,26 @@ export function SebteukWorkflow({
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteError, setNoteError] = useState("");
 
+  // 옛 앱(Streamlit) 이식 데이터 — AI 입력에 합산할지 토글(default 포함).
+  type LegacyReflectionRow = {
+    id: string;
+    source_subject: string | null;
+    activity_label: string;
+    payload: Record<string, unknown>;
+    legacy_created_at: string | null;
+  };
+  type SurveyResponseRow = {
+    id: string;
+    answers: Record<string, string>;
+    legacy_created_at: string | null;
+    surveys: { title: string | null; kind: string | null } | null;
+  };
+  const [legacyRecords, setLegacyRecords] = useState<LegacyReflectionRow[]>([]);
+  const [surveyRecords, setSurveyRecords] = useState<SurveyResponseRow[]>([]);
+  // 옛 성찰·설문도 개별 선택 (records 와 동일 패턴). 학생 선택 시 default 모두 선택.
+  const [selectedLegacyIds, setSelectedLegacyIds] = useState<Set<string>>(new Set());
+  const [selectedSurveyIds, setSelectedSurveyIds] = useState<Set<string>>(new Set());
+
   // 1) 학생 목록 (담당 학급)
   const loadStudents = useCallback(async () => {
     setStudentsLoading(true);
@@ -185,10 +205,14 @@ export function SebteukWorkflow({
       setNoteOriginal("");
       setNoteSaved(false);
       setNoteError("");
+      setLegacyRecords([]);
+      setSurveyRecords([]);
+      setSelectedLegacyIds(new Set());
+      setSelectedSurveyIds(new Set());
       return;
     }
     setRecordsLoading(true);
-    const [recRes, prioRes, draftRes, noteRes] = await Promise.all([
+    const [recRes, prioRes, draftRes, noteRes, legacyRes, surveyRes] = await Promise.all([
       supabase
         .from("activity_responses")
         .select(
@@ -216,6 +240,20 @@ export function SebteukWorkflow({
         .eq("teacher_profile_id", teacherProfileId)
         .eq("student_id", selStudentId)
         .maybeSingle(),
+      // 옛 앱 이식 성찰 (legacy_reflections) — AI 세특 합산용
+      supabase
+        .from("legacy_reflections")
+        .select("id, source_subject, activity_label, payload, legacy_created_at")
+        .eq("student_id", selStudentId)
+        .order("legacy_created_at", { ascending: false, nullsFirst: false }),
+      // 설문 응답 (survey_responses) — 본인 학생의 응답 + surveys 메타 join
+      supabase
+        .from("survey_responses")
+        .select(
+          "id, answers, legacy_created_at, surveys(title, kind)"
+        )
+        .eq("student_id", selStudentId)
+        .order("created_at", { ascending: false }),
     ]);
 
     const recordRows = (recRes.data ?? []) as unknown as RecordRow[];
@@ -239,6 +277,12 @@ export function SebteukWorkflow({
     setNoteOriginal(initialNote);
     setNoteSaved(false);
     setNoteError("");
+    const lRows = (legacyRes.data ?? []) as LegacyReflectionRow[];
+    const sRows = (surveyRes.data ?? []) as unknown as SurveyResponseRow[];
+    setLegacyRecords(lRows);
+    setSurveyRecords(sRows);
+    setSelectedLegacyIds(new Set(lRows.map((r) => r.id)));
+    setSelectedSurveyIds(new Set(sRows.map((r) => r.id)));
     setRecordsLoading(false);
     setSavedDraftId(null);
     setSaveOk(false);
@@ -250,8 +294,8 @@ export function SebteukWorkflow({
 
   // 입력 컨텍스트 — 교사가 선택한 항목만, 별표/일반 구분 표시
   const inputContext = useMemo(() => {
+    // chosen 0건이라도 옛 성찰·설문이 있으면 그것만으로 generate 가능.
     const chosen = records.filter((r) => selectedIds.has(r.id));
-    if (chosen.length === 0) return "";
     const marked = chosen.filter((r) => markedIds.has(r.id));
     const others = chosen.filter((r) => !markedIds.has(r.id));
     const fmtLine = (r: RecordRow, prefix: string) => {
@@ -272,8 +316,51 @@ export function SebteukWorkflow({
           others.map((r) => fmtLine(r, "·")).join("\n\n")
       );
     }
+    // 옛 앱 이식 성찰 — 개별 선택된 행만 포함.
+    const chosenLegacy = legacyRecords.filter((r) => selectedLegacyIds.has(r.id));
+    if (chosenLegacy.length > 0) {
+      const lines = chosenLegacy
+        .map((r) => {
+          const fields = Object.entries(r.payload)
+            .filter(([k]) => !["timestamp", "학번", "이름"].includes(k))
+            .map(([k, v]) => `    ${k}: ${String(v ?? "").trim()}`)
+            .filter((s) => s.split(": ")[1])
+            .join("\n");
+          if (!fields) return null;
+          const subj = r.source_subject ? ` [${r.source_subject}]` : "";
+          return `· 활동: ${r.activity_label}${subj}\n${fields}`;
+        })
+        .filter((s): s is string => s !== null);
+      if (lines.length > 0) {
+        blocks.push(
+          "## 옛 앱(Streamlit) 이식 성찰 — 이전 학습 이력\n" + lines.join("\n\n")
+        );
+      }
+    }
+    // 설문 응답 — 개별 선택된 행만 포함.
+    const chosenSurvey = surveyRecords.filter((r) => selectedSurveyIds.has(r.id));
+    if (chosenSurvey.length > 0) {
+      const lines = chosenSurvey
+        .map((r) => {
+          const title = r.surveys?.title ?? r.surveys?.kind ?? "설문";
+          const answers = Object.entries(r.answers)
+            .map(([k, v]) => `    ${k}: ${String(v)}`)
+            .join("\n");
+          return `· ${title}\n${answers}`;
+        })
+        .join("\n\n");
+      blocks.push("## 사전/사후 설문 응답 — 학습 인식·태도\n" + lines);
+    }
     return blocks.join("\n\n");
-  }, [records, markedIds, selectedIds]);
+  }, [
+    records,
+    markedIds,
+    selectedIds,
+    legacyRecords,
+    surveyRecords,
+    selectedLegacyIds,
+    selectedSurveyIds,
+  ]);
 
   function toggleSelected(id: string) {
     setSelectedIds((prev) => {
@@ -603,6 +690,174 @@ export function SebteukWorkflow({
               })}
             </ul>
           )}
+        </section>
+      ) : null}
+
+      {/* 2-1. 옛 앱 성찰 카드 목록 — 개별 선택 */}
+      {selStudent && legacyRecords.length > 0 ? (
+        <section className="rounded-2xl border border-amber-300/25 bg-amber-300/[0.04] p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-bold">
+              2-1. 옛 앱 성찰 ({legacyRecords.length}건)
+            </h2>
+            <span className="text-xs text-slate-400">
+              선택: <span className="text-amber-200">{selectedLegacyIds.size}</span>건
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">
+            기존 Streamlit 앱에서 이식. 체크된 항목만 AI 입력에 포함.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedLegacyIds(new Set(legacyRecords.map((r) => r.id)))
+              }
+              className="rounded-full border border-white/15 px-3 py-1 text-[11px] font-semibold text-slate-300 hover:bg-white/10"
+            >
+              전체 선택
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedLegacyIds(new Set())}
+              disabled={selectedLegacyIds.size === 0}
+              className="rounded-full border border-white/15 px-3 py-1 text-[11px] font-semibold text-slate-300 hover:bg-white/10 disabled:opacity-50"
+            >
+              모두 해제
+            </button>
+          </div>
+          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+            {legacyRecords.map((r) => {
+              const selected = selectedLegacyIds.has(r.id);
+              return (
+                <li
+                  key={r.id}
+                  className={`rounded-lg border bg-slate-950/60 p-3 transition ${
+                    selected
+                      ? "border-amber-300/40"
+                      : "border-white/5 opacity-70"
+                  }`}
+                >
+                  <label className="flex cursor-pointer items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() =>
+                        setSelectedLegacyIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(r.id)) next.delete(r.id);
+                          else next.add(r.id);
+                          return next;
+                        })
+                      }
+                      className="mt-1 h-4 w-4 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-white">
+                          📜 {r.activity_label}
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          {r.legacy_created_at
+                            ? formatDateTime(r.legacy_created_at)
+                            : ""}
+                        </span>
+                      </div>
+                      {r.source_subject ? (
+                        <span className="mt-1 inline-block rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
+                          {r.source_subject}
+                        </span>
+                      ) : null}
+                      {/* payload 의미 있는 답변 미리보기(최대 3 줄) */}
+                      <div className="mt-2 space-y-0.5 text-[11px] text-slate-300">
+                        {Object.entries(r.payload)
+                          .filter(
+                            ([k, v]) =>
+                              !["timestamp", "학번", "이름"].includes(k) &&
+                              String(v ?? "").trim()
+                          )
+                          .slice(0, 3)
+                          .map(([k, v]) => (
+                            <div key={k} className="flex gap-1.5">
+                              <span className="shrink-0 text-slate-500">
+                                {k}:
+                              </span>
+                              <span className="truncate text-slate-200">
+                                {String(v)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* 2-2. 사전/사후 설문 응답 — 개별 선택 */}
+      {selStudent && surveyRecords.length > 0 ? (
+        <section className="rounded-2xl border border-violet-300/25 bg-violet-300/[0.04] p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-bold">
+              2-2. 사전/사후 설문 ({surveyRecords.length}건)
+            </h2>
+            <span className="text-xs text-slate-400">
+              선택: <span className="text-violet-200">{selectedSurveyIds.size}</span>건
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">
+            체크된 설문 답변이 AI 입력에 함께 포함.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {surveyRecords.map((r) => {
+              const selected = selectedSurveyIds.has(r.id);
+              const title = r.surveys?.title ?? r.surveys?.kind ?? "설문";
+              return (
+                <li
+                  key={r.id}
+                  className={`rounded-lg border bg-slate-950/60 p-3 transition ${
+                    selected
+                      ? "border-violet-300/40"
+                      : "border-white/5 opacity-70"
+                  }`}
+                >
+                  <label className="flex cursor-pointer items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() =>
+                        setSelectedSurveyIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(r.id)) next.delete(r.id);
+                          else next.add(r.id);
+                          return next;
+                        })
+                      }
+                      className="mt-1 h-4 w-4 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-white">
+                          📊 {title}
+                        </span>
+                        {r.legacy_created_at ? (
+                          <span className="text-[11px] text-slate-500">
+                            {formatDateTime(r.legacy_created_at)}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        답변 {Object.keys(r.answers).length}개
+                      </p>
+                    </div>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       ) : null}
 

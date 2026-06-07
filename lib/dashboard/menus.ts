@@ -152,6 +152,7 @@ const adminMenu: MenuItem[] = [
   { key: "scores", label: "점수 관리", icon: "🏆", href: "/admin/scores" },
   { key: "notices", label: "공지 작성", icon: "📢", href: "/admin/notices" },
   { key: "surveys", label: "설문", icon: "📝", href: "/admin/surveys" },
+  { key: "sebteuk", label: "AI 세특", icon: "🤖", href: "/admin/sebteuk" },
 ];
 
 const generalMenu: MenuItem[] = [
@@ -213,6 +214,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/scores": "점수 관리",
   "/admin/notices": "공지 작성",
   "/admin/surveys": "설문",
+  "/admin/sebteuk": "AI 세특 작성",
 
   // 교사
   "/teacher": "교사 홈",
