@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { REFLECTION_LABELS } from "@/lib/legacy/reflectionLabels";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { extractMainReflection } from "@/lib/activities/reflection";
@@ -316,15 +317,21 @@ export function SebteukWorkflow({
           others.map((r) => fmtLine(r, "·")).join("\n\n")
       );
     }
-    // 옛 앱 이식 성찰 — 개별 선택된 행만 포함.
+    // 옛 앱 이식 성찰 — 개별 선택된 행만 포함. 컬럼명 → 진짜 질문 매핑 적용.
     const chosenLegacy = legacyRecords.filter((r) => selectedLegacyIds.has(r.id));
     if (chosenLegacy.length > 0) {
       const lines = chosenLegacy
         .map((r) => {
+          const labelMap = REFLECTION_LABELS[r.activity_label] ?? {};
           const fields = Object.entries(r.payload)
             .filter(([k]) => !["timestamp", "학번", "이름"].includes(k))
-            .map(([k, v]) => `    ${k}: ${String(v ?? "").trim()}`)
-            .filter((s) => s.split(": ")[1])
+            .map(([k, v]) => {
+              const value = String(v ?? "").trim();
+              if (!value) return "";
+              const prompt = labelMap[k] ?? k;
+              return `    Q: ${prompt}\n    A: ${value}`;
+            })
+            .filter((s) => s)
             .join("\n");
           if (!fields) return null;
           const subj = r.source_subject ? ` [${r.source_subject}]` : "";
@@ -768,7 +775,7 @@ export function SebteukWorkflow({
                           {r.source_subject}
                         </span>
                       ) : null}
-                      {/* payload 의미 있는 답변 미리보기(최대 3 줄) */}
+                      {/* payload 의미 있는 답변 미리보기(최대 3 줄) — 진짜 질문 매핑 적용 */}
                       <div className="mt-2 space-y-0.5 text-[11px] text-slate-300">
                         {Object.entries(r.payload)
                           .filter(
@@ -777,16 +784,22 @@ export function SebteukWorkflow({
                               String(v ?? "").trim()
                           )
                           .slice(0, 3)
-                          .map(([k, v]) => (
-                            <div key={k} className="flex gap-1.5">
-                              <span className="shrink-0 text-slate-500">
-                                {k}:
-                              </span>
-                              <span className="truncate text-slate-200">
-                                {String(v)}
-                              </span>
-                            </div>
-                          ))}
+                          .map(([k, v]) => {
+                            const label =
+                              REFLECTION_LABELS[r.activity_label]?.[k] ?? k;
+                            return (
+                              <div key={k} className="flex flex-col gap-0.5">
+                                <span className="text-[10px] text-slate-500">
+                                  {label.length > 60
+                                    ? label.slice(0, 60) + "…"
+                                    : label}
+                                </span>
+                                <span className="truncate text-slate-200">
+                                  {String(v)}
+                                </span>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   </label>

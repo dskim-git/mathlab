@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { REFLECTION_LABELS } from "@/lib/legacy/reflectionLabels";
 
 type LegacyRow = {
   id: string;
@@ -93,10 +94,13 @@ export function LegacyReflectionsSection({
               {Object.entries(r.payload).map(([k, v]) => {
                 const value = String(v ?? "").trim();
                 if (!value) return null;
+                // 활동별 매핑된 진짜 질문 텍스트가 있으면 그것으로, 없으면 컬럼명 그대로.
+                const label =
+                  REFLECTION_LABELS[r.activity_label]?.[k] ?? k;
                 return (
                   <div key={k} className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                      {k}
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      {label}
                     </span>
                     <span className="whitespace-pre-wrap text-slate-100">
                       {value}
