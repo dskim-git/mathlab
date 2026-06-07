@@ -14,12 +14,12 @@ function todayKst(): string {
   return kst.toISOString().slice(0, 10);
 }
 
-// 관리자 대시보드 4행 구성 (사용자 결정):
+// 관리자 대시보드 5행 구성:
 //   1행 통계 KPI (4): 오늘접속자·이번주 활동·성찰 작성 비율·새 건의사항
-//                   — 처음 3개는 /admin/stats 로 (실데이터 매핑은 후속)
-//   2행 회원 관리 (5): 가입승인 대기·회원관리·설정·교과권한·명렬표
-//   3행 교과 (2):     교과 학습 관리·교사 대시보드
-//   4행 기타 (2):     통계·건의사항
+//   2행 회원 (3):     가입승인·회원관리·설정
+//   3행 학생·그룹 (3): 교과권한·명렬표·수업그룹
+//   4행 콘텐츠·교사 도구 (5): 교과학습관리·단원관리·교사대시보드·학생활동기록·AI세특
+//   5행 소통·분석 (3): 통계·건의사항·설문
 
 type Counts = {
   pending: number | null;
@@ -218,7 +218,7 @@ export default function AdminHomePage() {
         />
       </div>
 
-      {/* 2행 — 회원 관리 5 */}
+      {/* 2행 — 회원 (3) */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
           icon="🕒"
@@ -250,6 +250,10 @@ export default function AdminHomePage() {
           href="/admin/settings"
           hoverBorderClass={theme.hoverBorder}
         />
+      </div>
+
+      {/* 3행 — 학생·그룹 (3) */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
           icon="🔐"
           title="교과 권한"
@@ -273,7 +277,7 @@ export default function AdminHomePage() {
         />
       </div>
 
-      {/* 3행 — 교과 3. 2행과 같은 5컬럼 그리드라 카드 크기 일정. 우측 2칸은 빈 공간(후속). */}
+      {/* 4행 — 콘텐츠·교사 도구 (5) */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
           icon="📚"
@@ -296,9 +300,23 @@ export default function AdminHomePage() {
           href="/teacher"
           hoverBorderClass={theme.hoverBorder}
         />
+        <DashboardCard
+          icon="🎒"
+          title="학생 활동 기록"
+          description="옛·새 성찰 모음 + profile"
+          href="/admin/students"
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="🤖"
+          title="AI 세특"
+          description="학생별 세특 초안 생성"
+          href="/admin/sebteuk"
+          hoverBorderClass={theme.hoverBorder}
+        />
       </div>
 
-      {/* 4행 — 기타 2. 동일한 5컬럼 그리드, 우측 3칸 빈 공간. */}
+      {/* 5행 — 소통·분석 (3) */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <DashboardCard
           icon="📊"
@@ -317,6 +335,13 @@ export default function AdminHomePage() {
               ? `접수 ${counts.newFeedback}`
               : undefined
           }
+          hoverBorderClass={theme.hoverBorder}
+        />
+        <DashboardCard
+          icon="📝"
+          title="설문"
+          description="사전·사후 설문 + 분석"
+          href="/admin/surveys"
           hoverBorderClass={theme.hoverBorder}
         />
       </div>

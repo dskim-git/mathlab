@@ -7,6 +7,9 @@ export type MenuItem = {
   href: string;
   // 하단 탭바에 노출할지 (모바일 공간이 적어 핵심만)
   inTabBar?: boolean;
+  // 사이드바 그룹 — 같은 group 끼리 묶이고, 그룹 사이엔 구분선이 그어짐.
+  // 없으면 default 그룹. Sidebar 는 메뉴 배열 순서대로 group 바뀌면 분리 표시.
+  group?: string;
 };
 
 const studentMenu: MenuItem[] = [
@@ -99,60 +102,33 @@ const teacherMenu: MenuItem[] = [
 ];
 
 const adminMenu: MenuItem[] = [
-  { key: "home", label: "홈", icon: "🏠", href: "/admin", inTabBar: true },
-  {
-    key: "members",
-    label: "회원관리",
-    icon: "👥",
-    href: "/admin/members",
-    inTabBar: true,
-  },
-  {
-    key: "students",
-    label: "학생 활동 기록",
-    icon: "🎒",
-    href: "/admin/students",
-  },
-  { key: "settings", label: "설정", icon: "⚙️", href: "/admin/settings" },
-  {
-    key: "learn",
-    label: "교과 학습 관리",
-    icon: "📚",
-    href: "/learn",
-    inTabBar: true,
-  },
-  {
-    // 교과 단원(curriculum_units) 트리 + 콘텐츠 블록 관리. SQL 임포트 대체.
-    key: "curriculum",
-    label: "단원 관리",
-    icon: "🗂️",
-    href: "/admin/curriculum",
-  },
-  {
-    // activities 행 자체(공유 템플릿) 신규/삭제. 운영 빈도 낮음.
-    key: "activities",
-    label: "활동 행 관리",
-    icon: "🧪",
-    href: "/admin/activities",
-  },
-  {
-    key: "access",
-    label: "교과 권한",
-    icon: "🔐",
-    href: "/admin/access",
-    inTabBar: true,
-  },
-  {
-    key: "feedback",
-    label: "건의사항",
-    icon: "💬",
-    href: "/admin/feedback",
-  },
-  { key: "stats", label: "통계", icon: "📊", href: "/admin/stats", inTabBar: true },
-  { key: "scores", label: "점수 관리", icon: "🏆", href: "/admin/scores" },
-  { key: "notices", label: "공지 작성", icon: "📢", href: "/admin/notices" },
-  { key: "surveys", label: "설문", icon: "📝", href: "/admin/surveys" },
-  { key: "sebteuk", label: "AI 세특", icon: "🤖", href: "/admin/sebteuk" },
+  // ── 홈 ───────────────────────────────────────────────
+  { key: "home", label: "홈", icon: "🏠", href: "/admin", inTabBar: true, group: "home" },
+
+  // ── 회원·권한 ───────────────────────────────────────
+  { key: "members", label: "회원관리", icon: "👥", href: "/admin/members", inTabBar: true, group: "members" },
+  { key: "access", label: "교과 권한", icon: "🔐", href: "/admin/access", inTabBar: true, group: "members" },
+  { key: "students", label: "학생 활동 기록", icon: "🎒", href: "/admin/students", group: "members" },
+
+  // ── 콘텐츠 ──────────────────────────────────────────
+  { key: "learn", label: "교과 학습 관리", icon: "📚", href: "/learn", inTabBar: true, group: "content" },
+  { key: "curriculum", label: "단원 관리", icon: "🗂️", href: "/admin/curriculum", group: "content" },
+  { key: "activities", label: "활동 행 관리", icon: "🧪", href: "/admin/activities", group: "content" },
+
+  // ── 설정·마스터 ─────────────────────────────────────
+  { key: "settings", label: "설정", icon: "⚙️", href: "/admin/settings", group: "settings" },
+
+  // ── 소통 ────────────────────────────────────────────
+  { key: "feedback", label: "건의사항", icon: "💬", href: "/admin/feedback", group: "comm" },
+  { key: "notices", label: "공지 작성", icon: "📢", href: "/admin/notices", group: "comm" },
+
+  // ── 데이터·분석 ────────────────────────────────────
+  { key: "stats", label: "통계", icon: "📊", href: "/admin/stats", inTabBar: true, group: "data" },
+  { key: "scores", label: "점수 관리", icon: "🏆", href: "/admin/scores", group: "data" },
+  { key: "surveys", label: "설문", icon: "📝", href: "/admin/surveys", group: "data" },
+
+  // ── AI ──────────────────────────────────────────────
+  { key: "sebteuk", label: "AI 세특", icon: "🤖", href: "/admin/sebteuk", group: "ai" },
 ];
 
 const generalMenu: MenuItem[] = [

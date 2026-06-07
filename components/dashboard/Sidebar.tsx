@@ -25,7 +25,7 @@ export function Sidebar({ role }: SidebarProps) {
       aria-label="대시보드 메뉴"
     >
       <nav className="flex flex-col gap-1">
-        {items.map((item) => {
+        {items.map((item, idx) => {
           const isActive =
             pathname === item.href ||
             (item.href !== "/" && pathname.startsWith(item.href + "/"));
@@ -34,17 +34,26 @@ export function Sidebar({ role }: SidebarProps) {
             ? `${theme.accentBg} ${theme.accentText} border-l-2 ${theme.accentBorder}`
             : "text-slate-300 hover:bg-white/5 border-l-2 border-transparent";
 
+          // 그룹 경계 — 이전 항목과 group 이 다르면 구분선 삽입 (첫 항목 제외).
+          const prevGroup = idx > 0 ? items[idx - 1].group : null;
+          const groupChanged =
+            idx > 0 && item.group != null && item.group !== prevGroup;
+
           return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-r-lg px-3 py-2 text-sm font-medium transition ${activeClass}`}
-            >
-              <span className="text-base" aria-hidden>
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </Link>
+            <div key={item.key}>
+              {groupChanged ? (
+                <div className="my-2 border-t border-white/10" aria-hidden />
+              ) : null}
+              <Link
+                href={item.href}
+                className={`flex items-center gap-3 rounded-r-lg px-3 py-2 text-sm font-medium transition ${activeClass}`}
+              >
+                <span className="text-base" aria-hidden>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </Link>
+            </div>
           );
         })}
       </nav>

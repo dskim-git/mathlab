@@ -21,6 +21,7 @@ type SurveyRow = {
   kind: string | null;
   questions: unknown;
   is_active: boolean;
+  consent_text: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -49,6 +50,7 @@ export default function AdminSurveysPage() {
   const [fKind, setFKind] = useState("");
   const [fQuestionsJson, setFQuestionsJson] = useState("[]");
   const [fActive, setFActive] = useState(false);
+  const [fConsent, setFConsent] = useState(""); // 비우면 동의 단계 X
   const [formError, setFormError] = useState("");
   const [formBusy, setFormBusy] = useState(false);
 
@@ -58,7 +60,9 @@ export default function AdminSurveysPage() {
     const [sRes, cRes] = await Promise.all([
       supabase
         .from("surveys")
-        .select("*")
+        .select(
+          "id, slug, title, description, kind, questions, is_active, consent_text, created_at, updated_at"
+        )
         .order("kind", { ascending: true })
         .order("created_at", { ascending: false }),
       supabase.from("survey_responses").select("survey_id, respondent_kind"),
@@ -96,6 +100,7 @@ export default function AdminSurveysPage() {
     setFKind("");
     setFQuestionsJson("[]");
     setFActive(false);
+    setFConsent("");
     setFormError("");
   }
 
@@ -113,6 +118,7 @@ export default function AdminSurveysPage() {
     setFKind(s.kind ?? "");
     setFQuestionsJson(JSON.stringify(s.questions, null, 2));
     setFActive(s.is_active);
+    setFConsent(s.consent_text ?? "");
     setFormError("");
   }
 
@@ -141,6 +147,7 @@ export default function AdminSurveysPage() {
       kind: fKind.trim() || null,
       questions: parsed,
       is_active: fActive,
+      consent_text: fConsent.trim() || null,
     };
     const res = editingId
       ? await supabase.from("surveys").update(payload).eq("id", editingId)
@@ -293,6 +300,25 @@ export default function AdminSurveysPage() {
             />
           </div>
           <div className="mt-3">
+            <label
+              htmlFor="f-consent"
+              className="block text-xs font-semibold text-slate-300"
+            >
+              개인정보 동의 안내문 (선택) —{" "}
+              <span className="text-slate-500">
+                비우면 동의 단계 X (응답 폼 바로 노출)
+              </span>
+            </label>
+            <textarea
+              id="f-consent"
+              value={fConsent}
+              onChange={(e) => setFConsent(e.target.value)}
+              rows={5}
+              placeholder="예: 이 설문은 ... 응답 내용은 수업 연구 목적으로만 활용되며 ..."
+              className="mt-1.5 w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+            />
+          </div>
+          <div className="mt-3">
             <label className="inline-flex items-center gap-2 text-sm text-slate-200">
               <input
                 type="checkbox"
@@ -350,6 +376,11 @@ export default function AdminSurveysPage() {
                       {s.kind ? (
                         <span className="rounded bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-300">
                           {s.kind}
+                        </span>
+                      ) : null}
+                      {s.consent_text ? (
+                        <span className="rounded bg-violet-300/15 px-2 py-0.5 text-[11px] font-semibold text-violet-200" title="응답 전 개인정보 동의 단계 노출">
+                          동의 필수
                         </span>
                       ) : null}
                       <h3 className="text-base font-bold text-white">

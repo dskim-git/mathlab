@@ -30,6 +30,7 @@ type SurveyRow = {
   kind: string | null;
   questions: Question[];
   is_active: boolean;
+  consent_text: string | null;
 };
 
 type ResponseRow = {
@@ -52,6 +53,8 @@ export function SurveyAnswerPanel({ accentText }: { accentText: string }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg] = useState("");
+  // 동의 단계 — consent_text 있는 설문에서, 새 응답 시 폼 가리고 안내문+체크 노출.
+  const [consentAgreed, setConsentAgreed] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -67,7 +70,9 @@ export function SurveyAnswerPanel({ accentText }: { accentText: string }) {
     const [sRes, rRes] = await Promise.all([
       supabase
         .from("surveys")
-        .select("id, slug, title, description, kind, questions, is_active")
+        .select(
+          "id, slug, title, description, kind, questions, is_active, consent_text"
+        )
         .eq("is_active", true)
         .order("kind", { ascending: true })
         .order("created_at", { ascending: false }),
@@ -94,15 +99,18 @@ export function SurveyAnswerPanel({ accentText }: { accentText: string }) {
   function openSurvey(s: SurveyRow) {
     setOpenSurveyId(s.id);
     setSubmitMsg("");
-    // 기존 응답이 있으면 그 값으로 채워 수정 모드.
+    // 기존 응답이 있으면 그 값으로 채워 수정 모드. 동의도 이미 한 것으로 간주.
     const existing = myResponses.get(s.id);
     setAnswers(existing?.answers ?? {});
+    // 새 응답인데 consent_text 있으면 동의 단계 노출 — 그 외는 바로 폼.
+    setConsentAgreed(!s.consent_text || !!existing);
   }
 
   function closeSurvey() {
     setOpenSurveyId(null);
     setAnswers({});
     setSubmitMsg("");
+    setConsentAgreed(false);
   }
 
   async function submitSurvey(s: SurveyRow) {
@@ -229,14 +237,21 @@ export function SurveyAnswerPanel({ accentText }: { accentText: string }) {
                 </div>
 
                 {isOpen ? (
-                  <SurveyForm
-                    survey={s}
-                    answers={answers}
-                    setAnswers={setAnswers}
-                    onSubmit={() => submitSurvey(s)}
-                    submitting={submitting}
-                    message={submitMsg}
-                  />
+                  s.consent_text && !consentAgreed ? (
+                    <ConsentStep
+                      text={s.consent_text}
+                      onAgree={() => setConsentAgreed(true)}
+                    />
+                  ) : (
+                    <SurveyForm
+                      survey={s}
+                      answers={answers}
+                      setAnswers={setAnswers}
+                      onSubmit={() => submitSurvey(s)}
+                      submitting={submitting}
+                      message={submitMsg}
+                    />
+                  )
                 ) : null}
               </Card>
             );
@@ -245,6 +260,45 @@ export function SurveyAnswerPanel({ accentText }: { accentText: string }) {
       </div>
       {openSurvey_ ? null : null}
     </section>
+  );
+}
+
+/** 설문 시작 전 개인정보 동의 단계 — 안내문 + 체크 + "시작" 버튼. */
+function ConsentStep({
+  text,
+  onAgree,
+}: {
+  text: string;
+  onAgree: () => void;
+}) {
+  const [checked, setChecked] = useState(false);
+  return (
+    <div className="mt-4 space-y-3 rounded-xl border border-violet-300/30 bg-violet-300/5 p-4">
+      <p className="font-semibold text-violet-200">📋 설문 시작 전 안내</p>
+      <p className="whitespace-pre-wrap text-sm leading-6 text-slate-100">
+        {text}
+      </p>
+      <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-200">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => setChecked(e.target.checked)}
+          className="h-4 w-4"
+        />
+        안내 내용을 확인했으며, 설문에 참여합니다.
+      </label>
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          disabled={!checked}
+          onClick={onAgree}
+        >
+          동의하고 설문 시작 →
+        </Button>
+      </div>
+    </div>
   );
 }
 
