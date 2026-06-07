@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/Alert";
 import { getResultRenderer } from "@/components/activities/resultRenderer";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 import { extractMainReflection } from "@/lib/activities/reflection";
+import { LegacyReflectionsSection } from "@/components/student/LegacyReflectionsSection";
 
 // 통합 페이지: "내 성찰"
 // - 학생이 제출한 모든 활동 응답을 한 곳에서 본다.
@@ -317,6 +318,12 @@ export default function StudentReflectionsPage() {
           참고합니다.
         </p>
       </div>
+
+      {/* 옛 앱(Streamlit)에서 이식한 성찰 — 데이터 있을 때만 펼침 카드로 표시 */}
+      <LegacyReflectionsSection
+        studentId={studentId}
+        accentText={theme.accentText}
+      />
 
       {loadError ? (
         <Alert tone="error" className="mb-4">

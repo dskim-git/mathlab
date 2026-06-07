@@ -100,6 +100,12 @@ const adminMenu: MenuItem[] = [
     href: "/admin/members",
     inTabBar: true,
   },
+  {
+    key: "students",
+    label: "학생 활동 기록",
+    icon: "🎒",
+    href: "/admin/students",
+  },
   { key: "settings", label: "설정", icon: "⚙️", href: "/admin/settings" },
   {
     key: "learn",
@@ -187,6 +193,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   // 관리자
   "/admin": "관리자 홈",
   "/admin/members": "회원관리",
+  "/admin/students": "학생 활동 기록",
   "/admin/teachers": "교사 권한",
   "/admin/roster": "명렬표",
   "/admin/subjects": "교과 접근(학생·일반)",
