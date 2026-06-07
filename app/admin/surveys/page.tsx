@@ -4,10 +4,11 @@
 // surveys 와 survey_responses 는 admin RLS(ALL) 라 client 에서 직접 조작 가능.
 // 질문 구조는 JSONB(자유 형식 [{id, prompt, kind, options?}, ...]) — 텍스트 편집.
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
@@ -378,7 +379,14 @@ export default function AdminSurveysPage() {
                       ) : null}
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-2">
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Link
+                      href={`/admin/surveys/${s.id}`}
+                      className={buttonClasses("primary", { size: "sm" })}
+                      title="미리보기 + 항목별 분석"
+                    >
+                      📊 보기
+                    </Link>
                     <Button
                       onClick={() => toggleActive(s)}
                       variant={s.is_active ? "neutral" : "secondary"}
