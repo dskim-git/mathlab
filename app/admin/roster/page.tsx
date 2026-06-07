@@ -29,6 +29,56 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
+/**
+ * 한국어 CSV 인코딩 자동 감지·디코드.
+ * 한국 Excel "CSV (쉼표)" 저장은 보통 CP949(=Windows-949, EUC-KR), "CSV UTF-8" 은 UTF-8 BOM.
+ * 우선순위: UTF-8 BOM → UTF-8 strict → EUC-KR → Windows-949 → UTF-8 lossy.
+ * 각 후보를 디코드해 "한글 음절(가-힣)" 비율이 가장 높은 결과를 채택해 더 정확히 판별한다.
+ */
+function decodeKoreanCsv(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  // UTF-8 BOM (EF BB BF)
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === 0xef &&
+    bytes[1] === 0xbb &&
+    bytes[2] === 0xbf
+  ) {
+    return new TextDecoder("utf-8").decode(buf);
+  }
+
+  const candidates: Array<{ enc: string; text: string; score: number }> = [];
+  const enclist = ["utf-8", "euc-kr", "windows-949"] as const;
+  for (const enc of enclist) {
+    try {
+      const text = new TextDecoder(enc, { fatal: true }).decode(buf);
+      const koSyllables = (text.match(/[가-힣]/g) ?? []).length;
+      candidates.push({ enc, text, score: koSyllables });
+    } catch {
+      // strict 실패 → 후보 X
+    }
+  }
+  if (candidates.length === 0) {
+    // 마지막 폴백: utf-8 lossy
+    const text = new TextDecoder("utf-8").decode(buf);
+    if (typeof window !== "undefined")
+      console.warn("[roster] 모든 인코딩 strict 실패 — utf-8 lossy 사용");
+    return text;
+  }
+  // 한글 음절이 가장 많은 인코딩 채택 (동률이면 enclist 순)
+  candidates.sort((a, b) => b.score - a.score);
+  const best = candidates[0];
+  if (typeof window !== "undefined") {
+    console.log(
+      "[roster] 인코딩 후보:",
+      candidates.map((c) => `${c.enc}=${c.score}`).join(" / "),
+      "→ 채택:",
+      best.enc
+    );
+  }
+  return best.text;
+}
+
 // CSV(또는 탭) 형식: 학년, 반, 번호, 이름  (헤더 줄은 자동으로 건너뜀)
 function parseRosterText(text: string): {
   rows: ParsedRow[];
@@ -153,7 +203,8 @@ export default function AdminRosterPage() {
     if (!file) return;
 
     setFileName(file.name);
-    const text = await file.text();
+    const buf = await file.arrayBuffer();
+    const text = decodeKoreanCsv(buf);
     const { rows, errors } = parseRosterText(text);
     setParsed(rows);
     setParseErrors(errors);
