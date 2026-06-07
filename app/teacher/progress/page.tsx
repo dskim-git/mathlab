@@ -85,12 +85,15 @@ function parseWeekOffset(raw: string | undefined): number {
   return n;
 }
 
+const WEEKS_COUNT_OPTIONS = [1, 2, 4, 8, 12] as const;
+const WEEKS_COUNT_MAX = 12;
+
 function parseWeeksCount(raw: string | undefined): number {
   if (!raw) return 2;
   const n = parseInt(raw, 10);
   if (!Number.isFinite(n)) return 2;
   if (n < 1) return 1;
-  if (n > 4) return 4;
+  if (n > WEEKS_COUNT_MAX) return WEEKS_COUNT_MAX;
   return n;
 }
 
@@ -326,7 +329,7 @@ export default async function TeacherProgressPage({
         {viewMode === "week" ? (
           <>
             <span className="ml-3 text-slate-400">기간</span>
-            {[1, 2, 3, 4].map((c) => (
+            {WEEKS_COUNT_OPTIONS.map((c) => (
               <Link
                 key={c}
                 href={weekQS(weekOffset, c)}
@@ -429,6 +432,7 @@ export default async function TeacherProgressPage({
       ) : null}
 
       <ProgressGrid
+        key={`${firstIso}_${lastIso}`}
         teacherId={user.id}
         schoolYear={schoolYear}
         classes={classes}

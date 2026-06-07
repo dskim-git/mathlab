@@ -36,7 +36,7 @@ const DRY_RUN = process.argv.includes("--dry-run");
 const RESET = process.argv.includes("--reset");
 const onlyArg = process.argv.find((a) => a.startsWith("--only="));
 const ONLY = onlyArg ? onlyArg.slice("--only=".length) : null;
-// null = 전부 / "progress" "schedule" "visits" "sebteuk"
+// null = 전부 / "progress" "daymeta" "schedule" "visits" "sebteuk" "permissions" "weekly"
 
 const PROGRESS_SHEET_ID = "13dDQ4LAHfOA4poxhD6IZ8RI3OkTrryGOUOjNRAzMhOo";
 const SCHOOL_YEAR = 2026;
@@ -153,7 +153,6 @@ async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
   for (const row of rows) {
     const date = parseDate(row["날짜"]);
     if (!date) continue;
-    const memo = String(row["비고"] ?? "").trim();
     for (const cc of classCols) {
       const topic = String(row[cc.h] ?? "").trim();
       if (!topic) continue;
@@ -165,7 +164,7 @@ async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
         class_number: cc.parsed.classNumber,
         subject: cc.parsed.subject,
         lesson_topic: topic,
-        notes: memo,
+        notes: "", // 비고는 daily_schedule_meta 로 분리 (importDailyMeta)
       });
     }
   }
@@ -181,6 +180,39 @@ async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
     });
   if (error) console.log(`  ❌ ${error.message}`);
   else console.log(`  ✅ ${batch.length}건 (중복 시 ignore)`);
+}
+
+// ═════════════════════════════════════════════════════════════
+// 1b) 진도표 시트 비고 → daily_schedule_meta (일자별 단일)
+//      시트의 "비고" 컬럼은 한 일자에 하나 — 모든 학반에 동일 적용되는
+//      날짜 단위 메모이므로 daily_schedule_meta.notes 로 저장한다.
+// ═════════════════════════════════════════════════════════════
+async function importDailyMeta(sb: SupabaseClient, daesobiId: string, ws: XLSX.WorkSheet) {
+  console.log("\n=== 진도표 비고 → daily_schedule_meta (일자별) ===");
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
+  const seen = new Set<string>();
+  const batch: Array<{
+    teacher_id: string;
+    date: string;
+    is_off: boolean;
+    notes: string;
+  }> = [];
+  for (const row of rows) {
+    const date = parseDate(row["날짜"]);
+    if (!date) continue;
+    const memo = String(row["비고"] ?? "").trim();
+    if (!memo) continue;
+    if (seen.has(date)) continue;
+    seen.add(date);
+    batch.push({ teacher_id: daesobiId, date, is_off: false, notes: memo });
+  }
+  console.log(`  배치 ${batch.length}건 (일자별 단일)`);
+  if (DRY_RUN || batch.length === 0) return;
+  const { error } = await sb
+    .from("daily_schedule_meta")
+    .upsert(batch, { onConflict: "teacher_id,date" });
+  if (error) console.log(`  ❌ ${error.message}`);
+  else console.log(`  ✅ ${batch.length}건`);
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -331,6 +363,163 @@ async function importSebteukUsage(sb: SupabaseClient, daesobiId: string, ws: XLS
 }
 
 // ═════════════════════════════════════════════════════════════
+// 5) 자동 추정: progress_tracker → teacher_permissions
+//    daesobi 의 진도표에 등장한 (grade, class, subject) 유니크 조합을
+//    teacher_permissions 에 일괄 등록. 이미 있으면 ignoreDuplicates.
+// ═════════════════════════════════════════════════════════════
+async function deriveTeacherPermissions(sb: SupabaseClient, daesobiId: string) {
+  console.log("\n=== teacher_permissions 자동 추정 (progress_tracker 기반) ===");
+
+  // daesobi 의 teachers 행 확인 / 생성
+  let teacherRowId: string | null = null;
+  {
+    const { data } = await sb
+      .from("teachers")
+      .select("id")
+      .eq("profile_id", daesobiId)
+      .maybeSingle();
+    teacherRowId = (data as { id: string } | null)?.id ?? null;
+  }
+  if (!teacherRowId) {
+    if (DRY_RUN) {
+      console.log("  [dry-run] teachers 행 없음 — INSERT 예정");
+    } else {
+      const { data, error } = await sb
+        .from("teachers")
+        .insert({ profile_id: daesobiId })
+        .select("id")
+        .single();
+      if (error) {
+        console.log(`  ❌ teachers INSERT 실패: ${error.message}`);
+        return;
+      }
+      teacherRowId = (data as { id: string }).id;
+      console.log(`  ✅ teachers 행 생성: ${teacherRowId}`);
+    }
+  } else {
+    console.log(`  teachers.id = ${teacherRowId}`);
+  }
+
+  // progress_tracker 의 유니크 학반·과목
+  const { data: progRows, error: progErr } = await sb
+    .from("progress_tracker")
+    .select("grade, class_number, subject")
+    .eq("teacher_id", daesobiId);
+  if (progErr) {
+    console.log(`  ❌ progress_tracker 조회 실패: ${progErr.message}`);
+    return;
+  }
+  const uniq = new Map<string, { grade: number; class_number: number; subject: string }>();
+  for (const r of (progRows ?? []) as Array<{
+    grade: number;
+    class_number: number;
+    subject: string;
+  }>) {
+    const key = `${r.grade}-${r.class_number}-${r.subject}`;
+    if (!uniq.has(key)) uniq.set(key, r);
+  }
+  console.log(`  유니크 학반·과목 ${uniq.size}건: ${Array.from(uniq.keys()).join(", ")}`);
+  if (DRY_RUN || uniq.size === 0 || !teacherRowId) return;
+
+  const batch = Array.from(uniq.values()).map((u) => ({
+    teacher_id: teacherRowId!,
+    grade: u.grade,
+    class_number: u.class_number,
+    subject: u.subject,
+  }));
+  const { error } = await sb
+    .from("teacher_permissions")
+    .upsert(batch, {
+      onConflict: "teacher_id,subject,grade,class_number",
+      ignoreDuplicates: true,
+    });
+  if (error) console.log(`  ❌ ${error.message}`);
+  else console.log(`  ✅ ${batch.length}건 (중복 시 ignore)`);
+}
+
+// ═════════════════════════════════════════════════════════════
+// 6) 자동 추정: progress_tracker → weekly_schedule
+//    각 (요일, grade, class, subject) 의 진도 입력 횟수를 세어
+//    임계 이상 (default: 3회) 나오면 정규 수업으로 간주, weekly_schedule INSERT.
+//    요일: 0=월 ~ 4=금 (주말은 제외).
+// ═════════════════════════════════════════════════════════════
+const WEEKLY_THRESHOLD = 3;
+
+async function deriveWeeklySchedule(sb: SupabaseClient, daesobiId: string) {
+  console.log("\n=== weekly_schedule 자동 추정 (progress_tracker 기반) ===");
+  const { data: rows, error } = await sb
+    .from("progress_tracker")
+    .select("date, grade, class_number, subject")
+    .eq("teacher_id", daesobiId);
+  if (error) {
+    console.log(`  ❌ progress_tracker 조회 실패: ${error.message}`);
+    return;
+  }
+
+  // (day_of_week, grade, class_number, subject) → count
+  const tally = new Map<
+    string,
+    { day_of_week: number; grade: number; class_number: number; subject: string; count: number }
+  >();
+  for (const r of (rows ?? []) as Array<{
+    date: string;
+    grade: number;
+    class_number: number;
+    subject: string;
+  }>) {
+    const d = new Date(r.date + "T00:00:00");
+    const jsDow = d.getDay(); // 0=일 ~ 6=토
+    if (jsDow === 0 || jsDow === 6) continue; // 주말 skip
+    const dow = jsDow - 1; // 1=월 → 0, 5=금 → 4
+    const key = `${dow}-${r.grade}-${r.class_number}-${r.subject}`;
+    const prev = tally.get(key);
+    if (prev) prev.count += 1;
+    else
+      tally.set(key, {
+        day_of_week: dow,
+        grade: r.grade,
+        class_number: r.class_number,
+        subject: r.subject,
+        count: 1,
+      });
+  }
+
+  const candidates = Array.from(tally.values())
+    .filter((t) => t.count >= WEEKLY_THRESHOLD)
+    .sort((a, b) =>
+      a.day_of_week !== b.day_of_week
+        ? a.day_of_week - b.day_of_week
+        : a.grade !== b.grade
+        ? a.grade - b.grade
+        : a.class_number - b.class_number
+    );
+  const DOW_LABEL = ["월", "화", "수", "목", "금"];
+  console.log(`  임계 ${WEEKLY_THRESHOLD}회 이상: ${candidates.length}건`);
+  for (const c of candidates) {
+    console.log(
+      `    ${DOW_LABEL[c.day_of_week]} ${c.grade}-${c.class_number} ${c.subject} (${c.count}회)`
+    );
+  }
+  if (DRY_RUN || candidates.length === 0) return;
+
+  const batch = candidates.map((c) => ({
+    teacher_id: daesobiId,
+    day_of_week: c.day_of_week,
+    grade: c.grade,
+    class_number: c.class_number,
+    subject: c.subject,
+  }));
+  const { error: upErr } = await sb
+    .from("weekly_schedule")
+    .upsert(batch, {
+      onConflict: "teacher_id,day_of_week,grade,class_number,subject",
+      ignoreDuplicates: true,
+    });
+  if (upErr) console.log(`  ❌ ${upErr.message}`);
+  else console.log(`  ✅ ${batch.length}건 (중복 시 ignore)`);
+}
+
+// ═════════════════════════════════════════════════════════════
 // 메인
 // ═════════════════════════════════════════════════════════════
 async function main() {
@@ -344,8 +533,9 @@ async function main() {
   console.log(`daesobi profile_id = ${daesobiId}`);
 
   if (RESET && !DRY_RUN) {
-    console.log("\n🧹 RESET — daesobi 의 progress/schedule/sebteuk + 모든 login_logs wipe");
+    console.log("\n🧹 RESET — daesobi 의 progress/daymeta/schedule/sebteuk wipe");
     await sb.from("progress_tracker").delete().eq("teacher_id", daesobiId);
+    await sb.from("daily_schedule_meta").delete().eq("teacher_id", daesobiId);
     await sb.from("daily_class_overrides").delete().eq("teacher_id", daesobiId);
     await sb.from("ai_usage_log").delete().eq("teacher_id", daesobiId);
     // login_logs 는 dedupe upsert 라 굳이 wipe 안 함.
@@ -357,6 +547,11 @@ async function main() {
   if (ONLY === null || ONLY === "progress") {
     const ws = wb.Sheets[TAB_PROGRESS];
     if (ws) await importProgress(sb, daesobiId, ws);
+    else console.log(`⚠ ${TAB_PROGRESS} 탭 없음`);
+  }
+  if (ONLY === null || ONLY === "daymeta") {
+    const ws = wb.Sheets[TAB_PROGRESS];
+    if (ws) await importDailyMeta(sb, daesobiId, ws);
     else console.log(`⚠ ${TAB_PROGRESS} 탭 없음`);
   }
   if (ONLY === null || ONLY === "schedule") {
@@ -373,6 +568,12 @@ async function main() {
     const ws = wb.Sheets[TAB_SEBTEUK];
     if (ws) await importSebteukUsage(sb, daesobiId, ws);
     else console.log(`⚠ ${TAB_SEBTEUK} 탭 없음`);
+  }
+  if (ONLY === null || ONLY === "permissions") {
+    await deriveTeacherPermissions(sb, daesobiId);
+  }
+  if (ONLY === null || ONLY === "weekly") {
+    await deriveWeeklySchedule(sb, daesobiId);
   }
 
   console.log("\n✅ 완료");

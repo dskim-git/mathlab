@@ -536,11 +536,16 @@ export function ProgressGrid({
           const cellEditing = editing === "cell:" + k;
           const cellBusy = busy === "cell:" + k;
 
+          const hasContent = !!cur?.content;
           const bgClass = (() => {
             if (sh.kind === "day_off") return "bg-slate-700/20";
-            if (sh.kind === "force_on") return "bg-amber-300/15";
+            if (sh.kind === "force_on")
+              return hasContent ? "bg-amber-300/25" : "bg-amber-300/15";
             if (sh.kind === "force_off") return "bg-slate-800/20";
-            if (sh.kind === "default_on") return theme.accentBg;
+            if (sh.kind === "default_on")
+              return hasContent ? "bg-cyan-300/25" : theme.accentBg;
+            // default_off — 시간표 비음영이지만 진도가 적혀 있으면 강조
+            if (hasContent) return "bg-cyan-300/15";
             return "";
           })();
 
@@ -554,7 +559,7 @@ export function ProgressGrid({
                   <textarea
                     value={draftCell}
                     onChange={(e) => setDraftCell(e.target.value)}
-                    placeholder="수업 단원·내용·비고 (자유 입력)"
+                    placeholder="수업 단원·내용 (자유 입력)"
                     rows={3}
                     className="w-full rounded border border-cyan-300/40 bg-slate-950 px-2 py-1 text-xs text-white outline-none focus:ring-2 focus:ring-cyan-300/40"
                     autoFocus

@@ -103,7 +103,7 @@ export function buildWeekRangeDays(
   weekOffset: number = 0,
   count: number = 2
 ): ProgressWeek[] {
-  const safeCount = Math.max(1, Math.min(count, 4));
+  const safeCount = Math.max(1, Math.min(count, 12));
   const monThisActual = startOfWeekMonday(now);
   const monLast = addDays(monThisActual, weekOffset * 7);
   const todayIso = toIsoDate(now);
