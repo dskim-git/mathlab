@@ -25,7 +25,17 @@ export default function GeneralLayout({
   const [gateState, setGateState] = useState<GateState>("loading");
   const [profile, setProfile] = useState<GateProfile | null>(null);
 
+  // 공개 경로 — 로그인·가입은 가드 예외 (무한 루프 회피).
+  const isPublic =
+    pathname === "/general/signup" || pathname === "/general/login";
+
   useEffect(() => {
+    if (isPublic) {
+      // 공개 경로에선 게이트 검사 자체를 건너뛰고 children 만 렌더.
+      setGateState("ok");
+      setProfile(null);
+      return;
+    }
     let active = true;
     setGateState("loading");
 
@@ -65,7 +75,12 @@ export default function GeneralLayout({
     return () => {
       active = false;
     };
-  }, [pathname]);
+  }, [pathname, isPublic]);
+
+  // 공개 경로(가입·로그인) — PageShell 없이 자체 main 그대로.
+  if (isPublic) {
+    return <>{children}</>;
+  }
 
   if (gateState === "loading") {
     return (
@@ -90,8 +105,15 @@ export default function GeneralLayout({
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/teacher/login" className={buttonClasses("primary")}>
-              로그인하러 가기
+            <Link href="/general/login" className={buttonClasses("primary")}>
+              일반인 로그인
+            </Link>
+
+            <Link
+              href="/general/signup"
+              className={buttonClasses("secondary")}
+            >
+              회원가입
             </Link>
 
             <Link href="/" className={buttonClasses("neutral")}>
