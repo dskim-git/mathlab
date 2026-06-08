@@ -1,5 +1,9 @@
 // 진도표용 날짜 헬퍼. 전주(월~금) + 이번 주(월~금) = 평일 10일.
 // 토/일은 제외. 시간대는 로컬(Asia/Seoul 가정) 기준.
+//
+// 서버 사이드(Vercel Functions)에서 호출 시 Node 런타임의 TZ env var 가
+// `Asia/Seoul` 로 설정되어 있어야 정확하다. Vercel: Settings → Environment
+// Variables 에서 TZ=Asia/Seoul 추가. (로컬 dev 는 한국 PC 기본값이라 보통 OK)
 
 const DAY_LABELS_KO = ["일", "월", "화", "수", "목", "금", "토"];
 
