@@ -433,7 +433,7 @@ function StatCard({ val, label, tone = "violet" }: { val: string; label: string;
   return (
     <div className="rounded-xl border border-white/10 bg-slate-900/40 px-2 py-3 text-center">
       <p key={val} className={`animate-[pulseR_0.3s_ease] font-mono text-xl font-black ${color}`}>{val}</p>
-      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className="mt-1 text-[10px] font-semibold tracking-wider text-slate-500">{label}</p>
     </div>
   );
 }

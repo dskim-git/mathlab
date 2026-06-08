@@ -237,7 +237,7 @@ function StatChip({ tone, lbl, val }: { tone: "mean" | "var" | "sig" | "q"; lbl:
   return (
     <div className={`rounded-xl border-2 px-3 py-2 text-center ${cls.box}`}>
       <p key={val} className={`animate-[pulseR_0.35s_ease] font-mono text-lg font-black ${cls.v}`}>{val}</p>
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{lbl}</p>
+      <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-400">{lbl}</p>
     </div>
   );
 }
@@ -613,7 +613,7 @@ function AnalysisReport({
     <div className="mt-3 grid gap-2 sm:grid-cols-2">
       {cards.map((c, i) => (
         <div key={i} className="rounded-xl border border-white/10 bg-slate-900/50 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{c.title}</p>
+          <p className="text-[11px] font-semibold tracking-wider text-slate-500">{c.title}</p>
           <div className="mt-1 text-base font-extrabold text-slate-100">{c.val}</div>
           <p className="mt-1 text-xs text-slate-500">{c.sub}</p>
         </div>

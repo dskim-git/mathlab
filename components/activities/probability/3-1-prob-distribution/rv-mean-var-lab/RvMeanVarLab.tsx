@@ -298,7 +298,7 @@ function StatCard({
       key={popKey}
       className="animate-[pulseR_0.45s_ease] rounded-xl border border-amber-400/45 bg-amber-400/12 px-3 py-3 text-center"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{lbl}</p>
+      <p className="text-[11px] font-semibold tracking-wider text-slate-400">{lbl}</p>
       <p className="mt-1 break-all font-mono text-xl font-black text-amber-300">{val}</p>
       <p className="mt-1 text-[10px] text-slate-500">{fml}</p>
     </div>

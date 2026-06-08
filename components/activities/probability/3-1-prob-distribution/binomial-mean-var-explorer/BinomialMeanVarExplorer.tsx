@@ -240,7 +240,7 @@ function FormulaBox({
     : { box: "border-emerald-400/50 bg-emerald-400/10", val: "text-emerald-300" };
   return (
     <div className={`rounded-2xl border-2 px-3 py-3 text-center ${cls.box}`}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{lbl}</p>
+      <p className="text-xs font-semibold tracking-wider text-slate-400">{lbl}</p>
       <p key={val} className={`mt-1 animate-[pulseR_0.4s_ease] font-mono text-2xl font-black ${cls.val}`}>{val}</p>
       <p className="mt-1 text-[11px] text-slate-500">{formula}</p>
     </div>
@@ -251,7 +251,7 @@ function Chip({ lbl, val, color }: { lbl: string; val: string; color: string }) 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center">
       <p key={val} className={`animate-[pulseR_0.4s_ease] font-mono text-lg font-black ${color}`}>{val}</p>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{lbl}</p>
+      <p className="text-[10px] font-semibold tracking-wider text-slate-500">{lbl}</p>
     </div>
   );
 }

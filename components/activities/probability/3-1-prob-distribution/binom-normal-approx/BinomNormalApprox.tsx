@@ -514,7 +514,7 @@ function StatCard({ tone, lbl, val }: { tone: "mu" | "si" | "np" | "nq"; lbl: st
   return (
     <div className={`rounded-2xl border-2 px-3 py-2.5 text-center ${cls.box}`}>
       <p key={val} className={`animate-[pulseR_0.3s_ease] font-mono text-lg font-black ${cls.v}`}>{val}</p>
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{lbl}</p>
+      <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-500">{lbl}</p>
     </div>
   );
 }

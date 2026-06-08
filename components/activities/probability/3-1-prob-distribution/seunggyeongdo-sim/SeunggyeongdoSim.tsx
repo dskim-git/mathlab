@@ -613,7 +613,7 @@ function CalcTab() {
 function StatBox({ lbl, val, sub, pop }: { lbl: string; val: string; sub: string; pop: boolean }) {
   return (
     <div className={`rounded-xl border px-3 py-3 text-center transition ${pop ? "border-amber-400/45 bg-amber-400/12" : "border-white/10 bg-white/[0.04]"}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{lbl}</p>
+      <p className="text-[11px] font-semibold tracking-wider text-slate-500">{lbl}</p>
       <p className="mt-1 font-mono text-2xl font-black text-amber-300">{val}</p>
       <p className="mt-0.5 text-[10px] text-slate-500">{sub}</p>
     </div>
