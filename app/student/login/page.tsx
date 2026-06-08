@@ -63,7 +63,19 @@ export default function StudentLoginPage() {
 
     if (signInError || !signInData.user) {
       setIsChecking(false);
-      setErrorMessage("학번 또는 비밀번호가 올바르지 않습니다.");
+      // 동시 로그인 burst(같은 IP 분당 30회 초과) 또는 일시 서버 오류는
+      // "비번 틀림"으로 오인되지 않도록 분기한다. NAT 단일 IP 학교에서 발생 가능.
+      if (signInError?.status === 429) {
+        setErrorMessage(
+          "접속이 잠시 몰려 로그인이 제한되었습니다. 10초 후 다시 시도해 주세요."
+        );
+      } else if (signInError?.status && signInError.status >= 500) {
+        setErrorMessage(
+          "로그인 서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+        );
+      } else {
+        setErrorMessage("학번 또는 비밀번호가 올바르지 않습니다.");
+      }
       return;
     }
 
