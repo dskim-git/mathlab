@@ -56,15 +56,27 @@ type SimResult = {
   inside: number;
 };
 
+// 초기화 버튼이 되돌릴 슬라이더 기본값. useState 초기치와 단일 출처로 공유.
+const DEFAULTS = { pPct: 50, hPct: 10, n: 100, m: 15 };
+
 // ─── 메인 ─────────────────────────────────────────────────
 export default function LlnBinomialSimple() {
   // 슬라이더(정수 백분율 또는 정수값으로 저장)
-  const [pPct, setPPct] = useState(50);
-  const [hPct, setHPct] = useState(10);
-  const [n, setN] = useState(100);
-  const [m, setM] = useState(15);
+  const [pPct, setPPct] = useState(DEFAULTS.pPct);
+  const [hPct, setHPct] = useState(DEFAULTS.hPct);
+  const [n, setN] = useState(DEFAULTS.n);
+  const [m, setM] = useState(DEFAULTS.m);
   const [result, setResult] = useState<SimResult | null>(null);
   const [running, setRunning] = useState(false);
+
+  function resetSettings() {
+    if (running) return;
+    setPPct(DEFAULTS.pPct);
+    setHPct(DEFAULTS.hPct);
+    setN(DEFAULTS.n);
+    setM(DEFAULTS.m);
+    setResult(null);
+  }
 
   const p = pPct / 100;
   const h = hPct / 100;
@@ -127,14 +139,25 @@ export default function LlnBinomialSimple() {
           <RangeRow label="시행 횟수 n" value={n} display={String(n)} min={10} max={500} step={5} onChange={setN} tone="cyan" />
           <RangeRow label="반복 횟수 m" value={m} display={String(m)} min={1} max={30} step={1} onChange={setM} tone="green" />
 
-          <button
-            type="button"
-            onClick={runSim}
-            disabled={running}
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 px-4 py-2.5 text-sm font-extrabold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {running ? "⏳ 계산 중…" : "▶ 시뮬레이션 실행"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={runSim}
+              disabled={running}
+              className="flex-1 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 px-4 py-2.5 text-sm font-extrabold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {running ? "⏳ 계산 중…" : "▶ 시뮬레이션 실행"}
+            </button>
+            <button
+              type="button"
+              onClick={resetSettings}
+              disabled={running}
+              title={`설정 초기화 (p=${(DEFAULTS.pPct / 100).toFixed(2)}, h=${(DEFAULTS.hPct / 100).toFixed(2)}, n=${DEFAULTS.n}, m=${DEFAULTS.m})`}
+              className="rounded-xl border border-slate-500 bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-100 transition hover:border-slate-300 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              ↺ 초기화
+            </button>
+          </div>
 
           {result && ratio !== null ? (
             <div className="grid grid-cols-2 gap-2">
