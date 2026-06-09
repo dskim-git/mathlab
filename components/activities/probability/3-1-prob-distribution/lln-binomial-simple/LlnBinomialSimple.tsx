@@ -238,11 +238,12 @@ function RangeRow({
     : tone === "violet" ? "accent-violet-500"
     : tone === "cyan" ? "accent-cyan-500"
     : "accent-emerald-500";
+  // 전자칠판 등 저대비 디스플레이에서도 읽히도록 밝은 솔리드 배경 + 어두운 글자.
   const badge =
-    tone === "orange" ? "bg-amber-400/15 text-amber-300"
-    : tone === "violet" ? "bg-violet-400/15 text-violet-300"
-    : tone === "cyan" ? "bg-cyan-400/15 text-cyan-300"
-    : "bg-emerald-400/15 text-emerald-300";
+    tone === "orange" ? "bg-amber-300 text-slate-900"
+    : tone === "violet" ? "bg-violet-300 text-slate-900"
+    : tone === "cyan" ? "bg-cyan-300 text-slate-900"
+    : "bg-emerald-300 text-slate-900";
   return (
     <div>
       <label htmlFor={id} className="mb-1 flex items-center justify-between text-xs font-bold text-slate-300">

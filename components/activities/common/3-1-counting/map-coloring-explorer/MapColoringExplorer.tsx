@@ -440,7 +440,7 @@ function NColorsRow({
         className="flex-1 accent-violet-400"
         aria-label="색 개수"
       />
-      <span className="w-9 rounded-md border border-violet-300/40 bg-violet-400/15 px-1 text-center font-mono text-base font-bold text-violet-200">
+      <span className="w-9 rounded-md border border-violet-300/40 bg-violet-300 px-1 text-center font-mono text-base font-bold text-slate-900">
         {value}
       </span>
     </div>

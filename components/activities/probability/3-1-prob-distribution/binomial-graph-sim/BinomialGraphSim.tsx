@@ -202,17 +202,15 @@ function RangeRow({
 }) {
   const id = useId();
   const accent = tone === "orange" ? "accent-amber-500" : "accent-violet-500";
-  const badgeBg =
-    tone === "orange"
-      ? "from-amber-400 to-orange-500"
-      : "from-indigo-500 to-violet-500";
+  // 전자칠판 등 저대비 디스플레이에서도 읽히도록 밝은 솔리드 배경 + 어두운 글자.
+  const badgeBg = tone === "orange" ? "bg-amber-300" : "bg-violet-300";
   return (
     <div>
       <label htmlFor={id} className="mb-1 flex items-center justify-between text-sm text-slate-300">
         <span><b>{label}</b></span>
         <span
           key={display}
-          className={`animate-[pulseR_0.35s_ease] rounded-md bg-gradient-to-r ${badgeBg} px-2.5 py-0.5 font-mono text-base font-extrabold text-slate-900`}
+          className={`animate-[pulseR_0.35s_ease] rounded-md ${badgeBg} px-2.5 py-0.5 font-mono text-base font-extrabold text-slate-900`}
         >
           {display}
         </span>

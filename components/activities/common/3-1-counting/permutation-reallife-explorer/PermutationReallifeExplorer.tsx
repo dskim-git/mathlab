@@ -351,7 +351,7 @@ function LineupTab() {
           aria-label="인원 수"
           className="flex-1 accent-amber-400"
         />
-        <span className="rounded-md border border-amber-300/40 bg-amber-400/15 px-2 py-0.5 font-mono text-sm font-bold text-amber-200">
+        <span className="rounded-md border border-amber-300/40 bg-amber-300 px-2 py-0.5 font-mono text-sm font-bold text-slate-900">
           {n} 명
         </span>
       </div>

@@ -378,7 +378,7 @@ function RangeRow({
         aria-label={label}
         className="flex-1 accent-amber-400"
       />
-      <span className="w-8 rounded-md border border-amber-300/40 bg-amber-400/15 px-1 text-center font-mono text-sm font-bold text-amber-200">
+      <span className="w-8 rounded-md border border-amber-300/40 bg-amber-300 px-1 text-center font-mono text-sm font-bold text-slate-900">
         {value}
       </span>
     </div>
