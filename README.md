@@ -181,13 +181,17 @@ npm install
 루트에 `.env.local` 생성:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxx
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...   # 서버 admin 라우트용. 절대 클라이언트에 노출 금지
+# Supabase 프로젝트 Settings → API 에서 값을 복사해 채워주세요.
+NEXT_PUBLIC_SUPABASE_URL=<your-supabase-project-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-secret>   # 서버 admin 라우트용. 절대 클라이언트에 노출 금지
+
 # 선택
-NEXT_PUBLIC_SYNTH_EMAIL_DOMAIN=mathlab.app  # 기본값 같으면 생략 가능
-ANTHROPIC_API_KEY=sk-ant-...                # AI 세특 기능 사용 시
+NEXT_PUBLIC_SYNTH_EMAIL_DOMAIN=mathlab.app             # 기본값 같으면 생략 가능
+ANTHROPIC_API_KEY=<your-anthropic-api-key>             # AI 세특 기능 사용 시
 ```
+
+> **주의** — 실제 키를 README·이슈·PR·스크린샷에 절대 붙여넣지 마세요. 만약 실수로 노출하면 즉시 키를 회전하세요(Supabase 새 secret 키 발급 / Anthropic 콘솔에서 revoke).
 
 `.env.local` 은 `.gitignore` 됩니다.
 
