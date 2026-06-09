@@ -122,7 +122,7 @@ Deploy          Vercel
 ## 아키텍처 핵심 결정
 
 **1. 학번 → 합성 이메일 매핑**
-모든 역할이 "아이디 + 비밀번호"로 로그인하고, 앱 내부에서 아이디를 단일 도메인의 합성 이메일(`{loginId}@mathlab.app`)로 매핑해 Supabase Auth를 사용합니다. 학생은 학번을 그대로 아이디로 씁니다.
+모든 역할이 "아이디 + 비밀번호"로 로그인하고, 앱 내부에서 아이디를 단일 도메인의 합성 이메일(`{loginId}@<your-domain>`)로 매핑해 Supabase Auth를 사용합니다. 도메인은 환경변수 `NEXT_PUBLIC_SYNTH_EMAIL_DOMAIN` 으로 지정합니다.
 
 **2. RLS 우선 보안**
 모든 테이블에 Row Level Security를 켜고 `auth.uid()` 기반 정책으로 접근을 제한합니다. service_role 키는 서버 측 admin 작업에만 쓰고, 호출 직전에 별도로 "현재 요청자가 관리자인지" 검증합니다.
@@ -187,7 +187,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-publishable-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-secret>   # 서버 admin 라우트용. 절대 클라이언트에 노출 금지
 
 # 선택
-NEXT_PUBLIC_SYNTH_EMAIL_DOMAIN=mathlab.app             # 기본값 같으면 생략 가능
+NEXT_PUBLIC_SYNTH_EMAIL_DOMAIN=<your-synth-email-domain>  # 합성 이메일 도메인 (코드에 기본값 있음)
 ANTHROPIC_API_KEY=<your-anthropic-api-key>             # AI 세특 기능 사용 시
 ```
 
