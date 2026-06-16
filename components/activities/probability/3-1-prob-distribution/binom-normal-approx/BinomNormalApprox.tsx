@@ -304,7 +304,7 @@ function CCTab() {
         <div className="mt-1 flex flex-wrap gap-4 px-2 pb-1 text-[11px] font-bold">
           <LegSwatch color="bg-indigo-400/85">이항분포 막대</LegSwatch>
           <LegSwatch color="bg-sky-400/80">선택 범위 [a, b]</LegSwatch>
-          <LegLine color="bg-rose-400" dashed>보정 없음 경계 (a, b+1)</LegLine>
+          <LegLine color="bg-rose-400" dashed>보정 없음 경계 (a, b)</LegLine>
           <LegLine color="bg-emerald-400">보정 있음 경계 (a−½, b+½)</LegLine>
         </div>
       </div>
@@ -756,11 +756,11 @@ function BinomVsNormalSVG({
       {mode === "cc" && a !== undefined && b !== undefined ? (
         <>
           <line x1={toX(a)} y1={PAD.t} x2={toX(a)} y2={baseY} stroke="rgba(239,68,68,0.85)" strokeWidth={1.8} strokeDasharray="5 4" />
-          <line x1={toX(b + 1)} y1={PAD.t} x2={toX(b + 1)} y2={baseY} stroke="rgba(239,68,68,0.85)" strokeWidth={1.8} strokeDasharray="5 4" />
+          <line x1={toX(b)} y1={PAD.t} x2={toX(b)} y2={baseY} stroke="rgba(239,68,68,0.85)" strokeWidth={1.8} strokeDasharray="5 4" />
           <line x1={toX(a - 0.5)} y1={PAD.t} x2={toX(a - 0.5)} y2={baseY} stroke="rgba(16,185,129,0.95)" strokeWidth={2.2} />
           <line x1={toX(b + 0.5)} y1={PAD.t} x2={toX(b + 0.5)} y2={baseY} stroke="rgba(16,185,129,0.95)" strokeWidth={2.2} />
           <text x={toX(a)} y={PAD.t + 10} textAnchor="middle" fontSize={10} fontWeight={700} fill="rgba(239,68,68,0.9)">a={a}</text>
-          <text x={toX(b + 1)} y={PAD.t + 10} textAnchor="middle" fontSize={10} fontWeight={700} fill="rgba(239,68,68,0.9)">b={b}</text>
+          <text x={toX(b)} y={PAD.t + 10} textAnchor="middle" fontSize={10} fontWeight={700} fill="rgba(239,68,68,0.9)">b={b}</text>
           <text x={toX(a - 0.5)} y={PAD.t + 22} textAnchor="middle" fontSize={10} fontWeight={700} fill="rgba(16,185,129,0.9)">a−½</text>
           <text x={toX(b + 0.5)} y={PAD.t + 22} textAnchor="middle" fontSize={10} fontWeight={700} fill="rgba(16,185,129,0.9)">b+½</text>
         </>
