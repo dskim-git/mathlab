@@ -235,6 +235,9 @@ function DiceTab() {
   const flickerRef = useRef<number | null>(null);
   const autoRef = useRef<number | null>(null);
   const aliveRef = useRef(true);
+  // setInterval 콜백의 stale closure를 피하려고 최신값을 ref로 추적
+  const drawnRef = useRef<number[]>([]);
+  const rollingRef = useRef(false);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -247,9 +250,22 @@ function DiceTab() {
 
   const done = drawn.length >= DICE_TARGET;
 
+  function setRollingBoth(v: boolean) {
+    rollingRef.current = v;
+    setRolling(v);
+  }
+
+  function stopAuto() {
+    if (autoRef.current !== null) {
+      window.clearInterval(autoRef.current);
+      autoRef.current = null;
+    }
+    setAutoRunning(false);
+  }
+
   function rollOnce() {
-    if (rolling || done) return;
-    setRolling(true);
+    if (rollingRef.current || drawnRef.current.length >= DICE_TARGET) return;
+    setRollingBoth(true);
 
     // 깜빡임 애니메이션
     flickerRef.current = window.setInterval(() => {
@@ -272,63 +288,53 @@ function DiceTab() {
       const num = d1 * 100 + d2 * 10 + d3;
       setCombined(String(num).padStart(3, "0"));
 
+      const cur = drawnRef.current;
       let st: DiceLog["st"];
-      let nextDrawn = drawn;
       if (num >= DICE_POP) {
         st = "over";
         setStatus({ tone: "bad", msg: `❌ ${String(num).padStart(3, "0")}번 → 300명 범위(0~299) 밖! 다시 굴려요` });
-      } else if (drawn.includes(num)) {
+      } else if (cur.includes(num)) {
         st = "dup";
         setStatus({ tone: "bad", msg: `⚠️ ${String(num).padStart(3, "0")}번 → 이미 뽑힌 번호! 다시 굴려요` });
       } else {
         st = "ok";
-        nextDrawn = [...drawn, num];
+        const nextDrawn = [...cur, num];
+        drawnRef.current = nextDrawn;
         setDrawn(nextDrawn);
         setStatus({ tone: "ok", msg: `✅ ${String(num).padStart(3, "0")}번 채택! (${nextDrawn.length}/${DICE_TARGET})` });
       }
       setHistory((prev) => [...prev, { n: num, st }]);
-      setRolling(false);
+      setRollingBoth(false);
 
-      // 자동 모드에서 완료되면 정지
-      if (nextDrawn.length >= DICE_TARGET && autoRef.current !== null) {
-        window.clearInterval(autoRef.current);
-        autoRef.current = null;
-        setAutoRunning(false);
-      }
+      // 목표 인원을 채우면 자동 모드 정지
+      if (drawnRef.current.length >= DICE_TARGET) stopAuto();
     }, 700);
   }
 
   function startAuto() {
-    if (autoRef.current !== null || done) return;
+    if (autoRef.current !== null || drawnRef.current.length >= DICE_TARGET) return;
     setAutoRunning(true);
     rollOnce();
     autoRef.current = window.setInterval(() => {
       if (!aliveRef.current) return;
-      if (drawn.length >= DICE_TARGET) {
-        if (autoRef.current !== null) {
-          window.clearInterval(autoRef.current);
-          autoRef.current = null;
-          setAutoRunning(false);
-        }
+      if (drawnRef.current.length >= DICE_TARGET) {
+        stopAuto();
         return;
       }
-      if (!rolling) rollOnce();
+      if (!rollingRef.current) rollOnce();
     }, 850);
   }
 
   function reset() {
-    if (autoRef.current !== null) {
-      window.clearInterval(autoRef.current);
-      autoRef.current = null;
-    }
+    stopAuto();
     if (flickerRef.current !== null) {
       window.clearInterval(flickerRef.current);
       flickerRef.current = null;
     }
-    setAutoRunning(false);
+    drawnRef.current = [];
+    setRollingBoth(false);
     setDrawn([]);
     setHistory([]);
-    setRolling(false);
     setDigits(["?", "?", "?"]);
     setCombined("___");
     setStatus({ tone: "idle", msg: "주사위를 굴려보세요!" });
@@ -410,19 +416,36 @@ function DiceTab() {
 }
 
 function Die({ color, value, rolling }: { color: "violet" | "amber" | "emerald"; value: string; rolling: boolean }) {
-  const grad =
-    color === "violet" ? "from-violet-500 to-violet-700"
-    : color === "amber" ? "from-orange-500 to-orange-700"
-    : "from-emerald-500 to-emerald-700";
+  // CSS clip-path/그라디언트가 일부 전자칠판 브라우저에서 렌더되지 않아 SVG로 그림
+  const [c1, c2] =
+    color === "violet" ? ["#8b5cf6", "#6d28d9"]
+    : color === "amber" ? ["#f97316", "#c2410c"]
+    : ["#10b981", "#047857"];
+  const gid = `die_${color}`;
   return (
-    <div className={`relative flex h-[130px] w-[130px] items-center justify-center ${rolling ? "animate-[rollDie_0.6s_linear_infinite]" : ""}`}>
-      <div
-        className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br ${grad} shadow-[0_6px_20px_rgba(0,0,0,0.45)] [clip-path:polygon(50%_0%,95%_25%,95%_75%,50%_100%,5%_75%,5%_25%)]`}
-      >
-        <span className={`font-mono text-6xl font-black text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.7)] ${rolling ? "animate-[flicker_0.08s_linear_infinite]" : ""}`}>
+    <div className={`relative h-[130px] w-[130px] ${rolling ? "animate-[rollDie_0.6s_linear_infinite]" : ""}`}>
+      <svg viewBox="0 0 100 100" className="h-full w-full drop-shadow-[0_6px_20px_rgba(0,0,0,0.45)]" role="img" aria-label={`주사위 ${value}`}>
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={c1} />
+            <stop offset="1" stopColor={c2} />
+          </linearGradient>
+        </defs>
+        <polygon points="50,2 95,25 95,75 50,98 5,75 5,25" fill={`url(#${gid})`} stroke="rgba(255,255,255,0.35)" strokeWidth="2" />
+        <text
+          x="50"
+          y="52"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize="46"
+          fontWeight="900"
+          fill="#ffffff"
+          className={`font-mono ${rolling ? "animate-[flicker_0.08s_linear_infinite]" : ""}`}
+          style={{ filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.7))" }}
+        >
           {value}
-        </span>
-      </div>
+        </text>
+      </svg>
     </div>
   );
 }
@@ -450,6 +473,9 @@ function TableTab() {
   const [status, setStatus] = useState<{ tone: "idle" | "ok" | "bad"; msg: string }>({ tone: "idle", msg: "시작 숫자를 클릭하세요!" });
   const [autoRunning, setAutoRunning] = useState(false);
   const autoRef = useRef<number | null>(null);
+  // setInterval 콜백의 stale closure를 피하려고 최신값을 ref로 추적
+  const readPosRef = useRef(-1);
+  const drawnRef = useRef<number[]>([]);
 
   useEffect(() => () => {
     if (autoRef.current !== null) window.clearInterval(autoRef.current);
@@ -464,6 +490,7 @@ function TableTab() {
     const idx = sequence.findIndex((s) => s.r === r && s.dc === dc);
     if (idx < 0) return;
     setStartIdx(idx);
+    readPosRef.current = idx;
     setReadPos(idx);
     setCellStates((prev) => {
       const next = prev.map((row) => row.slice());
@@ -474,24 +501,26 @@ function TableTab() {
   }
 
   function readNextPair() {
-    if (done || readPos < 0) return;
-    if (readPos + 1 >= sequence.length) {
+    const rp = readPosRef.current;
+    if (drawnRef.current.length >= TBL_TARGET || rp < 0) return;
+    if (rp + 1 >= sequence.length) {
       setStatus({ tone: "bad", msg: "⚠️ 표 끝까지 도달했어요. 다시 시작하거나 시작점을 바꿔보세요." });
       stopAuto();
       return;
     }
-    const a = sequence[readPos];
-    const b = sequence[readPos + 1];
+    const a = sequence[rp];
+    const b = sequence[rp + 1];
     const num = grid[a.r][a.dc] * 10 + grid[b.r][b.dc];
 
+    const cur = drawnRef.current;
     let st: DigitCell["st"];
-    let nextDrawn = drawn;
     if (num >= 1 && num <= TBL_POP) {
-      if (drawn.includes(num)) {
+      if (cur.includes(num)) {
         st = "dup";
       } else {
         st = "ok";
-        nextDrawn = [...drawn, num];
+        const nextDrawn = [...cur, num];
+        drawnRef.current = nextDrawn;
         setDrawn(nextDrawn);
       }
     } else {
@@ -504,26 +533,27 @@ function TableTab() {
       next[b.r][b.dc] = { st };
       return next;
     });
-    setReadPos((rp) => rp + 2);
+    readPosRef.current = rp + 2;
+    setReadPos(rp + 2);
 
     const ns = String(num).padStart(2, "0");
     if (st === "ok") {
-      setStatus({ tone: "ok", msg: `✅ ${ns}번 채택! (${nextDrawn.length}/${TBL_TARGET})` });
+      setStatus({ tone: "ok", msg: `✅ ${ns}번 채택! (${drawnRef.current.length}/${TBL_TARGET})` });
     } else if (st === "dup") {
       setStatus({ tone: "bad", msg: `⚠️ ${ns}번 → 이미 뽑힌 번호! 다음으로` });
     } else {
       setStatus({ tone: "bad", msg: `❌ ${ns}번 → 1~50 범위 밖! 다음으로` });
     }
 
-    if (nextDrawn.length >= TBL_TARGET) stopAuto();
+    if (drawnRef.current.length >= TBL_TARGET) stopAuto();
   }
 
   function startAuto() {
-    if (autoRef.current !== null || done || readPos < 0) return;
+    if (autoRef.current !== null || drawnRef.current.length >= TBL_TARGET || readPosRef.current < 0) return;
     setAutoRunning(true);
     readNextPair();
     autoRef.current = window.setInterval(() => {
-      if (drawn.length >= TBL_TARGET) {
+      if (drawnRef.current.length >= TBL_TARGET) {
         stopAuto();
         return;
       }
@@ -541,6 +571,8 @@ function TableTab() {
   function reset(regen: boolean) {
     stopAuto();
     if (regen) setGrid(genGrid());
+    readPosRef.current = -1;
+    drawnRef.current = [];
     setStartIdx(-1);
     setReadPos(-1);
     setDrawn([]);
@@ -670,10 +702,10 @@ function DigitBtn({
   locked: boolean;
 }) {
   const cls =
-    state === "start" ? "bg-yellow-200 text-amber-900 shadow-[0_0_0_3px_#ca8a04]"
-    : state === "ok" ? "bg-emerald-300 text-emerald-900"
-    : state === "dup" ? "bg-amber-200 text-amber-800 opacity-75"
-    : state === "over" ? "bg-rose-300 text-rose-900 opacity-75"
+    state === "start" ? "bg-yellow-300 text-amber-950 shadow-[inset_0_0_0_2px_#a16207]"
+    : state === "ok" ? "bg-emerald-600 text-white shadow-[inset_0_0_0_2px_#065f46]"
+    : state === "dup" ? "bg-amber-400 text-amber-950 shadow-[inset_0_0_0_2px_#a16207]"
+    : state === "over" ? "bg-rose-600 text-white shadow-[inset_0_0_0_2px_#9f1239]"
     : locked ? "text-slate-800"
     : "text-slate-800 cursor-pointer hover:scale-110 hover:bg-indigo-500/[0.18]";
   return (
@@ -681,7 +713,7 @@ function DigitBtn({
       type="button"
       disabled={locked}
       onClick={() => onClick(r, dc)}
-      className={`inline-block w-8 select-none appearance-none rounded border-0 bg-transparent px-0 py-1.5 text-center text-lg font-black transition ${cls}`}
+      className={`inline-block w-9 select-none appearance-none rounded border-0 px-0 py-1.5 text-center text-xl font-black transition ${cls}`}
     >
       {digit}
     </button>
