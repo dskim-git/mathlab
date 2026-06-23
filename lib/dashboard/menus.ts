@@ -114,6 +114,7 @@ const adminMenu: MenuItem[] = [
   { key: "learn", label: "교과 학습 관리", icon: "📚", href: "/learn", inTabBar: true, group: "content" },
   { key: "curriculum", label: "단원 관리", icon: "🗂️", href: "/admin/curriculum", group: "content" },
   { key: "activities", label: "활동 행 관리", icon: "🧪", href: "/admin/activities", group: "content" },
+  { key: "overviews", label: "활동 개요", icon: "🗒️", href: "/admin/overviews", group: "content" },
 
   // ── 설정·마스터 ─────────────────────────────────────
   { key: "settings", label: "설정", icon: "⚙️", href: "/admin/settings", group: "settings" },
@@ -184,6 +185,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/settings": "설정",
   "/admin/curriculum": "단원 관리",
   "/admin/activities": "활동 행 관리",
+  "/admin/overviews": "활동 개요",
   "/admin/access": "교과 권한",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",

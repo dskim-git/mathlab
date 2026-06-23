@@ -6,6 +6,7 @@ import { REFLECTION_LABELS } from "@/lib/legacy/reflectionLabels";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { extractMainReflection } from "@/lib/activities/reflection";
+import { shortActivityTitle } from "@/lib/activities/activityTitles";
 import {
   SEBTEUK_MODELS,
   DEFAULT_SEBTEUK_MODEL,
@@ -88,6 +89,10 @@ export function SebteukWorkflow({
   const [recordsLoading, setRecordsLoading] = useState(false);
   // 교사가 AI 입력에 포함할 항목 선택
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // 활동 슬러그 → 활동 개요(activity_overviews). 학생과 무관해 1회만 로드.
+  // 성찰이 부실해도 활동의 실제 내용을 근거로 보완하도록 AI 입력에 함께 보낸다.
+  const [overviews, setOverviews] = useState<Record<string, string>>({});
 
   // AI 생성 컨트롤
   const [model, setModel] = useState<string>(initialModel);
@@ -192,6 +197,21 @@ export function SebteukWorkflow({
   useEffect(() => {
     loadStudents();
   }, [loadStudents]);
+
+  // 활동 개요 1회 로드 — 비어있지 않은 것만 맵으로.
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("activity_overviews")
+        .select("slug, overview");
+      const map: Record<string, string> = {};
+      for (const r of (data ?? []) as { slug: string; overview: string }[]) {
+        const v = (r.overview ?? "").trim();
+        if (v) map[r.slug] = v;
+      }
+      setOverviews(map);
+    })();
+  }, []);
 
   // 2) 선택 학생의 활동/성찰 + 별표 + 드래프트 로드
   const loadStudentData = useCallback(async () => {
@@ -300,9 +320,11 @@ export function SebteukWorkflow({
     const marked = chosen.filter((r) => markedIds.has(r.id));
     const others = chosen.filter((r) => !markedIds.has(r.id));
     const fmtLine = (r: RecordRow, prefix: string) => {
-      const title = r.activities?.title ?? r.activity_slug ?? "활동";
+      const title = r.activities?.title ?? shortActivityTitle(r.activity_slug);
       const refl = extractMainReflection(r.reflection_data) || "(성찰 없음)";
-      return `${prefix} 활동: ${title}\n  성찰: ${refl}`;
+      const ov = r.activity_slug ? overviews[r.activity_slug] : "";
+      const ovLine = ov ? `\n  활동 개요: ${ov}` : "";
+      return `${prefix} 활동: ${title}${ovLine}\n  성찰: ${refl}`;
     };
     const blocks: string[] = [];
     if (marked.length > 0) {
@@ -367,6 +389,7 @@ export function SebteukWorkflow({
     surveyRecords,
     selectedLegacyIds,
     selectedSurveyIds,
+    overviews,
   ]);
 
   function toggleSelected(id: string) {
@@ -662,7 +685,7 @@ export function SebteukWorkflow({
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-sm font-semibold text-white">
                             {marked ? "★ " : ""}
-                            {r.activities?.title ?? r.activity_slug ?? "활동"}
+                            {r.activities?.title ?? shortActivityTitle(r.activity_slug)}
                           </span>
                           <span className="text-[11px] text-slate-400">
                             {formatDateTime(r.created_at)}

@@ -1,0 +1,63 @@
+-- 20260623_activity_overviews_seed_common1.sql
+-- 활동 개요 시드 — 공통수학1 48개 미니활동.
+-- activity_overviews(slug PK) 에 upsert. 재실행 멱등. 관리자가 /admin/overviews 에서 수정 가능.
+--
+-- 적용:  Supabase SQL 에디터에서 실행.
+-- 검증:  select count(*) from activity_overviews where slug like 'common/mini/%';
+
+insert into public.activity_overviews (slug, overview, updated_at) values
+  ($s$common/mini/poly_sort_game$s$, $ov$다항식의 항 카드를 드래그·클릭해 칸에 놓으며 차수를 기준으로 내림차순·오름차순으로 정렬하는 활동.$ov$, now()),
+  ($s$common/mini/poly_add_sub_game$s$, $ov$두 다항식의 항 카드를 같은 차수끼리 짝지어 계수를 직접 계산·입력하며 동류항을 모아 다항식의 덧셈과 뺄셈을 익히는 활동. 뺄셈에서 부호가 바뀌는 점도 다룬다.$ov$, now()),
+  ($s$common/mini/poly_mul_expand$s$, $ov$변수의 개수를 늘려 가며 합의 제곱 전개와 이항 전개 계수(파스칼 삼각형) 등의 규칙을 관찰하고, 발견한 패턴으로 더 큰 경우를 예측해 보는 활동.$ov$, now()),
+  ($s$common/mini/algebra_tile_formulas$s$, $ov$대수막대 타일을 격자에 놓아 곱셈 공식의 전개를 넓이로 맞추고, 세제곱 공식은 정육면체 조각으로 확인하며 곱셈 공식을 도형의 넓이·부피와 연결하는 활동.$ov$, now()),
+  ($s$common/mini/gelosia_mul$s$, $ov$격자(갤로시아) 곱셈법으로 두 자리 수와 다항식의 곱셈을 풀며, 각 칸에 곱을 입력하고 대각선 합을 구해 같은 대각선이 같은 자릿값·차수에 대응함을 관찰하는 활동.$ov$, now()),
+  ($s$common/mini/synthetic_div_principle$s$, $ov$다항식 나눗셈의 계수를 비교해 조립제법이 어떻게 유도되는지 단계별로 따라가고, 표의 빈칸을 직접 채우며 조립제법을 연습하는 활동.$ov$, now()),
+  ($s$common/mini/remainder_same_expressions$s$, $ov$다항식을 어떤 식으로 나눈 나머지를 구하고, 나머지가 같은 다른 식을 직접 만들어 두 식의 차가 항상 나누어떨어짐을 표로 확인하는 활동.$ov$, now()),
+  ($s$common/mini/synthetic_div_spreadsheet$s$, $ov$스프레드시트의 셀 참조 수식으로 조립제법을 구현하며, 빈칸에 수식을 직접 입력해 표가 자동으로 갱신되는 과정을 통해 조립제법의 원리를 셀 수식과 연결해 익히는 활동.$ov$, now()),
+  ($s$common/mini/gelosia_div$s$, $ov$격자(갤로시아) 방식으로 다항식 나눗셈을 풀며, 몫의 계수와 각 칸의 곱·나머지를 직접 입력하고 대각선 합이 원래 식의 계수가 됨을 확인하며 몫과 나머지를 구하는 활동.$ov$, now()),
+  ($s$common/mini/identity_game$s$, $ov$여러 식에 다양한 값을 대입해 좌변과 우변이 같은지 표로 확인하며, 그 식이 모든 값에서 성립하는 항등식인지 특정 값에서만 성립하는 방정식인지 판별하는 활동.$ov$, now()),
+  ($s$common/mini/undefined_coefficients$s$, $ov$같은 문제를 계수비교법과 수치대입법 두 방법의 단계별 풀이로 비교하며 미정계수의 값을 직접 구하고, 식의 모양에 따라 어느 방법이 효율적인지 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/power_remainder_booster$s$, $ov$큰 수의 거듭제곱을 작은 수로 나눈 나머지를, 밑을 문자로 두고 나머지정리를 단계별로 적용해 구하는 활동.$ov$, now()),
+  ($s$common/mini/factor_candidate_radar$s$, $ov$정수 계수 다항식에서 상수항과 최고차항 계수의 약수를 골라 유리근 후보를 모두 찾아보며, 인수정리에 넣어 볼 후보를 좁히는 원리를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/prime_composite_lock$s$, $ov$큰 수를 세제곱의 합·차나 제곱의 차 같은 익숙한 식으로 다시 쓰고 알맞은 인수분해 공식을 골라 두 인수로 나누어, 그 수가 소수인지 합성수인지 판정하는 활동.$ov$, now()),
+  ($s$common/mini/factor_pathfinder_arcade$s$, $ov$여러 인수분해 문제에서 공식 적용·치환·식 변형·인수정리 등 가장 알맞은 시작 전략을 골라 분류하고, 스피드 미니게임으로 전략 분류를 연습하는 활동.$ov$, now()),
+  ($s$common/mini/complex_number_terms$s$, $ov$주어진 수를 실수·허수·순허수로 분류하고 복소수의 실수부분·허수부분을 찾는 퀴즈로 복소수의 기본 용어를 익히는 활동.$ov$, now()),
+  ($s$common/mini/complex_arithmetic_game$s$, $ov$덧셈·뺄셈, 곱셈, 켤레·나눗셈 단계의 퀴즈를 풀며 허수단위의 제곱이 −1임을 적용하고 분모에 켤레복소수를 곱해 실수로 만드는 과정을 단계별로 연습하는 활동.$ov$, now()),
+  ($s$common/mini/imaginary_unit_cycle$s$, $ov$순환표 채우기, 복소평면 회전, 큰 지수 계산 등을 조작하며 허수단위의 거듭제곱이 네 개를 주기로 순환하고 지수를 4로 나눈 나머지로 값이 정해짐을 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/negative_sqrt_trap$s$, $ov$카드 뒤집기와 단계별 탐구로 '제곱근'과 근호의 차이를 구분하고, 음수를 포함한 제곱근의 곱셈·나눗셈에서 부호를 잘못 다루는 함정을 짚어 보는 활동.$ov$, now()),
+  ($s$common/mini/conjugate_roots_explorer$s$, $ov$계수를 바꾸며 두 근의 관계를 관찰하고 켤레근의 대입을 통해, 실수 계수 이차방정식에서 무리수·허수인 근이 켤레로 쌍을 이루어 나타나는 이유를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/vieta_roots_game$s$, $ov$인수분해로 근과 계수의 관계를 발견하고 두 근의 합·곱으로 대칭식을 계산하거나 두 근으로 이차방정식을 거꾸로 세우며, 근과 계수의 관계를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/quad_func_equation_explorer$s$, $ov$이차함수의 계수를 슬라이더로 바꾸며 그래프와 x절편·판별식·근을 관찰하고, 그래프를 보고 근의 종류를 맞히며 이차방정식의 근과 그래프 x절편의 관계를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/quad_line_position_explorer$s$, $ov$이차함수 그래프와 직선의 계수를 조작해 두 그래프의 교점 개수와 판별식의 부호 관계를 관찰하고, 연립방정식과 판별식으로 위치관계를 단계별로 따지는 활동.$ov$, now()),
+  ($s$common/mini/quad_maxmin_explorer$s$, $ov$이차함수의 식과 구간의 끝점을 슬라이더로 조작해, 전체 또는 주어진 구간에서의 최대·최소가 꼭짓점과 구간 끝점에 따라 어떻게 정해지는지 그래프로 관찰하는 활동.$ov$, now()),
+  ($s$common/mini/quad_maxmin_reallife$s$, $ov$울타리·밭·발사체 등 실생활 상황을 시뮬레이션하며 변수 설정·관계식·최대최소 해석에 이르는 단계별 풀이의 빈칸을 채워 이차함수 최대·최소 문제를 해결하는 활동.$ov$, now()),
+  ($s$common/mini/quad_bridge_curve_fit$s$, $ov$실제 다리 사진 위에서 이차함수의 계수를 슬라이더로 조절해 곡선을 다리 모양에 맞추며, 꼭짓점·대칭축과 최댓값·최솟값의 의미를 실생활과 연결하는 활동.$ov$, now()),
+  ($s$common/mini/cubic_quartic_equation_explorer$s$, $ov$삼·사차방정식을 인수분해 공식으로 풀지 인수정리와 조립제법으로 풀지 분류하고, 계수를 바꿔 모든 근을 복소평면에 표시하며 n차방정식이 복소수 범위에서 n개의 근을 가짐을 확인하는 활동.$ov$, now()),
+  ($s$common/mini/equation_history_flash$s$, $ov$이차방정식부터 오차방정식까지 방정식 해법의 역사를 영상으로 보고, 등장 수학자의 일화를 살펴보며 퀴즈로 확인하는 활동.$ov$, now()),
+  ($s$common/mini/omega_law_explorer$s$, $ov$세제곱하여 1이 되는 허수근의 여러 성질을 증명과 함께 익히고, 순환표를 채우거나 지수를 입력해 거듭제곱 값을 구하며 활용 문제를 푸는 활동.$ov$, now()),
+  ($s$common/mini/babylonian_cubic_solver$s$, $ov$약 4000년 전 바빌로니아인이 표를 이용해 삼차방정식을 풀던 방법을, 표 계산과 치환을 거치는 단계별 풀이로 직접 체험하고 이 방법이 통하지 않는 경우도 살펴보는 활동.$ov$, now()),
+  ($s$common/mini/simultaneous_quadratic_quiz$s$, $ov$일차식 포함 여부와 이차식의 인수분해 꼴로 연립이차방정식의 실수 해의 쌍 수를 판단하는 방법을 익히고, 제시된 연립방정식의 해가 몇 쌍인지 맞히는 스피드 퀴즈로 연습하는 활동.$ov$, now()),
+  ($s$common/mini/linear_ineq_system_explorer$s$, $ov$두 일차부등식의 부등호와 경계값을 슬라이더로 바꿔 가며 한 수직선 위에서 공통부분을 관찰하고, 단계별 문제로 연립일차부등식 풀이를 익히는 활동.$ov$, now()),
+  ($s$common/mini/abs_value_ineq_explorer$s$, $ov$점을 슬라이더로 움직여 절댓값이 두 점 사이의 거리임을 확인하고, 중심과 반지름을 조작해 절댓값 부등식의 해 구간을 수직선에서 시각화하며 단계별 문제를 푸는 활동.$ov$, now()),
+  ($s$common/mini/quad_ineq_graph_explorer$s$, $ov$이차함수의 계수를 슬라이더로 조작하며 포물선과 양·음 영역, x절편, 판별식을 관찰해 이차부등식의 해가 최고차항의 부호와 판별식에 따라 어떻게 달라지는지 발견하는 활동.$ov$, now()),
+  ($s$common/mini/quad_ineq_maxmin_reallife$s$, $ov$가격에 따른 매출 같은 실생활 상황에서, 표를 만들어 최댓값을 찾는 방법과 이차식을 세워 꼭짓점으로 구하는 방법을 빈칸·선택지로 풀며 비교하는 활동.$ov$, now()),
+  ($s$common/mini/dice_counting_explorer$s$, $ov$주사위 한두세 개를 던진 결과를 표로 정리하고, 합·곱·최댓값 등 조건을 골라 해당 경우를 직접 헤아리며 합의 법칙과 여사건으로 경우의 수를 세는 활동.$ov$, now()),
+  ($s$common/mini/addition_multiplication_rule$s$, $ov$교통수단·코디·메뉴 등 실생활 사례가 합의 법칙인지 곱의 법칙인지 판별하고, 풀이와 점수를 확인하며 두 법칙의 차이를 익히는 퀴즈 게임 활동.$ov$, now()),
+  ($s$common/mini/permutation_reallife_explorer$s$, $ov$줄 세우기·임원 선출·자연수 만들기 등 여러 상황에서 후보를 순서대로 직접 배치하며, 선택지가 하나씩 줄어드는 순열의 의미를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/permutation_identity_explorer$s$, $ov$n과 r을 바꾸고 원소를 배치하며 순열에 관한 등식들을, 첫 자리 결정이나 특정 원소 포함 여부로 발견하고 실생활 사례로 검증하는 활동.$ov$, now()),
+  ($s$common/mini/combination_reallife_explorer$s$, $ov$부분집합·다각형·팀 짜기 등 여러 상황에서 순서 없이 원소를 선택하며, 순서를 무시해 경우의 수가 줄어드는 조합의 의미를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/perm_comb_growth_race$s$, $ov$같은 n에서 r을 늘릴 때 순열과 조합의 막대그래프 변화를 비교하며, 순열은 계속 커지지만 조합은 가운데에서 최대가 되는 좌우 대칭 모양임을 관찰하는 활동.$ov$, now()),
+  ($s$common/mini/combination_identity_explorer$s$, $ov$여러 실생활 사례에서 선택을 직접 조작하며 조합에 관한 등식들(대칭성·파스칼 항등식 등)을, 같은 개수를 두 가지 방식으로 센 결과로 발견하는 활동.$ov$, now()),
+  ($s$common/mini/combination_application_explorer$s$, $ov$평행사변형의 개수, 부분집합의 개수, 원 위의 점으로 만든 삼각형의 개수 등을 시각화로 탐색하며, 이들이 모두 순서 없는 선택인 조합으로 세어짐을 발견하는 활동.$ov$, now()),
+  ($s$common/mini/counting_daily_sumin$s$, $ov$하루 일기 속 상황을 클릭해 교통수단(합의 법칙)·순서(순열)·코디(곱의 법칙)·고르기(조합) 문제를 직접 풀며 네 가지 셈법을 구별하는 활동.$ov$, now()),
+  ($s$common/mini/map_coloring_explorer$s$, $ov$인접한 영역은 다른 색으로 칠한다는 규칙으로 지도나 도형을 색칠하며, 영역별 선택지의 곱과 경우 분기의 합으로 경우의 수를 구하고 4색 정리를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/matrix_pixel_explorer$s$, $ov$사진의 픽셀을 살펴보며 밝기값이 행렬의 성분과 일대일 대응함을 확인하고, 색상 반전·밝기 조절 같은 사진 보정이 행렬 성분의 연산임을 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/matrix_equality_game$s$, $ov$행렬을 보고 꼴과 성분, 정사각행렬 여부를 맞히는 퀴즈를 풀고, 미지수가 든 두 행렬이 같을 조건으로 성분 방정식을 세워 미지수를 찾는 탐정 게임을 하는 활동.$ov$, now()),
+  ($s$common/mini/matrix_ops_explore$s$, $ov$행렬의 합·차·실수배를 버튼과 슬라이더로 직접 만들어 성분별 계산 과정을 관찰하고, 결과 행렬을 직접 입력해 채점받는 계산 챌린지를 푸는 활동.$ov$, now()),
+  ($s$common/mini/matrix_mul_reallife$s$, $ov$카페 주문·운동 효과 등 실생활 상황에서 두 행렬의 곱의 각 성분을 클릭해 '행과 열' 계산 과정과 의미를 확인하고, 지정된 칸의 값을 직접 계산해 보며 행렬곱의 원리를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/matrix_card_dice_game$s$, $ov$행렬 카드를 골라 주사위로 정한 연산으로 점수를 겨루는 게임으로, 곱셈에서 순서를 바꾸면 결과가 달라지는 비가환성과 뺄셈의 비대칭성을 점수로 체험하는 활동.$ov$, now()),
+  ($s$common/mini/matrix_cipher_explorer$s$, $ov$글자를 번호로 바꿔 만든 행렬에 열쇠행렬을 더해 암호로 만들고 빼서 해독하며, 덧셈과 뺄셈이 서로 역연산임을 이용한 행렬 암호를 탐구하는 활동.$ov$, now()),
+  ($s$common/mini/matrix_population_migration$s$, $ov$전이행렬과 인구 벡터의 곱으로 두 도시 사이의 인구 이동을 연도별로 시뮬레이션하고, 특정 인구를 넘는 시점을 예측하며 세 도시로 확장해 보는 활동.$ov$, now())
+on conflict (slug) do update set
+  overview = excluded.overview,
+  updated_at = now();
