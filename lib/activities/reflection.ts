@@ -77,7 +77,7 @@ export const COMMON_REFLECTION_QUESTION = COMMON_REFLECTION_QUESTIONS_SIMPLE[0];
 /**
  * reflection_data 의 형식이 시기별로 다르다(옛: { reflection: string } 또는 { id: string },
  * 새: { id: { prompt, answer } }). 어느 형식이든 "공통 마무리(takeaway)" 답을 뽑아낸다.
- * 학생 기록 메인 줄의 한 줄 요약·교사 세특 컨텍스트 같은 곳에서 한 곳에서 호출.
+ * 학생 기록 메인 줄의 한 줄 요약(UI 미리보기)에 사용.
  */
 export function extractMainReflection(
   reflectionData: unknown
@@ -98,4 +98,63 @@ export function extractMainReflection(
   if (typeof tk === "string") return tk.trim();
 
   return "";
+}
+
+function reflectionFieldAnswer(val: unknown): string {
+  if (typeof val === "string") return val.trim();
+  if (val && typeof val === "object") {
+    const ans = (val as { answer?: unknown }).answer;
+    if (typeof ans === "string") return ans.trim();
+  }
+  return "";
+}
+
+/**
+ * reflection_data 의 모든 Q&A를 추출해 세특 AI 컨텍스트용 문자열로 반환.
+ * takeaway(느낀점)만이 아닌 application·question·next_link 및
+ * 활동별 고유 질문 답변까지 모두 포함해 AI가 풍부한 성찰 전체를 참고할 수 있게 한다.
+ */
+export function extractAllReflections(reflectionData: unknown): string {
+  if (!reflectionData || typeof reflectionData !== "object") return "";
+  const obj = reflectionData as Record<string, unknown>;
+
+  // 옛 ProbabilitySimulator 형식 — 단일 문자열
+  if (typeof obj.reflection === "string") {
+    const v = obj.reflection.trim();
+    return v ? `[느낀 점] ${v}` : "";
+  }
+
+  // 표준 공통 질문 라벨 (고정 순서)
+  const STANDARD: [string, string][] = [
+    ["takeaway", "새롭게 알게 된 점·느낀 점"],
+    ["application", "실생활·다른 문제에 적용"],
+    ["question", "새로 생긴 의문"],
+    ["next_link", "앞으로 배울 내용과의 연결"],
+  ];
+
+  const lines: string[] = [];
+  const handled = new Set<string>();
+
+  for (const [id, label] of STANDARD) {
+    const val = obj[id];
+    if (val === undefined || val === null) continue;
+    handled.add(id);
+    const answer = reflectionFieldAnswer(val);
+    if (answer) lines.push(`[${label}] ${answer}`);
+  }
+
+  // 활동별 고유 질문 — 나머지 필드. prompt 가 있으면 그걸 라벨로 사용.
+  for (const [key, val] of Object.entries(obj)) {
+    if (handled.has(key)) continue;
+    const answer = reflectionFieldAnswer(val);
+    if (!answer) continue;
+    let label = key;
+    if (val && typeof val === "object") {
+      const p = (val as { prompt?: unknown }).prompt;
+      if (typeof p === "string" && p.trim()) label = p.trim();
+    }
+    lines.push(`[${label}] ${answer}`);
+  }
+
+  return lines.join("\n");
 }

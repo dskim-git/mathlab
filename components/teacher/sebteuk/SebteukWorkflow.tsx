@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { REFLECTION_LABELS } from "@/lib/legacy/reflectionLabels";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { extractMainReflection } from "@/lib/activities/reflection";
+import { extractMainReflection, extractAllReflections } from "@/lib/activities/reflection";
 import { shortActivityTitle } from "@/lib/activities/activityTitles";
 import {
   SEBTEUK_MODELS,
@@ -321,10 +321,10 @@ export function SebteukWorkflow({
     const others = chosen.filter((r) => !markedIds.has(r.id));
     const fmtLine = (r: RecordRow, prefix: string) => {
       const title = r.activities?.title ?? shortActivityTitle(r.activity_slug);
-      const refl = extractMainReflection(r.reflection_data) || "(성찰 없음)";
+      const refl = extractAllReflections(r.reflection_data) || "(성찰 없음)";
       const ov = r.activity_slug ? overviews[r.activity_slug] : "";
       const ovLine = ov ? `\n  활동 개요: ${ov}` : "";
-      return `${prefix} 활동: ${title}${ovLine}\n  성찰: ${refl}`;
+      return `${prefix} 활동: ${title}${ovLine}\n  성찰:\n${refl.split("\n").map((l) => `    ${l}`).join("\n")}`;
     };
     const blocks: string[] = [];
     if (marked.length > 0) {
@@ -702,7 +702,7 @@ export function SebteukWorkflow({
                           ) : null}
                         </div>
                         {(() => {
-                          const refl = extractMainReflection(r.reflection_data);
+                          const refl = extractAllReflections(r.reflection_data);
                           return refl ? (
                             <p className="mt-2 whitespace-pre-wrap text-xs text-slate-300">
                               {refl}

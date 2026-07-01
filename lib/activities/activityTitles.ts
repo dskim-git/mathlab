@@ -152,10 +152,15 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "gifted/euclidea_bingo": "작도 게임 (빙고)",
 };
 
-/** 슬러그 → 한국어 짧은 제목. 없으면 슬러그 그대로(앞 "mini:" 만 제거). */
+/** 슬러그 → 한국어 짧은 제목.
+ * 매핑에 없으면 경로 마지막 세그먼트를 가독성 있게 변환 (밑줄 → 공백). */
 export function shortActivityTitle(slug: string | null | undefined): string {
   if (!slug) return "활동";
   const known = SHORT_ACTIVITY_TITLE[slug];
   if (known) return known;
-  return slug.replace(/^미니:\s*/, "");
+  // "미니:" 접두어 제거 (옛 형식)
+  if (slug.startsWith("미니:")) return slug.replace(/^미니:\s*/, "");
+  // 경로 형식(예: "common/mini/matrix_pixel_explorer") — 마지막 세그먼트를 읽기 쉽게
+  const lastSegment = slug.split("/").pop() ?? slug;
+  return lastSegment.replace(/_/g, " ");
 }
