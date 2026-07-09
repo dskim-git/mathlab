@@ -10,7 +10,7 @@ function distinct(values: (string | null | undefined)[]): string[] {
 
 // 로그인 사용자가 접근 가능한 교과명을 역할별로 산출한다.
 //  - admin   : 전체 교과
-//  - teacher : 내 teacher_permissions 의 과목(담당 학급 기준) + 그룹 멤버 교과
+//  - teacher : 내 teacher_permissions 의 과목(담당 학급 기준) ∪ teacher_subject_permissions(개인 부여) + 그룹 멤버 교과
 //  - student : 내 학급에 부여된 class_subject_permissions + 그룹 멤버 교과
 //  - general : 내게 부여된 general_subject_permissions + 그룹 멤버 교과
 // 학생/일반인 권한 테이블은 RLS('본인만 읽기')가 이미 행을 제한하므로 전체 select 후 distinct 한다.
@@ -40,6 +40,11 @@ async function getAccessibleSubjectNames(
         .eq("teacher_id", (teacherRow as { id: string }).id);
       base = (data ?? []).map((r) => (r as { subject: string }).subject);
     }
+    // 담당 학반과 무관하게 개인 부여된 교과도 합산 (RLS 가 본인 행만 반환).
+    const { data: granted } = await supabase
+      .from("teacher_subject_permissions")
+      .select("subject");
+    base = [...base, ...(granted ?? []).map((r) => (r as { subject: string }).subject)];
   } else if (profile.role === "student") {
     const { data } = await supabase
       .from("class_subject_permissions")

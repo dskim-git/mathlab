@@ -138,6 +138,13 @@ export default async function TeacherHomePage() {
     );
   } else {
     const wanted = new Set(permissions.map((p) => p.subject));
+    // 담당 학반과 무관하게 개인 부여된 교과도 히어로 칩에 포함 (RLS 가 본인 행만 반환).
+    const { data: granted } = await supabase
+      .from("teacher_subject_permissions")
+      .select("subject");
+    ((granted ?? []) as Array<{ subject: string }>).forEach((g) =>
+      wanted.add(g.subject)
+    );
     if (wanted.size > 0) {
       const { data } = await supabase
         .from("subjects")
