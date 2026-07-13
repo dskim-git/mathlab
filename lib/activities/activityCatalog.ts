@@ -115,6 +115,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "common2/mini/two_point_distance",
       "common2/mini/internal_division_lab",
       "common2/mini/centroid_lab",
+      "common2/mini/block_stacking_lab",
     ],
   },
   {
