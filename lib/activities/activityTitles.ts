@@ -69,6 +69,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "probability/mini/circular_perm_anchor_p5": "원순열과 한 자리 고정",
   "probability/mini/polygon_edge_arrangements_p5": "다각형 변 위 배열과 대칭",
   "common2/mini/two_point_distance": "두 점 사이의 거리",
+  "common2/mini/internal_division_lab": "선분의 내분과 황금비",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",

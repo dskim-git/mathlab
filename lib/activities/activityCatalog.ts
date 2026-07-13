@@ -111,7 +111,10 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "1-1 평면좌표·선분의 내분",
-    slugs: ["common2/mini/two_point_distance"],
+    slugs: [
+      "common2/mini/two_point_distance",
+      "common2/mini/internal_division_lab",
+    ],
   },
   {
     subject: "확률과통계",
