@@ -65,6 +65,7 @@ import MatrixPopulationMigration from "./common/4-1-matrix/matrix-population-mig
 import TwoPointDistanceLab from "./common2/1-1-segment-division/two-point-distance/TwoPointDistanceLab";
 import InternalDivisionLab from "./common2/1-1-segment-division/internal-division-lab/InternalDivisionLab";
 import CentroidLab from "./common2/1-1-segment-division/centroid-lab/CentroidLab";
+import BlockStackingLab from "./common2/1-1-segment-division/block-stacking-lab/BlockStackingLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -250,6 +251,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/two_point_distance": TwoPointDistanceLab,
   "common2/mini/internal_division_lab": InternalDivisionLab,
   "common2/mini/centroid_lab": CentroidLab,
+  "common2/mini/block_stacking_lab": BlockStackingLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
