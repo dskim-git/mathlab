@@ -60,6 +60,10 @@ import MatrixCardDiceGame from "./common/4-1-matrix/matrix-card-dice-game/Matrix
 import MatrixCipherExplorer from "./common/4-1-matrix/matrix-cipher-explorer/MatrixCipherExplorer";
 import MatrixPopulationMigration from "./common/4-1-matrix/matrix-population-migration/MatrixPopulationMigration";
 
+// ─── 공통수학2 ──────────────────────────────────────────────
+// [1] 도형의 방정식 — (1) 평면좌표 · 선분의 내분
+import TwoPointDistanceLab from "./common2/1-1-segment-division/two-point-distance/TwoPointDistanceLab";
+
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
 import RepPermPassword from "./probability/1-1-permutations-combinations/rep-perm-password/RepPermPassword";
@@ -239,6 +243,9 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common/mini/matrix_card_dice_game": MatrixCardDiceGame,
   "common/mini/matrix_cipher_explorer": MatrixCipherExplorer,
   "common/mini/matrix_population_migration": MatrixPopulationMigration,
+
+  // ── 공통수학2 ──
+  "common2/mini/two_point_distance": TwoPointDistanceLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
