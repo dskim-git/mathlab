@@ -117,8 +117,28 @@ Claude 는: 컴포넌트 + 성찰 3개 초안 + 활동개요 초안을 만들고
 
 ---
 
-## 7. 진행 현황 (공통수학2)
+## 7. 다른 신규 교과에도 동일 적용 (경제수학 등)
 
-- 공통수학2 미니활동: **0개** (2026-07-13 기준). 새 교과, 백지에서 시작.
-- 원본 `C:/git-math/math/activities/common2/` 엔 `lessons/_units.py` 만 있고 `mini/` 활동 없음.
-- 캔바 수업자료·중/대단원 문제는 사용자가 앱(DB)에 업로드 완료. Claude 는 DB 내용을 직접 못 보므로 자리·목표를 요청 시 받는다.
+이 워크플로(6단계)는 **교과 무관하게 동일**하다. 신규 교과를 만들 때 **교과마다 달라지는 건 4가지**뿐이며,
+첫 활동에서 관례를 정하고 이후 재사용한다:
+
+| 항목 | 공통수학2 | 경제수학(신규 예시) |
+|---|---|---|
+| 슬러그 접두사 | `common2/mini/<slug>` | `economics/mini/<slug>` |
+| 컴포넌트 폴더 | `components/activities/common2/<중단원>/<활동>/` | `components/activities/economics/<중단원>/<활동>/` |
+| catalog 그룹 subject | `"공통수학2"` | `"경제수학"` |
+| 개요 시드 파일 | `supabase/migrations/20260713_activity_overviews_seed_common2.sql` | `..._seed_economics.sql`(신규 파일) |
+
+- 신규 교과는 대개 **활동 0개**에서 시작(경제수학도 2026-07-13 기준 0개, 커리큘럼·subject는 존재). 슬러그는
+  아직 커리큘럼에 활동 블록이 없으므로 **우리가 정하고**(catalog↔registry↔블록 에디터만 일치하면 됨), 이후 고정.
+- 원본 커리큘럼 참고: `C:/git-math/math/activities/<subject>/lessons/_units.py`(경제수학=`economics_math`). 캔바 내용은
+  Claude 가 직접 못 보므로 자리·목표는 요청 시 받는다.
+- 한 세션에서 여러 교과를 번갈아 만들어도 무방(각 요청이 교과를 명시).
+
+## 8. 진행 현황
+
+- **공통수학2**: 미니활동 4개 완료·배포(2026-07-13, main `e652f9a`) — 두 점 사이의 거리 / 선분의 내분과 황금비 /
+  무게중심과 내분 / 블록 밀기와 조화급수. 모두 catalog "1-1 평면좌표·선분의 내분" 그룹. 소단원 블록 배치·개요 라이브 SQL은 사용자 몫.
+- **경제수학**: 미니활동 **1개** 제작 — 주가지수 탐험(`economics/mini/stock_index_lab`), catalog "1-1 생활 속 경제지표" 그룹.
+  첫 활동으로 4가지 관례 확정(슬러그 `economics/mini/…` · 폴더 `components/activities/economics/…` · subject `"경제수학"` · 시드 `20260718_activity_overviews_seed_economics.sql`).
+  실측 데이터(Yahoo Finance) 내장 + **하이브리드 라이브 새로고침** 첫 사례 — 프록시 라우트 `app/api/economics/stock-index`(CORS 우회, 지수 현재가·종목 시가총액). 소단원 블록 배치·개요 라이브 SQL은 사용자 몫.

@@ -67,6 +67,10 @@ import InternalDivisionLab from "./common2/1-1-segment-division/internal-divisio
 import CentroidLab from "./common2/1-1-segment-division/centroid-lab/CentroidLab";
 import BlockStackingLab from "./common2/1-1-segment-division/block-stacking-lab/BlockStackingLab";
 
+// ─── 경제수학 ──────────────────────────────────────────────
+// [1] 수와 생활 속 경제 — 1-1 생활 속 경제지표
+import StockIndexLab from "./economics/1-1-economic-indicators/stock-index-lab/StockIndexLab";
+
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
 import RepPermPassword from "./probability/1-1-permutations-combinations/rep-perm-password/RepPermPassword";
@@ -252,6 +256,9 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/internal_division_lab": InternalDivisionLab,
   "common2/mini/centroid_lab": CentroidLab,
   "common2/mini/block_stacking_lab": BlockStackingLab,
+
+  // ── 경제수학 ──
+  "economics/mini/stock_index_lab": StockIndexLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

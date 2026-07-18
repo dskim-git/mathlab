@@ -72,6 +72,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/internal_division_lab": "선분의 내분과 황금비",
   "common2/mini/centroid_lab": "무게중심과 내분",
   "common2/mini/block_stacking_lab": "블록 밀기와 조화급수",
+  "economics/mini/stock_index_lab": "주가지수 탐험",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",

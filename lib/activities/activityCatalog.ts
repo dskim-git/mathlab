@@ -119,6 +119,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     ],
   },
   {
+    subject: "경제수학",
+    unit: "1-1 생활 속 경제지표",
+    slugs: ["economics/mini/stock_index_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
