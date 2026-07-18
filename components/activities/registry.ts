@@ -70,6 +70,7 @@ import BlockStackingLab from "./common2/1-1-segment-division/block-stacking-lab/
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — 1-1 생활 속 경제지표
 import StockIndexLab from "./economics/1-1-economic-indicators/stock-index-lab/StockIndexLab";
+import GdpGrowthLab from "./economics/1-1-economic-indicators/gdp-growth-lab/GdpGrowthLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -259,6 +260,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
+  "economics/mini/gdp_growth_lab": GdpGrowthLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
