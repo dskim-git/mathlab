@@ -121,7 +121,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "1-1 생활 속 경제지표",
-    slugs: ["economics/mini/stock_index_lab", "economics/mini/gdp_growth_lab"],
+    slugs: ["economics/mini/stock_index_lab", "economics/mini/gdp_growth_lab", "economics/mini/percentage_point_lab"],
   },
   {
     subject: "확률과통계",
