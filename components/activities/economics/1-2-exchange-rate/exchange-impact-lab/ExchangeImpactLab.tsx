@@ -110,26 +110,48 @@ const CHART = { W: 520, H: 150, X0: 44, X1: 508, Y0: 122, Y1: 14 };
 
 function SimTab() {
   const [code, setCode] = useState("USD");
+  const [rates, setRates] = useState<Record<string, number>>({ ...CURRENT_KRW }); // 원 / 1단위 (현재)
+  const [oil, setOil] = useState(OIL_USD);
+  const [asOf, setAsOf] = useState(AS_OF);
+  const [liveState, setLiveState] = useState<"idle" | "loading" | "error">("idle");
+
   const cur = CURRENCIES.find((c) => c.code === code)!;
   const unit = cur.unit;
-  const perCur = CURRENT_KRW[code]; // 원 / 1단위
+  const perCur = rates[code] ?? CURRENT_KRW[code]; // 원 / 1단위
   const dispCur = perCur * unit; // 표시 환율(원/quote단위)
-  const dMin = Math.floor((RANGE_KRW[code].min * unit) / 10) * 10;
-  const dMax = Math.ceil((RANGE_KRW[code].max * unit) / 10) * 10;
-  const [disp, setDisp] = useState(Math.round(dispCur)); // 슬라이더(표시 환율)
+  const dMin = Math.min(Math.floor((RANGE_KRW[code].min * unit) / 10) * 10, Math.floor(dispCur / 10) * 10);
+  const dMax = Math.max(Math.ceil((RANGE_KRW[code].max * unit) / 10) * 10, Math.ceil(dispCur / 10) * 10);
+  const [disp, setDisp] = useState(Math.round(CURRENT_KRW[code] * unit)); // 슬라이더(표시 환율)
   const per = disp / unit; // 원 / 1단위 (슬라이더)
+
+  async function refresh() {
+    setLiveState("loading");
+    try {
+      const res = await fetch("/api/economics/exchange-rate", { cache: "no-store" });
+      const json = await res.json();
+      if (!json.ok || !json.krw) throw new Error();
+      setRates((r) => ({ ...r, ...json.krw }));
+      if (typeof json.oil === "number") setOil(json.oil);
+      if (json.date) setAsOf(json.date);
+      if (typeof json.krw[code] === "number") setDisp(Math.round(json.krw[code] * unit)); // 슬라이더도 오늘 값으로
+      setLiveState("idle");
+    } catch {
+      setLiveState("error");
+    }
+  }
 
   const diff = disp - dispCur;
   const dir = Math.abs(diff) < dispCur * 0.002 ? "same" : diff > 0 ? "up" : "down";
   const amt = AMT[code];
-  const usdPer = code === "USD" ? per : CURRENT_KRW.USD; // 유가는 원/달러
+  const usdPer = code === "USD" ? per : (rates.USD ?? CURRENT_KRW.USD); // 유가는 원/달러
+  const usdCur = rates.USD ?? CURRENT_KRW.USD;
 
   const scenarios = [
     { key: "export", icon: "📦", title: "수출 기업 매출", desc: `제품 ${amt.sym}${fmt(amt.exportP)} 수출`, won: amt.exportP * per, base: amt.exportP * perCur, goodWhenUp: true },
     { key: "import", icon: "🛒", title: "수입·직구 비용", desc: `물건 ${amt.sym}${fmt(amt.importP)} 구입`, won: amt.importP * per, base: amt.importP * perCur, goodWhenUp: false },
     { key: "travel", icon: "✈️", title: "해외여행 환전", desc: `${amt.sym}${fmt(amt.travel)} 환전`, won: amt.travel * per, base: amt.travel * perCur, goodWhenUp: false },
     { key: "tuition", icon: "🎓", title: "유학 등록금", desc: `등록금 ${amt.sym}${fmt(amt.tuition)}`, won: amt.tuition * per, base: amt.tuition * perCur, goodWhenUp: false },
-    { key: "oil", icon: "🛢️", title: "수입 물가(국제유가)", desc: `유가 $${OIL_USD}/배럴`, won: OIL_USD * usdPer, base: OIL_USD * CURRENT_KRW.USD, goodWhenUp: false },
+    { key: "oil", icon: "🛢️", title: "수입 물가(국제유가)", desc: `유가 $${oil}/배럴`, won: oil * usdPer, base: oil * usdCur, goodWhenUp: false },
   ];
 
   // 미니 차트
@@ -148,15 +170,22 @@ function SimTab() {
         어떻게 다르게 작용하는지 실제 데이터로 확인해요.
       </p>
 
-      {/* 나라 선택 */}
-      <div className="mt-3 flex flex-wrap gap-2">
+      {/* 나라 선택 + 새로고침 */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {CURRENCIES.map((c) => (
-          <button key={c.code} type="button" onClick={() => { setCode(c.code); setDisp(Math.round(CURRENT_KRW[c.code] * c.unit)); }}
+          <button key={c.code} type="button" onClick={() => { setCode(c.code); setDisp(Math.round((rates[c.code] ?? CURRENT_KRW[c.code]) * c.unit)); }}
             className={"flex items-center gap-1.5 rounded-lg border-2 px-3 py-1.5 text-xs font-bold transition " + (code === c.code ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")}>
             <FlagImg code={c.code} /> {c.country}
           </button>
         ))}
+        <button type="button" onClick={refresh} disabled={liveState === "loading"} className="ml-auto rounded-lg border border-emerald-400/45 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/20 disabled:opacity-50">
+          {liveState === "loading" ? "불러오는 중…" : "🔄 오늘 환율로 새로고침"}
+        </button>
       </div>
+      <p className="mt-1.5 text-xs text-slate-500">
+        기준 {asOf === AS_OF ? `${AS_OF} 스냅샷` : <b className="text-emerald-300">{asOf} (방금)</b>} · 유가 ${oil}/배럴
+        {liveState === "error" ? <span className="ml-2 text-amber-300/90">⚠️ 최신값 실패 — 스냅샷 사용</span> : null}
+      </p>
 
       {/* 실제 환율 미니차트 */}
       <div className="mt-3 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/60">
