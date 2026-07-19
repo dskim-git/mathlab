@@ -77,6 +77,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
   "economics/mini/employment_lab": "고용률과 실업률",
   "economics/mini/exchange_rate_lab": "환율 변환과 추이",
+  "economics/mini/exchange_impact_lab": "환율 변동과 손익",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",

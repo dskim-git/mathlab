@@ -74,6 +74,7 @@ import GdpGrowthLab from "./economics/1-1-economic-indicators/gdp-growth-lab/Gdp
 import PercentagePointLab from "./economics/1-1-economic-indicators/percentage-point-lab/PercentagePointLab";
 import EmploymentLab from "./economics/1-1-economic-indicators/employment-lab/EmploymentLab";
 import ExchangeRateLab from "./economics/1-2-exchange-rate/exchange-rate-lab/ExchangeRateLab";
+import ExchangeImpactLab from "./economics/1-2-exchange-rate/exchange-impact-lab/ExchangeImpactLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -267,6 +268,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/percentage_point_lab": PercentagePointLab,
   "economics/mini/employment_lab": EmploymentLab,
   "economics/mini/exchange_rate_lab": ExchangeRateLab,
+  "economics/mini/exchange_impact_lab": ExchangeImpactLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

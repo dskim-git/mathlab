@@ -126,7 +126,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "1-2 환율",
-    slugs: ["economics/mini/exchange_rate_lab"],
+    slugs: ["economics/mini/exchange_rate_lab", "economics/mini/exchange_impact_lab"],
   },
   {
     subject: "확률과통계",
