@@ -129,6 +129,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/exchange_rate_lab", "economics/mini/exchange_impact_lab", "economics/mini/bigmac_index_lab", "economics/mini/exchange_smart_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "1-3 세금",
+    slugs: ["economics/mini/tax_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [

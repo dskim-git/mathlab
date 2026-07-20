@@ -80,6 +80,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/exchange_impact_lab": "환율 변동과 손익",
   "economics/mini/bigmac_index_lab": "빅맥지수와 물가",
   "economics/mini/exchange_smart_lab": "현명하게 환전하기",
+  "economics/mini/tax_lab": "세금의 종류",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
