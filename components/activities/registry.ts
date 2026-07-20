@@ -77,6 +77,7 @@ import ExchangeRateLab from "./economics/1-2-exchange-rate/exchange-rate-lab/Exc
 import ExchangeImpactLab from "./economics/1-2-exchange-rate/exchange-impact-lab/ExchangeImpactLab";
 import BigMacLab from "./economics/1-2-exchange-rate/bigmac-index-lab/BigMacLab";
 import ExchangeSmartLab from "./economics/1-2-exchange-rate/exchange-smart-lab/ExchangeSmartLab";
+import TaxLab from "./economics/1-3-tax/tax-lab/TaxLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -273,6 +274,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/exchange_impact_lab": ExchangeImpactLab,
   "economics/mini/bigmac_index_lab": BigMacLab,
   "economics/mini/exchange_smart_lab": ExchangeSmartLab,
+  "economics/mini/tax_lab": TaxLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
