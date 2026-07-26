@@ -131,7 +131,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "1-3 세금",
-    slugs: ["economics/mini/tax_lab"],
+    slugs: ["economics/mini/tax_lab", "economics/mini/tax_rates_lab"],
   },
   {
     subject: "확률과통계",
