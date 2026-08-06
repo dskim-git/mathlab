@@ -84,6 +84,8 @@ import CorporateTaxLab from "./economics/1-3-tax/corporate-tax-lab/CorporateTaxL
 import VatLab from "./economics/1-3-tax/vat-lab/VatLab";
 import ExciseTaxLab from "./economics/1-3-tax/excise-tax-lab/ExciseTaxLab";
 import CustomsLab from "./economics/1-3-tax/customs-lab/CustomsLab";
+// 2-1 이자와 원리합계
+import InterestRateLab from "./economics/2-1-interest/interest-rate-lab/InterestRateLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -287,6 +289,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/vat_lab": VatLab,
   "economics/mini/excise_tax_lab": ExciseTaxLab,
   "economics/mini/customs_lab": CustomsLab,
+  "economics/mini/interest_rate_lab": InterestRateLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
