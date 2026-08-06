@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
 import { AS_OF, CURRENCIES, CURRENT_KRW, RANGE_KRW, MONTHLY, OIL_USD } from "./data";
