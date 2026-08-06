@@ -120,22 +120,22 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   },
   {
     subject: "경제수학",
-    unit: "1-1 생활 속 경제지표",
+    unit: "1-1-1 생활 속 경제지표",
     slugs: ["economics/mini/stock_index_lab", "economics/mini/gdp_growth_lab", "economics/mini/percentage_point_lab", "economics/mini/employment_lab"],
   },
   {
     subject: "경제수학",
-    unit: "1-2 환율",
+    unit: "1-1-2 환율",
     slugs: ["economics/mini/exchange_rate_lab", "economics/mini/exchange_impact_lab", "economics/mini/bigmac_index_lab", "economics/mini/exchange_smart_lab"],
   },
   {
     subject: "경제수학",
-    unit: "1-3 세금",
+    unit: "1-1-3 세금",
     slugs: ["economics/mini/tax_lab", "economics/mini/tax_rates_lab", "economics/mini/income_tax_lab", "economics/mini/corporate_tax_lab", "economics/mini/vat_lab", "economics/mini/excise_tax_lab", "economics/mini/customs_lab"],
   },
   {
     subject: "경제수학",
-    unit: "2-1 이자와 원리합계",
+    unit: "1-2-1 이자와 원리합계",
     slugs: ["economics/mini/interest_rate_lab"],
   },
   {

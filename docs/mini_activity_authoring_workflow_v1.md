@@ -139,6 +139,6 @@ Claude 는: 컴포넌트 + 성찰 3개 초안 + 활동개요 초안을 만들고
 
 - **공통수학2**: 미니활동 4개 완료·배포(2026-07-13, main `e652f9a`) — 두 점 사이의 거리 / 선분의 내분과 황금비 /
   무게중심과 내분 / 블록 밀기와 조화급수. 모두 catalog "1-1 평면좌표·선분의 내분" 그룹. 소단원 블록 배치·개요 라이브 SQL은 사용자 몫.
-- **경제수학**: 미니활동 **1개** 제작 — 주가지수 탐험(`economics/mini/stock_index_lab`), catalog "1-1 생활 속 경제지표" 그룹.
+- **경제수학**: 미니활동 **1개** 제작 — 주가지수 탐험(`economics/mini/stock_index_lab`), catalog "1-1-1 생활 속 경제지표" 그룹.
   첫 활동으로 4가지 관례 확정(슬러그 `economics/mini/…` · 폴더 `components/activities/economics/…` · subject `"경제수학"` · 시드 `20260718_activity_overviews_seed_economics.sql`).
   실측 데이터(Yahoo Finance) 내장 + **하이브리드 라이브 새로고침** 첫 사례 — 프록시 라우트 `app/api/economics/stock-index`(CORS 우회, 지수 현재가·종목 시가총액). 소단원 블록 배치·개요 라이브 SQL은 사용자 몫.
