@@ -68,15 +68,18 @@ import CentroidLab from "./common2/1-1-segment-division/centroid-lab/CentroidLab
 import BlockStackingLab from "./common2/1-1-segment-division/block-stacking-lab/BlockStackingLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
-// [1] 수와 생활 속 경제 — 1-1 생활 속 경제지표
+// [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
+// 1-1-1 생활 속 경제지표
 import StockIndexLab from "./economics/1-1-economic-indicators/stock-index-lab/StockIndexLab";
 import GdpGrowthLab from "./economics/1-1-economic-indicators/gdp-growth-lab/GdpGrowthLab";
 import PercentagePointLab from "./economics/1-1-economic-indicators/percentage-point-lab/PercentagePointLab";
 import EmploymentLab from "./economics/1-1-economic-indicators/employment-lab/EmploymentLab";
+// 1-1-2 환율
 import ExchangeRateLab from "./economics/1-2-exchange-rate/exchange-rate-lab/ExchangeRateLab";
 import ExchangeImpactLab from "./economics/1-2-exchange-rate/exchange-impact-lab/ExchangeImpactLab";
 import BigMacLab from "./economics/1-2-exchange-rate/bigmac-index-lab/BigMacLab";
 import ExchangeSmartLab from "./economics/1-2-exchange-rate/exchange-smart-lab/ExchangeSmartLab";
+// 1-1-3 세금
 import TaxLab from "./economics/1-3-tax/tax-lab/TaxLab";
 import TaxRatesLab from "./economics/1-3-tax/tax-rates-lab/TaxRatesLab";
 import IncomeTaxLab from "./economics/1-3-tax/income-tax-lab/IncomeTaxLab";
@@ -84,7 +87,7 @@ import CorporateTaxLab from "./economics/1-3-tax/corporate-tax-lab/CorporateTaxL
 import VatLab from "./economics/1-3-tax/vat-lab/VatLab";
 import ExciseTaxLab from "./economics/1-3-tax/excise-tax-lab/ExciseTaxLab";
 import CustomsLab from "./economics/1-3-tax/customs-lab/CustomsLab";
-// 2-1 이자와 원리합계
+// 1-2-1 이자와 원리합계
 import InterestRateLab from "./economics/2-1-interest/interest-rate-lab/InterestRateLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
