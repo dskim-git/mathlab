@@ -84,6 +84,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/tax_rates_lab": "세계의 세율과 복지",
   "economics/mini/income_tax_lab": "소득세 계산",
   "economics/mini/corporate_tax_lab": "법인세 계산",
+  "economics/mini/vat_lab": "부가가치세 계산",
   "economics/mini/excise_tax_lab": "개별소비세 계산",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
