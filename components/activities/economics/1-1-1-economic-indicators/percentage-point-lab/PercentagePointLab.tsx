@@ -237,7 +237,6 @@ function ChangeCalculator() {
   const [after, setAfter] = useState(5);
 
   const dpp = after - before;
-  const rel = before !== 0 ? ((after - before) / before) * 100 : NaN;
   const up = dpp >= 0;
 
   // 막대 스케일
@@ -404,21 +403,20 @@ function QuizTab() {
   const [last, setLast] = useState<{ ok: boolean; explain: string } | null>(null);
   const [locked, setLocked] = useState<number | null>(null);
 
+  // 남은 시간 표시용 1초 타이머와 종료 타이머를 함께 건다.
+  // (효과 본문에서 곧바로 setState 하지 않도록 종료도 타이머 콜백에서 처리)
   useEffect(() => {
     if (phase !== "playing") return;
-    if (timeLeft <= 0) {
-      setPhase("done");
-      return;
-    }
-    const id = setInterval(() => setTimeLeft((t) => t - 1), 1000);
-    return () => clearInterval(id);
-  }, [phase, timeLeft]);
-
-  useEffect(() => {
-    if (phase === "done") setBest((b) => Math.max(b, score));
-  }, [phase, score]);
+    const tick = setInterval(() => setTimeLeft((t) => (t > 0 ? t - 1 : 0)), 1000);
+    const end = setTimeout(() => setPhase("done"), DURATION * 1000);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(end);
+    };
+  }, [phase]);
 
   function start() {
+    setBest((b) => Math.max(b, score)); // 직전 라운드 기록을 최고 기록에 반영
     setScore(0);
     setAttempts(0);
     setLast(null);

@@ -40,7 +40,6 @@ const REFLECTION_QUESTIONS: ReflectionQuestion[] = [
 function pct(v: number, d = 1): string { return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(d)}%`; }
 function usd(v: number): string { return `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
 function valColor(v: number): string { return v > 0.02 ? "text-rose-300" : v < -0.02 ? "text-sky-300" : "text-slate-300"; }
-const NAME: Record<string, string> = Object.fromEntries(COUNTRIES.map((c) => [c.iso, c.name]));
 
 // ─── 메인 ─────────────────────────────────────────────────────
 type Tab = "bigmac" | "others" | "official";

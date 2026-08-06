@@ -345,8 +345,6 @@ function GameTab() {
   const [score, setScore] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
 
-  // di 모드는 직접/간접 구분이 있는 국세 보통세만
-  const pool = mode === "level" ? ALL_TAX_CARDS : ALL_TAX_CARDS.filter((c) => c.di);
   const options = mode === "level" ? (["국세", "지방세"] as const) : (["직접세", "간접세"] as const);
 
   function start(m: GameMode) {
