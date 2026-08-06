@@ -83,6 +83,7 @@ import IncomeTaxLab from "./economics/1-3-tax/income-tax-lab/IncomeTaxLab";
 import CorporateTaxLab from "./economics/1-3-tax/corporate-tax-lab/CorporateTaxLab";
 import VatLab from "./economics/1-3-tax/vat-lab/VatLab";
 import ExciseTaxLab from "./economics/1-3-tax/excise-tax-lab/ExciseTaxLab";
+import CustomsLab from "./economics/1-3-tax/customs-lab/CustomsLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -285,6 +286,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/corporate_tax_lab": CorporateTaxLab,
   "economics/mini/vat_lab": VatLab,
   "economics/mini/excise_tax_lab": ExciseTaxLab,
+  "economics/mini/customs_lab": CustomsLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

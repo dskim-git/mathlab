@@ -86,6 +86,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/corporate_tax_lab": "법인세 계산",
   "economics/mini/vat_lab": "부가가치세 계산",
   "economics/mini/excise_tax_lab": "개별소비세 계산",
+  "economics/mini/customs_lab": "관세와 FTA",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
