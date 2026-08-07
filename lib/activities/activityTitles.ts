@@ -88,6 +88,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/excise_tax_lab": "개별소비세 계산",
   "economics/mini/customs_lab": "관세와 FTA",
   "economics/mini/interest_rate_lab": "여러 가지 이율",
+  "economics/mini/simple_interest_lab": "단리의 원리합계",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
