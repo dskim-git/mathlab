@@ -44,45 +44,131 @@ export function StudentsExplorer({ accentText }: { accentText: string }) {
   const [keyword, setKeyword] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // 수업 필터 — 경제수학처럼 여러 학급에서 모인 선택 수업은 학년·반으로 못 좁힌다.
+  // 내가 담당하는 수업(관리자는 전체)을 고르면 그 수강생만 남긴다.
+  const [courses, setCourses] = useState<
+    {
+      id: string;
+      school_year: number;
+      semester: number;
+      subject: string;
+      name: string;
+    }[]
+  >([]);
+  const [courseFilter, setCourseFilter] = useState<string>("");
+  const [courseMembers, setCourseMembers] = useState<Set<string> | null>(null);
+
+  // 고른 수업의 (학년도 · 학기 · 교과). 전체 보기면 null — 그때는 학생의 모든 기록을 본다.
+  // 상세 패널과 이름 옆 건수가 같은 기준을 쓰도록 한 곳에서 만든다.
+  const countScope = useMemo(() => {
+    const c = courses.find((x) => x.id === courseFilter);
+    if (!c) return null;
+    return {
+      school_year: c.school_year,
+      semester: c.semester,
+      subject: c.subject,
+    };
+  }, [courses, courseFilter]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [sRes, lRes, rRes] = await Promise.all([
-      supabase
-        .from("students")
-        .select(
-          "id, school_year, grade, class_number, student_number, student_code, student_login_id, profile_id, profiles!profile_id(name, email, status, must_change_password, created_at)"
-        )
-        .order("school_year", { ascending: false })
-        .order("grade")
-        .order("class_number")
-        .order("student_number"),
-      supabase.from("legacy_reflections").select("student_id"),
-      supabase.from("activity_responses").select("student_id"),
-    ]);
-    if (sRes.error) setError(sRes.error.message);
-    if (lRes.error) setError((e) => e || lRes.error!.message);
-    if (rRes.error) setError((e) => e || rRes.error!.message);
-    setStudents((sRes.data ?? []) as unknown as StudentRow[]);
-
-    const lMap = new Map<string, number>();
-    for (const r of (lRes.data ?? []) as { student_id: string }[]) {
-      lMap.set(r.student_id, (lMap.get(r.student_id) ?? 0) + 1);
-    }
-    setLegacyCounts(lMap);
-
-    const rMap = new Map<string, number>();
-    for (const r of (rRes.data ?? []) as { student_id: string }[]) {
-      rMap.set(r.student_id, (rMap.get(r.student_id) ?? 0) + 1);
-    }
-    setRecentCounts(rMap);
-
+    const { data, error: sErr } = await supabase
+      .from("students")
+      .select(
+        "id, school_year, grade, class_number, student_number, student_code, student_login_id, profile_id, profiles!profile_id(name, email, status, must_change_password, created_at)"
+      )
+      .order("school_year", { ascending: false })
+      .order("grade")
+      .order("class_number")
+      .order("student_number");
+    if (sErr) setError(sErr.message);
+    setStudents((data ?? []) as unknown as StudentRow[]);
     setLoading(false);
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // 내 수업 목록 (RLS 가 담당 수업만 반환 / 관리자는 전체)
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("courses")
+        .select("id, school_year, semester, subject, name")
+        .order("school_year", { ascending: false })
+        .order("semester", { ascending: false })
+        .order("name");
+      setCourses(
+        (data ?? []) as {
+          id: string;
+          school_year: number;
+          semester: number;
+          subject: string;
+          name: string;
+        }[]
+      );
+    })();
+  }, []);
+
+  // 이름 옆 성찰 건수 — 수업을 고르면 그 (학년도·학기·교과) 범위만 센다.
+  // 전체 보기일 때만 학생의 모든 기록을 센다.
+  const loadCounts = useCallback(async () => {
+    let legacyQuery = supabase.from("legacy_reflections").select("student_id");
+    let responseQuery = supabase.from("activity_responses").select("student_id");
+
+    if (countScope) {
+      const { school_year, semester, subject } = countScope;
+      // 옛 성찰은 '교과 무관(subject NULL)' 자료를 함께 세는 상세 패널과 기준을 맞춘다.
+      legacyQuery = legacyQuery
+        .eq("school_year", school_year)
+        .eq("semester", semester)
+        .or(`subject.eq."${subject}",subject.is.null`);
+      responseQuery = responseQuery
+        .eq("school_year", school_year)
+        .eq("semester", semester)
+        .eq("subject", subject);
+    }
+
+    const [lRes, rRes] = await Promise.all([legacyQuery, responseQuery]);
+    if (lRes.error) setError((e) => e || lRes.error!.message);
+    if (rRes.error) setError((e) => e || rRes.error!.message);
+
+    const tally = (rows: { student_id: string }[]) => {
+      const map = new Map<string, number>();
+      for (const r of rows) {
+        map.set(r.student_id, (map.get(r.student_id) ?? 0) + 1);
+      }
+      return map;
+    };
+    setLegacyCounts(tally((lRes.data ?? []) as { student_id: string }[]));
+    setRecentCounts(tally((rRes.data ?? []) as { student_id: string }[]));
+  }, [countScope]);
+
+  useEffect(() => {
+    loadCounts();
+  }, [loadCounts]);
+
+  // 선택한 수업의 수강생 student_id 집합 — 가입 연결된 학생만.
+  useEffect(() => {
+    if (!courseFilter) {
+      setCourseMembers(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("course_students")
+        .select("student_id")
+        .eq("course_id", courseFilter)
+        .not("student_id", "is", null);
+      setCourseMembers(
+        new Set(
+          ((data ?? []) as { student_id: string }[]).map((r) => r.student_id)
+        )
+      );
+    })();
+  }, [courseFilter]);
 
   const grades = useMemo(
     () => Array.from(new Set(students.map((s) => s.grade))).sort(),
@@ -100,6 +186,7 @@ export function StudentsExplorer({ accentText }: { accentText: string }) {
   const filtered = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     return students.filter((s) => {
+      if (courseMembers && !courseMembers.has(s.id)) return false;
       if (grade && String(s.grade) !== grade) return false;
       if (classNum && String(s.class_number) !== classNum) return false;
       if (k) {
@@ -111,7 +198,7 @@ export function StudentsExplorer({ accentText }: { accentText: string }) {
       }
       return true;
     });
-  }, [students, grade, classNum, keyword]);
+  }, [students, grade, classNum, keyword, courseMembers]);
 
   const selected = useMemo(
     () => students.find((s) => s.id === selectedId) ?? null,
@@ -138,6 +225,36 @@ export function StudentsExplorer({ accentText }: { accentText: string }) {
       ) : null}
 
       <Card className="mb-4 p-4">
+        <div className="mb-3">
+          <label
+            htmlFor="f-course"
+            className="block text-xs font-semibold text-slate-300"
+          >
+            수업
+          </label>
+          <select
+            id="f-course"
+            value={courseFilter}
+            onChange={(e) => {
+              setCourseFilter(e.target.value);
+              setSelectedId(null);
+            }}
+            disabled={courses.length === 0}
+            className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40 disabled:opacity-60 [color-scheme:dark]"
+          >
+            <option value="">전체 (수업으로 좁히지 않음)</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.school_year} {c.semester}학기 · {c.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-slate-500">
+            경제수학처럼 여러 학급에서 모인 선택 수업은 학년·반으로 좁힐 수 없습니다.
+            수업을 고르면 그 수강생만 남고, 이름 옆 성찰 건수와 아래 상세 기록도 그
+            수업의 학년도·학기·교과 범위로 좁혀집니다.
+          </p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-4">
           <div>
             <label
@@ -324,13 +441,16 @@ export function StudentsExplorer({ accentText }: { accentText: string }) {
               </div>
             </dl>
           </Card>
+          {/* 수업을 골랐으면 그 수업 범위의 기록만 — 다른 교과·학기 성찰이 섞이지 않게. */}
           <ActivityResponsesPanel
             studentId={selected.id}
             accentText={accentText}
+            scope={countScope}
           />
           <LegacyReflectionsSection
             studentId={selected.id}
             accentText={accentText}
+            scope={countScope}
           />
         </section>
       ) : (

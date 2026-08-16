@@ -11,6 +11,7 @@ import {
   SEBTEUK_MODELS,
   DEFAULT_SEBTEUK_MODEL,
 } from "@/lib/ai/sebteukPrompt";
+import { SEMESTER_LABEL, type Semester } from "@/lib/settings/semester";
 
 type StudentLite = {
   id: string;
@@ -18,7 +19,20 @@ type StudentLite = {
   class_number: number;
   student_number: number;
   student_login_id: string;
+  profile_id: string;
   profiles: { name: string | null } | null;
+};
+
+const STUDENT_COLUMNS =
+  "id, grade, class_number, student_number, student_login_id, profile_id, profiles!profile_id ( name )";
+
+// 내가 담당하는 개설 수업. 학년도·학기·교과·수강생이 여기 다 묶여 있다.
+type CourseLite = {
+  id: string;
+  school_year: number;
+  semester: number;
+  subject: string;
+  name: string;
 };
 
 type RecordRow = {
@@ -46,10 +60,12 @@ type Props = {
   teacherId: string | null;
   isAdmin: boolean;
   schoolYear: number;
+  currentSemester: Semester;
   accentText: string;
   enabledModels: string[];
 };
 
+// 선택 수업은 학급이 제각각이라 학반을 함께 보여준다.
 function studentLabel(s: StudentLite) {
   return `${s.grade}-${s.class_number} ${s.student_number}번 ${
     s.profiles?.name ?? ""
@@ -63,10 +79,12 @@ function formatDateTime(value: string) {
   });
 }
 
+// isAdmin 은 더 이상 분기에 쓰지 않는다 — 관리자는 courses RLS(admin ALL)로
+// 모든 수업이 그대로 조회되므로 목록 자체가 전체가 된다.
 export function SebteukWorkflow({
   teacherProfileId,
-  isAdmin,
   schoolYear,
+  currentSemester,
   accentText,
   enabledModels,
 }: Props) {
@@ -78,6 +96,16 @@ export function SebteukWorkflow({
     enabledModels.includes(DEFAULT_SEBTEUK_MODEL)
       ? DEFAULT_SEBTEUK_MODEL
       : enabledModels[0] ?? DEFAULT_SEBTEUK_MODEL;
+  // 작성 범위 = 내가 맡은 "수업" 하나.
+  // 수업 하나에 학년도·학기·교과·수강생이 모두 묶여 있으므로 축을 따로 고를 필요가 없다.
+  // (예전에는 학기와 교과를 각각 골라서 서로 겉돌았다.)
+  const [courses, setCourses] = useState<CourseLite[]>([]);
+  const [selCourseId, setSelCourseId] = useState<string>("");
+  const selCourse = courses.find((c) => c.id === selCourseId) ?? null;
+  const selYear = selCourse?.school_year ?? schoolYear;
+  const selSemester = (selCourse?.semester ?? currentSemester) as Semester;
+  const selSubject = selCourse?.subject ?? "";
+
   // 학생 선택
   const [students, setStudents] = useState<StudentLite[]>([]);
   const [selStudentId, setSelStudentId] = useState<string>("");
@@ -118,16 +146,19 @@ export function SebteukWorkflow({
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteError, setNoteError] = useState("");
 
-  // 옛 앱(Streamlit) 이식 데이터 — AI 입력에 합산할지 토글(default 포함).
+  // 옛 앱(Streamlit) 이식 데이터 — AI 입력에 합산할지 토글.
+  // subject 가 NULL 이면 '교과 무관' 자료 — 목록에는 보이되 기본 선택은 하지 않는다.
   type LegacyReflectionRow = {
     id: string;
     source_subject: string | null;
+    subject: string | null;
     activity_label: string;
     payload: Record<string, unknown>;
     legacy_created_at: string | null;
   };
   type SurveyResponseRow = {
     id: string;
+    subject: string | null;
     answers: Record<string, string>;
     legacy_created_at: string | null;
     surveys: { title: string | null; kind: string | null } | null;
@@ -138,61 +169,57 @@ export function SebteukWorkflow({
   const [selectedLegacyIds, setSelectedLegacyIds] = useState<Set<string>>(new Set());
   const [selectedSurveyIds, setSelectedSurveyIds] = useState<Set<string>>(new Set());
 
-  // 1) 학생 목록 (담당 학급)
+  // 0) 내가 맡은 수업 목록 (관리자는 전체). RLS 가 담당 수업만 반환한다.
+  const loadCourses = useCallback(async () => {
+    const { data } = await supabase
+      .from("courses")
+      .select("id, school_year, semester, subject, name")
+      .order("school_year", { ascending: false })
+      .order("semester", { ascending: false })
+      .order("subject")
+      .order("name");
+    const list = (data ?? []) as CourseLite[];
+    setCourses(list);
+    // 현재 학년도·학기 수업이 하나뿐이면 바로 고른다.
+    const current = list.filter(
+      (c) => c.school_year === schoolYear && c.semester === currentSemester
+    );
+    if (current.length === 1) setSelCourseId(current[0].id);
+  }, [schoolYear, currentSemester]);
+
+  useEffect(() => {
+    loadCourses();
+  }, [loadCourses]);
+
+  // 1) 학생 목록 = 그 수업의 수강생 명단.
+  //    아직 회원가입 안 한 편성(student_id IS NULL)은 기록이 있을 수 없으므로 제외한다.
   const loadStudents = useCallback(async () => {
-    setStudentsLoading(true);
-    if (isAdmin) {
-      const { data } = await supabase
-        .from("students")
-        .select(
-          "id, grade, class_number, student_number, student_login_id, profiles!profile_id ( name )"
-        )
-        .order("grade")
-        .order("class_number")
-        .order("student_number")
-        .limit(500);
-      setStudents((data ?? []) as unknown as StudentLite[]);
-    } else {
-      // 교사: teacher_permissions 의 학반에 해당하는 학생만
-      const { data: tRow } = await supabase
-        .from("teachers")
-        .select("id")
-        .eq("profile_id", teacherProfileId)
-        .maybeSingle();
-      if (tRow) {
-        const { data: perms } = await supabase
-          .from("teacher_permissions")
-          .select("grade, class_number")
-          .eq("teacher_id", (tRow as { id: string }).id);
-        const pairs = ((perms ?? []) as { grade: number; class_number: number }[])
-          .map((p) => `${p.grade}-${p.class_number}`);
-        if (pairs.length > 0) {
-          // 학년-반 OR 매칭
-          const grades = Array.from(new Set(pairs.map((p) => Number(p.split("-")[0]))));
-          const { data } = await supabase
-            .from("students")
-            .select(
-              "id, grade, class_number, student_number, student_login_id, profiles!profile_id ( name )"
-            )
-            .in("grade", grades)
-            .order("grade")
-            .order("class_number")
-            .order("student_number");
-          const all = ((data ?? []) as unknown as StudentLite[]);
-          // 학년+반 정확 매칭 필터
-          const allowed = new Set(pairs);
-          setStudents(
-            all.filter((s) => allowed.has(`${s.grade}-${s.class_number}`))
-          );
-        } else {
-          setStudents([]);
-        }
-      } else {
-        setStudents([]);
-      }
+    if (!selCourseId) {
+      setStudents([]);
+      return;
     }
+    setStudentsLoading(true);
+    const { data } = await supabase
+      .from("course_students")
+      .select(
+        "student_id, students!inner(" + STUDENT_COLUMNS + ")"
+      )
+      .eq("course_id", selCourseId)
+      .not("student_id", "is", null);
+
+    type Raw = { student_id: string; students: StudentLite };
+    const list = ((data ?? []) as unknown as Raw[])
+      .map((r) => r.students)
+      .filter(Boolean);
+    list.sort(
+      (a, b) =>
+        a.grade - b.grade ||
+        a.class_number - b.class_number ||
+        a.student_number - b.student_number
+    );
+    setStudents(list);
     setStudentsLoading(false);
-  }, [teacherProfileId, isAdmin]);
+  }, [selCourseId]);
 
   useEffect(() => {
     loadStudents();
@@ -215,7 +242,7 @@ export function SebteukWorkflow({
 
   // 2) 선택 학생의 활동/성찰 + 별표 + 드래프트 로드
   const loadStudentData = useCallback(async () => {
-    if (!selStudentId) {
+    if (!selStudentId || !selSubject) {
       setRecords([]);
       setMarkedIds(new Set());
       setDrafts([]);
@@ -233,6 +260,10 @@ export function SebteukWorkflow({
       return;
     }
     setRecordsLoading(true);
+    // 모든 기록 조회는 (학년도 · 학기 · 교과) 로 좁힌다 — 다른 교과·학기 성찰이
+    // 이 초안에 섞이지 않게 하는 핵심 지점.
+    // 옛 성찰·설문은 subject 가 NULL 인 '교과 무관' 자료가 있을 수 있어 함께 통과시키되,
+    // 아래에서 기본 선택은 하지 않는다.
     const [recRes, prioRes, draftRes, noteRes, legacyRes, surveyRes] = await Promise.all([
       supabase
         .from("activity_responses")
@@ -240,6 +271,9 @@ export function SebteukWorkflow({
           "id, subject, activity_slug, reflection_data, created_at, activities ( title )"
         )
         .eq("student_id", selStudentId)
+        .eq("school_year", selYear)
+        .eq("semester", selSemester)
+        .eq("subject", selSubject)
         .order("created_at", { ascending: false }),
       supabase
         .from("reflection_priority")
@@ -252,7 +286,9 @@ export function SebteukWorkflow({
           "id, student_id, body, ai_model, status, created_at, updated_at, finalized_at"
         )
         .eq("student_id", selStudentId)
-        .eq("school_year", schoolYear)
+        .eq("school_year", selYear)
+        .eq("semester", selSemester)
+        .eq("subject", selSubject)
         .order("updated_at", { ascending: false }),
       // 본인이 이 학생에 대해 적어둔 메모(있으면).
       supabase
@@ -264,16 +300,24 @@ export function SebteukWorkflow({
       // 옛 앱 이식 성찰 (legacy_reflections) — AI 세특 합산용
       supabase
         .from("legacy_reflections")
-        .select("id, source_subject, activity_label, payload, legacy_created_at")
+        .select(
+          "id, source_subject, subject, activity_label, payload, legacy_created_at"
+        )
         .eq("student_id", selStudentId)
+        .eq("school_year", selYear)
+        .eq("semester", selSemester)
+        .or(`subject.eq."${selSubject}",subject.is.null`)
         .order("legacy_created_at", { ascending: false, nullsFirst: false }),
       // 설문 응답 (survey_responses) — 본인 학생의 응답 + surveys 메타 join
       supabase
         .from("survey_responses")
         .select(
-          "id, answers, legacy_created_at, surveys(title, kind)"
+          "id, subject, answers, legacy_created_at, surveys(title, kind)"
         )
         .eq("student_id", selStudentId)
+        .eq("school_year", selYear)
+        .eq("semester", selSemester)
+        .or(`subject.eq."${selSubject}",subject.is.null`)
         .order("created_at", { ascending: false }),
     ]);
 
@@ -302,12 +346,17 @@ export function SebteukWorkflow({
     const sRows = (surveyRes.data ?? []) as unknown as SurveyResponseRow[];
     setLegacyRecords(lRows);
     setSurveyRecords(sRows);
-    setSelectedLegacyIds(new Set(lRows.map((r) => r.id)));
-    setSelectedSurveyIds(new Set(sRows.map((r) => r.id)));
+    // 이 교과의 기록만 기본 선택 — 교과 무관(NULL) 자료는 교사가 직접 체크.
+    setSelectedLegacyIds(
+      new Set(lRows.filter((r) => r.subject === selSubject).map((r) => r.id))
+    );
+    setSelectedSurveyIds(
+      new Set(sRows.filter((r) => r.subject === selSubject).map((r) => r.id))
+    );
     setRecordsLoading(false);
     setSavedDraftId(null);
     setSaveOk(false);
-  }, [selStudentId, schoolYear, teacherProfileId]);
+  }, [selStudentId, selYear, selSemester, selSubject, teacherProfileId]);
 
   useEffect(() => {
     loadStudentData();
@@ -451,7 +500,8 @@ export function SebteukWorkflow({
           teacherNote: noteText.trim(),
           targetBytes,
           model,
-          subject: "수학",
+          // 프롬프트의 "과목:" 줄 — 선택한 교과를 그대로 넘긴다(기존엔 '수학' 고정).
+          subject: selSubject,
         }),
       });
       const data = (await res.json()) as {
@@ -496,7 +546,9 @@ export function SebteukWorkflow({
         .insert({
           teacher_id: teacherProfileId,
           student_id: selStudentId,
-          school_year: schoolYear,
+          school_year: selYear,
+          semester: selSemester,
+          subject: selSubject,
           body: body.trim(),
           ai_model: model,
           status: "draft",
@@ -543,18 +595,64 @@ export function SebteukWorkflow({
 
   return (
     <div className="space-y-6">
+      {/* 작성 범위 — 내 수업 하나 */}
+      <section className="rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.04] p-5 sm:p-6">
+        <h2 className="text-base font-bold">1. 수업 선택</h2>
+        <p className="mt-1 text-xs text-slate-400">
+          세특은 <span className="font-semibold text-cyan-200">수업 하나</span> 단위로
+          작성합니다. 수업을 고르면 학년도·학기·교과·수강생이 함께 정해지고, 그
+          범위의 기록만 아래에 나타납니다. 다른 교과·학기 성찰은 섞이지 않습니다.
+        </p>
+        <div className="mt-3">
+          <label htmlFor="sel-course" className="text-xs font-semibold text-slate-300">
+            내 수업 ({courses.length}개)
+          </label>
+          <select
+            id="sel-course"
+            value={selCourseId}
+            onChange={(e) => {
+              setSelCourseId(e.target.value);
+              setSelStudentId("");
+            }}
+            disabled={courses.length === 0}
+            className="mt-1 w-full rounded border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-60 [color-scheme:dark]"
+          >
+            <option value="">— 수업 선택 —</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.school_year} {c.semester}학기 · {c.name}
+              </option>
+            ))}
+          </select>
+          {courses.length === 0 ? (
+            <p className="mt-1 text-[11px] text-amber-200">
+              담당 수업이 없습니다. 관리자에게 수업 배정을 요청하세요. (관리자
+              화면: 수업 관리 › 담당 교사)
+            </p>
+          ) : selCourse ? (
+            <p className="mt-2 text-[11px] text-slate-400">
+              {selCourse.school_year}학년도 {SEMESTER_LABEL[selSemester]} ·{" "}
+              <span className={accentText}>{selCourse.subject}</span> · 수강생{" "}
+              {students.length}명
+            </p>
+          ) : null}
+        </div>
+      </section>
+
       {/* 학생 선택 */}
       <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
-        <h2 className="text-base font-bold">1. 학생 선택</h2>
+        <h2 className="text-base font-bold">2. 학생 선택</h2>
         <div className="mt-3">
           <label htmlFor="sel-student" className="text-xs font-semibold text-slate-300">
-            담당 학급 학생 ({students.length}명)
+            {selCourse
+              ? `${selCourse.name} 수강생 (${students.length}명)`
+              : "수업을 먼저 선택하세요"}
           </label>
           <select
             id="sel-student"
             value={selStudentId}
             onChange={(e) => setSelStudentId(e.target.value)}
-            disabled={studentsLoading || students.length === 0}
+            disabled={!selCourseId || studentsLoading || students.length === 0}
             className="mt-1 w-full rounded border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-60"
           >
             <option value="">— 학생 선택 —</option>
@@ -616,7 +714,8 @@ export function SebteukWorkflow({
         <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-bold">
-              2. {selStudent.profiles?.name ?? ""}의 활동/성찰 ({records.length}건)
+              3. {selStudent.profiles?.name ?? ""}의 {selSubject} 활동/성찰 (
+              {records.length}건)
               {recordsLoading ? <span className="ml-2 text-xs text-slate-400">로딩 중...</span> : null}
             </h2>
             <span className="text-xs text-slate-400">
@@ -624,6 +723,7 @@ export function SebteukWorkflow({
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-400">
+            {selYear}학년도 {SEMESTER_LABEL[selSemester]} · {selSubject} 범위입니다.
             ★ = 학생이 생기부 후보로 체크한 항목 (기본 선택). 체크박스로 AI에
             보낼 성찰을 직접 고르세요.
           </p>
@@ -728,7 +828,7 @@ export function SebteukWorkflow({
         <section className="rounded-2xl border border-amber-300/25 bg-amber-300/[0.04] p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-bold">
-              2-1. 옛 앱 성찰 ({legacyRecords.length}건)
+              3-1. 옛 앱 성찰 ({legacyRecords.length}건)
             </h2>
             <span className="text-xs text-slate-400">
               선택: <span className="text-amber-200">{selectedLegacyIds.size}</span>건
@@ -793,11 +893,18 @@ export function SebteukWorkflow({
                             : ""}
                         </span>
                       </div>
-                      {r.source_subject ? (
-                        <span className="mt-1 inline-block rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
-                          {r.source_subject}
-                        </span>
-                      ) : null}
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {r.source_subject ? (
+                          <span className="inline-block rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
+                            {r.source_subject}
+                          </span>
+                        ) : null}
+                        {r.subject === null ? (
+                          <span className="inline-block rounded bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
+                            교과 무관 · 기본 미선택
+                          </span>
+                        ) : null}
+                      </div>
                       {/* payload 의미 있는 답변 미리보기(최대 3 줄) — 진짜 질문 매핑 적용 */}
                       <div className="mt-2 space-y-0.5 text-[11px] text-slate-300">
                         {Object.entries(r.payload)
@@ -838,7 +945,7 @@ export function SebteukWorkflow({
         <section className="rounded-2xl border border-violet-300/25 bg-violet-300/[0.04] p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-bold">
-              2-2. 사전/사후 설문 ({surveyRecords.length}건)
+              3-2. 사전/사후 설문 ({surveyRecords.length}건)
             </h2>
             <span className="text-xs text-slate-400">
               선택: <span className="text-violet-200">{selectedSurveyIds.size}</span>건
@@ -887,6 +994,11 @@ export function SebteukWorkflow({
                       </div>
                       <p className="mt-1 text-[11px] text-slate-400">
                         답변 {Object.keys(r.answers).length}개
+                        {r.subject === null ? (
+                          <span className="ml-2 rounded bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
+                            교과 무관 · 기본 미선택
+                          </span>
+                        ) : null}
                       </p>
                     </div>
                   </label>
@@ -900,7 +1012,7 @@ export function SebteukWorkflow({
       {/* 생성 컨트롤 */}
       {selStudent ? (
         <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
-          <h2 className="text-base font-bold">3. AI 초안 생성</h2>
+          <h2 className="text-base font-bold">4. AI 초안 생성</h2>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor="sel-model" className="text-xs font-semibold text-slate-300">
@@ -974,7 +1086,7 @@ export function SebteukWorkflow({
       {/* 본문 편집 + 저장 */}
       {selStudent ? (
         <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
-          <h2 className="text-base font-bold">4. 검토·편집 후 저장</h2>
+          <h2 className="text-base font-bold">5. 검토·편집 후 저장</h2>
           <p className="mt-1 text-xs text-slate-400">
             AI 본문을 직접 다듬어 NEIS 에 그대로 옮길 수 있는 형태로 만든 뒤
             저장하세요.

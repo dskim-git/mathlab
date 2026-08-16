@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { REFLECTION_LABELS } from "@/lib/legacy/reflectionLabels";
+import type { RecordScope } from "./ActivityResponsesPanel";
 
 type LegacyRow = {
   id: string;
@@ -21,23 +22,40 @@ type LegacyRow = {
 export function LegacyReflectionsSection({
   studentId,
   accentText,
+  scope,
 }: {
   studentId: string | null;
   accentText: string;
+  /** 교사가 수업을 고르고 볼 때의 (학년도·학기·교과) 범위. 없으면 전체. */
+  scope?: RecordScope | null;
 }) {
   const [rows, setRows] = useState<LegacyRow[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const scopeYear = scope?.school_year ?? null;
+  const scopeSemester = scope?.semester ?? null;
+  const scopeSubject = scope?.subject ?? null;
 
   useEffect(() => {
     if (!studentId) return;
     let active = true;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      let query = supabase
         .from("legacy_reflections")
         .select("id, source_subject, activity_label, payload, legacy_created_at")
-        .eq("student_id", studentId)
-        .order("legacy_created_at", { ascending: false, nullsFirst: false });
+        .eq("student_id", studentId);
+      if (scopeYear !== null && scopeSemester !== null && scopeSubject) {
+        // subject 가 NULL 인 '교과 무관' 옛 자료는 어느 수업에서 보든 함께 보여준다.
+        query = query
+          .eq("school_year", scopeYear)
+          .eq("semester", scopeSemester)
+          .or(`subject.eq."${scopeSubject}",subject.is.null`);
+      }
+      const { data } = await query.order("legacy_created_at", {
+        ascending: false,
+        nullsFirst: false,
+      });
       if (!active) return;
       setRows((data ?? []) as LegacyRow[]);
       setLoading(false);
@@ -45,7 +63,7 @@ export function LegacyReflectionsSection({
     return () => {
       active = false;
     };
-  }, [studentId]);
+  }, [studentId, scopeYear, scopeSemester, scopeSubject]);
 
   if (!studentId) return null;
   if (loading) {

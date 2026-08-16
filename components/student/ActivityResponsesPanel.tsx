@@ -24,15 +24,31 @@ function formatDateTime(value: string) {
   });
 }
 
+/**
+ * 조회 범위. 교사가 수업을 고르고 볼 때는 그 (학년도·학기·교과) 로 좁힌다.
+ * 학생 본인 화면처럼 범위가 없으면 전체를 보여준다.
+ */
+export type RecordScope = {
+  school_year: number;
+  semester: number;
+  subject: string;
+};
+
 export function ActivityResponsesPanel({
   studentId,
   accentText,
+  scope,
 }: {
   studentId: string | null;
   accentText: string;
+  scope?: RecordScope | null;
 }) {
   const [rows, setRows] = useState<ResponseRow[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const scopeYear = scope?.school_year ?? null;
+  const scopeSemester = scope?.semester ?? null;
+  const scopeSubject = scope?.subject ?? null;
 
   useEffect(() => {
     if (!studentId) {
@@ -42,13 +58,19 @@ export function ActivityResponsesPanel({
     let active = true;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      let query = supabase
         .from("activity_responses")
         .select(
           "id, subject, activity_slug, reflection_data, response_data, created_at, activities(title)"
         )
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false });
+        .eq("student_id", studentId);
+      if (scopeYear !== null && scopeSemester !== null && scopeSubject) {
+        query = query
+          .eq("school_year", scopeYear)
+          .eq("semester", scopeSemester)
+          .eq("subject", scopeSubject);
+      }
+      const { data } = await query.order("created_at", { ascending: false });
       if (!active) return;
       setRows((data ?? []) as unknown as ResponseRow[]);
       setLoading(false);
@@ -56,7 +78,7 @@ export function ActivityResponsesPanel({
     return () => {
       active = false;
     };
-  }, [studentId]);
+  }, [studentId, scopeYear, scopeSemester, scopeSubject]);
 
   if (!studentId) return null;
   if (loading)
@@ -70,13 +92,17 @@ export function ActivityResponsesPanel({
             🆕 현재 앱 성찰
           </h2>
           <p className="mt-1 text-xs text-slate-400">
-            새로 만든 웹앱에서 작성한 성찰 {rows.length}건
+            {scope
+              ? `${scope.school_year}학년도 ${scope.semester}학기 · ${scope.subject} 성찰 ${rows.length}건`
+              : `새로 만든 웹앱에서 작성한 성찰 ${rows.length}건`}
           </p>
         </div>
       </div>
       {rows.length === 0 ? (
         <p className="mt-3 text-sm text-slate-400">
-          아직 새 앱에서 작성한 성찰이 없습니다.
+          {scope
+            ? "이 수업 범위에서 작성한 성찰이 없습니다."
+            : "아직 새 앱에서 작성한 성찰이 없습니다."}
         </p>
       ) : (
         <div className="mt-4 space-y-2">

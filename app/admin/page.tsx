@@ -252,8 +252,15 @@ export default function AdminHomePage() {
         />
       </div>
 
-      {/* 3행 — 학생·그룹 (3) */}
+      {/* 3행 — 학생·그룹 (4) */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <DashboardCard
+          icon="🏫"
+          title="수업 관리"
+          description="학년도·학기·교과별 수강생"
+          href="/admin/courses"
+          hoverBorderClass={theme.hoverBorder}
+        />
         <DashboardCard
           icon="🔐"
           title="교과 권한"

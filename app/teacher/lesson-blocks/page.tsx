@@ -17,7 +17,8 @@ export default async function TeacherLessonBlocksPage() {
   const { supabase, user, profile } = await requireTeacher();
   const isAdmin = profile.role === "admin";
 
-  // 담당 교과 — 관리자=전체, 교사=teacher_permissions 의 distinct subject.
+  // 담당 교과 — 관리자=전체, 교사=담당 수업(courses)의 교과 ∪ teacher_permissions.
+  // 수업만 배정된 교사(선택 과목 담당 등)도 여기서 교과가 잡혀야 한다.
   let subjects: string[] = [];
   if (isAdmin) {
     const { data } = await supabase
@@ -26,6 +27,14 @@ export default async function TeacherLessonBlocksPage() {
       .order("order_index");
     subjects = ((data ?? []) as Array<{ name: string }>).map((s) => s.name);
   } else {
+    const set = new Set<string>();
+
+    // courses RLS 가 담당 수업만 반환한다.
+    const { data: courseRows } = await supabase.from("courses").select("subject");
+    ((courseRows ?? []) as Array<{ subject: string }>).forEach((c) =>
+      set.add(c.subject)
+    );
+
     const { data: teacherRow } = await supabase
       .from("teachers")
       .select("id")
@@ -36,19 +45,16 @@ export default async function TeacherLessonBlocksPage() {
         .from("teacher_permissions")
         .select("subject")
         .eq("teacher_id", (teacherRow as { id: string }).id);
-      const set = new Set(
-        ((data ?? []) as TeacherPermissionRow[]).map((r) => r.subject)
-      );
-      if (set.size > 0) {
-        const { data: ordered } = await supabase
-          .from("subjects")
-          .select("name, order_index")
-          .in("name", Array.from(set))
-          .order("order_index");
-        subjects = ((ordered ?? []) as Array<{ name: string }>).map(
-          (s) => s.name
-        );
-      }
+      ((data ?? []) as TeacherPermissionRow[]).forEach((r) => set.add(r.subject));
+    }
+
+    if (set.size > 0) {
+      const { data: ordered } = await supabase
+        .from("subjects")
+        .select("name, order_index")
+        .in("name", Array.from(set))
+        .order("order_index");
+      subjects = ((ordered ?? []) as Array<{ name: string }>).map((s) => s.name);
     }
   }
 

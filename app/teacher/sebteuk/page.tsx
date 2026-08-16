@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
+import { getCurrentSemester } from "@/lib/settings/semester";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 import {
   getEnabledSebteukModels,
@@ -15,6 +16,7 @@ export default async function TeacherSebteukPage() {
   const isAdmin = profile.role === "admin";
   const theme = getRoleTheme("teacher");
   const schoolYear = await getCurrentSchoolYear();
+  const semester = await getCurrentSemester();
   // 관리자: 글로벌 그대로 / 교사: 글로벌 ∩ 본인 허용
   const enabledModels = isAdmin
     ? await getEnabledSebteukModels(supabase)
@@ -85,6 +87,7 @@ export default async function TeacherSebteukPage() {
         teacherId={teacherId}
         isAdmin={isAdmin}
         schoolYear={schoolYear}
+        currentSemester={semester}
         accentText={theme.accentText}
         enabledModels={enabledModels}
       />

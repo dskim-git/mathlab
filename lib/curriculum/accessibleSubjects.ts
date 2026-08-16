@@ -64,7 +64,17 @@ async function getAccessibleSubjectNames(
     .select("subject");
   const groupNames = (groupSubjects ?? []).map((r) => (r as { subject: string }).subject);
 
-  return distinct([...base, ...groupNames]);
+  // 개설 수업(courses) 에 배정되어 있으면 그 교과도 합산.
+  // courses RLS 는 "담당 교사 OR 수강생" 만 반환하므로 별도 필터가 필요 없다.
+  // 교사·학생·일반인 모두 같은 경로 — 수업 배정이 곧 교과 접근 권한이다.
+  const { data: courseSubjects } = await supabase
+    .from("courses")
+    .select("subject");
+  const courseNames = (courseSubjects ?? []).map(
+    (r) => (r as { subject: string }).subject
+  );
+
+  return distinct([...base, ...groupNames, ...courseNames]);
 }
 
 // 접근 교과를 교육과정 순서(order_index)로 정렬해 반환.

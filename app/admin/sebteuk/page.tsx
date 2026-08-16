@@ -6,6 +6,7 @@ export const revalidate = 0;
 
 import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
+import { getCurrentSemester } from "@/lib/settings/semester";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 import { getEnabledSebteukModels } from "@/lib/ai/enabledModels";
 import { SebteukWorkflow } from "@/components/teacher/sebteuk/SebteukWorkflow";
@@ -17,6 +18,7 @@ export default async function AdminSebteukPage() {
   const isAdmin = profile.role === "admin";
   const theme = getRoleTheme("admin");
   const schoolYear = await getCurrentSchoolYear();
+  const semester = await getCurrentSemester();
   const enabledModels = await getEnabledSebteukModels(supabase);
 
   if (!isAdmin) {
@@ -64,6 +66,7 @@ export default async function AdminSebteukPage() {
         teacherId={null}
         isAdmin={true}
         schoolYear={schoolYear}
+        currentSemester={semester}
         accentText={theme.accentText}
         enabledModels={enabledModels}
       />
