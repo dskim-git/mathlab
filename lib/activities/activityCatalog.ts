@@ -121,7 +121,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "1-1-2 두 직선의 평행과 수직",
-    slugs: ["common2/mini/line_equation_lab"],
+    slugs: ["common2/mini/line_equation_lab", "common2/mini/two_lines_relation_lab"],
   },
   {
     subject: "경제수학",

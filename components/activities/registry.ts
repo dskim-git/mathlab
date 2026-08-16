@@ -68,6 +68,7 @@ import CentroidLab from "./common2/1-1-1-segment-division/centroid-lab/CentroidL
 import BlockStackingLab from "./common2/1-1-1-segment-division/block-stacking-lab/BlockStackingLab";
 // [1] 도형의 방정식 — (2) 직선의 방정식 · 두 직선의 평행과 수직
 import LineEquationLab from "./common2/1-1-2-parallel-perpendicular/line-equation-lab/LineEquationLab";
+import TwoLinesRelationLab from "./common2/1-1-2-parallel-perpendicular/two-lines-relation-lab/TwoLinesRelationLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -288,6 +289,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/centroid_lab": CentroidLab,
   "common2/mini/block_stacking_lab": BlockStackingLab,
   "common2/mini/line_equation_lab": LineEquationLab,
+  "common2/mini/two_lines_relation_lab": TwoLinesRelationLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
