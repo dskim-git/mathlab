@@ -508,7 +508,7 @@ function EqRow({ step, tex, tone }: { step: string; tex: string; tone: "slate" |
   return (
     <div className="flex items-center gap-2">
       <span className={"w-11 shrink-0 rounded-md border px-1 py-0.5 text-center text-[10px] font-bold " + cls[tone]}>{step}</span>
-      <div className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-black/25 px-3 py-1.5 text-slate-100">
+      <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-1.5 text-slate-100">
         <Katex expr={tex} />
       </div>
     </div>
@@ -651,7 +651,7 @@ function PsCard({ p, onSolved }: { p: PsProblem; onSolved: () => void }) {
         {done ? (
           <div className="mt-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 px-4 py-3">
             <p className="text-sm font-bold text-emerald-100">{gaveUp && !okN ? "📖 풀이" : "🎉 정답!"}</p>
-            <div className="mt-1 overflow-x-auto text-slate-100">
+            <div className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-slate-100">
               <Katex expr={`${pointSlopeTidyTex(p.x1, p.y1, p.m)} \\;\\Rightarrow\\; ${lineTex(p.m, b)}`} display />
             </div>
             <p className="mt-1 text-xs leading-5 text-emerald-100/90">{p.explain}</p>
@@ -833,7 +833,7 @@ function SpecialTab() {
                   <Katex expr="y - y_1 = m(x - x_1)" />
                 </div>
                 <p className="text-center text-xs text-rose-200">↓ 대신에</p>
-                <div className="overflow-x-auto rounded-lg border border-rose-400/45 bg-rose-400/15 px-3 py-2 text-rose-50">
+                <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-rose-400/45 bg-rose-400/15 px-3 py-2 text-rose-50">
                   <Katex expr={`x = ${a.x}`} display />
                 </div>
               </div>
@@ -904,7 +904,7 @@ function SummaryCard({
         {title}
       </p>
       <p className="mt-0.5 text-xs text-slate-300">{slope}</p>
-      <div className="mt-2 overflow-x-auto rounded-lg bg-black/25 px-3 py-1.5 text-slate-50">
+      <div className="mt-2 overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-1.5 text-slate-50">
         <Katex expr={eq} />
       </div>
       <p className="mt-1 text-[11px] text-slate-400">{note}</p>
@@ -1089,7 +1089,7 @@ function TwoPointTab() {
               <div className="mt-2 space-y-2">
                 <EqRow step="기울기" tex={`m = \\frac{${b.y} - (${a.y})}{${b.x} - (${a.x})} = \\frac{${dy}}{0}`} tone="cyan" />
                 <p className="text-center text-xs font-bold text-rose-200">↑ 0으로 나눌 수 없어요 — 기울기를 정할 수 없습니다</p>
-                <div className="overflow-x-auto rounded-lg border border-rose-400/45 bg-rose-400/15 px-3 py-2 text-rose-50">
+                <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-rose-400/45 bg-rose-400/15 px-3 py-2 text-rose-50">
                   <Katex expr={`x = ${a.x}`} display />
                 </div>
               </div>
@@ -1345,7 +1345,7 @@ function StarCard({
           {shown ? (
             <div className="rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 px-4 py-3">
               <p className="text-sm font-bold text-emerald-100">{cleared ? "🎉 별자리 완성!" : "📖 풀이"}</p>
-              <div className="mt-1 overflow-x-auto text-slate-100">
+              <div className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-slate-100">
                 <Katex expr={lineSpecTex(spec)} display />
               </div>
               <p className="mt-1 text-xs leading-5 text-emerald-100/90">{r.explain}</p>
