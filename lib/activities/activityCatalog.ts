@@ -146,7 +146,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "1-2-3 연금",
-    slugs: ["economics/mini/pension_lab"],
+    slugs: ["economics/mini/pension_lab", "economics/mini/budget_life_lab"],
   },
   {
     subject: "확률과통계",
