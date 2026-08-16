@@ -1,13 +1,17 @@
 "use client";
 
-// 수업 그룹 관리 페이지 — 정규 학년·반과 별도로 운영되는 수업 단위 (영재 수업 등).
+// 활동 그룹 관리 — 빙고 방(EuclideaBingo) 처럼 활동 안에서 쓰이는 사람 묶음.
+//
+// 주의: "수업 편성" 은 여기가 아니라 /admin/courses 다.
+//   수업(courses) 도입 전에는 이 그룹이 선택 수업 편성까지 겸했지만, 지금은
+//   담당 교사·수강생의 정본이 courses 로 옮겨졌다. 이 화면은 활동용으로 남는다.
+//   (bingo_rooms.group_id + lib/groups/permissions.ts 가 그룹 멤버십을 계속 참조한다.)
 //
 // 한 페이지 안에서:
 //   - 좌측: 그룹 목록 + 새 그룹 만들기
 //   - 우측: 선택된 그룹의 이름/비고 편집 + 멤버 관리 + 교과 권한
 //
 // RLS 는 study_groups·members·subjects 모두 관리자 ALL 허용 — 이 페이지는 admin 전용.
-// 후속 라운드(B/C) 에서 학생/교사 화면에 그룹 권한 통합 + 빙고 방장 판정 통합.
 
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -115,11 +119,20 @@ export default function AdminGroupsPage() {
     <main className="px-6 py-10">
       <div className="mx-auto max-w-6xl space-y-6">
         <header>
-          <p className="text-sm font-semibold text-cyan-300">관리자 · 수업 그룹</p>
-          <h1 className="mt-2 text-3xl font-bold">수업 그룹 관리</h1>
+          <p className="text-sm font-semibold text-violet-300">관리자 · 활동 그룹</p>
+          <h1 className="mt-2 text-3xl font-bold">활동 그룹 관리</h1>
           <p className="mt-2 text-sm text-slate-400">
-            정규 학년·반과 별도로 운영되는 수업 단위입니다. 그룹에 회원을 넣고 역할(교사·학생) 과 접근 교과를 설정하세요.
+            빙고 방처럼 활동 안에서 쓰이는 사람 묶음입니다. 그룹에 회원을 넣고
+            역할(교사·학생) 과 접근 교과를 설정하세요.
           </p>
+          <div className="mt-3 rounded-xl border border-amber-300/30 bg-amber-300/5 p-3 text-xs text-amber-100">
+            <b>수업 편성은 여기가 아닙니다.</b> 담당 교사·수강생 배정은{" "}
+            <a href="/admin/courses" className="font-semibold underline">
+              수업 관리
+            </a>
+            에서 하세요. 이미 만들어 둔 그룹은 수업 관리의 &ldquo;수업 그룹에서
+            가져오기&rdquo; 로 한 번에 옮길 수 있습니다.
+          </div>
         </header>
 
         {error ? <Alert tone="error">{error}</Alert> : null}

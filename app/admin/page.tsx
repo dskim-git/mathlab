@@ -263,8 +263,8 @@ export default function AdminHomePage() {
         />
         <DashboardCard
           icon="🔐"
-          title="교과 권한"
-          description="교사·학생·일반인 접근"
+          title="교과·수업 권한"
+          description="권한 설정 진입점"
           href="/admin/access"
           hoverBorderClass={theme.hoverBorder}
         />
@@ -277,8 +277,8 @@ export default function AdminHomePage() {
         />
         <DashboardCard
           icon="👨‍👩‍👧"
-          title="수업 그룹"
-          description="영재 등 별도 수업 단위"
+          title="활동 그룹"
+          description="빙고 방 등 활동용 묶음"
           href="/admin/groups"
           hoverBorderClass={theme.hoverBorder}
         />
