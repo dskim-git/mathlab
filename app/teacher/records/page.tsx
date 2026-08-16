@@ -49,17 +49,35 @@ export default async function TeacherRecordsPage({
   const { supabase, profile } = await requireTeacher();
 
   // 담당 학급 권한을 RLS로 조회(교사=본인, 관리자=전체) → 픽커에 props로 전달.
-  const { data: permissionRows } = await supabase
-    .from("teacher_permissions")
-    .select("subject, grade, class_number")
-    .order("grade", { ascending: true })
-    .order("class_number", { ascending: true });
+  // 개설 수업(courses) 중 학년·반이 지정된 정규 수업도 합산한다 — 수업만 배정된
+  // 교사도 픽커가 비지 않도록. 학급이 없는 선택 수업(경제수학 등)은 이 화면의
+  // 조회 단위(학년·반) 로 표현할 수 없어 제외되며, 그런 수업은 학생 활동 기록
+  // 화면(/teacher/students)의 수업 필터로 본다.
+  const [permRes, courseRes] = await Promise.all([
+    supabase
+      .from("teacher_permissions")
+      .select("subject, grade, class_number")
+      .order("grade", { ascending: true })
+      .order("class_number", { ascending: true }),
+    supabase
+      .from("courses")
+      .select("subject, grade, class_number")
+      .not("grade", "is", null)
+      .not("class_number", "is", null),
+  ]);
 
-  const permissions = (permissionRows ?? []) as {
-    subject: string | null;
-    grade: number;
-    class_number: number;
-  }[];
+  const permissions = [
+    ...((permRes.data ?? []) as {
+      subject: string | null;
+      grade: number;
+      class_number: number;
+    }[]),
+    ...((courseRes.data ?? []) as {
+      subject: string | null;
+      grade: number;
+      class_number: number;
+    }[]),
+  ];
 
   let records: TeacherRecordRowData[] = [];
   let loadError = "";

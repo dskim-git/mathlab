@@ -15,10 +15,19 @@ type TeacherPermissionRow = {
   subject: string;
 };
 
-type ResponseClassRow = {
-  grade: number | null;
-  class_number: number | null;
+type ResponseScopeRow = {
+  student_id: string | null;
   subject: string | null;
+  school_year: number | null;
+  semester: number | null;
+};
+
+type MyCourse = {
+  id: string;
+  school_year: number;
+  semester: number;
+  subject: string;
+  name: string;
 };
 
 type RecentResponseRow = {
@@ -66,7 +75,7 @@ export default async function TeacherHomePage() {
 
   // 누적 응답: RLS 가 본인 권한 행만 반환하므로 그대로 count.
   // (이전엔 본인 세션 ID 안의 응답만 카운트해서 /learn 의 세션 없는 응답이 누락됐었음.)
-  // 학급별 표를 위해 (grade, class_number, subject) 행도 같이 가져와 클라이언트에서 집계.
+  // 수업별 표를 위해 (student_id, subject, school_year, semester) 행도 같이 가져와 집계.
   const [responsesCountRes, responseRowsRes, recentResponsesRes, permRes] =
     await Promise.all([
       supabase
@@ -74,7 +83,7 @@ export default async function TeacherHomePage() {
         .select("id", { count: "exact", head: true }),
       supabase
         .from("activity_responses")
-        .select("grade, class_number, subject"),
+        .select("student_id, subject, school_year, semester"),
       supabase
         .from("activity_responses")
         .select(
@@ -86,44 +95,49 @@ export default async function TeacherHomePage() {
     ]);
 
   const responsesCount = (responsesCountRes as { count: number }).count ?? 0;
-  const responseRows = (responseRowsRes.data ?? []) as ResponseClassRow[];
+  const responseRows = (responseRowsRes.data ?? []) as ResponseScopeRow[];
   const recentResponses = (recentResponsesRes.data ?? []) as unknown as RecentResponseRow[];
   const permissions = (permRes.data ?? []) as TeacherPermissionRow[];
 
-  // 학급(과목)별 응답 수 집계 — teacher_permissions 가 있는 학급은 응답 0 이어도 표시.
-  // 관리자는 보이는 데이터 자체에서 distinct grade/class/subject 추출(권한 무관).
-  type ClassKey = { grade: number; class_number: number; subject: string };
-  const countMap = new Map<string, number>();
-  for (const r of responseRows) {
-    if (r.grade == null || r.class_number == null || !r.subject) continue;
-    const key = `${r.grade}-${r.class_number}-${r.subject}`;
-    countMap.set(key, (countMap.get(key) ?? 0) + 1);
+  // 내가 담당하는 개설 수업 + 그 수강생 — 표의 단위가 "학급" 에서 "수업" 으로 바뀌었다.
+  // 경제수학처럼 여러 학급에서 모인 선택 수업은 학년·반으로 셀 수 없기 때문.
+  const { data: courseRows } = await supabase
+    .from("courses")
+    .select("id, school_year, semester, subject, name")
+    .order("school_year", { ascending: false })
+    .order("semester", { ascending: false })
+    .order("subject")
+    .order("name");
+  const myCourses = (courseRows ?? []) as MyCourse[];
+
+  const { data: enrollRows } = await supabase
+    .from("course_students")
+    .select("course_id, student_id")
+    .not("student_id", "is", null);
+  const studentsByCourse = new Map<string, Set<string>>();
+  for (const r of (enrollRows ?? []) as {
+    course_id: string;
+    student_id: string;
+  }[]) {
+    const set = studentsByCourse.get(r.course_id) ?? new Set<string>();
+    set.add(r.student_id);
+    studentsByCourse.set(r.course_id, set);
   }
-  let classBuckets: ClassKey[] = [];
-  if (isAdmin) {
-    const seen = new Set<string>();
-    for (const r of responseRows) {
-      if (r.grade == null || r.class_number == null || !r.subject) continue;
-      const key = `${r.grade}-${r.class_number}-${r.subject}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      classBuckets.push({
-        grade: r.grade,
-        class_number: r.class_number,
-        subject: r.subject,
-      });
+
+  // 수업별 응답 수 — (수강생 ∧ 교과 ∧ 학년도 ∧ 학기) 가 모두 맞는 응답만 센다.
+  const courseBuckets = myCourses.map((c) => {
+    const roster = studentsByCourse.get(c.id);
+    let count = 0;
+    if (roster && roster.size > 0) {
+      for (const r of responseRows) {
+        if (!r.student_id || !roster.has(r.student_id)) continue;
+        if (r.subject !== c.subject) continue;
+        if (r.school_year !== c.school_year) continue;
+        if (r.semester !== c.semester) continue;
+        count += 1;
+      }
     }
-  } else {
-    classBuckets = permissions.map((p) => ({
-      grade: p.grade,
-      class_number: p.class_number,
-      subject: p.subject,
-    }));
-  }
-  classBuckets.sort((a, b) => {
-    if (a.grade !== b.grade) return a.grade - b.grade;
-    if (a.class_number !== b.class_number) return a.class_number - b.class_number;
-    return a.subject.localeCompare(b.subject, "ko");
+    return { course: c, count, students: roster?.size ?? 0 };
   });
 
   // Hero — 담당 교과 칩
@@ -144,6 +158,17 @@ export default async function TeacherHomePage() {
       .select("subject");
     ((granted ?? []) as Array<{ subject: string }>).forEach((g) =>
       wanted.add(g.subject)
+    );
+    // 담당 수업 그룹(선택 수업 등)의 교과도 칩에 포함 (RLS 가 자기 그룹만 반환).
+    const { data: groupSubjects } = await supabase
+      .from("study_group_subjects")
+      .select("subject");
+    ((groupSubjects ?? []) as Array<{ subject: string }>).forEach((g) =>
+      wanted.add(g.subject)
+    );
+    // 개설 수업(courses) 담당 교과 — 지금은 이쪽이 담당의 정본이다.
+    ((myCourses ?? []) as Array<{ subject: string }>).forEach((c) =>
+      wanted.add(c.subject)
     );
     if (wanted.size > 0) {
       const { data } = await supabase
@@ -218,7 +243,7 @@ export default async function TeacherHomePage() {
         )}
       </section>
 
-      {/* 누적 응답 KPI + 학급(과목)별 응답 표 */}
+      {/* 누적 응답 KPI + 수업별 응답 표 */}
       <div className="mb-4 grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-[200px_1fr]">
         <KpiCard
           label="누적 응답"
@@ -229,49 +254,61 @@ export default async function TeacherHomePage() {
         />
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
           <p className="text-xs font-semibold text-slate-400">
-            {isAdmin ? "학급(과목)별 응답" : "담당 학급(과목)별 응답"}
+            {isAdmin ? "수업별 응답" : "담당 수업별 응답"}
           </p>
-          {classBuckets.length === 0 ? (
+          {courseBuckets.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">
-              {isAdmin ? "데이터가 없습니다." : "담당 학급이 없습니다."}
+              {isAdmin
+                ? "개설된 수업이 없습니다."
+                : "담당 수업이 없습니다. 관리자에게 수업 배정을 요청하세요."}
             </p>
           ) : (
-            <div className="mt-3 overflow-x-auto">
+            <div className="mt-3 max-h-64 overflow-y-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr>
-                    {classBuckets.map((c) => {
-                      const key = `${c.grade}-${c.class_number}-${c.subject}`;
-                      return (
-                        <th
-                          key={key}
-                          scope="col"
-                          className="min-w-[120px] border-b border-white/10 px-3 py-2 text-center text-xs font-semibold text-slate-300"
-                        >
-                          {c.grade}-{c.class_number}반
-                          <span className="ml-1 text-[10px] text-cyan-300">
-                            ({c.subject})
-                          </span>
-                        </th>
-                      );
-                    })}
+                  <tr className="text-left text-xs text-slate-400">
+                    <th scope="col" className="border-b border-white/10 px-2 py-1.5">
+                      수업
+                    </th>
+                    <th scope="col" className="border-b border-white/10 px-2 py-1.5">
+                      학기
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-white/10 px-2 py-1.5 text-right"
+                    >
+                      수강생
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-white/10 px-2 py-1.5 text-right"
+                    >
+                      응답
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    {classBuckets.map((c) => {
-                      const key = `${c.grade}-${c.class_number}-${c.subject}`;
-                      const cnt = countMap.get(key) ?? 0;
-                      return (
-                        <td
-                          key={key}
-                          className="px-3 py-2 text-center text-lg font-bold text-amber-200"
-                        >
-                          {cnt}회
-                        </td>
-                      );
-                    })}
-                  </tr>
+                  {courseBuckets.map((b) => (
+                    <tr key={b.course.id} className="border-b border-white/5">
+                      <td className="px-2 py-1.5">
+                        <span className="font-semibold text-white">
+                          {b.course.name}
+                        </span>
+                        <span className="ml-1.5 text-[10px] text-cyan-300">
+                          {b.course.subject}
+                        </span>
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-slate-400">
+                        {b.course.school_year} {b.course.semester}학기
+                      </td>
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-300">
+                        {b.students}명
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-bold text-amber-200">
+                        {b.count}회
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
