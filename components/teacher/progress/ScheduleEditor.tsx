@@ -4,24 +4,27 @@ import { useCallback, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
-export type EditorClassRow = {
-  grade: number;
-  class_number: number;
+// 시간표의 단위는 "개설 수업" 이다. 수업이 학년도·학기·교과·학반을 이미 들고 있어
+// 학기가 바뀌면 담당 목록도 자동으로 갈린다.
+export type EditorCourseRow = {
+  id: string;
+  name: string;
   subject: string;
+  grade: number | null;
+  class_number: number | null;
 };
 
 export type WeeklySlot = {
   id: string;
   day_of_week: number; // 0~4
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
 };
 
 type Props = {
   teacherId: string;
-  classes: EditorClassRow[];
+  courses: EditorCourseRow[];
   initialSlots: WeeklySlot[];
+  termLabel: string;
 };
 
 const DAYS: { value: number; label: string }[] = [
@@ -32,22 +35,22 @@ const DAYS: { value: number; label: string }[] = [
   { value: 4, label: "금" },
 ];
 
-function slotKey(day: number, c: EditorClassRow) {
-  return `${day}-${c.grade}-${c.class_number}-${c.subject}`;
+function slotKey(day: number, courseId: string) {
+  return `${day}-${courseId}`;
 }
 
-export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
+export function ScheduleEditor({
+  teacherId,
+  courses,
+  initialSlots,
+  termLabel,
+}: Props) {
   const theme = getRoleTheme("teacher");
   const [slots, setSlots] = useState<Record<string, string>>(() => {
     const m: Record<string, string> = {};
     initialSlots.forEach((s) => {
-      m[
-        slotKey(s.day_of_week, {
-          grade: s.grade,
-          class_number: s.class_number,
-          subject: s.subject,
-        })
-      ] = s.id;
+      if (!s.course_id) return; // 수업으로 매칭되지 않은 옛 행은 무시
+      m[slotKey(s.day_of_week, s.course_id)] = s.id;
     });
     return m;
   });
@@ -55,8 +58,8 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const toggle = useCallback(
-    async (day: number, c: EditorClassRow) => {
-      const key = slotKey(day, c);
+    async (day: number, c: EditorCourseRow) => {
+      const key = slotKey(day, c.id);
       const existingId = slots[key];
       setBusy(key);
       setErrorMessage("");
@@ -80,12 +83,11 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
         // 켜기 — 삽입
         const { data, error } = await supabase
           .from("weekly_schedule")
+          // 교과·학년·반은 DB 트리거가 수업에서 채운다.
           .insert({
             teacher_id: teacherId,
             day_of_week: day,
-            grade: c.grade,
-            class_number: c.class_number,
-            subject: c.subject,
+            course_id: c.id,
           })
           .select("id")
           .single();
@@ -103,11 +105,11 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
     [slots, teacherId]
   );
 
-  if (classes.length === 0) {
+  if (courses.length === 0) {
     return (
       <div className="rounded-2xl border border-yellow-300/30 bg-yellow-950/30 p-6 text-sm text-yellow-100">
-        담당 학급이 없습니다. 관리자가 교사 권한 화면에서 담당 학급(학년·반·
-        과목)을 등록해야 시간표를 설정할 수 있습니다.
+        {termLabel}에 담당 수업이 없습니다. 관리자가 수업 관리 화면에서 이 학기
+        수업을 만들고 담당 교사로 배정해야 시간표를 설정할 수 있습니다.
       </div>
     );
   }
@@ -125,7 +127,7 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
           <thead>
             <tr className="border-b border-white/10 text-slate-300">
               <th className="sticky left-0 z-10 bg-slate-900/80 px-3 py-3 text-left text-xs font-semibold backdrop-blur">
-                담당 학급
+                담당 수업
               </th>
               {DAYS.map((d) => (
                 <th
@@ -138,18 +140,13 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
             </tr>
           </thead>
           <tbody>
-            {classes.map((c) => (
-              <tr
-                key={`${c.grade}-${c.class_number}-${c.subject}`}
-                className="border-b border-white/5"
-              >
+            {courses.map((c) => (
+              <tr key={c.id} className="border-b border-white/5">
                 <th
                   className="sticky left-0 z-10 bg-slate-900/80 px-3 py-3 text-left font-semibold text-white backdrop-blur"
                   scope="row"
                 >
-                  <div>
-                    {c.grade}학년 {c.class_number}반
-                  </div>
+                  <div>{c.name}</div>
                   <div
                     className={`text-[11px] font-normal ${theme.accentText}`}
                   >
@@ -157,7 +154,7 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
                   </div>
                 </th>
                 {DAYS.map((d) => {
-                  const key = slotKey(d.value, c);
+                  const key = slotKey(d.value, c.id);
                   const on = !!slots[key];
                   const isBusy = busy === key;
                   return (
@@ -169,7 +166,7 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
                         type="button"
                         onClick={() => toggle(d.value, c)}
                         disabled={isBusy}
-                        aria-label={`${c.grade}학년 ${c.class_number}반 ${c.subject} ${d.label}요일 ${on ? "수업 켜짐 (끄기)" : "수업 꺼짐 (켜기)"}`}
+                        aria-label={`${c.name} ${d.label}요일 ${on ? "수업 켜짐 (끄기)" : "수업 꺼짐 (켜기)"}`}
                         className={`h-9 w-full rounded-lg border text-xs font-semibold transition disabled:opacity-60 ${
                           on
                             ? `${theme.accentBg} ${theme.accentText} ${theme.accentBorder}`
@@ -188,9 +185,9 @@ export function ScheduleEditor({ teacherId, classes, initialSlots }: Props) {
       </div>
 
       <p className="text-xs text-slate-500">
-        칸을 클릭해 요일 시간표를 켜고 끕니다. 시간표가 켜진 (학반·요일) 칸은
+        칸을 클릭해 요일 시간표를 켜고 끕니다. 시간표가 켜진 (수업·요일) 칸은
         진도표에서 음영으로 표시됩니다. 특정 날짜의 휴강은 진도표에서 그 날 행을
-        직접 휴강 처리합니다.
+        직접 휴강 처리합니다. 학기가 바뀌면 그 학기 수업으로 목록이 갈립니다.
       </p>
     </div>
   );

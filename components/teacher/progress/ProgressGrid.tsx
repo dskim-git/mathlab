@@ -6,26 +6,25 @@ import { supabase } from "@/lib/supabase/client";
 import type { ProgressWeek, ProgressDay } from "@/lib/dashboard/progressDates";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
-export type ClassRow = {
-  grade: number;
-  class_number: number;
+// 진도표 한 줄 = 개설 수업 하나. 학반은 수업이 들고 있는 표시 정보다.
+export type CourseRow = {
+  id: string;
+  name: string;
   subject: string;
+  grade: number | null;
+  class_number: number | null;
 };
 
 export type ProgressEntry = {
   id: string;
   date: string;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   content: string;
 };
 
 export type WeeklySlotKey = {
   day_of_week: number;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
 };
 
 export type DailyMeta = {
@@ -38,16 +37,14 @@ export type DailyMeta = {
 export type DailyClassOverride = {
   id: string;
   date: string;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   action: "add" | "remove";
 };
 
 type Props = {
   teacherId: string;
   schoolYear: number;
-  classes: ClassRow[];
+  courses: CourseRow[];
   weeks: ProgressWeek[];
   initialEntries: ProgressEntry[];
   initialWeeklySlots: WeeklySlotKey[];
@@ -57,16 +54,16 @@ type Props = {
 
 type ShadeChoice = "default" | "force_on" | "force_off";
 
-function cellKey(c: ClassRow, dateIso: string) {
-  return `${c.grade}-${c.class_number}-${c.subject}-${dateIso}`;
+function cellKey(courseId: string, dateIso: string) {
+  return `${courseId}-${dateIso}`;
 }
 
 function slotSetKey(s: WeeklySlotKey) {
-  return `${s.day_of_week}-${s.grade}-${s.class_number}-${s.subject}`;
+  return `${s.day_of_week}-${s.course_id}`;
 }
 
-function slotKey(day: number, c: ClassRow) {
-  return `${day}-${c.grade}-${c.class_number}-${c.subject}`;
+function slotKey(day: number, courseId: string) {
+  return `${day}-${courseId}`;
 }
 
 function dayOfWeekFromIso(iso: string): number {
@@ -85,11 +82,8 @@ type OverrideMap = Record<
 function buildCellMap(entries: ProgressEntry[]): CellMap {
   const m: CellMap = {};
   entries.forEach((e) => {
-    const k = cellKey(
-      { grade: e.grade, class_number: e.class_number, subject: e.subject },
-      e.date
-    );
-    m[k] = { content: e.content, id: e.id };
+    if (!e.course_id) return; // 수업으로 매칭되지 않은 옛 행은 그리지 않는다
+    m[cellKey(e.course_id, e.date)] = { content: e.content, id: e.id };
   });
   return m;
 }
@@ -105,11 +99,8 @@ function buildDayMap(rows: DailyMeta[]): DayMap {
 function buildOverrideMap(rows: DailyClassOverride[]): OverrideMap {
   const m: OverrideMap = {};
   rows.forEach((r) => {
-    const k = cellKey(
-      { grade: r.grade, class_number: r.class_number, subject: r.subject },
-      r.date
-    );
-    m[k] = { id: r.id, action: r.action };
+    if (!r.course_id) return;
+    m[cellKey(r.course_id, r.date)] = { id: r.id, action: r.action };
   });
   return m;
 }
@@ -121,7 +112,7 @@ function buildSlotSet(slots: WeeklySlotKey[]): Set<string> {
 export function ProgressGrid({
   teacherId,
   schoolYear,
-  classes,
+  courses,
   weeks,
   initialEntries,
   initialWeeklySlots,
@@ -150,8 +141,8 @@ export function ProgressGrid({
   const [busy, setBusy] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  function startEditCell(c: ClassRow, dateIso: string) {
-    const k = cellKey(c, dateIso);
+  function startEditCell(c: CourseRow, dateIso: string) {
+    const k = cellKey(c.id, dateIso);
     setDraftCell(cells[k]?.content ?? "");
     const ov = overrides[k];
     setDraftShade(
@@ -182,19 +173,19 @@ export function ProgressGrid({
   }
 
   // 음영 결정 — 오버라이드 > 휴강 > 시간표
-  function shadeOf(c: ClassRow, dateIso: string): {
+  function shadeOf(c: CourseRow, dateIso: string): {
     shaded: boolean;
     kind: "default_on" | "default_off" | "force_on" | "force_off" | "day_off";
   } {
     const meta = dayMeta[dateIso];
     if (meta?.isOff) return { shaded: false, kind: "day_off" };
 
-    const ov = overrides[cellKey(c, dateIso)];
+    const ov = overrides[cellKey(c.id, dateIso)];
     if (ov?.action === "add") return { shaded: true, kind: "force_on" };
     if (ov?.action === "remove") return { shaded: false, kind: "force_off" };
 
     const dow = dayOfWeekFromIso(dateIso);
-    const baseOn = slotSet.has(slotKey(dow, c));
+    const baseOn = slotSet.has(slotKey(dow, c.id));
     return baseOn
       ? { shaded: true, kind: "default_on" }
       : { shaded: false, kind: "default_off" };
@@ -202,8 +193,8 @@ export function ProgressGrid({
 
   // 셀 저장: progress_tracker(내용) + daily_class_overrides(음영) 동시 처리
   const saveCell = useCallback(
-    async (c: ClassRow, dateIso: string) => {
-      const k = cellKey(c, dateIso);
+    async (c: CourseRow, dateIso: string) => {
+      const k = cellKey(c.id, dateIso);
       setBusy("cell:" + k);
       setErrorMessage("");
 
@@ -217,17 +208,16 @@ export function ProgressGrid({
           const { data, error } = await supabase
             .from("progress_tracker")
             .upsert(
+              // 교과·학년·반은 DB 트리거가 수업에서 채운다.
               {
                 teacher_id: teacherId,
                 school_year: schoolYear,
                 date: dateIso,
-                grade: c.grade,
-                class_number: c.class_number,
-                subject: c.subject,
+                course_id: c.id,
                 lesson_topic: content,
                 notes: "",
               },
-              { onConflict: "teacher_id,date,grade,class_number,subject" }
+              { onConflict: "teacher_id,date,course_id" }
             )
             .select("id")
             .single();
@@ -268,15 +258,10 @@ export function ProgressGrid({
               {
                 teacher_id: teacherId,
                 date: dateIso,
-                grade: c.grade,
-                class_number: c.class_number,
-                subject: c.subject,
+                course_id: c.id,
                 action: desiredAction,
               },
-              {
-                onConflict:
-                  "teacher_id,date,grade,class_number,subject",
-              }
+              { onConflict: "teacher_id,date,course_id" }
             )
             .select("id")
             .single();
@@ -306,8 +291,8 @@ export function ProgressGrid({
 
   // 셀 삭제 (내용 + 오버라이드 모두 제거)
   const deleteCell = useCallback(
-    async (c: ClassRow, dateIso: string) => {
-      const k = cellKey(c, dateIso);
+    async (c: CourseRow, dateIso: string) => {
+      const k = cellKey(c.id, dateIso);
       setBusy("cell:" + k);
       setErrorMessage("");
 
@@ -419,11 +404,11 @@ export function ProgressGrid({
     [draftDayNotes, draftDayOff, dayMeta, teacherId, router]
   );
 
-  if (classes.length === 0) {
+  if (courses.length === 0) {
     return (
       <div className="rounded-2xl border border-yellow-300/30 bg-yellow-950/30 p-6 text-sm text-yellow-100">
-        담당 학급이 없어서 진도표를 만들 수 없습니다. 관리자가 교사 권한
-        화면에서 담당 학급을 등록해야 합니다.
+        이 학기에 담당 수업이 없어서 진도표를 만들 수 없습니다. 관리자가 수업
+        관리 화면에서 이 학기 수업을 만들고 담당 교사로 배정해야 합니다.
       </div>
     );
   }
@@ -528,9 +513,9 @@ export function ProgressGrid({
           ) : null}
         </th>
 
-        {/* 학반별 진도 셀 */}
-        {classes.map((c) => {
-          const k = cellKey(c, d.iso);
+        {/* 수업별 진도 셀 */}
+        {courses.map((c) => {
+          const k = cellKey(c.id, d.iso);
           const cur = cells[k];
           const sh = shadeOf(c, d.iso);
           const cellEditing = editing === "cell:" + k;
@@ -693,13 +678,13 @@ export function ProgressGrid({
               <th className="sticky left-0 z-20 min-w-[120px] bg-slate-900/90 px-3 py-3 text-left text-xs font-semibold text-slate-300 backdrop-blur">
                 일자
               </th>
-              {classes.map((c) => (
+              {courses.map((c) => (
                 <th
-                  key={`${c.grade}-${c.class_number}-${c.subject}`}
+                  key={c.id}
                   className="min-w-[180px] border-l border-white/10 px-3 py-3 text-left text-xs font-semibold text-white"
                 >
                   <div>
-                    {c.grade}학년 {c.class_number}반
+                    {c.name}
                   </div>
                   <div
                     className={`text-[11px] font-normal ${theme.accentText}`}
@@ -721,7 +706,7 @@ export function ProgressGrid({
                   <tr className="border-b border-white/10">
                     <th
                       scope="colgroup"
-                      colSpan={2 + classes.length}
+                      colSpan={2 + courses.length}
                       className={`sticky left-0 z-10 bg-slate-950/80 px-3 py-1.5 text-left text-[11px] font-bold backdrop-blur ${
                         hasToday ? theme.accentText : "text-slate-400"
                       }`}

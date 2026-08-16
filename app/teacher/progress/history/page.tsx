@@ -10,7 +10,7 @@ import {
   type HistoryDayMeta,
 } from "@/components/teacher/progress/HistoryView";
 import type {
-  ClassRow,
+  CourseRow,
   WeeklySlotKey,
   DailyClassOverride,
 } from "@/components/teacher/progress/ProgressGrid";
@@ -18,9 +18,7 @@ import type {
 type ProgressRow = {
   id: string;
   date: string;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   lesson_topic: string;
 };
 
@@ -30,36 +28,17 @@ type DailyMetaRow = {
   notes: string;
 };
 
-type TeacherPermissionRow = {
-  grade: number;
-  class_number: number;
-  subject: string;
-};
-
 type WeeklyRow = {
   day_of_week: number;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
 };
 
 type OverrideRow = {
   id: string;
   date: string;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   action: "add" | "remove";
 };
-
-function sortClasses(rows: ClassRow[]): ClassRow[] {
-  return [...rows].sort((a, b) => {
-    if (a.grade !== b.grade) return a.grade - b.grade;
-    if (a.class_number !== b.class_number)
-      return a.class_number - b.class_number;
-    return a.subject.localeCompare(b.subject, "ko");
-  });
-}
 
 export default async function TeacherProgressHistoryPage() {
   const { supabase, user, profile } = await requireTeacher();
@@ -69,7 +48,7 @@ export default async function TeacherProgressHistoryPage() {
 
   let entries: HistoryEntry[] = [];
   let dayMeta: HistoryDayMeta[] = [];
-  let classes: ClassRow[] = [];
+  let courses: CourseRow[] = [];
   let weeklySlots: WeeklySlotKey[] = [];
   let overrides: DailyClassOverride[] = [];
 
@@ -79,7 +58,7 @@ export default async function TeacherProgressHistoryPage() {
       [
         supabase
           .from("progress_tracker")
-          .select("id, date, grade, class_number, subject, lesson_topic")
+          .select("id, date, course_id, lesson_topic")
           .eq("teacher_id", user.id)
           .order("date", { ascending: false }),
         supabase
@@ -89,11 +68,11 @@ export default async function TeacherProgressHistoryPage() {
           .order("date", { ascending: false }),
         supabase
           .from("weekly_schedule")
-          .select("day_of_week, grade, class_number, subject")
+          .select("day_of_week, course_id")
           .eq("teacher_id", user.id),
         supabase
           .from("daily_class_overrides")
-          .select("id, date, grade, class_number, subject, action")
+          .select("id, date, course_id, action")
           .eq("teacher_id", user.id),
       ]
     );
@@ -101,9 +80,7 @@ export default async function TeacherProgressHistoryPage() {
     entries = ((progressRes.data ?? []) as ProgressRow[]).map((r) => ({
       id: r.id,
       date: r.date,
-      grade: r.grade,
-      class_number: r.class_number,
-      subject: r.subject,
+      course_id: r.course_id,
       content: r.lesson_topic,
     }));
     dayMeta = ((dayMetaRes.data ?? []) as DailyMetaRow[]).map((r) => ({
@@ -115,31 +92,20 @@ export default async function TeacherProgressHistoryPage() {
     overrides = ((overrideRes.data ?? []) as OverrideRow[]).map((r) => ({
       id: r.id,
       date: r.date,
-      grade: r.grade,
-      class_number: r.class_number,
-      subject: r.subject,
+      course_id: r.course_id,
       action: r.action,
     }));
 
-    // 담당 학급 (편집 모드 학반 컬럼 합집합용)
-    const { data: teacherRow } = await supabase
-      .from("teachers")
-      .select("id")
-      .eq("profile_id", user.id)
-      .maybeSingle();
-    if (teacherRow) {
-      const { data: permissions } = await supabase
-        .from("teacher_permissions")
-        .select("grade, class_number, subject")
-        .eq("teacher_id", (teacherRow as { id: string }).id);
-      classes = sortClasses(
-        ((permissions ?? []) as TeacherPermissionRow[]).map((p) => ({
-          grade: p.grade,
-          class_number: p.class_number,
-          subject: p.subject,
-        }))
-      );
-    }
+    // 담당 수업 — 과거 기록도 함께 보므로 학기를 가리지 않고 내 수업 전체를 컬럼 후보로.
+    const { data: courseRows } = await supabase
+      .from("courses")
+      .select("id, name, subject, grade, class_number")
+      .order("school_year", { ascending: false })
+      .order("semester", { ascending: false })
+      .order("grade", { nullsFirst: false })
+      .order("class_number", { nullsFirst: false })
+      .order("name");
+    courses = (courseRows ?? []) as CourseRow[];
   }
 
   return (
@@ -166,7 +132,7 @@ export default async function TeacherProgressHistoryPage() {
       <HistoryView
         teacherId={user.id}
         schoolYear={schoolYear}
-        classes={classes}
+        courses={courses}
         entries={entries}
         dayMeta={dayMeta}
         weeklySlots={weeklySlots}

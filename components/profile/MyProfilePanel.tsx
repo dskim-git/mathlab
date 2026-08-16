@@ -23,10 +23,12 @@ type StudentInfo = {
   studentLoginId: string;
 };
 
-type TeacherClass = {
-  grade: number;
-  class_number: number;
+type TeacherCourse = {
+  id: string;
+  name: string;
   subject: string;
+  school_year: number;
+  semester: number;
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -45,7 +47,7 @@ export function MyProfilePanel({ role, accentText }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [student, setStudent] = useState<StudentInfo | null>(null);
-  const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
+  const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
 
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
@@ -117,27 +119,15 @@ export function MyProfilePanel({ role, accentText }: Props) {
       }
     }
 
-    // 교사 담당 학급
+    // 교사 담당 수업 — 담당의 정본은 courses 다(RLS 가 본인 수업만 반환).
     if (p?.role === "teacher" || p?.role === "admin") {
-      const { data: tRow } = await supabase
-        .from("teachers")
-        .select("id")
-        .eq("profile_id", user.id)
-        .maybeSingle();
-      if (tRow) {
-        const { data: perms } = await supabase
-          .from("teacher_permissions")
-          .select("grade, class_number, subject")
-          .eq("teacher_id", (tRow as { id: string }).id);
-        setTeacherClasses(
-          ((perms ?? []) as TeacherClass[]).sort((a, b) => {
-            if (a.grade !== b.grade) return a.grade - b.grade;
-            if (a.class_number !== b.class_number)
-              return a.class_number - b.class_number;
-            return a.subject.localeCompare(b.subject, "ko");
-          })
-        );
-      }
+      const { data: courseRows } = await supabase
+        .from("courses")
+        .select("id, name, subject, school_year, semester")
+        .order("school_year", { ascending: false })
+        .order("semester", { ascending: false })
+        .order("name");
+      setTeacherCourses((courseRows ?? []) as TeacherCourse[]);
     }
 
     setAuthChecked(true);
@@ -247,18 +237,18 @@ export function MyProfilePanel({ role, accentText }: Props) {
         ) : null}
 
         {(role === "teacher" || role === "admin") &&
-        teacherClasses.length > 0 ? (
+        teacherCourses.length > 0 ? (
           <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
             <p className="text-[11px] uppercase tracking-wider text-slate-400">
-              담당 학급
+              담당 수업
             </p>
             <ul className="mt-2 flex flex-wrap gap-2">
-              {teacherClasses.map((c) => (
+              {teacherCourses.map((c) => (
                 <li
-                  key={`${c.grade}-${c.class_number}-${c.subject}`}
+                  key={c.id}
                   className={`rounded-full bg-white/5 px-3 py-1 text-xs ${accentText}`}
                 >
-                  {c.grade}-{c.class_number} · {c.subject}
+                  {c.school_year} {c.semester}학기 · {c.name}
                 </li>
               ))}
             </ul>
@@ -266,7 +256,7 @@ export function MyProfilePanel({ role, accentText }: Props) {
         ) : null}
 
         <p className="mt-4 text-xs text-slate-500">
-          이름·역할·담당 학급 변경은 관리자에게 건의해 주세요.
+          이름·역할·담당 수업 변경은 관리자에게 건의해 주세요.
         </p>
       </section>
 
