@@ -107,6 +107,7 @@ const adminMenu: MenuItem[] = [
 
   // ── 회원·권한 ───────────────────────────────────────
   { key: "members", label: "회원관리", icon: "👥", href: "/admin/members", inTabBar: true, group: "members" },
+  { key: "courses", label: "수업 관리", icon: "🏫", href: "/admin/courses", inTabBar: true, group: "members" },
   { key: "access", label: "교과 권한", icon: "🔐", href: "/admin/access", inTabBar: true, group: "members" },
   { key: "students", label: "학생 활동 기록", icon: "🎒", href: "/admin/students", group: "members" },
 
@@ -187,6 +188,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin/activities": "활동 행 관리",
   "/admin/overviews": "활동 개요",
   "/admin/access": "교과 권한",
+  "/admin/courses": "수업 관리",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",
   "/admin/scores": "점수 관리",
