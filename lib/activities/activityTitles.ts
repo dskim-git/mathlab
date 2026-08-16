@@ -74,6 +74,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/block_stacking_lab": "블록 밀기와 조화급수",
   "common2/mini/line_equation_lab": "직선의 방정식 세우기",
   "common2/mini/two_lines_relation_lab": "두 직선의 위치 관계",
+  "common2/mini/point_line_distance_lab": "점과 직선 사이의 거리",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",

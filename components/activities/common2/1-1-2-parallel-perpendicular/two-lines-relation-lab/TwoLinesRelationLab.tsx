@@ -443,7 +443,7 @@ function LabTab() {
             <div className="rounded-xl border border-amber-400/25 bg-amber-400/[0.06] p-3">
               <p className="text-xs font-bold text-amber-200">일반형으로 보기 (ax + by + c = 0)</p>
               <div className="mt-2 space-y-1.5">
-                <div className="overflow-x-auto rounded-lg bg-black/25 px-3 py-1.5 text-slate-100">
+                <div className="overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-1.5 text-slate-100">
                   <Katex expr={`l:\\ ${genTex(g1)} \\qquad l':\\ ${genTex(g2)}`} />
                 </div>
                 <CheckRow
@@ -461,7 +461,7 @@ function LabTab() {
                   noText="0 아님"
                 />
                 {allNonZero(g1) && allNonZero(g2) ? (
-                  <div className="overflow-x-auto rounded-lg bg-black/25 px-3 py-1.5 text-[13px] text-slate-200">
+                  <div className="overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-1.5 text-[13px] text-slate-200">
                     <Katex
                       expr={`\\frac{a}{a'} = ${fracTex(mkFrac(g1.a, g2.a))},\\quad \\frac{b}{b'} = ${fracTex(mkFrac(g1.b, g2.b))},\\quad \\frac{c}{c'} = ${fracTex(mkFrac(g1.c, g2.c))}`}
                     />
@@ -490,7 +490,7 @@ function CheckRow({ label, tex, ok, okText, noText }: { label: string; tex: stri
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="w-20 shrink-0 text-[11px] font-bold text-slate-400">{label}</span>
-      <div className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-black/25 px-2.5 py-1 text-[13px] text-slate-100">
+      <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-2.5 py-1 text-[13px] text-slate-100">
         <Katex expr={tex} />
       </div>
       <span className={"shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold " + (ok ? "bg-emerald-400/20 text-emerald-200" : "bg-white/5 text-slate-400")}>
@@ -564,7 +564,7 @@ function LineEditor({
         </div>
       )}
 
-      <div className="mt-2 overflow-x-auto rounded-lg bg-black/25 px-3 py-1.5 text-slate-100">
+      <div className="mt-2 overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-1.5 text-slate-100">
         {line && gen ? (
           <Katex expr={draft.form === "std" ? `${lineTex(line)} \\quad \\Leftrightarrow \\quad ${genTex(gen)}` : `${genTex(gen)}${stdOrEmpty(gen)}`} />
         ) : (
@@ -726,7 +726,7 @@ function EqCard({ tone, name, line }: { tone: "cyan" | "amber"; name: string; li
       <p className="text-[11px] font-bold">
         직선 {name} · {FORM_LABEL[line.form]}
       </p>
-      <div className="mt-1 overflow-x-auto text-lg text-white">
+      <div className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-lg text-white">
         <Katex expr={lineTex(line)} />
       </div>
     </div>
@@ -1019,7 +1019,7 @@ function Leaderboard({ activitySlug, reloadToken }: { activitySlug: string; relo
         </p>
       ) : (
         <>
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-3 overflow-x-auto overflow-y-hidden">
             <table className="w-full min-w-[380px] text-sm">
               <thead>
                 <tr className="text-[11px] uppercase tracking-wide text-slate-500">
