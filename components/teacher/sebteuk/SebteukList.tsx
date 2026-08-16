@@ -13,6 +13,8 @@ type DraftRow = {
   body: string;
   ai_model: string | null;
   status: string;
+  semester: number | null;
+  subject: string | null;
   created_at: string;
   updated_at: string;
   finalized_at: string | null;
@@ -50,6 +52,9 @@ export function SebteukList({
 
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all"); // "G-C" or "all"
+  // 한 학생이 여러 교과·학기의 초안을 가질 수 있어 범위 필터가 필요하다.
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
+  const [semesterFilter, setSemesterFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -65,7 +70,7 @@ export function SebteukList({
     const { data, error } = await supabase
       .from("sebteuk_drafts")
       .select(
-        "id, student_id, body, ai_model, status, created_at, updated_at, finalized_at, students ( grade, class_number, student_number, student_code, student_login_id, profiles!profile_id ( name ) )"
+        "id, student_id, body, ai_model, status, semester, subject, created_at, updated_at, finalized_at, students ( grade, class_number, student_number, student_code, student_login_id, profiles!profile_id ( name ) )"
       )
       .eq("teacher_id", teacherProfileId)
       .eq("school_year", schoolYear)
@@ -94,6 +99,13 @@ export function SebteukList({
     });
   }, [rows]);
 
+  // 교과 옵션 — 초안에 실제로 붙어있는 교과만 (미지정 = 교과 축 도입 이전 초안)
+  const subjectOptions = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => set.add(r.subject ?? "(미지정)"));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ko"));
+  }, [rows]);
+
   // 필터 + 정렬
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -104,6 +116,10 @@ export function SebteukList({
           if (!s || `${s.grade}-${s.class_number}` !== classFilter)
             return false;
         }
+        if (subjectFilter !== "all" && (r.subject ?? "(미지정)") !== subjectFilter)
+          return false;
+        if (semesterFilter !== "all" && String(r.semester ?? "") !== semesterFilter)
+          return false;
         if (q) {
           const s = r.students;
           const hay = (
@@ -128,17 +144,20 @@ export function SebteukList({
           return sa.class_number - sb.class_number;
         return sa.student_number - sb.student_number;
       });
-  }, [rows, search, classFilter]);
+  }, [rows, search, classFilter, subjectFilter, semesterFilter]);
 
-  // 학반 단위 그룹화
+  // (교과 · 학기 · 학반) 단위 그룹화 — NEIS 는 교과별로 옮겨 적으므로
+  // 학반만으로 묶으면 서로 다른 교과 초안이 한 묶음/한 엑셀 파일에 섞인다.
   const grouped = useMemo(() => {
     type Group = { key: string; label: string; items: DraftRow[] };
     const map = new Map<string, Group>();
     filtered.forEach((r) => {
       const s = r.students;
       if (!s) return;
-      const key = `${s.grade}-${s.class_number}`;
-      const label = `${s.grade}학년 ${s.class_number}반`;
+      const subject = r.subject ?? "(교과 미지정)";
+      const semester = r.semester ? `${r.semester}학기` : "학기 미지정";
+      const key = `${subject}::${semester}::${s.grade}-${s.class_number}`;
+      const label = `${subject} · ${semester} · ${s.grade}학년 ${s.class_number}반`;
       let g = map.get(key);
       if (!g) {
         g = { key, label, items: [] };
@@ -147,10 +166,14 @@ export function SebteukList({
       g.items.push(r);
     });
     return Array.from(map.values()).sort((a, b) => {
-      const [ga, ca] = a.key.split("-").map(Number);
-      const [gb, cb] = b.key.split("-").map(Number);
+      const [sa, sea, ca] = a.key.split("::");
+      const [sb, seb, cb] = b.key.split("::");
+      if (sa !== sb) return sa.localeCompare(sb, "ko");
+      if (sea !== seb) return sea.localeCompare(seb, "ko");
+      const [ga, na] = ca.split("-").map(Number);
+      const [gb, nb] = cb.split("-").map(Number);
       if (ga !== gb) return ga - gb;
-      return ca - cb;
+      return na - nb;
     });
   }, [filtered]);
 
@@ -333,6 +356,29 @@ export function SebteukList({
                 </option>
               );
             })}
+          </select>
+          <select
+            value={subjectFilter}
+            onChange={(e) => setSubjectFilter(e.target.value)}
+            aria-label="교과 필터"
+            className="rounded border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+          >
+            <option value="all">전체 교과</option>
+            {subjectOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <select
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+            aria-label="학기 필터"
+            className="rounded border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-300/40"
+          >
+            <option value="all">전체 학기</option>
+            <option value="1">1학기</option>
+            <option value="2">2학기</option>
           </select>
         </div>
       </section>

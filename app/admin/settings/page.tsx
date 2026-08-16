@@ -36,13 +36,14 @@ export default function AdminSettingsPage() {
   const [isBusy, setIsBusy] = useState(false);
 
   const [currentYear, setCurrentYear] = useState("");
+  const [currentSemester, setCurrentSemester] = useState("1");
   const [yearMessage, setYearMessage] = useState("");
   const [yearError, setYearError] = useState("");
 
   const loadAll = useCallback(async () => {
     setIsLoading(true);
 
-    const [subjectResult, classResult, yearResult] = await Promise.all([
+    const [subjectResult, classResult, yearResult, semesterResult] = await Promise.all([
       supabase
         .from("subjects")
         .select("id, name, order_index")
@@ -57,6 +58,11 @@ export default function AdminSettingsPage() {
         .from("app_settings")
         .select("value")
         .eq("key", "current_school_year")
+        .maybeSingle(),
+      supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "current_semester")
         .maybeSingle(),
     ]);
 
@@ -74,6 +80,10 @@ export default function AdminSettingsPage() {
 
     if (!yearResult.error && yearResult.data) {
       setCurrentYear((yearResult.data as { value: string }).value);
+    }
+
+    if (!semesterResult.error && semesterResult.data) {
+      setCurrentSemester((semesterResult.data as { value: string }).value);
     }
 
     setIsLoading(false);
@@ -95,18 +105,32 @@ export default function AdminSettingsPage() {
     }
 
     setIsBusy(true);
-    const { error } = await supabase
-      .from("app_settings")
-      .update({ value: String(year), updated_at: new Date().toISOString() })
-      .eq("key", "current_school_year");
+    // 학년도·학기를 함께 저장 — 새 활동 응답에 자동으로 찍히는 값이라 한 번에 맞춘다.
+    const [yearRes, semesterRes] = await Promise.all([
+      supabase
+        .from("app_settings")
+        .update({ value: String(year), updated_at: new Date().toISOString() })
+        .eq("key", "current_school_year"),
+      supabase.from("app_settings").upsert(
+        {
+          key: "current_semester",
+          value: currentSemester,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "key" }
+      ),
+    ]);
     setIsBusy(false);
 
+    const error = yearRes.error ?? semesterRes.error;
     if (error) {
       setYearError(`저장 중 오류: ${error.message}`);
       return;
     }
 
-    setYearMessage(`현재 학년도를 ${year}로 저장했습니다.`);
+    setYearMessage(
+      `현재 학년도를 ${year}, 학기를 ${currentSemester}학기로 저장했습니다.`
+    );
   }
 
   async function handleAddSubject(event: React.FormEvent<HTMLFormElement>) {
@@ -218,8 +242,9 @@ export default function AdminSettingsPage() {
       setClassError("학년은 1 이상의 정수로 입력해 주세요.");
       return;
     }
-    if (!Number.isInteger(classValue) || classValue <= 0) {
-      setClassError("반은 1 이상의 정수로 입력해 주세요.");
+    // 0반 허용 — 수업 시연·테스트 계정을 담는 반으로 쓴다.
+    if (!Number.isInteger(classValue) || classValue < 0) {
+      setClassError("반은 0 이상의 정수로 입력해 주세요.");
       return;
     }
 
@@ -272,11 +297,17 @@ export default function AdminSettingsPage() {
         </p>
 
         <section className="mt-6 rounded-2xl border border-cyan-300/30 bg-cyan-950/20 p-6">
-          <h2 className="text-xl font-bold">현재 학년도</h2>
+          <h2 className="text-xl font-bold">현재 학년도 · 학기</h2>
           <p className="mt-2 text-sm leading-6 text-slate-300">
             학생 회원가입 시 학번 앞에 붙는 연도이자, 명렬표 업로드의 기본
             학년도입니다. 예: 2026 → 학번 20602는 로그인 ID{" "}
             <span className="font-semibold text-cyan-200">202620602</span>가 됩니다.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-amber-100">
+            <span className="font-semibold">학기</span>는 앞으로 저장되는 모든
+            활동 응답에 자동으로 찍히고, 학생 기록 조회·AI 세특의 기본 범위가
+            됩니다. 2학기가 시작되면 반드시 여기서 바꿔 주세요 — 그래야 1학기
+            성찰이 2학기 세특에 섞이지 않습니다.
           </p>
 
           <form onSubmit={handleSaveYear} className="mt-4 flex flex-wrap items-end gap-3">
@@ -299,6 +330,27 @@ export default function AdminSettingsPage() {
                 className="mt-1 w-32 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                 placeholder="2026"
               />
+            </div>
+            <div>
+              <label
+                htmlFor="settings-semester"
+                className="block text-xs font-semibold text-slate-300"
+              >
+                학기
+              </label>
+              <select
+                id="settings-semester"
+                value={currentSemester}
+                onChange={(event) => {
+                  setCurrentSemester(event.target.value);
+                  setYearMessage("");
+                  setYearError("");
+                }}
+                className="mt-1 w-32 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-300/40 [color-scheme:dark]"
+              >
+                <option value="1">1학기</option>
+                <option value="2">2학기</option>
+              </select>
             </div>
             <Button type="submit" size="sm" disabled={isBusy}>
               저장
@@ -497,7 +549,7 @@ export default function AdminSettingsPage() {
                   <input
                     id="settings-new-class"
                     type="number"
-                    min={1}
+                    min={0}
                     value={newClass}
                     onChange={(event) => {
                       setNewClass(event.target.value);
