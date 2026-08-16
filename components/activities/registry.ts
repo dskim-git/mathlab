@@ -71,6 +71,7 @@ import LineEquationLab from "./common2/1-1-2-parallel-perpendicular/line-equatio
 import TwoLinesRelationLab from "./common2/1-1-2-parallel-perpendicular/two-lines-relation-lab/TwoLinesRelationLab";
 // [1] 도형의 방정식 — (3) 점과 직선 사이의 거리
 import PointLineDistanceLab from "./common2/1-1-3-point-line-distance/point-line-distance-lab/PointLineDistanceLab";
+import ParallelPerpLab from "./common2/1-1-3-point-line-distance/parallel-perp-lab/ParallelPerpLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -293,6 +294,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/line_equation_lab": LineEquationLab,
   "common2/mini/two_lines_relation_lab": TwoLinesRelationLab,
   "common2/mini/point_line_distance_lab": PointLineDistanceLab,
+  "common2/mini/parallel_perp_lab": ParallelPerpLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
