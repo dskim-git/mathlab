@@ -110,13 +110,18 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   },
   {
     subject: "공통수학2",
-    unit: "1-1 평면좌표·선분의 내분",
+    unit: "1-1-1 평면좌표·선분의 내분",
     slugs: [
       "common2/mini/two_point_distance",
       "common2/mini/internal_division_lab",
       "common2/mini/centroid_lab",
       "common2/mini/block_stacking_lab",
     ],
+  },
+  {
+    subject: "공통수학2",
+    unit: "1-1-2 두 직선의 평행과 수직",
+    slugs: ["common2/mini/line_equation_lab"],
   },
   {
     subject: "경제수학",
