@@ -126,7 +126,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "1-1-3 점과 직선 사이의 거리",
-    slugs: ["common2/mini/point_line_distance_lab"],
+    slugs: ["common2/mini/point_line_distance_lab", "common2/mini/parallel_perp_lab"],
   },
   {
     subject: "경제수학",
