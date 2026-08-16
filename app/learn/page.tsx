@@ -5,6 +5,7 @@ import { fetchUserOverrideMap } from "@/lib/curriculum/lessonOverrides";
 import { OT_MATERIALS } from "@/lib/learn/otMaterials";
 import { buttonClasses } from "@/components/ui/Button";
 import LearnBrowser, { type CurriculumUnit } from "@/components/learn/LearnBrowser";
+import FloatingCalculator from "@/components/learn/FloatingCalculator";
 
 export default async function LearnPage() {
   const { supabase, user, profile } = await requireUser();
@@ -90,6 +91,9 @@ export default async function LearnPage() {
           />
         </div>
       </div>
+
+      {/* 교과 학습 화면 어디서나 쓸 수 있는 떠 있는 계산기 (수업 내용과 별개로 동작) */}
+      <FloatingCalculator />
     </main>
   );
 }
