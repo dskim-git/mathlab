@@ -108,7 +108,7 @@ const adminMenu: MenuItem[] = [
   // ── 회원·권한 ───────────────────────────────────────
   { key: "members", label: "회원관리", icon: "👥", href: "/admin/members", inTabBar: true, group: "members" },
   { key: "courses", label: "수업 관리", icon: "🏫", href: "/admin/courses", inTabBar: true, group: "members" },
-  { key: "access", label: "교과 권한", icon: "🔐", href: "/admin/access", inTabBar: true, group: "members" },
+  { key: "access", label: "교과·수업 권한", icon: "🔐", href: "/admin/access", inTabBar: true, group: "members" },
   { key: "students", label: "학생 활동 기록", icon: "🎒", href: "/admin/students", group: "members" },
 
   // ── 콘텐츠 ──────────────────────────────────────────
@@ -180,15 +180,16 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin": "관리자 홈",
   "/admin/members": "회원관리",
   "/admin/students": "학생 활동 기록",
-  "/admin/teachers": "교사 권한",
+  "/admin/teachers": "교사별 담당 현황",
   "/admin/roster": "명렬표",
-  "/admin/subjects": "교과 접근(학생·일반)",
+  "/admin/subjects": "교과 열람권",
   "/admin/settings": "설정",
   "/admin/curriculum": "단원 관리",
   "/admin/activities": "활동 행 관리",
   "/admin/overviews": "활동 개요",
-  "/admin/access": "교과 권한",
+  "/admin/access": "교과·수업 권한",
   "/admin/courses": "수업 관리",
+  "/admin/groups": "활동 그룹",
   "/admin/feedback": "건의사항",
   "/admin/stats": "통계",
   "/admin/scores": "점수 관리",
@@ -251,8 +252,10 @@ export const ROUTE_PARENTS: Record<string, string> = {
   "/admin/roster": "/admin/members",
 
   // 교과 권한 산하 — 콘텐츠/교과 접근에 관한 것
-  // /admin/teachers 는 "교사의 담당 학급·과목 + AI세특 권한" 화면이라 권한 메뉴 아래.
-  // (교사 *계정 자체* 관리는 Step 2 후속에서 /admin/members 안 탭으로 추가 예정.)
+  // 권한 화면들의 진입점은 /admin/access 하나로 모은다.
+  // (교사 *계정 자체* 관리는 /admin/members.)
   "/admin/teachers": "/admin/access",
   "/admin/subjects": "/admin/access",
+  "/admin/groups": "/admin/access",
+  "/admin/courses": "/admin/access",
 };
