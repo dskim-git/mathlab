@@ -21,7 +21,7 @@ export default function SiteFooter() {
   return (
     <footer className="mt-10 border-t border-indigo-400/15 px-4 py-5 text-center text-xs leading-7 text-slate-400">
       <p>
-        © 2026 MathLab. All rights reserved. &nbsp;|&nbsp; 개인정보책임자: 김대섭 교사 (휘문고등학교) &nbsp;|&nbsp; 문의: 02-500-9513
+        © 2026 MathLab. All rights reserved. &nbsp;|&nbsp; 개인정보책임자: 김대섭 교사 (휘문고등학교) &nbsp;|&nbsp; 문의: 02-500-9513 (daesobi1@gmail.com)
       </p>
       <button
         type="button"
@@ -153,9 +153,9 @@ function PrivacyPolicyBody() {
           <li><b>성명</b>: 김대섭 (개발자)</li>
           <li><b>소속</b>: 휘문고등학교</li>
           <li><b>직위</b>: 교사</li>
-          <li>
-            <b>연락처</b>: 02-500-9513 (학교 교무실)
-            <br />
+          <li><b>연락처</b>: 02-500-9513 (학교 교무실)</li>
+          <li><b>이메일</b>: daesobi1@gmail.com</li>
+          <li className="list-none">
             <span className="text-slate-500">※ 개인정보 보호를 위해 교사의 개인 휴대전화 번호는 기재하지 않습니다.</span>
           </li>
         </ul>
