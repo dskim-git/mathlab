@@ -91,6 +91,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/simple_interest_lab": "단리의 원리합계",
   "economics/mini/compound_interest_lab": "복리의 원리합계",
   "economics/mini/rule_of_72_lab": "맨해튼의 24달러와 72의 법칙",
+  "economics/mini/continuous_compound_lab": "연속복리",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
