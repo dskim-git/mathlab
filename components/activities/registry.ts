@@ -91,6 +91,7 @@ import CustomsLab from "./economics/1-1-3-tax/customs-lab/CustomsLab";
 import InterestRateLab from "./economics/1-2-1-interest/interest-rate-lab/InterestRateLab";
 import SimpleInterestLab from "./economics/1-2-1-interest/simple-interest-lab/SimpleInterestLab";
 import CompoundInterestLab from "./economics/1-2-1-interest/compound-interest-lab/CompoundInterestLab";
+import RuleOf72Lab from "./economics/1-2-1-interest/rule-of-72-lab/RuleOf72Lab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -297,6 +298,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/interest_rate_lab": InterestRateLab,
   "economics/mini/simple_interest_lab": SimpleInterestLab,
   "economics/mini/compound_interest_lab": CompoundInterestLab,
+  "economics/mini/rule_of_72_lab": RuleOf72Lab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,

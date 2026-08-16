@@ -136,7 +136,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "1-2-1 이자와 원리합계",
-    slugs: ["economics/mini/interest_rate_lab", "economics/mini/simple_interest_lab", "economics/mini/compound_interest_lab"],
+    slugs: ["economics/mini/interest_rate_lab", "economics/mini/simple_interest_lab", "economics/mini/compound_interest_lab", "economics/mini/rule_of_72_lab"],
   },
   {
     subject: "확률과통계",
