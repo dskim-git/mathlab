@@ -139,6 +139,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/interest_rate_lab", "economics/mini/simple_interest_lab", "economics/mini/compound_interest_lab", "economics/mini/rule_of_72_lab", "economics/mini/continuous_compound_lab", "economics/mini/installment_savings_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "1-2-2 현재가치와 할인율",
+    slugs: ["economics/mini/present_value_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [

@@ -94,6 +94,8 @@ import CompoundInterestLab from "./economics/1-2-1-interest/compound-interest-la
 import RuleOf72Lab from "./economics/1-2-1-interest/rule-of-72-lab/RuleOf72Lab";
 import ContinuousCompoundLab from "./economics/1-2-1-interest/continuous-compound-lab/ContinuousCompoundLab";
 import InstallmentSavingsLab from "./economics/1-2-1-interest/installment-savings-lab/InstallmentSavingsLab";
+// 1-2-2 현재가치와 할인율
+import PresentValueLab from "./economics/1-2-2-present-value/present-value-lab/PresentValueLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -303,6 +305,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/rule_of_72_lab": RuleOf72Lab,
   "economics/mini/continuous_compound_lab": ContinuousCompoundLab,
   "economics/mini/installment_savings_lab": InstallmentSavingsLab,
+  "economics/mini/present_value_lab": PresentValueLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
