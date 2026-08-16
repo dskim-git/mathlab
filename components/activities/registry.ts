@@ -96,6 +96,8 @@ import ContinuousCompoundLab from "./economics/1-2-1-interest/continuous-compoun
 import InstallmentSavingsLab from "./economics/1-2-1-interest/installment-savings-lab/InstallmentSavingsLab";
 // 1-2-2 현재가치와 할인율
 import PresentValueLab from "./economics/1-2-2-present-value/present-value-lab/PresentValueLab";
+// 1-2-3 연금
+import PensionLab from "./economics/1-2-3-pension/pension-lab/PensionLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -306,6 +308,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/continuous_compound_lab": ContinuousCompoundLab,
   "economics/mini/installment_savings_lab": InstallmentSavingsLab,
   "economics/mini/present_value_lab": PresentValueLab,
+  "economics/mini/pension_lab": PensionLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
