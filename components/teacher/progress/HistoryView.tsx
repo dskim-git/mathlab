@@ -4,7 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 import {
   ProgressGrid,
-  type ClassRow,
+  type CourseRow,
   type ProgressEntry,
   type WeeklySlotKey,
   type DailyMeta,
@@ -15,9 +15,7 @@ import type { ProgressDay, ProgressWeek } from "@/lib/dashboard/progressDates";
 export type HistoryEntry = {
   id: string;
   date: string; // YYYY-MM-DD
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   content: string;
 };
 
@@ -30,7 +28,7 @@ export type HistoryDayMeta = {
 type Props = {
   teacherId: string;
   schoolYear: number;
-  classes: ClassRow[];
+  courses: CourseRow[];
   entries: HistoryEntry[];
   dayMeta: HistoryDayMeta[];
   weeklySlots: WeeklySlotKey[];
@@ -38,54 +36,48 @@ type Props = {
 };
 
 // 빈 상태에서 "샘플 미리보기"용 가짜 데이터 (편집 모드 비활성)
+// 빈 상태 "샘플 미리보기" 용 가짜 수업·진도 (편집 모드 비활성)
+const DEMO_COURSES: CourseRow[] = [
+  { id: "demo-c1", name: "1학년 9반 공통수학1", subject: "공통수학1", grade: 1, class_number: 9 },
+  { id: "demo-c2", name: "2학년 9반 확률과통계", subject: "확률과통계", grade: 2, class_number: 9 },
+];
+
 const DEMO_ENTRIES: HistoryEntry[] = [
   {
     id: "demo-1",
     date: "2026-05-25",
-    grade: 1,
-    class_number: 9,
-    subject: "공통수학1",
+    course_id: "demo-c1",
     content:
       "다항식의 연산 (덧셈·뺄셈·곱셈)\n교과서 p.12-18, 연습문제 1~5번 풀이",
   },
   {
     id: "demo-2",
     date: "2026-05-25",
-    grade: 2,
-    class_number: 9,
-    subject: "확률과통계",
+    course_id: "demo-c2",
     content: "확률의 곱셈정리 도입\n예제 1·2 풀이, 모둠 토의",
   },
   {
     id: "demo-3",
     date: "2026-05-27",
-    grade: 1,
-    class_number: 9,
-    subject: "공통수학1",
+    course_id: "demo-c1",
     content: "인수분해 — 공식 정리\n공통인수·치환·완전제곱식",
   },
   {
     id: "demo-4",
     date: "2026-05-28",
-    grade: 2,
-    class_number: 9,
-    subject: "확률과통계",
+    course_id: "demo-c2",
     content: "베이즈 정리 — 도핑 검사 사례\n쿠키 상자 예제 풀이",
   },
   {
     id: "demo-5",
     date: "2026-05-29",
-    grade: 1,
-    class_number: 9,
-    subject: "공통수학1",
+    course_id: "demo-c1",
     content: "복소수와 이차방정식 — 켤레복소수\n허근의 합·곱",
   },
   {
     id: "demo-6",
     date: "2026-05-29",
-    grade: 2,
-    class_number: 9,
-    subject: "확률과통계",
+    course_id: "demo-c2",
     content: "독립시행 — 자유투 성공률\n수행평가 안내",
   },
 ];
@@ -121,29 +113,27 @@ function todayIso() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-type ClassCol = ClassRow;
-
-function classKey(c: ClassCol) {
-  return `${c.grade}-${c.class_number}-${c.subject}`;
+function cellKey(courseId: string, dateIso: string) {
+  return `${courseId}-${dateIso}`;
 }
 
-function cellKey(c: ClassCol, dateIso: string) {
-  return `${classKey(c)}-${dateIso}`;
-}
-
-function sortClasses(rows: ClassCol[]): ClassCol[] {
+// 표시 순서 — 학년·반이 있으면 그 순, 없으면(학반 없는 수업) 이름 순으로 뒤에.
+function sortCourses(rows: CourseRow[]): CourseRow[] {
   return [...rows].sort((a, b) => {
-    if (a.grade !== b.grade) return a.grade - b.grade;
-    if (a.class_number !== b.class_number)
-      return a.class_number - b.class_number;
-    return a.subject.localeCompare(b.subject, "ko");
+    const ga = a.grade ?? 99;
+    const gb = b.grade ?? 99;
+    if (ga !== gb) return ga - gb;
+    const ca = a.class_number ?? 99;
+    const cb = b.class_number ?? 99;
+    if (ca !== cb) return ca - cb;
+    return a.name.localeCompare(b.name, "ko");
   });
 }
 
 export function HistoryView({
   teacherId,
   schoolYear,
-  classes: propsClasses,
+  courses: propsCourses,
   entries,
   dayMeta,
   weeklySlots,
@@ -172,6 +162,7 @@ export function HistoryView({
   const isDemo = entries.length === 0 && dayMeta.length === 0 && showDemo;
   const effectiveEntries = isDemo ? DEMO_ENTRIES : entries;
   const effectiveDayMeta = isDemo ? DEMO_DAY_META : dayMeta;
+  const allCourses = isDemo ? DEMO_COURSES : propsCourses;
 
   // 월 목록 (오래된 월 먼저 — 학기 진행 순)
   const monthKeys = useMemo(() => {
@@ -200,28 +191,24 @@ export function HistoryView({
     [effectiveDayMeta, selectedMonth]
   );
 
-  // 등장한 학반 (entries 기준)
-  const entryClasses = useMemo<ClassCol[]>(() => {
-    const map = new Map<string, ClassCol>();
+  // 기록에 등장한 수업만 (읽기 표의 컬럼)
+  const entryCourses = useMemo<CourseRow[]>(() => {
+    const byId = new Map(allCourses.map((c) => [c.id, c]));
+    const map = new Map<string, CourseRow>();
     filteredEntries.forEach((e) => {
-      const c: ClassCol = {
-        grade: e.grade,
-        class_number: e.class_number,
-        subject: e.subject,
-      };
-      map.set(classKey(c), c);
+      if (!e.course_id) return;
+      const c = byId.get(e.course_id);
+      if (c) map.set(c.id, c);
     });
-    return sortClasses(Array.from(map.values()));
-  }, [filteredEntries]);
+    return sortCourses(Array.from(map.values()));
+  }, [filteredEntries, allCourses]);
 
-  // 편집 모드에서는 담당 학급도 합쳐서(과거에 없던 학반에도 입력 가능)
-  const editClasses = useMemo<ClassCol[]>(() => {
-    const map = new Map<string, ClassCol>();
-    [...entryClasses, ...propsClasses].forEach((c) => {
-      map.set(classKey(c), c);
-    });
-    return sortClasses(Array.from(map.values()));
-  }, [entryClasses, propsClasses]);
+  // 편집 모드에서는 담당 수업 전체를 컬럼으로 (기록이 없던 수업에도 입력 가능)
+  const editCourses = useMemo<CourseRow[]>(() => {
+    const map = new Map<string, CourseRow>();
+    [...entryCourses, ...allCourses].forEach((c) => map.set(c.id, c));
+    return sortCourses(Array.from(map.values()));
+  }, [entryCourses, allCourses]);
 
   // 등장한 날짜를 월별로 그룹화 (오래된 월 위, 같은 월 안에서 오래된 날짜 위 — 학기 진행 순)
   // 편집 모드일 때만 extraDates 도 합쳐서 빈 행으로 노출.
@@ -251,15 +238,10 @@ export function HistoryView({
   // readonly 표용 인덱스
   const cellIndex = useMemo(() => {
     const m = new Map<string, HistoryEntry>();
-    filteredEntries.forEach((e) =>
-      m.set(
-        cellKey(
-          { grade: e.grade, class_number: e.class_number, subject: e.subject },
-          e.date
-        ),
-        e
-      )
-    );
+    filteredEntries.forEach((e) => {
+      if (!e.course_id) return;
+      m.set(cellKey(e.course_id, e.date), e);
+    });
     return m;
   }, [filteredEntries]);
   const dayMetaIndex = useMemo(() => {
@@ -291,9 +273,7 @@ export function HistoryView({
   const progressEntries: ProgressEntry[] = filteredEntries.map((e) => ({
     id: e.id,
     date: e.date,
-    grade: e.grade,
-    class_number: e.class_number,
-    subject: e.subject,
+    course_id: e.course_id,
     content: e.content,
   }));
 
@@ -399,7 +379,7 @@ export function HistoryView({
         <>
           <p className="text-xs text-amber-200">
             📝 편집 모드 — 셀을 클릭해 진도표와 같은 방식으로 과거 기록을 수정·
-            추가·삭제할 수 있습니다. 학반 컬럼은 등장한 학반 + 현재 담당 학급의
+            추가·삭제할 수 있습니다. 수업 컬럼은 기록에 등장한 수업 + 현재 담당 수업의
             합집합입니다.
           </p>
 
@@ -454,7 +434,7 @@ export function HistoryView({
           <ProgressGrid
             teacherId={teacherId}
             schoolYear={schoolYear}
-            classes={editClasses}
+            courses={editCourses}
             weeks={weeksForGrid}
             initialEntries={progressEntries}
             initialWeeklySlots={weeklySlots}
@@ -470,19 +450,17 @@ export function HistoryView({
                 <th className="sticky left-0 z-20 min-w-[120px] bg-slate-900/90 px-3 py-3 text-left text-xs font-semibold text-slate-300 backdrop-blur">
                   일자
                 </th>
-                {entryClasses.length === 0 ? (
+                {entryCourses.length === 0 ? (
                   <th className="border-l border-white/10 px-3 py-3 text-left text-xs font-semibold text-slate-400">
-                    (학반 데이터 없음)
+                    (수업 데이터 없음)
                   </th>
                 ) : (
-                  entryClasses.map((c) => (
+                  entryCourses.map((c) => (
                     <th
-                      key={classKey(c)}
+                      key={c.id}
                       className="min-w-[180px] border-l border-white/10 px-3 py-3 text-left text-xs font-semibold text-white"
                     >
-                      <div>
-                        {c.grade}학년 {c.class_number}반
-                      </div>
+                      <div>{c.name}</div>
                       <div
                         className={`text-[11px] font-normal ${theme.accentText}`}
                       >
@@ -502,7 +480,7 @@ export function HistoryView({
                   <tr className="border-b border-white/10">
                     <th
                       scope="colgroup"
-                      colSpan={1 + Math.max(entryClasses.length, 1) + 1}
+                      colSpan={1 + Math.max(entryCourses.length, 1) + 1}
                       className={`sticky left-0 z-10 bg-slate-950/80 px-3 py-1.5 text-left text-[11px] font-bold backdrop-blur ${theme.accentText}`}
                     >
                       {monthLabel(g.monthKey)}
@@ -531,16 +509,16 @@ export function HistoryView({
                             </span>
                           </div>
                         </th>
-                        {entryClasses.length === 0 ? (
+                        {entryCourses.length === 0 ? (
                           <td className="border-l border-white/10 px-3 py-3 text-xs text-slate-500">
                             -
                           </td>
                         ) : (
-                          entryClasses.map((c) => {
-                            const cell = cellIndex.get(cellKey(c, iso));
+                          entryCourses.map((c) => {
+                            const cell = cellIndex.get(cellKey(c.id, iso));
                             return (
                               <td
-                                key={classKey(c)}
+                                key={c.id}
                                 className={`min-w-[180px] border-l border-white/10 align-top px-3 py-3 ${
                                   isOff ? "opacity-60" : ""
                                 }`}
@@ -590,7 +568,7 @@ export function HistoryView({
 
       <p className="text-xs text-slate-500">
         {editMode
-          ? "편집 모드에서는 진도표 페이지와 동일하게 셀 클릭으로 인라인 편집됩니다. 학반은 등장한 학반 + 현재 담당 학급의 합집합으로 표시됩니다."
+          ? "편집 모드에서는 진도표 페이지와 동일하게 셀 클릭으로 인라인 편집됩니다. 컬럼은 기록에 등장한 수업 + 현재 담당 수업의 합집합입니다."
           : "보기 모드입니다. 과거 기록을 수정하려면 우측 상단에서 편집 모드를 켜세요."}
       </p>
     </div>

@@ -4,6 +4,7 @@ export const revalidate = 0;
 import Link from "next/link";
 import { requireTeacher } from "@/lib/auth/requireTeacher";
 import { getCurrentSchoolYear } from "@/lib/settings/schoolYear";
+import { getCurrentSemester } from "@/lib/settings/semester";
 import {
   buildWeekRangeDays,
   buildMonthDays,
@@ -13,33 +14,23 @@ import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 import { buttonClasses } from "@/components/ui/Button";
 import {
   ProgressGrid,
-  type ClassRow,
+  type CourseRow,
   type ProgressEntry,
   type WeeklySlotKey,
   type DailyMeta,
   type DailyClassOverride,
 } from "@/components/teacher/progress/ProgressGrid";
 
-type TeacherPermissionRow = {
-  grade: number;
-  class_number: number;
-  subject: string;
-};
-
 type ProgressRow = {
   id: string;
   date: string;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   lesson_topic: string;
 };
 
 type WeeklyRow = {
   day_of_week: number;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
 };
 
 type DailyMetaRow = {
@@ -52,20 +43,9 @@ type DailyMetaRow = {
 type OverrideRow = {
   id: string;
   date: string;
-  grade: number;
-  class_number: number;
-  subject: string;
+  course_id: string | null;
   action: "add" | "remove";
 };
-
-function sortClasses(rows: ClassRow[]): ClassRow[] {
-  return [...rows].sort((a, b) => {
-    if (a.grade !== b.grade) return a.grade - b.grade;
-    if (a.class_number !== b.class_number)
-      return a.class_number - b.class_number;
-    return a.subject.localeCompare(b.subject, "ko");
-  });
-}
 
 type PageProps = {
   searchParams: Promise<{
@@ -140,30 +120,20 @@ export default async function TeacherProgressPage({
 
   const schoolYear = await getCurrentSchoolYear();
 
-  // 담당 학급
-  let classes: ClassRow[] = [];
-  if (!isAdmin) {
-    const { data: teacherRow } = await supabase
-      .from("teachers")
-      .select("id")
-      .eq("profile_id", user.id)
-      .maybeSingle();
+  // 담당 수업 — 현재 학년도·학기의 내 수업. 학기가 바뀌면 목록도 갈린다.
+  // (courses RLS 가 담당 수업만 반환하고, 관리자는 전체가 보인다.)
+  const semester = await getCurrentSemester();
+  const termLabel = `${schoolYear}학년도 ${semester}학기`;
 
-    if (teacherRow) {
-      const { data: permissions } = await supabase
-        .from("teacher_permissions")
-        .select("grade, class_number, subject")
-        .eq("teacher_id", (teacherRow as { id: string }).id);
-
-      classes = sortClasses(
-        ((permissions ?? []) as TeacherPermissionRow[]).map((p) => ({
-          grade: p.grade,
-          class_number: p.class_number,
-          subject: p.subject,
-        }))
-      );
-    }
-  }
+  const { data: courseRows } = await supabase
+    .from("courses")
+    .select("id, name, subject, grade, class_number")
+    .eq("school_year", schoolYear)
+    .eq("semester", semester)
+    .order("grade", { nullsFirst: false })
+    .order("class_number", { nullsFirst: false })
+    .order("name");
+  const courses = (courseRows ?? []) as CourseRow[];
 
   // 보는 윈도우의 날짜 묶음 — 주간(1~4주) 또는 월간.
   const weeks =
@@ -176,7 +146,7 @@ export default async function TeacherProgressPage({
   const lastIso = dateIsos[dateIsos.length - 1] ?? "";
 
   // 진도 / 시간표 / 일자 메타 / 학반 오버라이드 병렬
-  const [progressRes, weeklyRes, dayMetaRes, overrideRes] = isAdmin || !firstIso
+  const [progressRes, weeklyRes, dayMetaRes, overrideRes] = !firstIso
     ? [
         { data: [] as ProgressRow[] },
         { data: [] as WeeklyRow[] },
@@ -186,15 +156,13 @@ export default async function TeacherProgressPage({
     : await Promise.all([
         supabase
           .from("progress_tracker")
-          .select(
-            "id, date, grade, class_number, subject, lesson_topic"
-          )
+          .select("id, date, course_id, lesson_topic")
           .eq("teacher_id", user.id)
           .gte("date", firstIso)
           .lte("date", lastIso),
         supabase
           .from("weekly_schedule")
-          .select("day_of_week, grade, class_number, subject")
+          .select("day_of_week, course_id")
           .eq("teacher_id", user.id),
         supabase
           .from("daily_schedule_meta")
@@ -204,7 +172,7 @@ export default async function TeacherProgressPage({
           .lte("date", lastIso),
         supabase
           .from("daily_class_overrides")
-          .select("id, date, grade, class_number, subject, action")
+          .select("id, date, course_id, action")
           .eq("teacher_id", user.id)
           .gte("date", firstIso)
           .lte("date", lastIso),
@@ -215,9 +183,7 @@ export default async function TeacherProgressPage({
   ).map((r) => ({
     id: r.id,
     date: r.date,
-    grade: r.grade,
-    class_number: r.class_number,
-    subject: r.subject,
+    course_id: r.course_id,
     content: r.lesson_topic,
   }));
 
@@ -225,9 +191,7 @@ export default async function TeacherProgressPage({
     (weeklyRes.data ?? []) as WeeklyRow[]
   ).map((r) => ({
     day_of_week: r.day_of_week,
-    grade: r.grade,
-    class_number: r.class_number,
-    subject: r.subject,
+    course_id: r.course_id,
   }));
 
   const initialDayMeta: DailyMeta[] = (
@@ -244,9 +208,7 @@ export default async function TeacherProgressPage({
   ).map((r) => ({
     id: r.id,
     date: r.date,
-    grade: r.grade,
-    class_number: r.class_number,
-    subject: r.subject,
+    course_id: r.course_id,
     action: r.action,
   }));
 
@@ -279,11 +241,14 @@ export default async function TeacherProgressPage({
     <>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className={`text-sm font-semibold ${theme.accentText}`}>진도표</p>
+          <p className={`text-sm font-semibold ${theme.accentText}`}>
+            진도표 · {termLabel}
+          </p>
           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{headerTitle}</h1>
           <p className="mt-1 text-sm text-slate-400">
-            행 = 일자, 열 = 담당 학반(과목). 음영 = 요일 시간표에 등록된 수업
-            시간. 미래 주에 휴강·임시수업·진도 계획을 미리 표시할 수 있습니다.
+            행 = 일자, 열 = {termLabel} 담당 수업. 음영 = 요일 시간표에 등록된
+            수업 시간. 미래 주에 휴강·임시수업·진도 계획을 미리 표시할 수
+            있습니다.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -426,7 +391,7 @@ export default async function TeacherProgressPage({
 
       {isAdmin ? (
         <div className="mb-4 rounded-2xl border border-amber-300/30 bg-amber-300/5 p-4 text-sm text-amber-200">
-          관리자 계정에는 담당 학급이 없어 진도표 입력이 불가합니다. 교사 본인
+          관리자 계정에는 전체 수업이 보입니다. 진도 입력은 교사 본인
           계정으로 로그인해 사용하세요.
         </div>
       ) : null}
@@ -435,7 +400,7 @@ export default async function TeacherProgressPage({
         key={`${firstIso}_${lastIso}`}
         teacherId={user.id}
         schoolYear={schoolYear}
-        classes={classes}
+        courses={courses}
         weeks={weeks}
         initialEntries={initialEntries}
         initialWeeklySlots={initialWeeklySlots}
