@@ -77,6 +77,7 @@ import CircleEquationLab from "./common2/1-2-1-circle-equation/circle-equation-l
 import CircleGeneralFormLab from "./common2/1-2-1-circle-equation/circle-general-form-lab/CircleGeneralFormLab";
 import TangentAxisCircleLab from "./common2/1-2-1-circle-equation/tangent-axis-circle-lab/TangentAxisCircleLab";
 import ApolloniusCircleLab from "./common2/1-2-1-circle-equation/apollonius-circle-lab/ApolloniusCircleLab";
+import CircleLineRelationLab from "./common2/1-2-2-circle-line-relation/circle-line-relation-lab/CircleLineRelationLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -304,6 +305,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/circle_general_form_lab": CircleGeneralFormLab,
   "common2/mini/tangent_axis_circle_lab": TangentAxisCircleLab,
   "common2/mini/apollonius_circle_lab": ApolloniusCircleLab,
+  "common2/mini/circle_line_relation_lab": CircleLineRelationLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
