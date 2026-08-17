@@ -141,7 +141,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "1-2-2 원과 직선의 위치 관계",
-    slugs: ["common2/mini/circle_line_relation_lab"],
+    slugs: ["common2/mini/circle_line_relation_lab", "common2/mini/circle_tangent_line_lab"],
   },
   {
     subject: "경제수학",
