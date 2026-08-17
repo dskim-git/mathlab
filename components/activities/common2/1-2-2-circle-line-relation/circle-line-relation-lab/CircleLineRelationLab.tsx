@@ -1076,7 +1076,10 @@ function DistOne({ q, onSolved }: { q: DistQ; onSolved: () => void }) {
             <FormulaLine label="직선" tex={lineTex(q.L.a, q.L.b, q.L.c)} />
           </div>
           <p className="mt-1 text-[11px] text-slate-400">
-            중심 ({nx(q.center.x)}, {nx(q.center.y)}) · 반지름 <span className="font-mono text-slate-200">r = √{q.r2} ≈ {fmt(r)}</span>
+            중심 ({nx(q.center.x)}, {nx(q.center.y)}) · 반지름{" "}
+            <span className="align-middle text-slate-200">
+              <Katex expr={`r = ${mulRadTex(1, q.r2)} \\approx ${fmt(r)}`} />
+            </span>
           </p>
         </div>
 
