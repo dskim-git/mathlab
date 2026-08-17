@@ -83,6 +83,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/circle_line_relation_lab": "원과 직선의 위치 관계",
   "common2/mini/circle_tangent_line_lab": "원의 접선의 방정식",
   "common2/mini/translation_lab": "평행이동",
+  "common2/mini/reflection_lab": "대칭이동",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
