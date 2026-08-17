@@ -82,6 +82,7 @@ import CircleTangentLineLab from "./common2/1-2-2-circle-line-relation/circle-ta
 import TranslationLab from "./common2/1-3-1-translation/translation-lab/TranslationLab";
 import ReflectionLab from "./common2/1-3-2-reflection/reflection-lab/ReflectionLab";
 import LineYxReflectionLab from "./common2/1-3-2-reflection/line-yx-reflection-lab/LineYxReflectionLab";
+import GeneralSymmetryLab from "./common2/1-3-2-reflection/general-symmetry-lab/GeneralSymmetryLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -314,6 +315,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/translation_lab": TranslationLab,
   "common2/mini/reflection_lab": ReflectionLab,
   "common2/mini/line_yx_reflection_lab": LineYxReflectionLab,
+  "common2/mini/general_symmetry_lab": GeneralSymmetryLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
