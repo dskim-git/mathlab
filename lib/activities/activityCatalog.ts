@@ -131,7 +131,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "1-2-1 원의 방정식",
-    slugs: ["common2/mini/circle_equation_lab"],
+    slugs: ["common2/mini/circle_equation_lab", "common2/mini/circle_general_form_lab"],
   },
   {
     subject: "경제수학",

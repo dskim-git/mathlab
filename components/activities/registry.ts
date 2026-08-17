@@ -74,6 +74,7 @@ import PointLineDistanceLab from "./common2/1-1-3-point-line-distance/point-line
 import ParallelPerpLab from "./common2/1-1-3-point-line-distance/parallel-perp-lab/ParallelPerpLab";
 // [1] 도형의 방정식 — (4) 원의 방정식
 import CircleEquationLab from "./common2/1-2-1-circle-equation/circle-equation-lab/CircleEquationLab";
+import CircleGeneralFormLab from "./common2/1-2-1-circle-equation/circle-general-form-lab/CircleGeneralFormLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -298,6 +299,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/point_line_distance_lab": PointLineDistanceLab,
   "common2/mini/parallel_perp_lab": ParallelPerpLab,
   "common2/mini/circle_equation_lab": CircleEquationLab,
+  "common2/mini/circle_general_form_lab": CircleGeneralFormLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
