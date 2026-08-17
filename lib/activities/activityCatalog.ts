@@ -151,7 +151,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "1-3-2 대칭이동",
-    slugs: ["common2/mini/reflection_lab", "common2/mini/line_yx_reflection_lab", "common2/mini/general_symmetry_lab"],
+    slugs: ["common2/mini/reflection_lab", "common2/mini/line_yx_reflection_lab", "common2/mini/general_symmetry_lab", "common2/mini/shortest_path_lab"],
   },
   {
     subject: "경제수학",
