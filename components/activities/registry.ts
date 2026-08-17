@@ -85,6 +85,7 @@ import LineYxReflectionLab from "./common2/1-3-2-reflection/line-yx-reflection-l
 import GeneralSymmetryLab from "./common2/1-3-2-reflection/general-symmetry-lab/GeneralSymmetryLab";
 import ShortestPathLab from "./common2/1-3-2-reflection/shortest-path-lab/ShortestPathLab";
 import TessellationLab from "./common2/1-3-2-reflection/tessellation-lab/TessellationLab";
+import MoveCardLab from "./common2/1-3-2-reflection/move-card-lab/MoveCardLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -320,6 +321,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/general_symmetry_lab": GeneralSymmetryLab,
   "common2/mini/shortest_path_lab": ShortestPathLab,
   "common2/mini/tessellation_lab": TessellationLab,
+  "common2/mini/move_card_lab": MoveCardLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
