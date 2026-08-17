@@ -533,7 +533,7 @@ function FormulaLine({ tex, label }: { tex: string; label?: string }) {
   return (
     <div className="flex items-baseline gap-2">
       {label ? <span className="w-14 shrink-0 text-[10px] font-bold text-slate-400">{label}</span> : null}
-      <span className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 text-slate-100">
+      <span className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden py-1 text-slate-100">
         <Katex expr={tex} />
       </span>
     </div>
@@ -779,7 +779,7 @@ function ResultLine({ tone, label, tex }: { tone: "sky" | "violet"; label: strin
   return (
     <div className="flex items-center gap-2">
       <span className={"w-12 shrink-0 rounded-md border px-1 py-0.5 text-center text-[10px] font-bold " + cls}>{label}</span>
-      <span className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-black/25 px-2.5 py-1.5 text-slate-100">
+      <span className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-2.5 py-1.5 text-slate-100">
         <Katex expr={tex} />
       </span>
     </div>
@@ -959,12 +959,12 @@ function AreaTab() {
               <div className="rounded-xl border border-pink-400/30 bg-pink-400/[0.07] px-3 py-2">
                 <p className="text-[11px] font-bold text-pink-200">① 밑변 × 높이 ÷ 2 — 높이가 바로 ‘점과 직선 사이의 거리’</p>
                 <div className="mt-1 space-y-0.5">
-                  <FormulaLine label="밑변" tex={`\\overline{AB} = \\sqrt{${(B.x - A.x) ** 2} + ${(B.y - A.y) ** 2}} = ${radTex(abLen2)}`} />
+                  <FormulaLine label="밑변" tex={`\\sqrt{${(B.x - A.x) ** 2} + ${(B.y - A.y) ** 2}} = ${radTex(abLen2)}`} />
                   <FormulaLine
                     label="높이"
-                    tex={`d = \\frac{|${ab.a}\\cdot(${C.x}) + ${ab.b}\\cdot(${C.y}) + ${ab.c}|}{\\sqrt{${dDen}}} = ${distTex(dNum, dDen)} \\approx ${d.toFixed(3)}`}
+                    tex={`\\frac{|${ab.a}\\cdot(${C.x}) + ${ab.b}\\cdot(${C.y}) + ${ab.c}|}{\\sqrt{${dDen}}} = ${distTex(dNum, dDen)} \\approx ${d.toFixed(2)}`}
                   />
-                  <FormulaLine label="넓이" tex={`S = \\tfrac{1}{2} \\times ${radTex(abLen2)} \\times ${distTex(dNum, dDen)} = ${area}`} />
+                  <FormulaLine label="넓이" tex={`\\tfrac{1}{2} \\times ${radTex(abLen2)} \\times ${distTex(dNum, dDen)} = ${area}`} />
                 </div>
               </div>
               <div className="rounded-xl border border-sky-400/30 bg-sky-400/[0.07] px-3 py-2">
@@ -972,7 +972,7 @@ function AreaTab() {
                 <div className="mt-1 space-y-0.5">
                   <FormulaLine
                     label="넓이"
-                    tex={`S = \\tfrac{1}{2}\\left|${A.x}(${B.y} - (${C.y})) + ${B.x}((${C.y}) - ${A.y}) + (${C.x})(${A.y} - (${B.y}))\\right| = ${area}`}
+                    tex={`\\tfrac{1}{2}\\left|${A.x}(${B.y} - (${C.y})) + ${B.x}((${C.y}) - ${A.y}) + (${C.x})(${A.y} - (${B.y}))\\right| = ${area}`}
                   />
                 </div>
               </div>
