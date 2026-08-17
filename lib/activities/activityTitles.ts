@@ -78,6 +78,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/parallel_perp_lab": "한 점을 지나는 평행선과 수직선",
   "common2/mini/circle_equation_lab": "원의 방정식",
   "common2/mini/circle_general_form_lab": "원의 방정식의 표준형과 일반형",
+  "common2/mini/tangent_axis_circle_lab": "좌표축에 접하는 원",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
