@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { errorMessage as toErrorMessage } from "@/lib/supabase/errorMessage";
 import type { ProgressWeek, ProgressDay } from "@/lib/dashboard/progressDates";
 import { getRoleTheme } from "@/lib/dashboard/roleTheme";
 
@@ -281,8 +282,7 @@ export function ProgressGrid({
         // 새 데이터로 받아 보기 모드 표가 즉시 반영되도록 한다.
         router.refresh();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setErrorMessage(msg);
+        setErrorMessage(toErrorMessage(err));
         setBusy(null);
       }
     },
@@ -328,8 +328,7 @@ export function ProgressGrid({
         setEditing(null);
         router.refresh();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setErrorMessage(msg);
+        setErrorMessage(toErrorMessage(err));
         setBusy(null);
       }
     },
