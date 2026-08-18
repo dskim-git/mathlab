@@ -7,7 +7,10 @@
  *   세특사용량  → ai_usage_log (teacher=daesobi)
  *
  * 학반 컬럼 형식: "1학년 9반 (공통수)" / "2학년 9반 (확률과통)"
- * → grade/class_number 추출 + 약어 → subjects 마스터 이름 매핑.
+ * → grade/class_number 추출 + 약어 → subjects 마스터 이름 매핑
+ * → 그 (교과·학년·반) 으로 courses(개설 수업) 를 찾아 course_id 로 저장한다.
+ *   (진도·시간표 테이블의 키가 course_id 기준으로 바뀌었다 — 20260816_progress_by_course.sql)
+ *   개설 수업이 없는 학반은 넣을 수 없으므로 건너뛰고 목록으로 보고한다.
  *
  * 실행:
  *   npx tsx scripts/import/progress.ts --dry-run
@@ -40,6 +43,9 @@ const ONLY = onlyArg ? onlyArg.slice("--only=".length) : null;
 
 const PROGRESS_SHEET_ID = "13dDQ4LAHfOA4poxhD6IZ8RI3OkTrryGOUOjNRAzMhOo";
 const SCHOOL_YEAR = 2026;
+// 레거시 시트는 2026학년도 1학기 자료다. 20260816_progress_by_course.sql 의
+// 백필도 같은 (2026, 1) 기준이라 여기에 맞춘다.
+const SEMESTER = 1;
 const DAESOBI_LOGIN_ID = "daesobi";
 
 const TAB_PROGRESS = "진도표";
@@ -120,9 +126,59 @@ async function getDaesobiProfileId(sb: SupabaseClient): Promise<string> {
 }
 
 // ═════════════════════════════════════════════════════════════
+// 수업(course) 매핑
+// ═════════════════════════════════════════════════════════════
+// 20260816_progress_by_course.sql 이후 progress_tracker / daily_class_overrides /
+// weekly_schedule 의 유일성 키는 course_id 기준이다. 옛 키
+// (grade, class_number, subject) 제약은 삭제됐으므로 그대로 upsert 하면
+// 42P10 (no unique or exclusion constraint matching the ON CONFLICT specification)
+// 이 난다. 시트의 학반·교과를 개설 수업으로 먼저 해석한 뒤 course_id 로 넣는다.
+
+/** `${subject}-${grade}-${classNumber}` — 시트 학반 ↔ 수업 매칭 키 */
+function courseKey(subject: string, grade: number, classNumber: number) {
+  return `${subject}-${grade}-${classNumber}`;
+}
+
+async function loadCourseMap(sb: SupabaseClient): Promise<Map<string, string>> {
+  const { data, error } = await sb
+    .from("courses")
+    .select("id, subject, grade, class_number")
+    .eq("school_year", SCHOOL_YEAR)
+    .eq("semester", SEMESTER);
+  if (error) throw new Error(`courses 조회 실패: ${error.message}`);
+  const m = new Map<string, string>();
+  for (const c of (data ?? []) as Array<{
+    id: string;
+    subject: string;
+    grade: number | null;
+    class_number: number | null;
+  }>) {
+    if (c.grade == null || c.class_number == null) continue; // 학반 없는 선택 수업은 시트에 없다
+    m.set(courseKey(c.subject, c.grade, c.class_number), c.id);
+  }
+  console.log(`수업 매핑 ${m.size}건 (${SCHOOL_YEAR}학년도 ${SEMESTER}학기)`);
+  return m;
+}
+
+/** 매칭 실패한 학반을 한 번에 모아 보고 — 개설 수업이 없으면 그 행은 넣을 수 없다. */
+function reportUnmatched(unmatched: Map<string, number>) {
+  if (unmatched.size === 0) return;
+  console.log(`  ⚠ 개설 수업 미매칭 ${unmatched.size}종 — 해당 행은 건너뜀`);
+  for (const [key, count] of unmatched) {
+    console.log(`     ${key} (${count}건)`);
+  }
+  console.log(`     → 관리자 화면에서 수업을 개설한 뒤 다시 실행하세요.`);
+}
+
+// ═════════════════════════════════════════════════════════════
 // 1) 진도표 → progress_tracker
 // ═════════════════════════════════════════════════════════════
-async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.WorkSheet) {
+async function importProgress(
+  sb: SupabaseClient,
+  daesobiId: string,
+  ws: XLSX.WorkSheet,
+  courseMap: Map<string, string>
+) {
   console.log("\n=== 진도표 → progress_tracker ===");
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
   if (rows.length === 0) {
@@ -139,16 +195,16 @@ async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
     .filter((x): x is { h: string; parsed: ReturnType<typeof parseClassHeader> & {} } => x.parsed != null);
   console.log(`  학반 컬럼 ${classCols.length}개: ${classCols.map((c) => c.h).join(", ")}`);
 
+  // 교과·학년·반은 DB 트리거가 course 에서 채운다 — course_id 만 보내면 된다.
   const batch: Array<{
     teacher_id: string;
     school_year: number;
     date: string;
-    grade: number;
-    class_number: number;
-    subject: string;
+    course_id: string;
     lesson_topic: string;
     notes: string;
   }> = [];
+  const unmatched = new Map<string, number>();
 
   for (const row of rows) {
     const date = parseDate(row["날짜"]);
@@ -156,13 +212,17 @@ async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
     for (const cc of classCols) {
       const topic = String(row[cc.h] ?? "").trim();
       if (!topic) continue;
+      const key = courseKey(cc.parsed.subject, cc.parsed.grade, cc.parsed.classNumber);
+      const courseId = courseMap.get(key);
+      if (!courseId) {
+        unmatched.set(key, (unmatched.get(key) ?? 0) + 1);
+        continue;
+      }
       batch.push({
         teacher_id: daesobiId,
         school_year: SCHOOL_YEAR,
         date,
-        grade: cc.parsed.grade,
-        class_number: cc.parsed.classNumber,
-        subject: cc.parsed.subject,
+        course_id: courseId,
         lesson_topic: topic,
         notes: "", // 비고는 daily_schedule_meta 로 분리 (importDailyMeta)
       });
@@ -170,12 +230,13 @@ async function importProgress(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
   }
 
   console.log(`  배치 ${batch.length}건`);
+  reportUnmatched(unmatched);
   if (DRY_RUN || batch.length === 0) return;
-  // unique (teacher,date,grade,class,subject) — 중복 시 ignore. supabase 는 upsert ignoreDuplicates.
+  // unique (teacher,date,course) — 중복 시 ignore. supabase 는 upsert ignoreDuplicates.
   const { error } = await sb
     .from("progress_tracker")
     .upsert(batch, {
-      onConflict: "teacher_id,date,grade,class_number,subject",
+      onConflict: "teacher_id,date,course_id",
       ignoreDuplicates: true,
     });
   if (error) console.log(`  ❌ ${error.message}`);
@@ -218,17 +279,21 @@ async function importDailyMeta(sb: SupabaseClient, daesobiId: string, ws: XLSX.W
 // ═════════════════════════════════════════════════════════════
 // 2) 시간표설정 → daily_class_overrides
 // ═════════════════════════════════════════════════════════════
-async function importSchedule(sb: SupabaseClient, daesobiId: string, ws: XLSX.WorkSheet) {
+async function importSchedule(
+  sb: SupabaseClient,
+  daesobiId: string,
+  ws: XLSX.WorkSheet,
+  courseMap: Map<string, string>
+) {
   console.log("\n=== 시간표설정 → daily_class_overrides ===");
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
   const batch: Array<{
     teacher_id: string;
     date: string;
-    grade: number;
-    class_number: number;
-    subject: string;
+    course_id: string;
     action: "add";
   }> = [];
+  const unmatched = new Map<string, number>();
   let skip = 0;
   for (const row of rows) {
     const date = parseDate(row["날짜"]);
@@ -243,21 +308,26 @@ async function importSchedule(sb: SupabaseClient, daesobiId: string, ws: XLSX.Wo
       skip++;
       continue;
     }
+    const key = courseKey(parsed.subject, parsed.grade, parsed.classNumber);
+    const courseId = courseMap.get(key);
+    if (!courseId) {
+      unmatched.set(key, (unmatched.get(key) ?? 0) + 1);
+      continue;
+    }
     batch.push({
       teacher_id: daesobiId,
       date,
-      grade: parsed.grade,
-      class_number: parsed.classNumber,
-      subject: parsed.subject,
+      course_id: courseId,
       action: "add",
     });
   }
   console.log(`  배치 ${batch.length}건 (빈 행 skip ${skip})`);
+  reportUnmatched(unmatched);
   if (DRY_RUN || batch.length === 0) return;
   const { error } = await sb
     .from("daily_class_overrides")
     .upsert(batch, {
-      onConflict: "teacher_id,date,grade,class_number,subject",
+      onConflict: "teacher_id,date,course_id",
       ignoreDuplicates: true,
     });
   if (error) console.log(`  ❌ ${error.message}`);
@@ -449,39 +519,52 @@ async function deriveWeeklySchedule(sb: SupabaseClient, daesobiId: string) {
   console.log("\n=== weekly_schedule 자동 추정 (progress_tracker 기반) ===");
   const { data: rows, error } = await sb
     .from("progress_tracker")
-    .select("date, grade, class_number, subject")
+    .select("date, course_id, grade, class_number, subject")
     .eq("teacher_id", daesobiId);
   if (error) {
     console.log(`  ❌ progress_tracker 조회 실패: ${error.message}`);
     return;
   }
 
-  // (day_of_week, grade, class_number, subject) → count
+  // (day_of_week, course_id) → count. 학년·반·교과는 로그 표시용으로만 들고 간다.
   const tally = new Map<
     string,
-    { day_of_week: number; grade: number; class_number: number; subject: string; count: number }
+    {
+      day_of_week: number;
+      course_id: string;
+      label: string;
+      count: number;
+    }
   >();
+  let noCourse = 0;
   for (const r of (rows ?? []) as Array<{
     date: string;
-    grade: number;
-    class_number: number;
+    course_id: string | null;
+    grade: number | null;
+    class_number: number | null;
     subject: string;
   }>) {
+    if (!r.course_id) {
+      noCourse += 1; // 수업으로 매칭되지 않은 옛 행 — 시간표를 만들 수 없다
+      continue;
+    }
     const d = new Date(r.date + "T00:00:00");
     const jsDow = d.getDay(); // 0=일 ~ 6=토
     if (jsDow === 0 || jsDow === 6) continue; // 주말 skip
     const dow = jsDow - 1; // 1=월 → 0, 5=금 → 4
-    const key = `${dow}-${r.grade}-${r.class_number}-${r.subject}`;
+    const key = `${dow}-${r.course_id}`;
     const prev = tally.get(key);
     if (prev) prev.count += 1;
     else
       tally.set(key, {
         day_of_week: dow,
-        grade: r.grade,
-        class_number: r.class_number,
-        subject: r.subject,
+        course_id: r.course_id,
+        label: `${r.grade ?? "-"}-${r.class_number ?? "-"} ${r.subject}`,
         count: 1,
       });
+  }
+  if (noCourse > 0) {
+    console.log(`  ⚠ course_id 없는 진도 행 ${noCourse}건 — 추정에서 제외`);
   }
 
   const candidates = Array.from(tally.values())
@@ -489,30 +572,25 @@ async function deriveWeeklySchedule(sb: SupabaseClient, daesobiId: string) {
     .sort((a, b) =>
       a.day_of_week !== b.day_of_week
         ? a.day_of_week - b.day_of_week
-        : a.grade !== b.grade
-        ? a.grade - b.grade
-        : a.class_number - b.class_number
+        : a.label.localeCompare(b.label)
     );
   const DOW_LABEL = ["월", "화", "수", "목", "금"];
   console.log(`  임계 ${WEEKLY_THRESHOLD}회 이상: ${candidates.length}건`);
   for (const c of candidates) {
-    console.log(
-      `    ${DOW_LABEL[c.day_of_week]} ${c.grade}-${c.class_number} ${c.subject} (${c.count}회)`
-    );
+    console.log(`    ${DOW_LABEL[c.day_of_week]} ${c.label} (${c.count}회)`);
   }
   if (DRY_RUN || candidates.length === 0) return;
 
+  // 교과·학년·반은 DB 트리거가 course 에서 채운다.
   const batch = candidates.map((c) => ({
     teacher_id: daesobiId,
     day_of_week: c.day_of_week,
-    grade: c.grade,
-    class_number: c.class_number,
-    subject: c.subject,
+    course_id: c.course_id,
   }));
   const { error: upErr } = await sb
     .from("weekly_schedule")
     .upsert(batch, {
-      onConflict: "teacher_id,day_of_week,grade,class_number,subject",
+      onConflict: "teacher_id,day_of_week,course_id",
       ignoreDuplicates: true,
     });
   if (upErr) console.log(`  ❌ ${upErr.message}`);
@@ -531,6 +609,7 @@ async function main() {
   });
   const daesobiId = await getDaesobiProfileId(sb);
   console.log(`daesobi profile_id = ${daesobiId}`);
+  const courseMap = await loadCourseMap(sb);
 
   if (RESET && !DRY_RUN) {
     console.log("\n🧹 RESET — daesobi 의 progress/daymeta/schedule/sebteuk wipe");
@@ -546,7 +625,7 @@ async function main() {
 
   if (ONLY === null || ONLY === "progress") {
     const ws = wb.Sheets[TAB_PROGRESS];
-    if (ws) await importProgress(sb, daesobiId, ws);
+    if (ws) await importProgress(sb, daesobiId, ws, courseMap);
     else console.log(`⚠ ${TAB_PROGRESS} 탭 없음`);
   }
   if (ONLY === null || ONLY === "daymeta") {
@@ -556,7 +635,7 @@ async function main() {
   }
   if (ONLY === null || ONLY === "schedule") {
     const ws = wb.Sheets[TAB_SCHEDULE];
-    if (ws) await importSchedule(sb, daesobiId, ws);
+    if (ws) await importSchedule(sb, daesobiId, ws, courseMap);
     else console.log(`⚠ ${TAB_SCHEDULE} 탭 없음`);
   }
   if (ONLY === null || ONLY === "visits") {
