@@ -121,6 +121,7 @@ import PensionLab from "./economics/1-2-3-pension/pension-lab/PensionLab";
 import BudgetLifeLab from "./economics/1-2-3-pension/budget-life-lab/BudgetLifeLab";
 // 2-1-1 생산함수와 비용함수
 import ProductionFunctionLab from "./economics/2-1-1-production-cost/production-function-lab/ProductionFunctionLab";
+import CostFunctionLab from "./economics/2-1-1-production-cost/cost-function-lab/CostFunctionLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -351,6 +352,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/pension_lab": PensionLab,
   "economics/mini/budget_life_lab": BudgetLifeLab,
   "economics/mini/production_function_lab": ProductionFunctionLab,
+  "economics/mini/cost_function_lab": CostFunctionLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
