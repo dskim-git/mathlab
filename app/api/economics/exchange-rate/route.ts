@@ -32,7 +32,8 @@ export async function GET() {
     ]);
     if (!res.ok) throw new Error(`frankfurter ${res.status}`);
     const json = await res.json();
-    const rates = json?.rates;
+    // base=EUR 응답의 rates 에는 기준통화 EUR 자신이 빠져 있으므로 1 로 채워 준다.
+    const rates = { EUR: 1, ...json?.rates };
     if (!rates?.KRW) throw new Error("no KRW");
     const krw: Record<string, number> = {};
     for (const c of CODES) if (rates[c]) krw[c] = Math.round((rates.KRW / rates[c]) * 100) / 100;
