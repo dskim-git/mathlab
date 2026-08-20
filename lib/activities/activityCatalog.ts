@@ -194,6 +194,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/demand_supply_lab", "economics/mini/demand_forecast_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "2-1-3 효용함수",
+    slugs: ["economics/mini/utility_function_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
