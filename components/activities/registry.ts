@@ -124,6 +124,7 @@ import ProductionFunctionLab from "./economics/2-1-1-production-cost/production-
 import CostFunctionLab from "./economics/2-1-1-production-cost/cost-function-lab/CostFunctionLab";
 // 2-1-2 수요함수와 공급함수
 import DemandSupplyLab from "./economics/2-1-2-demand-supply/demand-supply-lab/DemandSupplyLab";
+import DemandForecastLab from "./economics/2-1-2-demand-supply/demand-forecast-lab/DemandForecastLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -356,6 +357,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/production_function_lab": ProductionFunctionLab,
   "economics/mini/cost_function_lab": CostFunctionLab,
   "economics/mini/demand_supply_lab": DemandSupplyLab,
+  "economics/mini/demand_forecast_lab": DemandForecastLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
