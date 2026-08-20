@@ -206,7 +206,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "2-2-2 균형가격의 변화",
-    slugs: ["economics/mini/equilibrium_change_lab", "economics/mini/tax_explorer_lab"],
+    slugs: [
+      "economics/mini/equilibrium_change_lab",
+      "economics/mini/tax_explorer_lab",
+      "economics/mini/inflation_lab",
+    ],
   },
   {
     subject: "확률과통계",

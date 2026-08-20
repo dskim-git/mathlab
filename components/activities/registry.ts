@@ -133,6 +133,7 @@ import MarketAdjustLab from "./economics/2-2-1-equilibrium/market-adjust-lab/Mar
 // 2-2-2 균형가격의 변화
 import EquilibriumChangeLab from "./economics/2-2-2-equilibrium-change/equilibrium-change-lab/EquilibriumChangeLab";
 import TaxExplorerLab from "./economics/2-2-2-equilibrium-change/tax-explorer-lab/TaxExplorerLab";
+import InflationLab from "./economics/2-2-2-equilibrium-change/inflation-lab/InflationLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -372,6 +373,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/market_adjust_lab": MarketAdjustLab,
   "economics/mini/equilibrium_change_lab": EquilibriumChangeLab,
   "economics/mini/tax_explorer_lab": TaxExplorerLab,
+  "economics/mini/inflation_lab": InflationLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
