@@ -196,7 +196,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "2-1-3 효용함수",
-    slugs: ["economics/mini/utility_function_lab"],
+    slugs: ["economics/mini/utility_function_lab", "economics/mini/ordinal_cardinal_lab"],
   },
   {
     subject: "확률과통계",

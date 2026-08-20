@@ -118,6 +118,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/demand_supply_lab": "수요함수와 공급함수",
   "economics/mini/demand_forecast_lab": "수요량 예측하기",
   "economics/mini/utility_function_lab": "효용함수",
+  "economics/mini/ordinal_cardinal_lab": "효용의 순서와 크기",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
