@@ -184,6 +184,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/pension_lab", "economics/mini/budget_life_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "2-1-1 생산함수와 비용함수",
+    slugs: ["economics/mini/production_function_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
