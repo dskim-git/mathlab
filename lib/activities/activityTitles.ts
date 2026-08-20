@@ -121,6 +121,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/ordinal_cardinal_lab": "효용의 순서와 크기",
   "economics/mini/equilibrium_price_lab": "균형가격의 결정",
   "economics/mini/market_adjust_lab": "시장가격과 균형가격",
+  "economics/mini/equilibrium_change_lab": "균형가격의 변화",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
