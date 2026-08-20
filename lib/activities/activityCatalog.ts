@@ -199,6 +199,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/utility_function_lab", "economics/mini/ordinal_cardinal_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "2-2-1 균형가격의 결정",
+    slugs: ["economics/mini/equilibrium_price_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [

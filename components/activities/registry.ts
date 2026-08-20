@@ -127,6 +127,8 @@ import DemandSupplyLab from "./economics/2-1-2-demand-supply/demand-supply-lab/D
 import DemandForecastLab from "./economics/2-1-2-demand-supply/demand-forecast-lab/DemandForecastLab";
 import UtilityFunctionLab from "./economics/2-1-3-utility/utility-function-lab/UtilityFunctionLab";
 import OrdinalCardinalLab from "./economics/2-1-3-utility/ordinal-cardinal-lab/OrdinalCardinalLab";
+// 2-2-1 균형가격의 결정
+import EquilibriumPriceLab from "./economics/2-2-1-equilibrium/equilibrium-price-lab/EquilibriumPriceLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -362,6 +364,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/demand_forecast_lab": DemandForecastLab,
   "economics/mini/utility_function_lab": UtilityFunctionLab,
   "economics/mini/ordinal_cardinal_lab": OrdinalCardinalLab,
+  "economics/mini/equilibrium_price_lab": EquilibriumPriceLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
