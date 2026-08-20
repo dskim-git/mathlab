@@ -113,6 +113,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/present_value_lab": "현재가치와 할인율",
   "economics/mini/pension_lab": "연금의 종류와 생명연금",
   "economics/mini/budget_life_lab": "수입과 지출을 고려한 금융 생활",
+  "economics/mini/production_function_lab": "생산함수",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
