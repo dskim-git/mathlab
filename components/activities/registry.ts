@@ -130,6 +130,8 @@ import OrdinalCardinalLab from "./economics/2-1-3-utility/ordinal-cardinal-lab/O
 // 2-2-1 균형가격의 결정
 import EquilibriumPriceLab from "./economics/2-2-1-equilibrium/equilibrium-price-lab/EquilibriumPriceLab";
 import MarketAdjustLab from "./economics/2-2-1-equilibrium/market-adjust-lab/MarketAdjustLab";
+// 2-2-2 균형가격의 변화
+import EquilibriumChangeLab from "./economics/2-2-2-equilibrium-change/equilibrium-change-lab/EquilibriumChangeLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -367,6 +369,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/ordinal_cardinal_lab": OrdinalCardinalLab,
   "economics/mini/equilibrium_price_lab": EquilibriumPriceLab,
   "economics/mini/market_adjust_lab": MarketAdjustLab,
+  "economics/mini/equilibrium_change_lab": EquilibriumChangeLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
