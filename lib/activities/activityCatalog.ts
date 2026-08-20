@@ -191,7 +191,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "2-1-2 수요함수와 공급함수",
-    slugs: ["economics/mini/demand_supply_lab"],
+    slugs: ["economics/mini/demand_supply_lab", "economics/mini/demand_forecast_lab"],
   },
   {
     subject: "확률과통계",
