@@ -156,7 +156,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "2-1-1 집합의 뜻과 표현",
-    slugs: ["common2/mini/set_notation_lab"],
+    slugs: ["common2/mini/set_notation_lab", "common2/mini/set_game_lab"],
   },
   {
     subject: "경제수학",
