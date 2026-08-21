@@ -126,6 +126,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/inflation_lab": "인플레이션과 균형가격",
   "economics/mini/region_lab": "부등식의 영역",
   "economics/mini/system_region_lab": "연립부등식의 영역과 최대·최소",
+  "economics/mini/linear_programming_lab": "선형계획법",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
