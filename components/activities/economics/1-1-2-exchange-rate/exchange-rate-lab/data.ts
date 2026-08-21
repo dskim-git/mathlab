@@ -1,5 +1,5 @@
 // 환율 미니활동 — Frankfurter(유럽중앙은행 ECB 참조환율) 공식 데이터. 기준일 2026-08-20.
-// scratchpad fetch_fx.mjs 로 생성. 값은 '통화 1단위 = ? 원'(KRW per unit). JPY 는 관례상 100단위로 표시(unit).
+// scripts/fetch/economics_fx.mjs 로 생성. 값은 '통화 1단위 = ? 원'(KRW per unit). JPY 는 관례상 100단위로 표시(unit).
 export type Currency = { code: string; ko: string; emoji: string; unit: number };
 export type Series = { dates: string[]; rates: Record<string, (number | null)[]> };
 export const AS_OF = "2026-08-20";

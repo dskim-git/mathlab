@@ -1,5 +1,5 @@
 // 현명하게 환전하기 미니활동 — Frankfurter(ECB) 환율 스냅샷. 기준일 2026-08-20.
-// CURRENT_KRW = 통화 1단위 = ? 원(매매기준율). spread = 은행 현찰 환전 수수료율(편도, 근사).
+// scripts/fetch/economics_fx.mjs 로 생성. CURRENT_KRW = 통화 1단위 = ? 원(매매기준율). spread = 은행 현찰 환전 수수료율(편도, 근사).
 // 살 때(고객이 외화 살 때)=기준*(1+spread), 팔 때=기준*(1-spread).
 export type Cur = { code: string; ko: string; unit: number; spread: number };
 export const AS_OF = "2026-08-20";
