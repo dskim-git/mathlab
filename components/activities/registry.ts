@@ -136,6 +136,7 @@ import TaxExplorerLab from "./economics/2-2-2-equilibrium-change/tax-explorer-la
 import InflationLab from "./economics/2-2-2-equilibrium-change/inflation-lab/InflationLab";
 import RegionLab from "./economics/2-2-3-inequality-region/region-lab/RegionLab";
 import SystemRegionLab from "./economics/2-2-3-inequality-region/system-region-lab/SystemRegionLab";
+import LinearProgrammingLab from "./economics/2-2-3-inequality-region/linear-programming-lab/LinearProgrammingLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -378,6 +379,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/inflation_lab": InflationLab,
   "economics/mini/region_lab": RegionLab,
   "economics/mini/system_region_lab": SystemRegionLab,
+  "economics/mini/linear_programming_lab": LinearProgrammingLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
