@@ -90,6 +90,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/tessellation_lab": "테셀레이션",
   "common2/mini/move_card_lab": "이동 카드 놀이",
   "common2/mini/set_notation_lab": "집합의 뜻과 표현",
+  "common2/mini/set_game_lab": "SET 카드 놀이",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",

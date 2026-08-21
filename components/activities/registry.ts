@@ -88,6 +88,7 @@ import TessellationLab from "./common2/1-3-2-reflection/tessellation-lab/Tessell
 import MoveCardLab from "./common2/1-3-2-reflection/move-card-lab/MoveCardLab";
 // 2-1-1 집합의 뜻과 표현
 import SetNotationLab from "./common2/2-1-1-set-notation/set-notation-lab/SetNotationLab";
+import SetGameLab from "./common2/2-1-1-set-notation/set-game-lab/SetGameLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -344,6 +345,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/tessellation_lab": TessellationLab,
   "common2/mini/move_card_lab": MoveCardLab,
   "common2/mini/set_notation_lab": SetNotationLab,
+  "common2/mini/set_game_lab": SetGameLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
