@@ -219,6 +219,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
       "economics/mini/region_lab",
       "economics/mini/system_region_lab",
       "economics/mini/linear_programming_lab",
+      "economics/mini/polygon_region_lab",
     ],
   },
   {
