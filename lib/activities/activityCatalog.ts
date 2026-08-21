@@ -213,6 +213,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     ],
   },
   {
+    subject: "경제수학",
+    unit: "2-2-3 부등식의 영역과 활용",
+    slugs: ["economics/mini/region_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
