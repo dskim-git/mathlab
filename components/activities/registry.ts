@@ -95,6 +95,7 @@ import SubsetCountLab from "./common2/2-1-2-subset/subset-count-lab/SubsetCountL
 // 2-1-3 집합의 연산
 import UnionIntersectionLab from "./common2/2-1-3-set-operation/union-intersection-lab/UnionIntersectionLab";
 import SetLawLab from "./common2/2-1-3-set-operation/set-law-lab/SetLawLab";
+import ComplementLab from "./common2/2-1-3-set-operation/complement-lab/ComplementLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -356,6 +357,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/subset_count_lab": SubsetCountLab,
   "common2/mini/union_intersection_lab": UnionIntersectionLab,
   "common2/mini/set_law_lab": SetLawLab,
+  "common2/mini/complement_lab": ComplementLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
