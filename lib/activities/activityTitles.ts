@@ -94,6 +94,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/subset_lab": "부분집합과 포함관계",
   "common2/mini/subset_count_lab": "부분집합의 개수",
   "common2/mini/union_intersection_lab": "합집합과 교집합",
+  "common2/mini/set_law_lab": "집합의 연산법칙",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
