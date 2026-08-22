@@ -169,6 +169,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["common2/mini/union_intersection_lab", "common2/mini/set_law_lab", "common2/mini/complement_lab", "common2/mini/de_morgan_lab", "common2/mini/set_machine_lab"],
   },
   {
+    subject: "공통수학2",
+    unit: "2-2-1 명제와 조건",
+    slugs: ["common2/mini/proposition_lab"],
+  },
+  {
     subject: "경제수학",
     unit: "1-1-1 생활 속 경제지표",
     slugs: ["economics/mini/stock_index_lab", "economics/mini/gdp_growth_lab", "economics/mini/percentage_point_lab", "economics/mini/employment_lab"],
