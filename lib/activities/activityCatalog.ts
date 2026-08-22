@@ -171,7 +171,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "2-2-1 명제와 조건",
-    slugs: ["common2/mini/proposition_lab"],
+    slugs: ["common2/mini/proposition_lab", "common2/mini/negation_lab"],
   },
   {
     subject: "경제수학",
