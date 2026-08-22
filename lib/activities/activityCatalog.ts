@@ -161,7 +161,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "2-1-2 집합 사이의 포함관계",
-    slugs: ["common2/mini/subset_lab"],
+    slugs: ["common2/mini/subset_lab", "common2/mini/subset_count_lab"],
   },
   {
     subject: "경제수학",

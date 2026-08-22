@@ -91,6 +91,7 @@ import SetNotationLab from "./common2/2-1-1-set-notation/set-notation-lab/SetNot
 import SetGameLab from "./common2/2-1-1-set-notation/set-game-lab/SetGameLab";
 // 2-1-2 집합 사이의 포함관계
 import SubsetLab from "./common2/2-1-2-subset/subset-lab/SubsetLab";
+import SubsetCountLab from "./common2/2-1-2-subset/subset-count-lab/SubsetCountLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -349,6 +350,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/set_notation_lab": SetNotationLab,
   "common2/mini/set_game_lab": SetGameLab,
   "common2/mini/subset_lab": SubsetLab,
+  "common2/mini/subset_count_lab": SubsetCountLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
