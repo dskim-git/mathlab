@@ -87,13 +87,31 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
 // ══════════════════════════════════════════════════════════════
 // 탭 ① 환전소 체험 (환율 표기판 + 환전 계산기)
 // ══════════════════════════════════════════════════════════════
+// 계산기 기본 금액 — 방향에 따라 단위가 원/외화로 달라지므로 각각 따로 둔다.
+const KRW_DEFAULT = 500000;
+// 약 40만 원어치를 그 통화에서 자연스러운 자릿수로 반올림 (USD→300, JPY→50000 …)
+function niceForeign(wonPerUnit: number): number {
+  const raw = 400000 / wonPerUnit;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  return Math.max(1, Math.round(raw / mag) * mag);
+}
+
 function BoothTab() {
   const [rates, setRates] = useState<Record<string, number>>({ ...CURRENT_KRW });
   const [asOf, setAsOf] = useState(AS_OF);
   const [liveState, setLiveState] = useState<"idle" | "loading" | "error">("idle");
   const [code, setCode] = useState("USD");
   const [dir, setDir] = useState<"buy" | "sell">("buy"); // buy: 원→외화(외화 삼), sell: 외화→원(외화 팖)
-  const [amount, setAmount] = useState(1000);
+  // 원→외화는 '원', 외화→원은 그 외화가 단위라 하나의 숫자를 공유하면 단위가 뒤바뀐다.
+  const [krwAmount, setKrwAmount] = useState(KRW_DEFAULT);
+  const [fxAmount, setFxAmount] = useState(() => niceForeign(CURRENT_KRW.USD));
+  const amount = dir === "buy" ? krwAmount : fxAmount;
+  const setAmount = dir === "buy" ? setKrwAmount : setFxAmount;
+
+  function chooseCode(next: string) {
+    setCode(next);
+    setFxAmount(niceForeign(rates[next] ?? CURRENT_KRW[next]));
+  }
 
   const cur = CURRENCIES.find((c) => c.code === code)!;
   const base = rates[code] ?? CURRENT_KRW[code]; // 원/1단위 (매매기준율)
@@ -146,7 +164,7 @@ function BoothTab() {
               const b = (rates[c.code] ?? CURRENT_KRW[c.code]) * c.unit;
               const isSel = c.code === code;
               return (
-                <tr key={c.code} onClick={() => setCode(c.code)} className={"cursor-pointer border-t border-white/5 transition " + (isSel ? "bg-emerald-400/10" : "hover:bg-white/5")}>
+                <tr key={c.code} onClick={() => chooseCode(c.code)} className={"cursor-pointer border-t border-white/5 transition " + (isSel ? "bg-emerald-400/10" : "hover:bg-white/5")}>
                   <td className="px-3 py-1.5"><span className="flex items-center gap-1.5 font-bold text-slate-100"><FlagImg code={c.code} /> {c.unit === 100 ? "100 " : ""}{c.code}</span></td>
                   <td className="px-3 py-1.5 text-right font-mono text-white">{won(b)}</td>
                   <td className="px-3 py-1.5 text-right font-mono text-rose-200">{won(b * (1 + c.spread))}</td>
@@ -168,10 +186,13 @@ function BoothTab() {
 
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <label className="flex-1 text-xs text-slate-400">
-            {dir === "buy" ? "환전할 금액(원)" : `가진 ${code}`}
-            <input type="number" min={0} value={amount} onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-right font-mono text-lg text-white outline-none focus:border-emerald-400/60" />
+            {dir === "buy" ? "환전할 금액 (원화)" : `가진 금액 (${code})`}
+            <div className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 focus-within:border-emerald-400/60">
+              <input type="number" min={0} value={amount} onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))} className="w-full bg-transparent text-right font-mono text-lg text-white outline-none" />
+              <span className="shrink-0 text-sm font-bold text-slate-300">{dir === "buy" ? "원" : code}</span>
+            </div>
           </label>
-          <select value={code} onChange={(e) => setCode(e.target.value)} aria-label="통화" className="rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-sm font-bold text-white outline-none">
+          <select value={code} onChange={(e) => chooseCode(e.target.value)} aria-label="통화" className="rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-sm font-bold text-white outline-none">
             {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
           </select>
         </div>
