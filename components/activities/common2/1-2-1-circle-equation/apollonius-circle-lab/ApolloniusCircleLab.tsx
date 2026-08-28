@@ -19,6 +19,8 @@ import {
   genIntTex,
   internalPoint,
   lineTex,
+  locusDist,
+  projectToLocus,
   radicalAxis,
   stdTexF,
   sumLocus,
@@ -230,10 +232,6 @@ function useDrag(svgRef: React.RefObject<SVGSVGElement | null>, view: View, onDr
 function clampInt(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, Math.round(v)));
 }
-function q4(v: number): number {
-  return Math.round(v * 4) / 4;
-}
-
 function FormulaLine({ tex, label, big }: { tex: string; label?: string; big?: boolean }) {
   return (
     <div className="flex items-baseline gap-2">
@@ -302,6 +300,10 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
 // ══════════════════════════════════════════════════════════════
 // 탭 ① 비가 일정한 점 찾기
 // ══════════════════════════════════════════════════════════════
+// P 가 자취 위에 있다고 볼 허용 오차 — 좌표 단위가 아니라 화면 픽셀(뷰박스) 기준.
+// 축척이 비마다 달라서 고정 좌표 오차를 쓰면 원이 클수록 점이 눈에 띄게 어긋난다.
+const HIT_PX = 2.5;
+
 function ApolloTab() {
   const svgRef = useRef<SVGSVGElement>(null);
   const [A, setA] = useState<Pt>({ x: -3, y: 0 });
@@ -310,6 +312,12 @@ function ApolloTab() {
   const [P, setP] = useState<Pt>({ x: -1, y: 0 });
   const [found, setFound] = useState<Pt[]>([]);
   const [reveal, setReveal] = useState(false);
+  const foundRef = useRef<Pt[]>([]);
+
+  function clearFound() {
+    foundRef.current = [];
+    setFound([]);
+  }
 
   const { m, n } = RATIOS[ri];
   const ap = apolloniusOf(A, B, m, n);
@@ -325,30 +333,41 @@ function ApolloTab() {
   const view = makeView(need);
 
   const { setDragId } = useDrag(svgRef, view, (id, p) => {
-    if (id === "A") setA({ x: clampInt(p.x, -8, 8), y: clampInt(p.y, -8, 8) });
-    else if (id === "B") setB({ x: clampInt(p.x, -8, 8), y: clampInt(p.y, -8, 8) });
-    else setP({ x: q4(p.x), y: q4(p.y) });
+    // A·B 를 옮기면 자취가 달라지므로 앞서 찍은 점은 더 이상 그 자취 위의 점이 아니다.
+    if (id === "A") {
+      setA({ x: clampInt(p.x, -8, 8), y: clampInt(p.y, -8, 8) });
+      clearFound();
+    } else if (id === "B") {
+      setB({ x: clampInt(p.x, -8, 8), y: clampInt(p.y, -8, 8) });
+      clearFound();
+    } else setP(p);
   });
 
   const PA = Math.sqrt(dist2(P, A));
   const PB = Math.sqrt(dist2(P, B));
-  const gap = Math.abs(n * PA - m * PB);
-  const tol = 0.2 * Math.max(1, (m + n) / 2);
-  const hit = gap < tol;
+  // |n·PA − m·PB| 로 판정하면 같은 값이라도 자취에서 실제로 떨어진 거리가 위치마다 다르다.
+  // (이 식의 기울기 크기가 내분점 쪽 m+n 에서 외분점 쪽 |m−n| 까지 변한다.)
+  // 그래서 바깥쪽 호에서는 자취와 0.4 이상 어긋난 점까지 찍혔다. 자취까지의 거리로 직접 판정한다.
+  const off = locusDist(ap, P);
+  const hit = off < HIT_PX / view.u;
+
+  // 흔적은 자취 위로 내린 발에 찍는다. P 자체를 찍으면 허용 오차만큼 삐뚤빼뚤해 보인다.
+  const mark = projectToLocus(ap, P);
+  const mx = hit ? mark.x : 0;
+  const my = hit ? mark.y : 0;
 
   // 조건을 만족하는 자리에 오면 자동으로 흔적을 남긴다
-  const foundRef = useRef<Pt[]>([]);
   useEffect(() => {
     if (!hit) return;
-    const near = foundRef.current.some((f) => dist2(f, P) < 0.6);
+    const p = { x: mx, y: my };
+    const near = foundRef.current.some((f) => dist2(f, p) < 0.6);
     if (near || foundRef.current.length >= 40) return;
-    foundRef.current = [...foundRef.current, P];
+    foundRef.current = [...foundRef.current, p];
     setFound(foundRef.current);
-  }, [hit, P]);
+  }, [hit, mx, my]);
 
   function resetHunt() {
-    foundRef.current = [];
-    setFound([]);
+    clearFound();
     setReveal(false);
   }
 

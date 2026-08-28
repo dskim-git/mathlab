@@ -153,17 +153,28 @@ function CircleDraw({ view, c, r, color, fill, width = 3 }: { view: View; c: Pt;
 
 /** ax + by + c = 0 */
 function LineDraw({ view, L, color, width = 3, dash }: { view: View; L: Line; color: string; width?: number; dash?: string }) {
-  if (L.a === 0 && L.b === 0) return null;
-  const M = view.half + 6;
-  let p: [number, number, number, number];
-  if (L.b === 0) {
-    const x = -L.c / L.a;
-    p = [view.sx(x), view.sy(M), view.sx(x), view.sy(-M)];
-  } else {
-    const yAt = (x: number) => (-L.a * x - L.c) / L.b;
-    p = [view.sx(-M), view.sy(yAt(-M)), view.sx(M), view.sy(yAt(M))];
-  }
-  return <line x1={p[0]} y1={p[1]} x2={p[2]} y2={p[3]} stroke={color} strokeWidth={width} strokeDasharray={dash} strokeLinecap="round" />;
+  const len = Math.hypot(L.a, L.b);
+  if (len < 1e-12) return null;
+  // y = (-ax-c)/b 로 풀면 b 가 0 에 가까운 세로선에서 값이 폭주한다.
+  // (원 밖의 점에서 그은 접선은 접점 좌표를 삼각함수로 구해 b 가 정확히 0 이 아니라 1e-16 쯤이 된다.)
+  // 직선 위의 한 점(원점에서 내린 발)과 방향벡터로 그리면 기울기가 없는 직선도 같은 식으로 처리된다.
+  const M = (view.half + 6) * 2;
+  const ox = (-L.c * L.a) / (len * len);
+  const oy = (-L.c * L.b) / (len * len);
+  const dx = -L.b / len;
+  const dy = L.a / len;
+  return (
+    <line
+      x1={view.sx(ox - dx * M)}
+      y1={view.sy(oy - dy * M)}
+      x2={view.sx(ox + dx * M)}
+      y2={view.sy(oy + dy * M)}
+      stroke={color}
+      strokeWidth={width}
+      strokeDasharray={dash}
+      strokeLinecap="round"
+    />
+  );
 }
 
 function Dot({ view, p, color, label, onDown, r = 6 }: { view: View; p: Pt; color: string; label?: string; onDown?: () => void; r?: number }) {
@@ -842,8 +853,8 @@ function PointPlay() {
         <div className="rounded-2xl border border-violet-400/30 bg-violet-400/[0.08] p-4">
           <p className="text-sm font-bold text-violet-200">🔎 공식은 이렇게 나와요</p>
           <div className="mt-2 space-y-0.5">
-            <FormulaLine label="1" tex="\text{OP} : \frac{y_1}{x_1}" />
-            <FormulaLine label="2" tex="\text{tangent} : -\frac{x_1}{y_1}" />
+            <FormulaLine label="1" tex="\text{OP의 기울기} : \frac{y_1}{x_1}" />
+            <FormulaLine label="2" tex="\text{접선의 기울기} : -\frac{x_1}{y_1}" />
             <FormulaLine label="3" tex="y - y_1 = -\frac{x_1}{y_1}(x - x_1)" />
             <FormulaLine label="4" tex="x_1 x + y_1 y = x_1^2 + y_1^2 = r^2" big />
           </div>

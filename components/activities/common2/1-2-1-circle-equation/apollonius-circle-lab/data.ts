@@ -146,6 +146,29 @@ export function apolloniusOf(A: Pt, B: Pt, m: number, n: number): Apollo {
   return { kind: "circle", k: kk, D: DD, E: EE, F: FF, center: { x: cx, y: cy }, r2 };
 }
 
+/** 점 P 에서 자취(원 또는 직선)까지의 거리 */
+export function locusDist(ap: Apollo, P: Pt): number {
+  if (ap.kind === "line") return Math.abs(ap.a * P.x + ap.b * P.y + ap.c) / Math.hypot(ap.a, ap.b);
+  const cx = fv(ap.center.x);
+  const cy = fv(ap.center.y);
+  const r = Math.sqrt(Math.max(0, fv(ap.r2)));
+  return Math.abs(Math.hypot(P.x - cx, P.y - cy) - r);
+}
+
+/** 점 P 에서 자취 위로 내린 발 */
+export function projectToLocus(ap: Apollo, P: Pt): Pt {
+  if (ap.kind === "line") {
+    const t = (ap.a * P.x + ap.b * P.y + ap.c) / (ap.a * ap.a + ap.b * ap.b);
+    return { x: P.x - ap.a * t, y: P.y - ap.b * t };
+  }
+  const cx = fv(ap.center.x);
+  const cy = fv(ap.center.y);
+  const r = Math.sqrt(Math.max(0, fv(ap.r2)));
+  const d = Math.hypot(P.x - cx, P.y - cy);
+  if (d === 0) return { x: cx + r, y: cy };
+  return { x: cx + ((P.x - cx) * r) / d, y: cy + ((P.y - cy) * r) / d };
+}
+
 /** 선분 AB 를 m : n 으로 내분하는 점 */
 export function internalPoint(A: Pt, B: Pt, m: number, n: number): { x: Frac; y: Frac } {
   return { x: frac(m * B.x + n * A.x, m + n), y: frac(m * B.y + n * A.y, m + n) };
