@@ -100,6 +100,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/set_machine_lab": "집합 연산 장치",
   "common2/mini/proposition_lab": "명제와 조건",
   "common2/mini/negation_lab": "명제와 조건의 부정",
+  "common2/mini/quantifier_lab": "‘모든’과 ‘어떤’이 있는 명제",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
