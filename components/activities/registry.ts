@@ -101,6 +101,7 @@ import SetMachineLab from "./common2/2-1-3-set-operation/set-machine-lab/SetMach
 // 2-2-1 명제와 조건
 import PropositionLab from "./common2/2-2-1-proposition/proposition-lab/PropositionLab";
 import NegationLab from "./common2/2-2-1-proposition/negation-lab/NegationLab";
+import QuantifierLab from "./common2/2-2-1-proposition/quantifier-lab/QuantifierLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -367,6 +368,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/set_machine_lab": SetMachineLab,
   "common2/mini/proposition_lab": PropositionLab,
   "common2/mini/negation_lab": NegationLab,
+  "common2/mini/quantifier_lab": QuantifierLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
