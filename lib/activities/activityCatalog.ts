@@ -186,7 +186,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "3-1-1 함수",
-    slugs: ["common2/mini/function_basics_lab"],
+    slugs: ["common2/mini/function_basics_lab", "common2/mini/function_types_lab"],
   },
   {
     subject: "경제수학",
