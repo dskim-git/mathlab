@@ -107,6 +107,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/proof_basics_lab": "용어의 정의와 증명, 정리",
   "common2/mini/indirect_proof_lab": "대우법과 귀류법",
   "common2/mini/absolute_inequality_lab": "절대부등식",
+  "common2/mini/function_basics_lab": "함수",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
