@@ -108,6 +108,7 @@ import NecessarySufficientLab from "./common2/2-2-2-conditional/necessary-suffic
 import ProofBasicsLab from "./common2/2-2-3-proof/proof-basics-lab/ProofBasicsLab";
 import IndirectProofLab from "./common2/2-2-3-proof/indirect-proof-lab/IndirectProofLab";
 import AbsoluteInequalityLab from "./common2/2-2-3-proof/absolute-inequality-lab/AbsoluteInequalityLab";
+import FunctionBasicsLab from "./common2/3-1-1-function/function-basics-lab/FunctionBasicsLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -381,6 +382,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/proof_basics_lab": ProofBasicsLab,
   "common2/mini/indirect_proof_lab": IndirectProofLab,
   "common2/mini/absolute_inequality_lab": AbsoluteInequalityLab,
+  "common2/mini/function_basics_lab": FunctionBasicsLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
