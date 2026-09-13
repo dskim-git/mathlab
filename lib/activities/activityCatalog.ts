@@ -181,7 +181,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "2-2-3 명제의 증명",
-    slugs: ["common2/mini/proof_basics_lab"],
+    slugs: ["common2/mini/proof_basics_lab", "common2/mini/indirect_proof_lab"],
   },
   {
     subject: "경제수학",
