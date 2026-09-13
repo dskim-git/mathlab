@@ -179,6 +179,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["common2/mini/conditional_truth_lab", "common2/mini/converse_contrapositive_lab", "common2/mini/necessary_sufficient_lab"],
   },
   {
+    subject: "공통수학2",
+    unit: "2-2-3 명제의 증명",
+    slugs: ["common2/mini/proof_basics_lab"],
+  },
+  {
     subject: "경제수학",
     unit: "1-1-1 생활 속 경제지표",
     slugs: ["economics/mini/stock_index_lab", "economics/mini/gdp_growth_lab", "economics/mini/percentage_point_lab", "economics/mini/employment_lab"],
