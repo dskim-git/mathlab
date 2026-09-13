@@ -620,7 +620,7 @@ function IncomeTab() {
             ) : (
               <>
                 <p className="text-sm font-bold text-slate-100">
-                  {up ? "💰 소득 증가" : "🪙 소득 감소"} → {shift > 0 ? "수요 증가 ↗️" : "수요 감소 ↘️"}
+                  {up ? "💰 소득 증가" : "🪙 소득 감소"} → {shift > 0 ? "수요 증가 ⬆️" : "수요 감소 ⬇️"}
                 </p>
                 <p className="mt-1 text-[11px] leading-5 text-slate-300">
                   {m.inferior
@@ -733,6 +733,12 @@ function CardGame({ side, cards }: { side: "demand" | "supply"; cards: Card[] })
         </div>
       </div>
 
+      <p className="mt-3 rounded-xl border border-sky-400/25 bg-sky-400/[0.06] px-3 py-2 text-[11px] leading-5 text-sky-100">
+        🧭 <b>가로축이 가격이라는 점에 주의!</b> 이 그래프에서는 수요·공급이 <b>늘면 곡선이 위로</b>, <b>줄면 아래로</b>{" "}
+        움직여요. 수요곡선(우하향)은 오른쪽으로, 공급곡선(우상향)은 왼쪽으로 기울어 보이지만 둘 다 «같은 값에서 양이
+        늘었다»는 뜻이에요.
+      </p>
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="space-y-2">
           <ShiftChart m={CARD_MKT} dShift={dShift} sShift={sShift} />
@@ -760,7 +766,7 @@ function CardGame({ side, cards }: { side: "demand" | "supply"; cards: Card[] })
               <QRow
                 n={1}
                 ask={`이 일로 ${word}는 어떻게 될까요?`}
-                options={[`↗️ ${word} 증가 — 곡선이 오른쪽 위로`, `↘️ ${word} 감소 — 곡선이 왼쪽 아래로`]}
+                options={[`⬆️ ${word} 증가 — 곡선이 위로`, `⬇️ ${word} 감소 — 곡선이 아래로`]}
                 answer={a1}
                 pick={q1}
                 onPick={setQ1}
