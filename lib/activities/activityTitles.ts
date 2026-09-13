@@ -109,6 +109,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/absolute_inequality_lab": "절대부등식",
   "common2/mini/function_basics_lab": "함수",
   "common2/mini/function_types_lab": "함수의 그래프와 여러 가지 함수",
+  "common2/mini/composite_function_lab": "합성함수",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",

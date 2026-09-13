@@ -1308,7 +1308,7 @@ function LifeTab() {
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🏫 둘레에서 여섯 갈래 찾기</p>
+          <p className="text-sm font-bold text-slate-100">🏫 일상생활에서 여섯 갈래 찾기</p>
           <Chips ids={LIFE_CASES.map((q) => q.id)} cur={ci} done={done} onPick={setCi} />
         </div>
         <p className="mt-1 text-[12px] leading-6 text-slate-400">그림은 그 짝짓기를 몇 개만 뽑아 그린 것이에요.</p>
