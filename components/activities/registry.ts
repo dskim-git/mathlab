@@ -104,6 +104,7 @@ import NegationLab from "./common2/2-2-1-proposition/negation-lab/NegationLab";
 import QuantifierLab from "./common2/2-2-1-proposition/quantifier-lab/QuantifierLab";
 import ConditionalTruthLab from "./common2/2-2-2-conditional/conditional-truth-lab/ConditionalTruthLab";
 import ConverseContrapositiveLab from "./common2/2-2-2-conditional/converse-contrapositive-lab/ConverseContrapositiveLab";
+import NecessarySufficientLab from "./common2/2-2-2-conditional/necessary-sufficient-lab/NecessarySufficientLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -373,6 +374,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/quantifier_lab": QuantifierLab,
   "common2/mini/conditional_truth_lab": ConditionalTruthLab,
   "common2/mini/converse_contrapositive_lab": ConverseContrapositiveLab,
+  "common2/mini/necessary_sufficient_lab": NecessarySufficientLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,

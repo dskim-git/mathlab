@@ -103,6 +103,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/quantifier_lab": "‘모든’과 ‘어떤’이 있는 명제",
   "common2/mini/conditional_truth_lab": "명제 p→q의 참과 거짓",
   "common2/mini/converse_contrapositive_lab": "명제의 역과 대우",
+  "common2/mini/necessary_sufficient_lab": "충분조건과 필요조건",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
