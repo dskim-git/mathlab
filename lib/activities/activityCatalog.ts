@@ -196,7 +196,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "3-1-3 역함수",
-    slugs: ["common2/mini/inverse_function_lab", "common2/mini/inverse_graph_lab"],
+    slugs: ["common2/mini/inverse_function_lab", "common2/mini/inverse_graph_lab", "common2/mini/cipher_inverse_lab"],
   },
   {
     subject: "경제수학",

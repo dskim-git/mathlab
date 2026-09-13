@@ -112,6 +112,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/composite_function_lab": "합성함수",
   "common2/mini/inverse_function_lab": "역함수",
   "common2/mini/inverse_graph_lab": "역함수의 그래프",
+  "common2/mini/cipher_inverse_lab": "역함수와 암호",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
