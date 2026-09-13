@@ -113,6 +113,7 @@ import FunctionTypesLab from "./common2/3-1-1-function/function-types-lab/Functi
 import CompositeFunctionLab from "./common2/3-1-2-composite/composite-function-lab/CompositeFunctionLab";
 import InverseFunctionLab from "./common2/3-1-3-inverse/inverse-function-lab/InverseFunctionLab";
 import InverseGraphLab from "./common2/3-1-3-inverse/inverse-graph-lab/InverseGraphLab";
+import CipherInverseLab from "./common2/3-1-3-inverse/cipher-inverse-lab/CipherInverseLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -391,6 +392,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/composite_function_lab": CompositeFunctionLab,
   "common2/mini/inverse_function_lab": InverseFunctionLab,
   "common2/mini/inverse_graph_lab": InverseGraphLab,
+  "common2/mini/cipher_inverse_lab": CipherInverseLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
