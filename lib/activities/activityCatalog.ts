@@ -204,6 +204,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["common2/mini/rational_basics_lab", "common2/mini/rational_graph_lab"],
   },
   {
+    subject: "공통수학2",
+    unit: "3-2-2 무리함수의 그래프",
+    slugs: ["common2/mini/irrational_basics_lab"],
+  },
+  {
     subject: "경제수학",
     unit: "1-1-1 생활 속 경제지표",
     slugs: ["economics/mini/stock_index_lab", "economics/mini/gdp_growth_lab", "economics/mini/percentage_point_lab", "economics/mini/employment_lab"],
