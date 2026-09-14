@@ -115,6 +115,7 @@ import InverseFunctionLab from "./common2/3-1-3-inverse/inverse-function-lab/Inv
 import InverseGraphLab from "./common2/3-1-3-inverse/inverse-graph-lab/InverseGraphLab";
 import CipherInverseLab from "./common2/3-1-3-inverse/cipher-inverse-lab/CipherInverseLab";
 import RationalBasicsLab from "./common2/3-2-1-rational-function/rational-basics-lab/RationalBasicsLab";
+import RationalGraphLab from "./common2/3-2-1-rational-function/rational-graph-lab/RationalGraphLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -395,6 +396,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/inverse_graph_lab": InverseGraphLab,
   "common2/mini/cipher_inverse_lab": CipherInverseLab,
   "common2/mini/rational_basics_lab": RationalBasicsLab,
+  "common2/mini/rational_graph_lab": RationalGraphLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
