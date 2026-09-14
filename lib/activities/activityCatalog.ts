@@ -201,7 +201,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "3-2-1 유리함수의 그래프",
-    slugs: ["common2/mini/rational_basics_lab"],
+    slugs: ["common2/mini/rational_basics_lab", "common2/mini/rational_graph_lab"],
   },
   {
     subject: "경제수학",
