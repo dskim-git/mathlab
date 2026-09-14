@@ -206,7 +206,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "공통수학2",
     unit: "3-2-2 무리함수의 그래프",
-    slugs: ["common2/mini/irrational_basics_lab"],
+    slugs: ["common2/mini/irrational_basics_lab", "common2/mini/irrational_graph_lab"],
   },
   {
     subject: "경제수학",
