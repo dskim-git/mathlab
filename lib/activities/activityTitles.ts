@@ -118,6 +118,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "common2/mini/irrational_basics_lab": "무리식과 무리함수",
   "common2/mini/irrational_graph_lab": "무리함수의 그래프",
   "common2/mini/irrational_life_lab": "무리함수의 활용",
+  "common2/mini/function_art_lab": "함수로 그림 그리기",
   "economics/mini/stock_index_lab": "주가지수 탐험",
   "economics/mini/gdp_growth_lab": "GDP와 경제성장률",
   "economics/mini/percentage_point_lab": "퍼센트와 퍼센트포인트",
