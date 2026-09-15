@@ -172,6 +172,7 @@ import RegionLab from "./economics/2-2-3-inequality-region/region-lab/RegionLab"
 import SystemRegionLab from "./economics/2-2-3-inequality-region/system-region-lab/SystemRegionLab";
 import LinearProgrammingLab from "./economics/2-2-3-inequality-region/linear-programming-lab/LinearProgrammingLab";
 import PolygonRegionLab from "./economics/2-2-3-inequality-region/polygon-region-lab/PolygonRegionLab";
+import MatrixLab from "./economics/3-1-1-matrix-operations/matrix-lab/MatrixLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -446,6 +447,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/system_region_lab": SystemRegionLab,
   "economics/mini/linear_programming_lab": LinearProgrammingLab,
   "economics/mini/polygon_region_lab": PolygonRegionLab,
+  "economics/mini/matrix_lab": MatrixLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
