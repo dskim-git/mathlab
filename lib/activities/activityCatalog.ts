@@ -288,6 +288,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/inverse_matrix_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "3-2-2 행렬의 활용",
+    slugs: ["economics/mini/linear_system_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [

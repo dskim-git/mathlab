@@ -175,6 +175,7 @@ import PolygonRegionLab from "./economics/2-2-3-inequality-region/polygon-region
 import MatrixLab from "./economics/3-1-1-matrix-operations/matrix-lab/MatrixLab";
 import RowSumMeanLab from "./economics/3-1-1-matrix-operations/row-sum-mean-lab/RowSumMeanLab";
 import InverseMatrixLab from "./economics/3-2-1-inverse-matrix/inverse-matrix-lab/InverseMatrixLab";
+import LinearSystemLab from "./economics/3-2-2-matrix-application/linear-system-lab/LinearSystemLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -452,6 +453,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/matrix_lab": MatrixLab,
   "economics/mini/row_sum_mean_lab": RowSumMeanLab,
   "economics/mini/inverse_matrix_lab": InverseMatrixLab,
+  "economics/mini/linear_system_lab": LinearSystemLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
