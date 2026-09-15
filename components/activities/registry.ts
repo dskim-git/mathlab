@@ -119,6 +119,7 @@ import RationalGraphLab from "./common2/3-2-1-rational-function/rational-graph-l
 import IrrationalBasicsLab from "./common2/3-2-2-irrational-function/irrational-basics-lab/IrrationalBasicsLab";
 import IrrationalGraphLab from "./common2/3-2-2-irrational-function/irrational-graph-lab/IrrationalGraphLab";
 import IrrationalLifeLab from "./common2/3-2-2-irrational-function/irrational-life-lab/IrrationalLifeLab";
+import FunctionArtLab from "./common2/3-2-2-irrational-function/function-art-lab/FunctionArtLab";
 
 // ─── 경제수학 ──────────────────────────────────────────────
 // [1] 수와 생활 속 경제 — (1) 생활 속 경제지표·환율·세금 / (2) 금융
@@ -403,6 +404,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "common2/mini/irrational_basics_lab": IrrationalBasicsLab,
   "common2/mini/irrational_graph_lab": IrrationalGraphLab,
   "common2/mini/irrational_life_lab": IrrationalLifeLab,
+  "common2/mini/function_art_lab": FunctionArtLab,
 
   // ── 경제수학 ──
   "economics/mini/stock_index_lab": StockIndexLab,
