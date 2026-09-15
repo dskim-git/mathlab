@@ -159,6 +159,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/linear_programming_lab": "선형계획법",
   "economics/mini/polygon_region_lab": "다각형과 부등식의 영역",
   "economics/mini/matrix_lab": "행렬의 연산과 활용",
+  "economics/mini/row_sum_mean_lab": "행의 합과 평균을 구하는 행렬",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
