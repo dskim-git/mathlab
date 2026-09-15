@@ -278,6 +278,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     ],
   },
   {
+    subject: "경제수학",
+    unit: "3-1-1 행렬의 연산과 경제 현상",
+    slugs: ["economics/mini/matrix_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
