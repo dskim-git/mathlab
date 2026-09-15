@@ -283,6 +283,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/matrix_lab", "economics/mini/row_sum_mean_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "3-2-1 역행렬",
+    slugs: ["economics/mini/inverse_matrix_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
