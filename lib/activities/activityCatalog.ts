@@ -290,7 +290,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "3-2-2 행렬의 활용",
-    slugs: ["economics/mini/linear_system_lab"],
+    slugs: ["economics/mini/linear_system_lab", "economics/mini/matrix_use_lab"],
   },
   {
     subject: "확률과통계",
