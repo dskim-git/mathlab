@@ -10,6 +10,42 @@ import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
 import { Alert } from "@/components/ui/Alert";
 
+/**
+ * 가입 실패 원인을 학생이 이해할 수 있는 문구로 옮긴다.
+ *
+ * 예전에는 어떤 오류든 "이미 가입된 학번일 수 있습니다"를 덧붙여서 오진을 불렀다.
+ * (auth.identities 에 남은 옛 계정 잔재 탓에 "User already registered" 가 떴는데,
+ *  회원관리에는 그 학번이 없어 원인 파악이 오래 걸린 적이 있다.
+ *  → supabase/migrations/20260923_fix_demo_identity_email.sql)
+ * 그래서 추측은 붙이지 않고, 원인별로 다음 행동이 분명한 문구만 돌려준다.
+ */
+function describeSignupError(error: { message: string; code?: string }): string {
+  const code = error.code ?? "";
+  const msg = error.message ?? "";
+  const has = (re: RegExp) => re.test(msg);
+
+  if (code === "user_already_exists" || has(/already registered|already exists/i)) {
+    return "이미 이 학번으로 만들어진 계정이 있습니다. 로그인 화면에서 학번과 비밀번호로 들어가 보세요. 가입한 적이 없다면 선생님께 알려 주세요.";
+  }
+  if (
+    code === "over_request_rate_limit" ||
+    code === "over_email_send_rate_limit" ||
+    has(/rate limit|only request this after/i)
+  ) {
+    return "잠깐 사이에 가입 요청이 몰렸습니다. 1분쯤 기다렸다가 다시 눌러 주세요.";
+  }
+  if (has(/^Database error/i)) {
+    return `계정을 만드는 중 서버 오류가 났습니다. 선생님께 알려 주세요. (원인: ${msg})`;
+  }
+  if (code.startsWith("weak_password") || has(/password/i)) {
+    return `비밀번호를 다시 정해 주세요. (원인: ${msg})`;
+  }
+  if (has(/email/i)) {
+    return `학번으로 만든 계정 주소가 거부되었습니다. 선생님께 알려 주세요. (원인: ${msg})`;
+  }
+  return `가입 중 오류가 발생했습니다: ${msg}`;
+}
+
 export default function StudentSignupPage() {
   const [studentCode, setStudentCode] = useState("");
   const [name, setName] = useState("");
@@ -95,9 +131,7 @@ export default function StudentSignupPage() {
 
     if (error) {
       setIsSubmitting(false);
-      setErrorMessage(
-        `가입 중 오류가 발생했습니다: ${error.message} (이미 가입된 학번일 수 있습니다.)`
-      );
+      setErrorMessage(describeSignupError(error));
       return;
     }
 
