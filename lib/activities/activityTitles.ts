@@ -163,6 +163,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/inverse_matrix_lab": "역행렬과 행렬식",
   "economics/mini/linear_system_lab": "연립방정식과 역행렬",
   "economics/mini/matrix_use_lab": "행렬로 푸는 실생활 문제",
+  "economics/mini/limit_lab": "함수의 극한과 그 성질",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
