@@ -293,6 +293,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/linear_system_lab", "economics/mini/matrix_use_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "4-1-1 함수의 극한",
+    slugs: ["economics/mini/limit_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
