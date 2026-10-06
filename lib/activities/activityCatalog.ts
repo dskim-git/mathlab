@@ -305,7 +305,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "4-1-3 경제함수의 미분",
-    slugs: ["economics/mini/marginal_lab"],
+    slugs: ["economics/mini/marginal_lab", "economics/mini/dilemma_lab"],
   },
   {
     subject: "확률과통계",
