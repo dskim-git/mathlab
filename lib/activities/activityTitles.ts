@@ -166,6 +166,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/limit_lab": "함수의 극한과 그 성질",
   "economics/mini/derivative_lab": "평균변화율과 도함수",
   "economics/mini/marginal_lab": "경제함수의 미분과 한계",
+  "economics/mini/dilemma_lab": "죄수의 딜레마",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",
