@@ -308,6 +308,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/marginal_lab", "economics/mini/dilemma_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "4-1-4 그래프의 개형",
+    slugs: ["economics/mini/extremum_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [

@@ -181,6 +181,7 @@ import LimitLab from "./economics/4-1-1-function-limit/limit-lab/LimitLab";
 import DerivativeLab from "./economics/4-1-2-differentiation/derivative-lab/DerivativeLab";
 import MarginalLab from "./economics/4-1-3-economic-derivative/marginal-lab/MarginalLab";
 import DilemmaLab from "./economics/4-1-3-economic-derivative/dilemma-lab/DilemmaLab";
+import ExtremumLab from "./economics/4-1-4-graph-shape/extremum-lab/ExtremumLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -464,6 +465,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/derivative_lab": DerivativeLab,
   "economics/mini/marginal_lab": MarginalLab,
   "economics/mini/dilemma_lab": DilemmaLab,
+  "economics/mini/extremum_lab": ExtremumLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
