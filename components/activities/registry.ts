@@ -179,6 +179,7 @@ import LinearSystemLab from "./economics/3-2-2-matrix-application/linear-system-
 import MatrixUseLab from "./economics/3-2-2-matrix-application/matrix-use-lab/MatrixUseLab";
 import LimitLab from "./economics/4-1-1-function-limit/limit-lab/LimitLab";
 import DerivativeLab from "./economics/4-1-2-differentiation/derivative-lab/DerivativeLab";
+import MarginalLab from "./economics/4-1-3-economic-derivative/marginal-lab/MarginalLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -460,6 +461,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/matrix_use_lab": MatrixUseLab,
   "economics/mini/limit_lab": LimitLab,
   "economics/mini/derivative_lab": DerivativeLab,
+  "economics/mini/marginal_lab": MarginalLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
