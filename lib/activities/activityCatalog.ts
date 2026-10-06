@@ -298,6 +298,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/limit_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "4-1-2 함수의 미분법",
+    slugs: ["economics/mini/derivative_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
