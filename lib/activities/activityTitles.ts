@@ -171,6 +171,7 @@ export const SHORT_ACTIVITY_TITLE: Record<string, string> = {
   "economics/mini/graph_shape_lab": "도함수로 그리는 그래프의 개형",
   "economics/mini/elasticity_lab": "수요의 가격 탄력성",
   "economics/mini/supply_elasticity_lab": "공급의 가격 탄력성",
+  "economics/mini/elasticity_graph_lab": "그래프로 보는 탄력성",
   "common/mini/perm_comb_growth_race": "순열 vs 조합 — r 증가 레이스",
   "common/mini/poly_sort_game": "항 카드 정렬 게임",
   "common/mini/poly_add_sub_game": "동류항 연결 게임",

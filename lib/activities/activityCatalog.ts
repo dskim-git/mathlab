@@ -315,7 +315,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "4-2-1 탄력성",
-    slugs: ["economics/mini/elasticity_lab", "economics/mini/supply_elasticity_lab"],
+    slugs: [
+      "economics/mini/elasticity_lab",
+      "economics/mini/supply_elasticity_lab",
+      "economics/mini/elasticity_graph_lab",
+    ],
   },
   {
     subject: "확률과통계",
