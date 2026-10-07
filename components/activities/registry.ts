@@ -186,6 +186,7 @@ import ShapeLab from "./economics/4-1-4-graph-shape/shape-lab/ShapeLab";
 import ElasticityLab from "./economics/4-2-1-elasticity/elasticity-lab/ElasticityLab";
 import SupplyElasticityLab from "./economics/4-2-1-elasticity/supply-elasticity-lab/SupplyElasticityLab";
 import ElasticityGraphLab from "./economics/4-2-1-elasticity/elasticity-graph-lab/ElasticityGraphLab";
+import OptimizationLab from "./economics/4-2-2-optimization/optimization-lab/OptimizationLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -474,6 +475,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/elasticity_lab": ElasticityLab,
   "economics/mini/supply_elasticity_lab": SupplyElasticityLab,
   "economics/mini/elasticity_graph_lab": ElasticityGraphLab,
+  "economics/mini/optimization_lab": OptimizationLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
