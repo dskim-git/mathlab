@@ -313,6 +313,11 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
     slugs: ["economics/mini/extremum_lab", "economics/mini/graph_shape_lab"],
   },
   {
+    subject: "경제수학",
+    unit: "4-2-1 탄력성",
+    slugs: ["economics/mini/elasticity_lab"],
+  },
+  {
     subject: "확률과통계",
     unit: "1-1 순열과 조합",
     slugs: [
