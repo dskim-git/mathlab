@@ -310,7 +310,7 @@ export const ACTIVITY_CATALOG: ActivityGroup[] = [
   {
     subject: "경제수학",
     unit: "4-1-4 그래프의 개형",
-    slugs: ["economics/mini/extremum_lab"],
+    slugs: ["economics/mini/extremum_lab", "economics/mini/graph_shape_lab"],
   },
   {
     subject: "확률과통계",
