@@ -184,6 +184,7 @@ import DilemmaLab from "./economics/4-1-3-economic-derivative/dilemma-lab/Dilemm
 import ExtremumLab from "./economics/4-1-4-graph-shape/extremum-lab/ExtremumLab";
 import ShapeLab from "./economics/4-1-4-graph-shape/shape-lab/ShapeLab";
 import ElasticityLab from "./economics/4-2-1-elasticity/elasticity-lab/ElasticityLab";
+import SupplyElasticityLab from "./economics/4-2-1-elasticity/supply-elasticity-lab/SupplyElasticityLab";
 
 // ─── 확률과통계 ────────────────────────────────────────────
 // 1-1 순열과 조합
@@ -470,6 +471,7 @@ export const ACTIVITY_REGISTRY: Record<string, ComponentType> = {
   "economics/mini/extremum_lab": ExtremumLab,
   "economics/mini/graph_shape_lab": ShapeLab,
   "economics/mini/elasticity_lab": ElasticityLab,
+  "economics/mini/supply_elasticity_lab": SupplyElasticityLab,
 
   // ── 확률과통계 ──
   "probability_new/mini/rep_perm_password": RepPermPassword,
