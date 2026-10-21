@@ -1045,7 +1045,8 @@ function PickOne({ t, last, onDone, onNext }: { t: PickTask; last: boolean; onDo
 // ══════════════════════════════════════════════════════════════
 // 탭 ④ 명제 카드게임
 // ══════════════════════════════════════════════════════════════
-function CardFace({ c, tone, small }: { c: GameCard; tone: "p" | "q" | "dim"; small?: boolean }) {
+function CardFace({ c, tone, small, showSet }: { c: GameCard; tone: "p" | "q" | "dim"; small?: boolean; showSet?: boolean }) {
+  const setCls = tone === "p" ? "text-sky-200/90" : tone === "q" ? "text-violet-200/90" : "text-slate-500";
   const cls =
     tone === "p"
       ? "border-sky-400/60 bg-gradient-to-br from-sky-500/25 to-indigo-500/15 text-sky-50"
@@ -1058,6 +1059,13 @@ function CardFace({ c, tone, small }: { c: GameCard; tone: "p" | "q" | "dim"; sm
       <span className={small ? "text-[12px] font-bold" : "text-[13px] font-bold"}>
         <PieceLine ps={c.cond} />
       </span>
+      {showSet ? (
+        <span className={"mt-1 whitespace-nowrap rounded bg-black/30 px-1.5 py-0.5 font-mono text-[11px] font-bold " + setCls}>
+          {"{ "}
+          {truthSetOf(c).join(", ")}
+          {" }"}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -1249,7 +1257,7 @@ function GameGrid({ onNext }: { onNext: () => void }) {
                 <th className="px-1 py-1.5" />
                 {Q_CARDS.map((b) => (
                   <th key={b.id} className="px-1 py-1.5">
-                    <CardFace c={b} tone="q" small />
+                    <CardFace c={b} tone="q" small showSet />
                   </th>
                 ))}
               </tr>
@@ -1258,7 +1266,7 @@ function GameGrid({ onNext }: { onNext: () => void }) {
               {P_CARDS.map((a) => (
                 <tr key={a.id}>
                   <th className="px-1 py-1.5">
-                    <CardFace c={a} tone="p" small />
+                    <CardFace c={a} tone="p" small showSet />
                   </th>
                   {Q_CARDS.map((b) => {
                     const key = `${a.id}${b.id}`;
@@ -1430,7 +1438,7 @@ function GameBuild() {
                 return (
                   <button key={c.id} type="button" onClick={() => place(c)} disabled={allOk} className={"transition disabled:cursor-default " + (isUsed ? "opacity-45" : "hover:brightness-125")}>
                     <span className="block">
-                      <CardFace c={c} tone={isUsed ? "dim" : g.tone} />
+                      <CardFace c={c} tone={isUsed ? "dim" : g.tone} showSet />
                     </span>
                   </button>
                 );
@@ -1481,9 +1489,9 @@ function GameBuild() {
                 ) : null}
               </button>
               <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5">
-                {s.p ? <CardFace c={cardById(s.p)} tone="p" small /> : <span className="rounded-xl border-2 border-dashed border-white/15 px-4 py-2 text-[11px] text-slate-600">가정</span>}
+                {s.p ? <CardFace c={cardById(s.p)} tone="p" small showSet /> : <span className="rounded-xl border-2 border-dashed border-white/15 px-4 py-2 text-[11px] text-slate-600">가정</span>}
                 <span className="text-base text-emerald-300">→</span>
-                {s.q ? <CardFace c={cardById(s.q)} tone="q" small /> : <span className="rounded-xl border-2 border-dashed border-white/15 px-4 py-2 text-[11px] text-slate-600">결론</span>}
+                {s.q ? <CardFace c={cardById(s.q)} tone="q" small showSet /> : <span className="rounded-xl border-2 border-dashed border-white/15 px-4 py-2 text-[11px] text-slate-600">결론</span>}
               </div>
               {r.filled ? (
                 <div className="mt-1.5 flex flex-wrap justify-center gap-1.5 text-[11px] font-bold">
