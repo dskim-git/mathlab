@@ -285,7 +285,13 @@ export const SPEED_SECONDS = 60;
 export const SPEED_PENALTY = 5;
 export const SPEED_MODE = "speed60";
 
-export const SPEED_U = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+// 전체집합은 자연수 전체. 판정은 1 … 1000 에서 한다 — 유한한 진리집합(약수·x < 5 등)은 모두 12 이하에
+// 들어 있고, 무한한 쪽(배수·거듭제곱·제곱수·소수·x ≥ 10 등)은 12 를 넘는 원소가 반드시 있어서
+// 포함 관계가 1000 에서 끊어도 자연수 전체와 같다(10000 으로 늘려도 판정이 같음을 node 로 확인).
+// 예전처럼 12 이하로 끊으면 「6의 배수 ⇒ 12의 약수」가 충분조건으로 판정되는 등 어색한 문제가 생긴다.
+export const SPEED_U = Array.from({ length: 1000 }, (_, i) => i + 1);
+/** 화면에 보일 때 원소를 이만큼만 쓰고 나머지는 … 로 줄인다 */
+const SPEED_SHOW = 6;
 
 const isPrime = (n: number) => {
   if (n < 2) return false;
@@ -316,11 +322,16 @@ export const SPEED_CONDS: SpeedCond[] = [
   { id: "d9", cond: [{ pre: "x는 9의 약수이다" }], test: (n) => 9 % n === 0 },
   { id: "lt3", cond: [{ tex: "x < 3" }], test: (n) => n < 3 },
   { id: "ge10", cond: [{ tex: "x \\ge 10" }], test: (n) => n >= 10 },
-  { id: "pow2", cond: [{ pre: "x는 2의 거듭제곱이다" }], test: (n) => Number.isInteger(Math.log2(n)) },
+  { id: "pow2", cond: [{ pre: "x는 2의 거듭제곱이다" }], test: (n) => n >= 2 && (n & (n - 1)) === 0 }, // 2, 4, 8, … (1 = 2⁰ 은 넣지 않는다)
 ];
 
 export function speedSet(c: SpeedCond): number[] {
   return SPEED_U.filter((n) => c.test(n));
+}
+/** 진리집합을 화면 글자로 — 무한집합은 앞 원소 몇 개 뒤에 … 를 붙인다 */
+export function speedSetText(c: SpeedCond): string {
+  const s = speedSet(c);
+  return s.length > SPEED_SHOW ? s.slice(0, SPEED_SHOW).join(", ") + ", …" : s.join(", ");
 }
 
 export type SpeedItem = { key: string; p: SpeedCond; q: SpeedCond; answer: RelKind };

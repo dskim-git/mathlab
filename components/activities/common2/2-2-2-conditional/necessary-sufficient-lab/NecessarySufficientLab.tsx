@@ -32,7 +32,7 @@ import {
   nlX,
   num,
   relOfRange,
-  speedSet,
+  speedSetText,
   splitAt,
   type ArrowTask,
   type MatchCard,
@@ -1025,7 +1025,7 @@ function SpeedTab() {
           <p className="mt-2 text-xl font-extrabold text-amber-100">{SPEED_SECONDS}초 충분·필요 판정</p>
           <div className="mx-auto mt-3 grid max-w-md gap-1.5 text-left text-sm leading-6 text-slate-300">
             <p>
-              • 전체집합은 <b className="text-slate-100">12 이하의 자연수</b> 예요.
+              • 전체집합은 <b className="text-slate-100">자연수 전체</b> 예요.
             </p>
             <p>
               • 두 조건을 보고 <b className="text-white">p 는 q 이기 위한 무슨 조건</b>인지 고르세요.
@@ -1064,7 +1064,10 @@ function SpeedTab() {
             <div className={"h-full rounded-full transition-all " + (left < 10 ? "bg-rose-400" : "bg-amber-400")} style={{ width: `${(left / SPEED_SECONDS) * 100}%` }} />
           </div>
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <p className="mt-3 text-center text-[11px] font-bold text-slate-400">
+            전체집합 <span className="rounded bg-white/10 px-1.5 py-0.5 text-slate-200">자연수 전체</span>
+          </p>
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
             <CondCard name="p" ps={item.p.cond} tone="p" />
             <CondCard name="q" ps={item.q.cond} tone="q" />
           </div>
@@ -1134,11 +1137,11 @@ function SpeedTab() {
                       </span>
                     </p>
                     <p className="mt-0.5 text-center font-mono text-[11px] text-slate-400">
-                      P = {"{"}
-                      {speedSet(m.item.p).join(",")}
-                      {"}"} · Q = {"{"}
-                      {speedSet(m.item.q).join(",")}
-                      {"}"}
+                      P = {"{ "}
+                      {speedSetText(m.item.p)}
+                      {" }"} · Q = {"{ "}
+                      {speedSetText(m.item.q)}
+                      {" }"}
                     </p>
                     <p className="mt-1 text-center text-[12px] leading-6 text-slate-300">
                       고른 답 <b className="text-rose-200">{REL_META[m.picked].label}</b> → 정답{" "}
