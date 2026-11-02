@@ -883,21 +883,21 @@ function FactoryTab() {
         <p className="text-lg font-bold text-slate-100">
           {f.emoji} {f.title}
         </p>
-        <p className="mt-1 text-xs leading-6 text-slate-300">{f.lead}</p>
+        <p className="mt-1 text-sm leading-7 text-slate-300">{f.lead}</p>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-xl border border-sky-400/25 bg-slate-950/50 p-2">
-            <p className="mb-1.5 text-[11px] font-bold text-sky-200">1개를 만드는 데 드는 양</p>
-            <div className="overflow-x-auto overflow-y-hidden py-1">
-              <table className="border-collapse text-xs">
+          <div className="flex flex-col rounded-xl border border-sky-400/25 bg-slate-950/50 p-4">
+            <p className="mb-3 text-sm font-bold text-sky-200">1개를 만드는 데 드는 양</p>
+            <div className="flex-1 overflow-x-auto overflow-y-hidden py-1">
+              <table className="h-full w-full border-collapse text-base">
                 <thead>
                   <tr>
-                    <th className="border border-white/10 px-2 py-1">
-                      <span className="block text-right text-[9px] leading-3 text-slate-500">제품</span>
-                      <span className="block text-left text-[9px] leading-3 text-slate-500">자원</span>
+                    <th className="w-1/3 border border-white/10 px-3 py-2">
+                      <span className="block text-right text-xs leading-4 text-slate-500">제품</span>
+                      <span className="block text-left text-xs leading-4 text-slate-500">자원</span>
                     </th>
                     {f.goods.map((g) => (
-                      <th key={g} className="whitespace-nowrap border border-white/10 bg-sky-400/[0.14] px-2.5 py-1 text-[11px] font-bold text-sky-100">
+                      <th key={g} className="whitespace-nowrap border border-white/10 bg-sky-400/[0.14] px-4 py-3 text-base font-bold text-sky-100">
                         {g}
                       </th>
                     ))}
@@ -906,11 +906,11 @@ function FactoryTab() {
                 <tbody>
                   {f.resources.map((r, i) => (
                     <tr key={r}>
-                      <th className="whitespace-nowrap border border-white/10 bg-sky-400/[0.14] px-2.5 py-1 text-[11px] font-bold text-sky-100">
+                      <th className="whitespace-nowrap border border-white/10 bg-sky-400/[0.14] px-4 py-3 text-base font-bold text-sky-100">
                         {r} ({f.resUnits[i]})
                       </th>
                       {f.raw[i].map((v, j) => (
-                        <td key={j} className="border border-white/10 px-2.5 py-1 text-right font-mono tabular-nums text-slate-100">
+                        <td key={j} className="border border-white/10 px-5 py-3 text-right font-mono text-xl tabular-nums text-slate-100">
                           {won(v)}
                         </td>
                       ))}
@@ -922,35 +922,35 @@ function FactoryTab() {
           </div>
 
           <div className="space-y-2">
-            <div className="rounded-xl border border-rose-400/25 bg-rose-400/[0.07] px-3 py-2">
-              <p className="text-[10px] font-bold text-rose-300">실제로 쓴 양</p>
-              <p className="mt-0.5 text-sm font-bold text-slate-100">
+            <div className="rounded-xl border border-rose-400/25 bg-rose-400/[0.07] px-4 py-3">
+              <p className="text-xs font-bold text-rose-300">실제로 쓴 양</p>
+              <p className="mt-1 text-lg font-bold text-slate-100">
                 {f.resources[0]} {won(f.used[0])}
                 {f.resUnits[0]} · {f.resources[1]} {won(f.used[1])}
                 {f.resUnits[1]}
               </p>
             </div>
-            <div className="rounded-xl border border-violet-400/25 bg-violet-400/[0.06] p-3">
-              <p className="mb-1 text-[10px] font-bold text-violet-300">
+            <div className="rounded-xl border border-violet-400/25 bg-violet-400/[0.06] p-4">
+              <p className="mb-1.5 text-xs font-bold text-violet-300">
                 가로줄을 {f.scale[0]} 과 {f.scale[1]} 로 나누어 간단히 하면
               </p>
               <div className="overflow-x-auto overflow-y-hidden py-1">
                 <Katex
                   expr={`${matTex(A)} \\begin{pmatrix} x \\\\ y \\end{pmatrix} = ${matTex(B)}`}
-                  className="text-base text-slate-100"
+                  className="text-xl text-slate-100"
                 />
               </div>
-              <p className="mt-1 text-[10px] leading-4 text-slate-500">
+              <p className="mt-1.5 text-xs leading-5 text-slate-400">
                 x 는 {f.goods[0]}, y 는 {f.goods[1]} 의 개수
               </p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-center">
+            <div className="rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-center">
               <div className="overflow-x-auto overflow-y-hidden py-1">
-                <Katex expr={detTex(A)} className="whitespace-nowrap text-base text-slate-100" />
+                <Katex expr={detTex(A)} className="whitespace-nowrap text-xl text-slate-100" />
               </div>
               {k !== 0 ? (
                 <div className="mt-1 overflow-x-auto overflow-y-hidden py-1">
-                  <Katex expr={`A^{-1} = ${invTex(A)}`} className="whitespace-nowrap text-base text-violet-100" />
+                  <Katex expr={`A^{-1} = ${invTex(A)}`} className="whitespace-nowrap text-xl text-violet-100" />
                 </div>
               ) : null}
             </div>
@@ -968,7 +968,7 @@ function FactoryTab() {
 // ══════════════════════════════════════════════════════════════
 //  탭 ③ 사용자 수 예측
 // ══════════════════════════════════════════════════════════════
-function UserBars({ a, b, names, max }: { a: number; b: number; names: [string, string]; max: number }) {
+function UserBars({ a, b, names, max, big = false }: { a: number; b: number; names: [string, string]; max: number; big?: boolean }) {
   const wa = Math.max(2, (a / max) * 100);
   const wb = Math.max(2, (b / max) * 100);
   return (
@@ -978,11 +978,11 @@ function UserBars({ a, b, names, max }: { a: number; b: number; names: [string, 
         { name: names[1], v: b, w: wb, bar: "bg-amber-400/70", text: "text-amber-100" },
       ].map((z) => (
         <div key={z.name} className="flex items-center gap-2">
-          <span className="w-20 shrink-0 text-right text-[11px] font-bold text-slate-300">{z.name}</span>
+          <span className={"w-20 shrink-0 text-right font-bold text-slate-300 " + (big ? "text-sm" : "text-[11px]")}>{z.name}</span>
           <div className="h-5 flex-1 rounded-md bg-white/[0.04]">
             <div className={"h-5 rounded-md " + z.bar} style={{ width: `${z.w}%` }} />
           </div>
-          <span className={"w-16 shrink-0 text-right font-mono text-xs tabular-nums " + z.text}>{fmt(z.v)}</span>
+          <span className={"w-16 shrink-0 text-right font-mono tabular-nums " + (big ? "text-base " : "text-xs ") + z.text}>{fmt(z.v)}</span>
         </div>
       ))}
     </div>
@@ -1158,21 +1158,21 @@ function ForecastTab() {
         <p className="text-lg font-bold text-slate-100">
           {fc.emoji} {fc.title}
         </p>
-        <p className="mt-1 text-xs leading-6 text-slate-300">{fc.lead}</p>
+        <p className="mt-1 text-sm leading-7 text-slate-300">{fc.lead}</p>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-xl border border-violet-400/25 bg-slate-950/50 p-2">
-            <p className="mb-1.5 text-[11px] font-bold text-violet-200">내년에 무엇을 쓸까 (확률)</p>
-            <div className="overflow-x-auto overflow-y-hidden py-1">
-              <table className="border-collapse text-xs">
+          <div className="flex flex-col rounded-xl border border-violet-400/25 bg-slate-950/50 p-4">
+            <p className="mb-3 text-sm font-bold text-violet-200">내년에 무엇을 쓸까 (확률)</p>
+            <div className="flex-1 overflow-x-auto overflow-y-hidden py-1">
+              <table className="h-full w-full border-collapse text-base">
                 <thead>
                   <tr>
-                    <th className="border border-white/10 px-2 py-1">
-                      <span className="block text-right text-[9px] leading-3 text-slate-500">내년</span>
-                      <span className="block text-left text-[9px] leading-3 text-slate-500">올해</span>
+                    <th className="w-1/3 border border-white/10 px-3 py-2">
+                      <span className="block text-right text-xs leading-4 text-slate-500">내년</span>
+                      <span className="block text-left text-xs leading-4 text-slate-500">올해</span>
                     </th>
                     {fc.names.map((g) => (
-                      <th key={g} className="whitespace-nowrap border border-white/10 bg-violet-400/[0.14] px-2.5 py-1 text-[11px] font-bold text-violet-100">
+                      <th key={g} className="whitespace-nowrap border border-white/10 bg-violet-400/[0.14] px-4 py-3 text-base font-bold text-violet-100">
                         {g}
                       </th>
                     ))}
@@ -1181,11 +1181,11 @@ function ForecastTab() {
                 <tbody>
                   {fc.names.map((r, i) => (
                     <tr key={r}>
-                      <th className="whitespace-nowrap border border-white/10 bg-violet-400/[0.14] px-2.5 py-1 text-[11px] font-bold text-violet-100">
+                      <th className="whitespace-nowrap border border-white/10 bg-violet-400/[0.14] px-4 py-3 text-base font-bold text-violet-100">
                         {r}
                       </th>
                       {fc.A[i].map((v, j) => (
-                        <td key={j} className="border border-white/10 px-2.5 py-1 text-right font-mono tabular-nums text-slate-100">
+                        <td key={j} className="border border-white/10 px-5 py-3 text-right font-mono text-xl tabular-nums text-slate-100">
                           {fmt(v)}
                         </td>
                       ))}
@@ -1197,26 +1197,26 @@ function ForecastTab() {
           </div>
 
           <div className="space-y-2">
-            <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
-              <p className="mb-1 text-[10px] font-bold text-slate-400">올해 사용자 수</p>
+            <div className="rounded-xl border border-white/10 bg-slate-950/60 p-4">
+              <p className="mb-1.5 text-xs font-bold text-slate-400">올해 사용자 수</p>
               <div className="overflow-x-auto overflow-y-hidden py-1">
-                <Katex expr={`B = ${matTex([[fc.start[0], fc.start[1]]])}`} className="text-base text-slate-100" />
+                <Katex expr={`B = ${matTex([[fc.start[0], fc.start[1]]])}`} className="text-xl text-slate-100" />
               </div>
-              <p className="mt-2 text-[11px] leading-5 text-slate-400">
+              <p className="mt-2 text-sm leading-6 text-slate-400">
                 내년은 <Katex expr="BA" className="text-violet-200" />, 내후년은 <Katex expr="BA^2" className="text-violet-200" />,
                 n년 뒤는 <Katex expr="BA^n" className="text-violet-200" /> 이에요.
               </p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
-              <p className="mb-1.5 text-[10px] font-bold text-slate-400">해마다의 사용자 수</p>
-              <div className="space-y-1.5">
+            <div className="rounded-xl border border-white/10 bg-slate-950/60 p-4">
+              <p className="mb-2 text-xs font-bold text-slate-400">해마다의 사용자 수</p>
+              <div className="space-y-2.5">
                 {[0, 1, 2, 3].map((n) => {
                   const p = afterYears(fc.start, fc.A, n);
                   return (
                     <div key={n} className="flex items-center gap-2">
-                      <span className="w-12 shrink-0 text-right text-[10px] font-bold text-slate-400">{n}년 뒤</span>
+                      <span className="w-14 shrink-0 text-right text-sm font-bold text-slate-400">{n}년 뒤</span>
                       <div className="flex-1">
-                        <UserBars a={p[0]} b={p[1]} names={fc.names} max={fc.start[0] + fc.start[1]} />
+                        <UserBars a={p[0]} b={p[1]} names={fc.names} max={fc.start[0] + fc.start[1]} big />
                       </div>
                     </div>
                   );
