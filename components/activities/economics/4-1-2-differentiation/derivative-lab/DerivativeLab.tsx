@@ -19,11 +19,15 @@ import {
   POW_STEPS,
   REAL_NOTE,
   TAN_FNS,
-  TAN_GAPS,
+  TAN_HMIN,
+  TAN_STOPS,
   TAN_STEPS,
   autoBox,
   fmt,
   samplePath,
+  tanGapAt,
+  tanSAt,
+  tanStart,
   won,
   type Box,
   type Piece,
@@ -144,25 +148,29 @@ const PMR = 14;
 const PMT = 16;
 const PMB = 30;
 
-type LineTone = "sec" | "tan" | "ghost";
-type PlotLine = { m: number; x0: number; y0: number; tone: LineTone };
+type LineTone = "sec" | "secL" | "tan" | "ghost" | "ghostL";
+/** op 는 잔상 부채에서 오래된 할선일수록 흐리게 할 때만 쓴다 */
+type PlotLine = { m: number; x0: number; y0: number; tone: LineTone; op?: number };
 const LINE_COLOR: Record<LineTone, string> = {
   sec: "#f472b6",
+  secL: "#fbbf24",
   tan: "#34d399",
-  ghost: "rgba(244,114,182,0.28)",
+  ghost: "#f472b6",
+  ghostL: "#fbbf24",
 };
-const LINE_WIDTH: Record<LineTone, number> = { sec: 2.2, tan: 2.4, ghost: 1.4 };
+const LINE_WIDTH: Record<LineTone, number> = { sec: 2.4, secL: 2.4, tan: 3, ghost: 1.2, ghostL: 1.2 };
 
-type MarkTone = "a" | "b" | "tan" | "dot" | "ghost";
+type MarkTone = "a" | "b" | "bl" | "tan" | "dot" | "ghost";
 type PlotMark = { x: number; y: number; tone: MarkTone; open?: boolean };
 const MARK_COLOR: Record<MarkTone, string> = {
   a: "#e2e8f0",
   b: "#f472b6",
+  bl: "#fbbf24",
   tan: "#34d399",
   dot: "#fb923c",
   ghost: "rgba(251,146,60,0.45)",
 };
-const MARK_R: Record<MarkTone, number> = { a: 5, b: 5, tan: 5.5, dot: 3.4, ghost: 2.6 };
+const MARK_R: Record<MarkTone, number> = { a: 5, b: 5, bl: 5, tan: 5.5, dot: 3.4, ghost: 2.6 };
 
 type DeltaBox = { x1: number; y1: number; x2: number; y2: number };
 
@@ -178,6 +186,7 @@ function Plot({
   uid,
   axis,
   yFmt,
+  big = false,
 }: {
   box: Box;
   paths: [number, number][][];
@@ -190,6 +199,8 @@ function Plot({
   uid: string;
   axis?: [string, string];
   yFmt?: (v: number) => string;
+  /** 그래프가 주인공인 탭에서 창을 더 크게 */
+  big?: boolean;
 }) {
   const pw = PS - PML - PMR;
   const ph = PS - PMT - PMB;
@@ -215,7 +226,7 @@ function Plot({
   const stroke = curve === "d" ? "#fb923c" : "#38bdf8";
 
   return (
-    <svg viewBox={"0 0 " + PS + " " + PS} className="w-full max-w-[320px]" role="img" aria-label="함수의 그래프">
+    <svg viewBox={"0 0 " + PS + " " + PS} className={"w-full " + (big ? "max-w-[440px]" : "max-w-[320px]")} role="img" aria-label="함수의 그래프">
       <defs>
         <clipPath id={cid}>
           <rect x={PML} y={PMT} width={pw} height={ph} />
@@ -233,21 +244,21 @@ function Plot({
       {axisY ? <line x1={X(0)} y1={PMT} x2={X(0)} y2={PS - PMB} stroke="rgba(255,255,255,0.3)" /> : null}
 
       {gx.map((v) => (
-        <text key={"tx" + v} x={X(v)} y={PS - PMB + 12} textAnchor="middle" fontSize="8" fill="#64748b">
+        <text key={"tx" + v} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={"ty" + v} x={PML - 4} y={Y(v) + 3} textAnchor="end" fontSize="8" fill="#64748b">
+        <text key={"ty" + v} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
           {fy(v)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="8" fill="#475569">
+          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 5} textAnchor="start" fontSize="8" fill="#475569">
+          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
@@ -277,6 +288,7 @@ function Plot({
             y2={Y(ln.m * (box.xMax - ln.x0) + ln.y0)}
             stroke={LINE_COLOR[ln.tone]}
             strokeWidth={LINE_WIDTH[ln.tone]}
+            opacity={ln.op ?? 1}
           />
         ))}
 
@@ -296,10 +308,10 @@ function Plot({
       {/* 점·이름표는 clipPath 밖에 그린다 */}
       {delta && delta.x1 >= box.xMin && delta.x2 <= box.xMax ? (
         <>
-          <text x={(X(delta.x1) + X(delta.x2)) / 2} y={Y(delta.y1) + 13} textAnchor="middle" fontSize="9" fill="#5eead4">
+          <text x={(X(delta.x1) + X(delta.x2)) / 2} y={Y(delta.y1) + 13} textAnchor="middle" fontSize="11" fill="#5eead4">
             Δx
           </text>
-          <text x={X(delta.x2) + 6} y={(Y(delta.y1) + Y(delta.y2)) / 2 + 3} textAnchor="start" fontSize="9" fill="#c4b5fd">
+          <text x={X(delta.x2) + 6} y={(Y(delta.y1) + Y(delta.y2)) / 2 + 3} textAnchor="start" fontSize="11" fill="#c4b5fd">
             Δy
           </text>
         </>
@@ -813,32 +825,111 @@ function slopeAt(fn: (x: number) => number, a: number, h: number): number {
   return (fn(a + h) - fn(a)) / h;
 }
 
+/** 잔상 부채의 촘촘함 — 손잡이 0 ~ 1 을 이만큼 나눈 자리마다 지나온 할선을 남긴다 */
+const FAN_N = 28;
+/** 처음부터 끝까지 한 번에 좁힐 때 걸리는 시간 */
+const TAN_PLAY_MS = 4200;
+const TAN_STEP_MS = 800;
+const easeInOut = (t: number): number => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+function SlopeChip({ label, value, tone }: { label: string; value: number; tone: "r" | "l" | "t" }) {
+  return (
+    <div className={"rounded-xl border px-3 py-2 text-center " + SLOPE_CHIP[tone]}>
+      <p className="text-xs font-bold opacity-80">{label}</p>
+      <p className="mt-0.5 font-mono text-xl font-bold tabular-nums">{fmt(value, 4)}</p>
+    </div>
+  );
+}
+const SLOPE_CHIP: Record<"r" | "l" | "t", string> = {
+  r: "border-rose-400/40 bg-rose-400/[0.10] text-rose-100",
+  l: "border-amber-400/40 bg-amber-400/[0.10] text-amber-100",
+  t: "border-emerald-400/50 bg-emerald-400/[0.12] text-emerald-100",
+};
+
 function TanTab() {
   const [ti, setTi] = useState(0);
   const [a, setA] = useState(TAN_FNS[0].a0);
-  const [k, setK] = useState(0);
+  // s 는 Δx 를 로그 눈금으로 늘인 손잡이 자리 — 0 이 처음 Δx, 1 이 0.001
+  const [s, setS] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
 
   const t = TAN_FNS[ti];
   const fa = t.fn(a);
-  const h = TAN_GAPS[k];
+  const start = tanStart(t, a);
+  const h = tanGapAt(start, s);
   const mR = slopeAt(t.fn, a, h);
+  const mL = slopeAt(t.fn, a, -h);
   const mT = t.d(a);
 
+  const stop = () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setBusy(false);
+  };
+  const glide = (to: number, ms: number) => {
+    stop();
+    const from = s;
+    if (to <= from || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setS(to);
+      return;
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const u = Math.min((now - t0) / ms, 1);
+      if (u >= 1) {
+        rafRef.current = null;
+        setBusy(false);
+        setS(to);
+        return;
+      }
+      setS(from + (to - from) * easeInOut(u));
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    setBusy(true);
+    rafRef.current = requestAnimationFrame(tick);
+  };
+  const reset = () => {
+    stop();
+    setS(0);
+  };
+
+  const gaps = [start, ...TAN_STOPS.filter((g) => g < start - 1e-9)];
+  const stopS = gaps.map((g) => tanSAt(start, g));
+  const nextS = stopS.find((v) => v > s + 1e-6);
+
   const paths = samplePath(t.fn, t.box);
+  // 잔상 부채 — 지나온 자리에 할선을 촘촘히 남기고, 오래된 것일수록 흐리게
   const lines: PlotLine[] = [];
-  for (let i = 0; i < k; i++) lines.push({ m: slopeAt(t.fn, a, TAN_GAPS[i]), x0: a, y0: fa, tone: "ghost" });
+  for (let j = 0; j < FAN_N; j++) {
+    const sj = j / FAN_N;
+    if (sj > s - 0.5 / FAN_N) break;
+    const g = tanGapAt(start, sj);
+    const op = 0.12 + 0.38 * (s > 0 ? sj / s : 0);
+    lines.push({ m: slopeAt(t.fn, a, -g), x0: a, y0: fa, tone: "ghostL", op });
+    lines.push({ m: slopeAt(t.fn, a, g), x0: a, y0: fa, tone: "ghost", op });
+  }
   lines.push({ m: mT, x0: a, y0: fa, tone: "tan" });
+  lines.push({ m: mL, x0: a, y0: fa, tone: "secL" });
   lines.push({ m: mR, x0: a, y0: fa, tone: "sec" });
 
   const marks: PlotMark[] = [
+    { x: a - h, y: t.fn(a - h), tone: "bl" },
     { x: a + h, y: t.fn(a + h), tone: "b" },
-    { x: a - h, y: t.fn(a - h), tone: "b", open: true },
     { x: a, y: fa, tone: "tan" },
   ];
 
   const rows = [];
-  for (let i = 0; i <= k; i++) {
-    const g = TAN_GAPS[i];
+  for (let i = 0; i < gaps.length; i++) {
+    if (stopS[i] > s + 1e-6) break;
+    const g = gaps[i];
     rows.push({ i, g, r: slopeAt(t.fn, a, g), l: slopeAt(t.fn, a, -g) });
   }
 
@@ -853,9 +944,10 @@ function TanTab() {
             at={ti}
             accent="violet"
             onPick={(i) => {
+              stop();
               setTi(i);
               setA(TAN_FNS[i].a0);
-              setK(0);
+              setS(0);
             }}
           />
         </div>
@@ -864,7 +956,7 @@ function TanTab() {
           <Katex expr={t.tex} className="text-lg text-slate-100" />
         </div>
 
-        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
+        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
           <div className="space-y-3">
             <Knob
               label="접점의 자리 a"
@@ -874,72 +966,108 @@ function TanTab() {
               step={t.aStep}
               accent="violet"
               onChange={(z) => {
+                stop();
                 setA(z);
-                setK(0);
+                setS(0);
               }}
             />
 
+            <div className="rounded-xl border border-violet-400/30 bg-violet-400/[0.06] p-3">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-bold text-violet-100">Δx 좁히기</span>
+                <span className="font-mono text-lg font-bold tabular-nums text-slate-100">Δx = {Number(h.toPrecision(3))}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.002}
+                value={s}
+                aria-label="Δx 좁히기"
+                onChange={(e) => {
+                  stop();
+                  setS(Number(e.target.value));
+                }}
+                className="mt-2 w-full accent-violet-400"
+              />
+              <div className="flex justify-between font-mono text-xs text-slate-400">
+                <span>{fmt(start)}</span>
+                <span>→ 0 쪽으로</span>
+                <span>{TAN_HMIN}</span>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={busy || s >= 1}
+                  onClick={() => glide(1, TAN_PLAY_MS * (1 - s))}
+                  className={"rounded-lg border-2 px-4 py-1.5 text-sm font-bold transition disabled:opacity-40 " + ACC_BTN.violet}
+                >
+                  ▶ 끝까지 좁히기
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || nextS === undefined}
+                  onClick={() => (nextS === undefined ? null : glide(nextS, TAN_STEP_MS))}
+                  className="rounded-lg border border-violet-400/40 bg-violet-400/10 px-3 py-1.5 text-sm font-bold text-violet-100 transition hover:bg-violet-400/20 disabled:opacity-40"
+                >
+                  ⏩ 다음 Δx 까지
+                </button>
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
+                >
+                  ↩️ 처음으로
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <SlopeChip label="왼쪽 할선" value={mL} tone="l" />
+              <SlopeChip label="접선 f'(a)" value={mT} tone="t" />
+              <SlopeChip label="오른쪽 할선" value={mR} tone="r" />
+            </div>
+
             <div className="overflow-x-auto overflow-y-hidden py-1">
-              <table className="w-full border-collapse text-xs">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-slate-200">Δx</th>
-                    <th className="border border-white/10 bg-rose-400/[0.14] px-2 py-1 text-[10px] font-bold text-rose-100">
-                      오른쪽 할선의 기울기
-                    </th>
-                    <th className="border border-white/10 bg-sky-400/[0.14] px-2 py-1 text-[10px] font-bold text-sky-100">
+                    <th className="border border-white/10 bg-white/[0.06] px-3 py-2 text-sm font-bold text-slate-200">Δx</th>
+                    <th className="border border-white/10 bg-amber-400/[0.14] px-3 py-2 text-sm font-bold text-amber-100">
                       왼쪽 할선의 기울기
+                    </th>
+                    <th className="border border-white/10 bg-rose-400/[0.14] px-3 py-2 text-sm font-bold text-rose-100">
+                      오른쪽 할선의 기울기
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.i}>
-                      <td className="border border-white/10 px-2 py-1 text-right font-mono text-[11px] tabular-nums text-slate-300">
+                      <td className="border border-white/10 px-3 py-2 text-right font-mono text-base tabular-nums text-slate-300">
                         {fmt(r.g, 4)}
                       </td>
-                      <td className="border border-white/10 px-2 py-1 text-right font-mono text-[11px] tabular-nums text-rose-100">
-                        {fmt(r.r, 4)}
-                      </td>
-                      <td className="border border-white/10 px-2 py-1 text-right font-mono text-[11px] tabular-nums text-sky-100">
+                      <td className="border border-white/10 px-3 py-2 text-right font-mono text-base tabular-nums text-amber-100">
                         {fmt(r.l, 4)}
+                      </td>
+                      <td className="border border-white/10 px-3 py-2 text-right font-mono text-base tabular-nums text-rose-100">
+                        {fmt(r.r, 4)}
                       </td>
                     </tr>
                   ))}
                   <tr>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       ↓ 0
                     </td>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       ↓ {fmt(mT, 4)}
                     </td>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       ↓ {fmt(mT, 4)}
                     </td>
                   </tr>
                 </tbody>
               </table>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                disabled={k >= TAN_GAPS.length - 1}
-                onClick={() => setK(k + 1)}
-                className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN.violet}
-              >
-                🔭 Δx 를 더 좁히기
-              </button>
-              <button
-                type="button"
-                onClick={() => setK(0)}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
-              >
-                ↩️ 처음으로
-              </button>
-              <span className="font-mono text-[11px] text-slate-400">
-                {k + 1} / {TAN_GAPS.length} 단계 · Δx = {fmt(h, 4)}
-              </span>
             </div>
 
             <div className="rounded-xl border-2 border-emerald-400/45 bg-emerald-400/[0.08] px-3 py-3 text-center">
@@ -966,10 +1094,10 @@ function TanTab() {
 
           <div className="space-y-2">
             <div className="flex justify-center">
-              <Plot box={t.box} paths={paths} lines={lines} marks={marks} uid={"tan-" + t.id} axis={["x", "y"]} />
+              <Plot box={t.box} paths={paths} lines={lines} marks={marks} uid={"tan-" + t.id} axis={["x", "y"]} big />
             </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">
-              초록 점 P({fmt(a)}, {fmt(fa)}) · 분홍 점 Q 가 다가오는 중 · 흐린 분홍은 지나온 할선 · 초록 직선이 접선
+            <p className="text-center text-xs leading-5 text-slate-400">
+              초록 점 P({fmt(a)}, {fmt(fa)}) · 분홍·주황 점 Q 가 양쪽에서 다가오는 중 · 흐린 부채는 지나온 할선 · 초록 직선이 접선
             </p>
             <TipBox>{t.note}</TipBox>
           </div>

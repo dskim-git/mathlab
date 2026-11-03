@@ -32,8 +32,15 @@
 //        x^3 - 3x 에서 -1 → 1    : f(-1) = 2, f(1) = -2 이라 Δy = -4, Δx = 2 → -2
 //
 // ── 탭 ② 할선에서 접선으로 ────────────────────────────────
-//  · Δx 를 1 → 0.5 → 0.2 → 0.1 → 0.05 → 0.02 → 0.01 → 0.001 로 좁히며 할선을 잔상으로 남긴다.
-//    오른쪽(+Δx)과 왼쪽(-Δx) 의 할선 기울기가 양쪽에서 같은 값으로 모인다.
+//  · Δx 를 처음 값(h0)에서 0.001 까지 로그 눈금으로 끊김 없이 좁히며(손잡이 · ▶ 재생)
+//    지나온 할선을 잔상 부채로 남긴다. Δx 가 1 · 0.5 · 0.1 · 0.01 · 0.001 을 지날 때 표에 한 줄씩 쌓인다.
+//    오른쪽(+Δx, 분홍)과 왼쪽(-Δx, 주황) 할선이 가위처럼 양쪽에서 접선으로 닫힌다.
+//    처음 자리 — 할선이 접선과 확 달라 보이도록 Δx 를 크게 잡았다.
+//        x^2 - 4x + 5   a 1.5  h0 2    오른쪽 1     왼쪽 -3      접선 -1
+//        x^3 - 3x       a -0.5 h0 1.1  오른쪽 -2.69 왼쪽 0.61    접선 -2.25  (오른쪽은 처음부터 접선 가까이, 왼쪽이 크게 돈다)
+//        -0.5x^2 + 3x   a 1.5  h0 2.5  오른쪽 0.25  왼쪽 2.75    접선 1.5
+//        2x + 1         a 0    h0 2    셋 다 2
+//    a 를 옮겨 Q 가 창 밖으로 나가면 tanStart 가 h0 · 2 · 1.5 · 1.2 · 1 · 0.8 · 0.5 중 들어오는 첫 값을 고른다.
 //        f(x) = x^2 - 4x + 5   오른쪽 2a + h - 4       왼쪽 2a - h - 4      f'(a) = 2a - 4
 //        f(x) = x^3 - 3x       3a^2 + 3ah + h^2 - 3   3a^2 - 3ah + h^2 - 3  f'(a) = 3a^2 - 3
 //        f(x) = -0.5x^2 + 3x   -a - h/2 + 3           -a + h/2 + 3          f'(a) = -a + 3
@@ -316,6 +323,8 @@ export type TanFn = {
   aMax: number;
   aStep: number;
   a0: number;
+  /** 처음 Δx — 손잡이 자리에 따라 Q 가 창 밖으로 나가면 tanStart 가 더 작은 값을 고른다 */
+  h0: number;
   box: Box;
   note: string;
 };
@@ -332,7 +341,8 @@ export const TAN_FNS: TanFn[] = [
     aMin: 0.5,
     aMax: 3.5,
     aStep: 0.5,
-    a0: 1,
+    a0: 1.5,
+    h0: 2,
     box: { xMin: -0.7, xMax: 4.7, yMin: -1, yMax: 9, gx: 1, gy: 2 },
     note: "a = 2 로 두면 접선이 가로로 눕습니다. 포물선의 꼭짓점이지요.",
   },
@@ -347,7 +357,8 @@ export const TAN_FNS: TanFn[] = [
     aMin: -1,
     aMax: 1,
     aStep: 0.5,
-    a0: 0.5,
+    a0: -0.5,
+    h0: 1.1,
     box: { xMin: -2.2, xMax: 2.2, yMin: -5, yMax: 5, gx: 1, gy: 2 },
     note: "a 를 -1 과 1 에 두면 접선이 가로로 누워요. 봉우리와 골짜기가 있는 자리입니다.",
   },
@@ -362,7 +373,8 @@ export const TAN_FNS: TanFn[] = [
     aMin: 0,
     aMax: 5,
     aStep: 0.5,
-    a0: 1,
+    a0: 1.5,
+    h0: 2.5,
     box: { xMin: -1.2, xMax: 6.2, yMin: -5, yMax: 5.5, gx: 1, gy: 2 },
     note: "a 가 커질수록 접선이 점점 눕다가 3 을 지나면 아래로 기울어요.",
   },
@@ -378,13 +390,35 @@ export const TAN_FNS: TanFn[] = [
     aMax: 2,
     aStep: 0.5,
     a0: 0,
+    h0: 2,
     box: { xMin: -3.2, xMax: 3.2, yMin: -6, yMax: 8, gx: 1, gy: 2 },
     note: "할선이 처음부터 접선과 겹쳐 있어요. 좁힐 것도 없이 늘 기울기가 2 입니다.",
   },
 ];
 
-/** Δx 를 좁혀 가는 단계 */
-export const TAN_GAPS = [1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.001];
+/** Δx 가 이 값들을 지날 때 표에 한 줄씩 남긴다 (처음 Δx 의 줄은 따로 맨 위에) */
+export const TAN_STOPS = [1, 0.5, 0.1, 0.01, 0.001];
+/** Δx 를 이 값까지 좁힌다 */
+export const TAN_HMIN = 0.001;
+
+/** 처음 Δx — t.h0 부터 차례로 줄여 가며 두 점 Q(a ± Δx) 가 모두 창 안에 드는 첫 값 */
+export function tanStart(t: TanFn, a: number): number {
+  const m = 0.15;
+  const inBox = (x: number) => {
+    const y = t.fn(x);
+    return x >= t.box.xMin + m && x <= t.box.xMax - m && y >= t.box.yMin + m && y <= t.box.yMax - m;
+  };
+  for (const h of [t.h0, 2, 1.5, 1.2, 1, 0.8, 0.5]) {
+    if (h > t.h0) continue;
+    if (inBox(a - h) && inBox(a + h)) return h;
+  }
+  return 0.5;
+}
+
+/** 손잡이 s(0 ~ 1) 에서의 Δx — 로그 눈금이라 자릿수마다 같은 시간이 걸린다 */
+export const tanGapAt = (start: number, s: number): number => start * Math.pow(TAN_HMIN / start, s);
+/** Δx 가 g 가 되는 손잡이 자리 */
+export const tanSAt = (start: number, g: number): number => Math.log(g / start) / Math.log(TAN_HMIN / start);
 
 export const TAN_STEPS: Step[] = [
   {
