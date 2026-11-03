@@ -26,6 +26,10 @@
 //        (2x² - 2)/(x - 1)      a 1   L  4    x = 1 에서 뚫림  [= 2(x + 1)]
 //        1/x               a 2   L  0.5  이어짐
 //        4 (상수함수)      a 1   L  4    x 가 무엇이든 늘 4
+//  · 돋보기 연출 — 전체 그림은 a ± 2.5 를 보여 주고, k 단계의 돋보기 창은 a ± 2.5·10⁻ᵏ 를
+//    같은 가로세로 비율 그대로 키워 보여 준다. 그래서 배율이 정확히 10ᵏ 배이고,
+//    분홍 점 a ∓ 10⁻ᵏ 은 늘 창 반지름의 0.4 자리에 놓인다.
+//    단추를 누르면 ① 점이 a ∓ 10⁻ᵏ → a ∓ 10⁻⁽ᵏ⁺¹⁾ 로 모이고 ② 창이 10배 줌인되어 다시 벌어진다.
 //
 // ── 탭 ② 구멍이 있어도 ────────────────────────────────────
 //  · 같은 극한값을 가지는 세 함수를 나란히 두고 함숫값만 다르다는 것을 본다.
@@ -136,6 +140,8 @@ export type ZoomFn = {
   /** x = a 에서 함숫값이 있는가 */
   defined: boolean;
   note: string;
+  /** 전체 그림의 세로 범위 — 치솟는 곳이 있어 자동으로 정하기 어려울 때만 */
+  view?: [number, number];
 };
 
 export const ZOOM_FNS: ZoomFn[] = [
@@ -193,6 +199,7 @@ export const ZOOM_FNS: ZoomFn[] = [
     L: 0.5,
     defined: true,
     note: "x = 0 근처에서는 치솟지만 x = 2 근처에서는 얌전히 이어져 있어요.",
+    view: [-1, 3],
   },
   {
     id: "z6",
@@ -210,6 +217,39 @@ export const ZOOM_FNS: ZoomFn[] = [
 export const ZOOM_MAX_STEP = 5;
 /** k 단계에서 a 로부터 떨어진 거리 */
 export const zoomGap = (k: number): number => Math.pow(10, -k);
+
+/** 전체 그림이 a 양옆으로 보여 주는 폭 — 돋보기 창의 반폭은 k 단계에서 이 값의 10⁻ᵏ 배 */
+export const OVER_R = 2.5;
+
+/** 1 · 2 · 5 × 10ⁿ 꼴의 눈금 간격 */
+export function niceStep(raw: number): number {
+  const m = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / m;
+  return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * m;
+}
+
+/** 돋보기 바깥의 전체 그림 — 가로는 a ± OVER_R, 세로는 그 구간의 값이 다 들어오게 */
+export function zoomOverview(z: ZoomFn): Box {
+  let lo = Infinity;
+  let hi = -Infinity;
+  if (z.view) {
+    [lo, hi] = z.view;
+  } else {
+    for (let i = 0; i <= 200; i++) {
+      const x = z.a - OVER_R + (2 * OVER_R * i) / 200;
+      if (Math.abs(x - z.a) < 1e-9) continue;
+      const y = z.fn(x);
+      if (!Number.isFinite(y)) continue;
+      lo = Math.min(lo, y);
+      hi = Math.max(hi, y);
+    }
+    lo = Math.min(lo, z.L);
+    hi = Math.max(hi, z.L);
+  }
+  const mid = (lo + hi) / 2;
+  const half = (Math.max(hi - lo, 4) / 2) * (z.view ? 1 : 1.12);
+  return { xMin: z.a - OVER_R, xMax: z.a + OVER_R, yMin: mid - half, yMax: mid + half, gx: 1, gy: niceStep((2 * half) / 4) };
+}
 
 export const ZOOM_STEPS: Step[] = [
   {

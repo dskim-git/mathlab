@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
@@ -22,16 +22,18 @@ import {
   ZOOM_FNS,
   ZOOM_MAX_STEP,
   ZOOM_STEPS,
+  OVER_R,
   fmt,
   samplePath,
   won,
-  zoomBox,
+  zoomOverview,
   zoomGap,
   type Box,
   type GraphCard,
   type HoleKind,
   type Piece,
   type Step,
+  type ZoomFn,
 } from "./data";
 
 // ─── 성찰 (활동 고유 질문 3개 · 공통 마무리 질문은 자동 부착) ────────
@@ -209,21 +211,21 @@ function Plot({
       {axisY ? <line x1={X(0)} y1={PMT} x2={X(0)} y2={PS - PMB} stroke="rgba(255,255,255,0.3)" /> : null}
 
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 12} textAnchor="middle" fontSize="8" fill="#64748b">
+        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 3} textAnchor="end" fontSize="8" fill="#64748b">
+        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
           {fy(v)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="8" fill="#475569">
+          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 5} textAnchor="start" fontSize="8" fill="#475569">
+          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
@@ -536,34 +538,263 @@ function ValueCell({ value, goal }: { value: number; goal: string }) {
   const s = fmt(value, 8);
   const n = sharedPrefix(s, goal);
   return (
-    <span className="font-mono text-[11px] tabular-nums">
+    <span className="font-mono text-base tabular-nums">
       <span className="font-bold text-emerald-300">{s.slice(0, n)}</span>
       <span className="text-slate-400">{s.slice(n)}</span>
     </span>
   );
 }
 
+// ── 돋보기 — 왼쪽 전체 그림의 작은 원 안을 오른쪽 큰 원에 같은 비율로 키워 보여 준다 ──
+type ScopeLayout = { id: string; w: number; h: number; ol: number; ot: number; os: number; mx: number; my: number; mr: number };
+const SCOPE_WIDE: ScopeLayout = { id: "w", w: 640, h: 330, ol: 48, ot: 30, os: 240, mx: 480, my: 165, mr: 146 };
+const SCOPE_TALL: ScopeLayout = { id: "t", w: 340, h: 640, ol: 60, ot: 28, os: 240, mx: 170, my: 472, mr: 150 };
+
+/** 한 번 누를 때 걸리는 시간과, 그 앞부분 중 '점이 모이는' 몫 (나머지는 줌인) */
+const SCOPE_MS = 1500;
+const GATHER = 0.35;
+const easeInOut = (t: number): number => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+/** pos 는 단계를 실수로 늘인 값 — k 에서 k + 1 로 가는 동안 ① 점이 모이고 ② 창이 줌인된다 */
+function scopeAt(pos: number): { gap: number; r: number } {
+  const base = Math.floor(pos + 1e-9);
+  const u = pos - base;
+  const p1 = easeInOut(Math.min(u / GATHER, 1));
+  const p2 = easeInOut(Math.max((u - GATHER) / (1 - GATHER), 0));
+  return { gap: Math.pow(10, -(base + p1)), r: OVER_R * Math.pow(10, -(base + p2)) };
+}
+
+/** 원 안에 그릴 격자선 자리 (가운데에서 간격만큼씩) */
+function gridOffsets(spacing: number, reach: number): number[] {
+  const out: number[] = [];
+  const n = Math.ceil(reach / spacing);
+  for (let j = -n; j <= n; j++) out.push(j * spacing);
+  return out;
+}
+
+function ZoomScope({ z, ob, pos, lay }: { z: ZoomFn; ob: Box; pos: number; lay: ScopeLayout }) {
+  const { gap, r } = scopeAt(pos);
+  const { ol, ot, os, mx, my, mr } = lay;
+  const OX = (x: number) => ol + ((x - ob.xMin) / (ob.xMax - ob.xMin)) * os;
+  const OY = (y: number) => ot + os - ((y - ob.yMin) / (ob.yMax - ob.yMin)) * os;
+  const sx = os / (ob.xMax - ob.xMin);
+  const sy = os / (ob.yMax - ob.yMin);
+  // 돋보기 창의 세로 반폭 — 전체 그림과 가로세로 비율이 같아야 원이 원으로 커진다
+  const ry = (r * sx) / sy;
+  const MX = (x: number) => mx + ((x - z.a) / r) * mr;
+  const MY = (y: number) => my - ((y - z.L) / ry) * mr;
+
+  const ox = OX(z.a);
+  const oy = OY(z.L);
+  const rho = Math.max(r * sx, 3);
+  const len = Math.hypot(mx - ox, my - oy);
+  const nx = -(my - oy) / len;
+  const ny = (mx - ox) / len;
+  const cone = [
+    [ox + nx * rho, oy + ny * rho],
+    [mx + nx * mr, my + ny * mr],
+    [mx - nx * mr, my - ny * mr],
+    [ox - nx * rho, oy - ny * rho],
+  ]
+    .map(([a, b]) => a + "," + b)
+    .join(" ");
+
+  const overPaths = samplePath(z.fn, ob.xMin, ob.xMax, ob);
+  const tx: number[] = [];
+  for (let v = Math.ceil(ob.xMin); v <= ob.xMax + 1e-9; v++) tx.push(v);
+  const ty: number[] = [];
+  for (let v = Math.ceil(ob.yMin / ob.gy) * ob.gy; v <= ob.yMax + 1e-9; v += ob.gy) ty.push(Number(v.toFixed(10)));
+
+  // 창 안의 곡선 — 가운데(x = a)를 밟지 않도록 반 칸씩 비켜 잡는다
+  const magPaths: string[] = [];
+  let cur: string[] = [];
+  const N = 200;
+  for (let i = 0; i < N; i++) {
+    const x = z.a + r * (-1 + (2 * (i + 0.5)) / N);
+    const y = z.fn(x);
+    const py = MY(y);
+    if (!Number.isFinite(py) || Math.abs(py - my) > 3 * mr) {
+      if (cur.length > 1) magPaths.push(cur.join(" "));
+      cur = [];
+      continue;
+    }
+    cur.push(MX(x) + "," + py);
+  }
+  if (cur.length > 1) magPaths.push(cur.join(" "));
+
+  // 격자는 10 의 거듭제곱 간격 — 줌인하면 벌어지다가 다음 자릿수의 잔 격자가 서서히 나타난다
+  const lr = Math.log10(r);
+  const frac = lr - Math.floor(lr);
+  const major = mr * Math.pow(10, -frac);
+  const minor = major / 10;
+  const minorOp = Math.min(Math.max((0.5 - frac) * 2, 0), 1);
+
+  const live = [z.a - gap, z.a + gap];
+  const zoomRate = Math.round(OVER_R / r).toLocaleString("ko-KR");
+  const ovId = "zo-" + lay.id + "-" + z.id;
+  const mgId = "zm-" + lay.id + "-" + z.id;
+
+  return (
+    <svg viewBox={"0 0 " + lay.w + " " + lay.h} className="w-full" role="img" aria-label="돋보기로 확대한 그래프">
+      <defs>
+        <clipPath id={ovId}>
+          <rect x={ol} y={ot} width={os} height={os} />
+        </clipPath>
+        <clipPath id={mgId}>
+          <circle cx={mx} cy={my} r={mr} />
+        </clipPath>
+      </defs>
+
+      {/* 전체 그림 */}
+      <rect x={ol} y={ot} width={os} height={os} fill="#0b1220" stroke="rgba(255,255,255,0.12)" />
+      {tx.map((v) => (
+        <line key={"ox" + v} x1={OX(v)} y1={ot} x2={OX(v)} y2={ot + os} stroke="rgba(255,255,255,0.06)" />
+      ))}
+      {ty.map((v) => (
+        <line key={"oy" + v} x1={ol} y1={OY(v)} x2={ol + os} y2={OY(v)} stroke="rgba(255,255,255,0.06)" />
+      ))}
+      {ob.yMin <= 0 && ob.yMax >= 0 ? <line x1={ol} y1={OY(0)} x2={ol + os} y2={OY(0)} stroke="rgba(255,255,255,0.3)" /> : null}
+      {ob.xMin <= 0 && ob.xMax >= 0 ? <line x1={OX(0)} y1={ot} x2={OX(0)} y2={ot + os} stroke="rgba(255,255,255,0.3)" /> : null}
+      {tx.map((v) => (
+        <text key={"otx" + v} x={OX(v)} y={ot + os + 15} textAnchor="middle" fontSize="11" fill="#94a3b8">
+          {fmt(v, 4)}
+        </text>
+      ))}
+      {ty.map((v) => (
+        <text key={"oty" + v} x={ol - 5} y={OY(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
+          {fmt(v, 4)}
+        </text>
+      ))}
+      <g clipPath={"url(#" + ovId + ")"}>
+        {overPaths.map((p, i) => (
+          <polyline
+            key={i}
+            points={p.map(([x, y]) => OX(x) + "," + OY(y)).join(" ")}
+            fill="none"
+            stroke="#38bdf8"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ))}
+      </g>
+
+      {/* 돋보기 원뿔 — 작은 원과 큰 원을 잇는다 */}
+      <polygon points={cone} fill="rgba(56,189,248,0.07)" stroke="rgba(56,189,248,0.35)" strokeWidth="1" strokeDasharray="4 3" />
+
+      {/* 전체 그림 위의 렌즈 (점은 clipPath 밖에) */}
+      <circle cx={ox} cy={oy} r={rho} fill="rgba(56,189,248,0.12)" stroke="#7dd3fc" strokeWidth="1.8" />
+      <line
+        x1={ox + rho * 0.71}
+        y1={oy + rho * 0.71}
+        x2={ox + rho * 0.71 + 11}
+        y2={oy + rho * 0.71 + 11}
+        stroke="#7dd3fc"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+      {live.map((x) => (
+        <circle key={"ol" + x} cx={OX(x)} cy={OY(z.fn(x))} r="2.6" fill="#f472b6" />
+      ))}
+      <circle cx={ox} cy={oy} r="2.6" fill={z.defined ? "#34d399" : "#0b1220"} stroke="#34d399" strokeWidth="1.4" />
+
+      {/* 돋보기 창 */}
+      <circle cx={mx} cy={my} r={mr} fill="#0b1220" />
+      <g clipPath={"url(#" + mgId + ")"}>
+        {minorOp > 0.02
+          ? gridOffsets(minor, mr).map((d) => (
+              <g key={"mn" + d} opacity={minorOp}>
+                <line x1={mx + d} y1={my - mr} x2={mx + d} y2={my + mr} stroke="rgba(255,255,255,0.07)" />
+                <line x1={mx - mr} y1={my + d} x2={mx + mr} y2={my + d} stroke="rgba(255,255,255,0.07)" />
+              </g>
+            ))
+          : null}
+        {gridOffsets(major, mr).map((d) => (
+          <g key={"mj" + d}>
+            <line x1={mx + d} y1={my - mr} x2={mx + d} y2={my + mr} stroke="rgba(255,255,255,0.13)" />
+            <line x1={mx - mr} y1={my + d} x2={mx + mr} y2={my + d} stroke="rgba(255,255,255,0.13)" />
+          </g>
+        ))}
+        <line x1={mx} y1={my - mr} x2={mx} y2={my + mr} stroke="rgba(148,163,184,0.5)" strokeDasharray="4 3" />
+        <line x1={mx - mr} y1={my} x2={mx + mr} y2={my} stroke="rgba(52,211,153,0.5)" strokeDasharray="4 3" />
+        {magPaths.map((p, i) => (
+          <polyline key={i} points={p} fill="none" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        ))}
+      </g>
+      <circle cx={mx} cy={my} r={mr} fill="none" stroke="rgba(125,211,252,0.55)" strokeWidth="6" />
+      <circle cx={mx} cy={my} r={mr - 4} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+
+      {/* 창 안의 점 — 테두리에서 잘리지 않게 clipPath 밖에 */}
+      {live.map((x) => (
+        <circle key={"ml" + x} cx={MX(x)} cy={MY(z.fn(x))} r="6" fill="#f472b6" stroke="#fdf2f8" strokeWidth="1.5" />
+      ))}
+      <circle cx={mx} cy={my} r="7" fill={z.defined ? "#34d399" : "#0b1220"} stroke="#34d399" strokeWidth="2.4" />
+
+      <rect x={mx - 42} y={my - mr + 14} width="84" height="26" rx="13" fill="rgba(15,23,42,0.9)" stroke="rgba(125,211,252,0.6)" />
+      <text x={mx} y={my - mr + 32} textAnchor="middle" fontSize="15" fontWeight="bold" fill="#e0f2fe">
+        ×{zoomRate}
+      </text>
+      <rect x={mx - 92} y={my + mr - 42} width="184" height="24" rx="12" fill="rgba(15,23,42,0.85)" />
+      <text x={mx} y={my + mr - 25} textAnchor="middle" fontSize="12" fill="#cbd5e1">
+        x : {fmt(z.a - r, 7)} ~ {fmt(z.a + r, 7)}
+      </text>
+    </svg>
+  );
+}
+
 function ZoomTab() {
   const [zi, setZi] = useState(0);
-  const [k, setK] = useState(1);
+  const [pos, setPos] = useState(1);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
 
   const z = ZOOM_FNS[zi];
-  const r = zoomGap(k) * 4;
-  const box = zoomBox(z.fn, z.a, r, z.defined ? undefined : z.a);
-  const paths = samplePath(z.fn, box.xMin, box.xMax, box);
+  const ob = zoomOverview(z);
+  const k = Math.ceil(pos - 1e-9);
+  const busy = !Number.isInteger(pos);
   const goal = fmt(z.L, 8);
+
+  const stop = () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+  };
+  const stepIn = () => {
+    stop();
+    const from = k;
+    const to = k + 1;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPos(to);
+      return;
+    }
+    const start = performance.now();
+    const tick = (t: number) => {
+      const u = Math.min((t - start) / SCOPE_MS, 1);
+      if (u >= 1) {
+        rafRef.current = null;
+        setPos(to);
+        return;
+      }
+      setPos(from + u);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+  const reset = () => {
+    stop();
+    setPos(1);
+  };
 
   const rows = [];
   for (let i = 1; i <= k; i++) {
     const g = zoomGap(i);
     rows.push({ i, lx: z.a - g, ly: z.fn(z.a - g), rx: z.a + g, ry: z.fn(z.a + g) });
   }
-  const last = rows[rows.length - 1];
-  const marks: Mark[] = [
-    { x: last.lx, y: last.ly, filled: true, tone: "live" },
-    { x: last.rx, y: last.ry, filled: true, tone: "live" },
-    { x: z.a, y: z.L, filled: z.defined, tone: "goal" },
-  ];
 
   return (
     <div className="space-y-4">
@@ -576,8 +807,9 @@ function ZoomTab() {
               key={v.id}
               type="button"
               onClick={() => {
+                stop();
                 setZi(i);
-                setK(1);
+                setPos(1);
               }}
               className={
                 "rounded-lg border px-2.5 py-1.5 text-xs font-bold transition " +
@@ -591,55 +823,68 @@ function ZoomTab() {
 
         <div className="mt-3 rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 text-center">
           <Katex expr={z.tex} className="text-lg text-slate-100" />
-          <p className="mt-1 text-[11px] text-slate-400">
+          <p className="mt-1 text-sm text-slate-400">
             x 가 <b className="text-amber-200">{fmt(z.a)}</b> 에 한없이 가까워질 때
+          </p>
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+          <div className="mx-auto hidden max-w-[680px] sm:block">
+            <ZoomScope z={z} ob={ob} pos={pos} lay={SCOPE_WIDE} />
+          </div>
+          <div className="mx-auto max-w-[360px] sm:hidden">
+            <ZoomScope z={z} ob={ob} pos={pos} lay={SCOPE_TALL} />
+          </div>
+          <p className="mt-1 text-center text-xs leading-5 text-slate-400">
+            작은 원이 돋보기를 댄 자리 · 큰 원은 그 안을 키운 모습 · 분홍 점이 양쪽에서 다가가는 x · 초록 점이 ({fmt(z.a)},{" "}
+            {fmt(z.L)}){z.defined ? "" : " — 속이 빈 것은 값이 없다는 뜻"}
           </p>
         </div>
 
         <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
           <div className="space-y-2">
             <div className="overflow-x-auto overflow-y-hidden py-1">
-              <table className="w-full border-collapse text-xs">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th className="border border-white/10 bg-sky-400/[0.14] px-2 py-1 text-[10px] font-bold text-sky-100">
+                    <th className="border border-white/10 bg-sky-400/[0.14] px-3 py-2 text-sm font-bold text-sky-100">
                       왼쪽에서 x
                     </th>
-                    <th className="border border-white/10 bg-sky-400/[0.14] px-2 py-1 text-[10px] font-bold text-sky-100">f(x)</th>
-                    <th className="border border-white/10 bg-amber-400/[0.14] px-2 py-1 text-[10px] font-bold text-amber-100">
+                    <th className="border border-white/10 bg-sky-400/[0.14] px-3 py-2 text-sm font-bold text-sky-100">f(x)</th>
+                    <th className="border border-white/10 bg-amber-400/[0.14] px-3 py-2 text-sm font-bold text-amber-100">
                       오른쪽에서 x
                     </th>
-                    <th className="border border-white/10 bg-amber-400/[0.14] px-2 py-1 text-[10px] font-bold text-amber-100">f(x)</th>
+                    <th className="border border-white/10 bg-amber-400/[0.14] px-3 py-2 text-sm font-bold text-amber-100">f(x)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r2) => (
                     <tr key={r2.i}>
-                      <td className="border border-white/10 px-2 py-1 text-right font-mono text-[11px] tabular-nums text-slate-200">
+                      <td className="border border-white/10 px-3 py-2 text-right font-mono text-base tabular-nums text-slate-200">
                         {fmt(r2.lx, 6)}
                       </td>
-                      <td className="border border-white/10 px-2 py-1 text-right">
+                      <td className="border border-white/10 px-3 py-2 text-right">
                         <ValueCell value={r2.ly} goal={goal} />
                       </td>
-                      <td className="border border-white/10 px-2 py-1 text-right font-mono text-[11px] tabular-nums text-slate-200">
+                      <td className="border border-white/10 px-3 py-2 text-right font-mono text-base tabular-nums text-slate-200">
                         {fmt(r2.rx, 6)}
                       </td>
-                      <td className="border border-white/10 px-2 py-1 text-right">
+                      <td className="border border-white/10 px-3 py-2 text-right">
                         <ValueCell value={r2.ry} goal={goal} />
                       </td>
                     </tr>
                   ))}
                   <tr>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       ↓ {fmt(z.a)}
                     </td>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       ↓ {goal}
                     </td>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       {fmt(z.a)} ↓
                     </td>
-                    <td className="border border-white/10 bg-emerald-400/[0.10] px-2 py-1 text-right font-mono text-[11px] font-bold text-emerald-200">
+                    <td className="border border-white/10 bg-emerald-400/[0.10] px-3 py-2 text-right font-mono text-base font-bold text-emerald-200">
                       {goal} ↓
                     </td>
                   </tr>
@@ -650,24 +895,26 @@ function ZoomTab() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                disabled={k >= ZOOM_MAX_STEP}
-                onClick={() => setK(k + 1)}
+                disabled={busy || k >= ZOOM_MAX_STEP}
+                onClick={stepIn}
                 className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN.sky}
               >
                 🔎 한 걸음 더 가까이
               </button>
               <button
                 type="button"
-                onClick={() => setK(1)}
+                onClick={reset}
                 className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
               >
                 ↩️ 처음으로
               </button>
-              <span className="font-mono text-[11px] text-slate-400">
+              <span className="font-mono text-xs text-slate-400">
                 {k} / {ZOOM_MAX_STEP} 단계 · a 와의 거리 {zoomGap(k).toExponential(0)}
               </span>
             </div>
+          </div>
 
+          <div className="space-y-2">
             <div className="rounded-xl border-2 border-emerald-400/45 bg-emerald-400/[0.08] px-3 py-2 text-center">
               <div className="overflow-x-auto overflow-y-hidden py-1">
                 <Katex
@@ -675,7 +922,7 @@ function ZoomTab() {
                   className="whitespace-nowrap text-lg text-emerald-100"
                 />
               </div>
-              <p className="mt-0.5 text-[11px] text-slate-300">
+              <p className="mt-1 text-sm text-slate-300">
                 {z.defined ? (
                   <>
                     x = {fmt(z.a)} 에서의 함숫값도 <b className="text-emerald-200">{fmt(z.L)}</b> 이에요
@@ -687,16 +934,6 @@ function ZoomTab() {
                 )}
               </p>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-center">
-              <Plot box={box} paths={paths} marks={marks} guideX={z.a} guideY={z.L} uid={`zoom-${z.id}-${k}`} />
-            </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">
-              분홍 점이 양쪽에서 다가가는 자리 · 초록 점이 ({fmt(z.a)}, {fmt(z.L)})
-              {z.defined ? "" : " — 속이 빈 것은 값이 없다는 뜻이에요"}
-            </p>
             <TipBox>{z.note}</TipBox>
           </div>
         </div>
@@ -704,7 +941,7 @@ function ZoomTab() {
         <div className="mt-3">
           <GoalList
             items={[
-              "한 걸음 갈 때마다 x 는 a 에 10배씩 가까워지고 그래프도 그만큼 확대돼요.",
+              "한 걸음 갈 때마다 x 는 a 에 10배씩 가까워지고 돋보기도 10배씩 더 키워 보여 줘요.",
               "f(x) 의 앞자리가 초록으로 바뀌는 만큼 극한값과 같아진 것이에요.",
               "아무리 좁혀도 x 가 a 와 같아지지는 않아요.",
               "그래서 x = a 에서 값이 있든 없든 극한에는 영향이 없어요.",
