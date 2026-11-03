@@ -215,21 +215,21 @@ function Plot({
       {axisY ? <line x1={X(0)} y1={PMT} x2={X(0)} y2={PS - PMB} stroke="rgba(255,255,255,0.3)" /> : null}
 
       {gx.map((v) => (
-        <text key={"tx" + v} x={X(v)} y={PS - PMB + 12} textAnchor="middle" fontSize="8" fill="#64748b">
+        <text key={"tx" + v} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={"ty" + v} x={PML - 4} y={Y(v) + 3} textAnchor="end" fontSize="8" fill="#64748b">
+        <text key={"ty" + v} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
           {fy(v)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="8" fill="#475569">
+          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 5} textAnchor="start" fontSize="8" fill="#475569">
+          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
@@ -663,10 +663,10 @@ function UtilBars({ vals, shown, top }: { vals: number[]; shown: number; top: nu
               stroke={i === shown ? "#34d399" : "#38bdf8"}
               strokeWidth="1.2"
             />
-            <text x={cx} y={Y(v) - 4} textAnchor="middle" fontSize="9" fill={i === shown ? "#6ee7b7" : "#94a3b8"}>
+            <text x={cx} y={Y(v) - 5} textAnchor="middle" fontSize="12" fontWeight="bold" fill={i === shown ? "#6ee7b7" : "#94a3b8"}>
               {v}
             </text>
-            <text x={cx} y={UB_H - UB_B + 11} textAnchor="middle" fontSize="9" fill="#64748b">
+            <text x={cx} y={UB_H - UB_B + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
               {i}
             </text>
           </g>
@@ -690,16 +690,16 @@ function UtilBars({ vals, shown, top }: { vals: number[]; shown: number; top: nu
             stroke="#fde047"
             strokeWidth="2.4"
           />
-          <text x={UB_L + slot * shown + slot / 2 + 5} y={(Y(vals[shown - 1]) + Y(vals[shown])) / 2 + 3} fontSize="10" fill="#fde047">
+          <text x={UB_L + slot * shown + slot / 2 + 5} y={(Y(vals[shown - 1]) + Y(vals[shown])) / 2 + 4} fontSize="13" fontWeight="bold" fill="#fde047">
             {vals[shown] - vals[shown - 1] >= 0 ? "+" : ""}
             {vals[shown] - vals[shown - 1]}
           </text>
         </g>
       ) : null}
-      <text x={2} y={UB_T - 8} fontSize="8" fill="#475569">
+      <text x={2} y={UB_T - 8} fontSize="10" fill="#94a3b8">
         총효용
       </text>
-      <text x={UB_W - UB_R} y={UB_H - 3} textAnchor="end" fontSize="8" fill="#475569">
+      <text x={UB_W - UB_R} y={UB_H - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
         소비량
       </text>
     </svg>
@@ -802,7 +802,7 @@ function UtilTab() {
             <div className="flex justify-center">
               <UtilBars vals={vals} shown={n} top={top} />
             </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">
+            <p className="text-center text-xs leading-5 text-slate-500">
               막대는 지금까지 쌓인 총효용 · 노란 화살표가 방금 한 {s.unit} 으로 늘어난 몫(한계효용)
             </p>
           </div>
@@ -819,7 +819,7 @@ function UtilTab() {
                 axis={["소비량", "한계효용"]}
               />
             </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">
+            <p className="text-center text-xs leading-5 text-slate-500">
               보라 막대가 한 {s.unit} 씩의 한계효용 · 주황 직선이 한계효용함수 · 노란 점은 막대 한가운데
             </p>
           </div>
