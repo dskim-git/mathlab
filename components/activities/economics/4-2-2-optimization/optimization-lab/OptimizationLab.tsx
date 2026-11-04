@@ -156,8 +156,8 @@ function PieceLine({ line }: { line: Piece[] }) {
 const PS = 320;
 const PML = 46;
 const PMR = 14;
-const PMT = 14;
-const PMB = 28;
+const PMT = 16;
+const PMB = 30;
 
 type Stroke = "curve" | "ghost" | "tangent" | "revenue" | "cost" | "marginal" | "profit";
 const STROKE_COLOR: Record<Stroke, string> = {
@@ -249,21 +249,21 @@ function Plot({
         <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.06)" />
       ))}
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 12} textAnchor="middle" fontSize="8" fill="#64748b">
+        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 3} textAnchor="end" fontSize="8" fill="#64748b">
+        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="8" fill="#475569">
+          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 3} textAnchor="start" fontSize="8" fill="#475569">
+          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
             {axis[1]}
           </text>
         </>

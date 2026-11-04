@@ -165,9 +165,9 @@ function PieceLine({ line }: { line: Piece[] }) {
 const PS = 320;
 const PML = 46;
 const PMR = 14;
-const PMT = 14;
-const PMB = 28;
-const CML = 22;
+const PMT = 16;
+const PMB = 30;
+const CML = 30;
 const CMR = 10;
 const CMT = 10;
 const CMB = 18;
@@ -229,7 +229,7 @@ function Plot({
   const X = (v: number) => ml + ((v - box.xMin) / (box.xMax - box.xMin)) * pw;
   const Y = (v: number) => PS - mb - ((v - box.yMin) / (box.yMax - box.yMin)) * ph;
   const cid = `sh-${uid}`;
-  const fs = compact ? 7 : 8;
+  const fs = compact ? 10 : 11;
 
   const gx: number[] = [];
   for (let i = 0; i <= 30; i++) {
@@ -245,6 +245,14 @@ function Plot({
   }
   const axisX = box.yMin <= 0 && box.yMax >= 0;
   const axisY = box.xMin <= 0 && box.xMax >= 0;
+  // 공학도구에 큰 식을 넣으면 눈금이 촘촘해진다 — 숫자가 겹칠 만큼 좁으면 숫자만 건너뛰어 쓴다(격자선은 그대로)
+  const dyPx = (ph * box.gy) / (box.yMax - box.yMin);
+  const yEvery = Math.max(1, Math.ceil((fs + 2) / dyPx));
+  const xLabelW = Math.max(0, ...gx.map((v) => fmt(v, 4).length)) * fs * 0.6;
+  const dxPx = (pw * box.gx) / (box.xMax - box.xMin);
+  const xEvery = Math.max(1, Math.ceil((xLabelW + 3) / dxPx));
+  const showY = (v: number) => Math.abs(Math.round(v / box.gy)) % yEvery === 0;
+  const showX = (v: number) => Math.abs(Math.round(v / box.gx)) % xEvery === 0;
 
   return (
     <svg viewBox={`0 0 ${PS} ${PS}`} className="w-full" role="img" aria-label="함수의 그래프">
@@ -266,24 +274,24 @@ function Plot({
 
       {bare
         ? null
-        : gx.map((v) => (
-            <text key={`tx${v}`} x={X(v)} y={PS - mb + 12} textAnchor="middle" fontSize={fs} fill="#64748b">
+        : gx.filter(showX).map((v) => (
+            <text key={`tx${v}`} x={X(v)} y={PS - mb + fs + 3} textAnchor="middle" fontSize={fs} fill="#94a3b8">
               {fmt(v, 4)}
             </text>
           ))}
       {bare
         ? null
-        : gy.map((v) => (
-            <text key={`ty${v}`} x={ml - 4} y={Y(v) + 3} textAnchor="end" fontSize={fs} fill="#64748b">
+        : gy.filter(showY).map((v) => (
+            <text key={`ty${v}`} x={ml - 4} y={Y(v) + 4} textAnchor="end" fontSize={fs} fill="#94a3b8">
               {fmt(v, 4)}
             </text>
           ))}
       {axis && !bare ? (
         <>
-          <text x={PS - mr} y={PS - 3} textAnchor="end" fontSize={fs} fill="#475569">
+          <text x={PS - mr} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={mt - 3} textAnchor="start" fontSize={fs} fill="#475569">
+          <text x={2} y={mt - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
@@ -343,7 +351,7 @@ function Plot({
                 x={X(d.x)}
                 y={Y(d.y) - 10}
                 textAnchor="middle"
-                fontSize={compact ? 9 : 11}
+                fontSize={compact ? 10 : 11}
                 fill={DOT_COLOR[d.tone]}
               >
                 {d.label}
