@@ -209,7 +209,7 @@ function ConceptTab() {
         <p className="mt-1 text-[11px] text-slate-400">빈칸을 누를 때마다 순위가 1위 → 2위 → … 로 바뀌어요.</p>
 
         <div className="mt-3 overflow-x-auto overflow-y-hidden">
-          <table className="w-full min-w-[460px] border-collapse text-center text-xs">
+          <table className="w-full min-w-[460px] border-collapse text-center text-sm">
             <tbody>
               <tr>
                 <th className="border border-white/15 bg-slate-700/50 px-2 py-2 text-left font-bold text-slate-200" />
@@ -263,7 +263,7 @@ function ConceptTab() {
                       >
                         {v === null ? "?" : `${v}위`}
                       </button>
-                      {graded && !right ? <p className="mt-0.5 text-[10px] text-emerald-200">{answer[i]}위</p> : null}
+                      {graded && !right ? <p className="mt-0.5 text-xs text-emerald-200">{answer[i]}위</p> : null}
                     </td>
                   );
                 })}
@@ -334,7 +334,7 @@ function ConceptTab() {
               아래 세 사람은 <b className="text-slate-100">모두 순위가 똑같아요</b>. 그런데 매긴 점수는 제각각이죠.
             </p>
             <div className="mt-2 overflow-x-auto overflow-y-hidden">
-              <table className="w-full min-w-[420px] border-collapse text-center text-xs">
+              <table className="w-full min-w-[420px] border-collapse text-center text-sm">
                 <tbody>
                   <tr>
                     <th className="border border-white/15 bg-blue-600/70 px-2 py-1.5 font-bold text-white">
@@ -349,7 +349,7 @@ function ConceptTab() {
                   </tr>
                   {[{ label: `${c.emoji} 원래 값`, values: c.values }, ...alts].map((row) => (
                     <tr key={row.label}>
-                      <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-left text-[11px] font-bold text-slate-200">
+                      <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-left text-xs font-bold text-slate-200">
                         {row.label}
                       </th>
                       {row.values.map((v, i) => (
@@ -357,7 +357,7 @@ function ConceptTab() {
                           {fmt(v, 1)}
                         </td>
                       ))}
-                      <td className="border border-white/15 bg-sky-500/15 px-2 py-1.5 font-mono text-[11px] font-bold text-sky-100">
+                      <td className="border border-white/15 bg-sky-500/15 px-2 py-1.5 font-mono text-xs font-bold text-sky-100">
                         {rankOf(row.values).join(" · ")}
                       </td>
                     </tr>
@@ -469,7 +469,7 @@ function TransformTab() {
               {ORD_XS.map((x, i) => (
                 <g key={x}>
                   <line x1={X(i)} y1={PT} x2={X(i)} y2={CH - PB} stroke="rgba(148,163,184,0.13)" strokeWidth={0.8} />
-                  <text x={X(i)} y={CH - PB + 14} textAnchor="middle" fill="#64748b" fontSize={10} fontFamily="monospace">
+                  <text x={X(i)} y={CH - PB + 14} textAnchor="middle" fill="#94a3b8" fontSize={10} fontFamily="monospace">
                     {x}
                   </text>
                 </g>
@@ -510,7 +510,7 @@ function TransformTab() {
 
         <div className="space-y-2">
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[340px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[340px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   <th className="border border-white/15 bg-blue-600/70 px-2 py-1.5 font-bold text-white">
@@ -521,7 +521,7 @@ function TransformTab() {
                       {x}
                     </td>
                   ))}
-                  <th className="border border-white/15 bg-slate-700/50 px-2 py-1.5 text-[10px] font-bold text-slate-200">순위</th>
+                  <th className="border border-white/15 bg-slate-700/50 px-2 py-1.5 text-xs font-bold text-slate-200">순위</th>
                 </tr>
                 {rows.map(({ t, vals, rank, same }) => (
                   <tr key={t.id}>
@@ -537,7 +537,7 @@ function TransformTab() {
                     ))}
                     <td
                       className={
-                        "border border-white/15 px-2 py-1.5 font-mono text-[11px] font-bold " +
+                        "border border-white/15 px-2 py-1.5 font-mono text-xs font-bold " +
                         (same ? "bg-emerald-400/15 text-emerald-100" : "bg-rose-400/15 text-rose-100")
                       }
                     >
@@ -607,7 +607,7 @@ function SortTab() {
             <button
               type="button"
               onClick={() => setAns({})}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               ↩️ 다시
             </button>
@@ -791,7 +791,7 @@ function ProblemTab() {
         {prob.tex ? <FormulaLine expr={prob.tex} className="mt-1 text-slate-100" /> : null}
         {prob.table ? (
           <div className="mt-2 overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[320px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[320px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   {prob.table.head.map((h, i) => (
@@ -936,7 +936,7 @@ function ProblemTab() {
                       <button
                         type="button"
                         onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
@@ -944,16 +944,16 @@ function ProblemTab() {
                         <button
                           type="button"
                           onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                         >
                           정답 보기
                         </button>
                       ) : null}
                       {ss.hint ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span>
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span>
                       ) : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number"

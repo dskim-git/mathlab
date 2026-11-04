@@ -202,7 +202,7 @@ function MarketChart({
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`y${r}`}>
               <line x1={PL} y1={Y(r * qTop)} x2={W - PR} y2={Y(r * qTop)} stroke="rgba(148,163,184,0.11)" strokeWidth={0.8} />
-              <text x={PL - 6} y={Y(r * qTop)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={PL - 6} y={Y(r * qTop)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {Math.round(r * qTop)}
               </text>
             </g>
@@ -210,7 +210,7 @@ function MarketChart({
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`x${r}`}>
               <line x1={X(r * xMax)} y1={PT} x2={X(r * xMax)} y2={H - PB} stroke="rgba(148,163,184,0.1)" strokeWidth={0.8} />
-              <text x={X(r * xMax)} y={H - PB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={X(r * xMax)} y={H - PB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {Math.round(r * xMax)}
               </text>
             </g>
@@ -857,13 +857,13 @@ function IndexChart({ r, n }: { r: number; n: number }) {
           {[0, 0.25, 0.5, 0.75, 1].map((f) => (
             <g key={f}>
               <line x1={IL} y1={Y(f * top)} x2={IW - IR} y2={Y(f * top)} stroke="rgba(148,163,184,0.11)" strokeWidth={0.8} />
-              <text x={IL - 6} y={Y(f * top)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={IL - 6} y={Y(f * top)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {Math.round(f * top)}
               </text>
             </g>
           ))}
           {xTicks.map((t, i) => (
-            <text key={i} x={X(t)} y={IH - IB + 14} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+            <text key={i} x={X(t)} y={IH - IB + 14} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
               {t}
             </text>
           ))}
@@ -1164,7 +1164,7 @@ function HistChart({ type, spot, onPick }: { type: string | null; spot: string |
           {gTicks.map((g) => (
             <g key={`g${g}`}>
               <line x1={X(g)} y1={HT} x2={X(g)} y2={HH - HB} stroke="rgba(148,163,184,0.1)" strokeWidth={0.8} />
-              <text x={X(g)} y={HH - HB + 14} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={X(g)} y={HH - HB + 14} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {g}
               </text>
             </g>
@@ -1172,7 +1172,7 @@ function HistChart({ type, spot, onPick }: { type: string | null; spot: string |
           {iTicks.map((i) => (
             <g key={`i${i}`}>
               <line x1={HL} y1={Y(i)} x2={HW - HR} y2={Y(i)} stroke="rgba(148,163,184,0.1)" strokeWidth={0.8} />
-              <text x={HL - 6} y={Y(i)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={HL - 6} y={Y(i)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {i}
               </text>
             </g>
@@ -1420,7 +1420,7 @@ function StepList({
                     <button
                       type="button"
                       onClick={() => update(step.id, { hint: !ss.hint })}
-                      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                     >
                       💡 힌트 {ss.hint ? "닫기" : "보기"}
                     </button>
@@ -1428,14 +1428,14 @@ function StepList({
                       <button
                         type="button"
                         onClick={() => update(step.id, { shown: true })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         정답 보기
                       </button>
                     ) : null}
-                    {ss.hint ? <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span> : null}
+                    {ss.hint ? <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span> : null}
                     {ss.shown ? (
-                      <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                      <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                         정답:{" "}
                         <b className="font-mono text-emerald-200">
                           {step.kind === "number"

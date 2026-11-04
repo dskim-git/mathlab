@@ -287,14 +287,14 @@ function Plane({
         {/* 눈금 — 축 위에 적는다 */}
         {!compact
           ? tx.map((v) => (
-              <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {v}
               </text>
             ))
           : null}
         {!compact
           ? ty.map((v) => (
-              <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {v}
               </text>
             ))
@@ -414,7 +414,7 @@ function DrawTab() {
             <button
               type="button"
               onClick={() => setPts([])}
-              className="ml-auto rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="ml-auto rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               점 지우기
             </button>

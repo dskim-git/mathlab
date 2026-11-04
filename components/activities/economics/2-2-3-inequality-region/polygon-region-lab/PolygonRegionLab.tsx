@@ -252,12 +252,12 @@ function Plane({
         </g>
 
         {gx.filter((v) => v !== 0 && Math.abs(v % tick) < 1e-9).map((v) => (
-          <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+          <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
             {v}
           </text>
         ))}
         {gy.filter((v) => v !== 0 && Math.abs(v % tick) < 1e-9).map((v) => (
-          <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+          <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
             {v}
           </text>
         ))}
@@ -518,14 +518,14 @@ function DrawTab() {
             <button
               type="button"
               onClick={() => setPts(DRAW_START)}
-              className="ml-auto rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="ml-auto rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               ↩️ 처음 도형
             </button>
             <button
               type="button"
               onClick={() => setPts([])}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               모두 지우기
             </button>
@@ -650,15 +650,15 @@ function ValueTable({ a, b }: { a: number; b: number }) {
   const flat = vals.every((v) => Math.abs(v - vals[0]) < 1e-9);
   return (
     <div className="overflow-x-auto overflow-y-hidden">
-      <table className="w-full min-w-[290px] border-collapse text-center text-xs">
+      <table className="w-full min-w-[290px] border-collapse text-center text-sm">
         <tbody>
           <tr>
             <th className="w-16 border border-white/15 bg-blue-600/70 px-2 py-1.5 font-bold text-white">꼭짓점</th>
             {PENTA.map((p, i) => (
-              <td key={i} className="border border-white/15 bg-white/5 px-1 py-1.5 font-mono text-[11px] font-bold text-violet-100">
+              <td key={i} className="border border-white/15 bg-white/5 px-1 py-1.5 font-mono text-xs font-bold text-violet-100">
                 {CORNER_NAMES[i]}
                 <br />
-                <span className="text-[10px] text-slate-400">
+                <span className="text-xs text-slate-400">
                   ({p[0]},{p[1]})
                 </span>
               </td>
@@ -922,7 +922,7 @@ function MissionTab() {
           {clearCount === MISSIONS.length ? (
             <div className="rounded-2xl border-2 border-emerald-400/45 bg-emerald-400/[0.10] p-3 text-center">
               <p className="text-sm font-bold text-emerald-100">🏅 다섯 미션을 모두 성공했어요!</p>
-              <p className="mt-1.5 text-[11px] leading-5 text-slate-200">
+              <p className="mt-1.5 text-sm leading-6 text-slate-200">
                 영역은 한 번도 바뀌지 않았는데 답이 나오는 자리는 계속 달라졌죠? 바뀐 것은 <b className="text-pink-200">
                 직선의 기울기</b> 하나뿐이었어요.
               </p>

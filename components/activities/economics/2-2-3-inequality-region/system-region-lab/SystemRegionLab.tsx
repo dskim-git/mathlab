@@ -236,12 +236,12 @@ function Plane({
         </g>
 
         {gx.filter((v) => v !== 0 && v % tick === 0).map((v) => (
-          <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+          <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
             {v}
           </text>
         ))}
         {gy.filter((v) => v !== 0 && v % tick === 0).map((v) => (
-          <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+          <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
             {v}
           </text>
         ))}
@@ -651,14 +651,14 @@ function OptTab() {
                   <button
                     type="button"
                     onClick={() => setK(r.max)}
-                    className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                    className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                   >
                     최대로 밀기
                   </button>
                   <button
                     type="button"
                     onClick={() => setK(r.min)}
-                    className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                    className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                   >
                     최소로 밀기
                   </button>
@@ -983,7 +983,7 @@ function TableTab() {
           </div>
 
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[300px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[300px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   <th className="w-20 border border-white/15 bg-blue-600/70 px-2 py-2 font-bold text-white">꼭짓점</th>
@@ -996,7 +996,7 @@ function TableTab() {
                 <tr>
                   <th className="border border-white/15 bg-blue-600/70 px-2 py-2 font-bold text-white">좌표</th>
                   {p.corners.map((c, i) => (
-                    <td key={i} className="border border-white/15 px-2 py-2 font-mono text-[11px] text-violet-100">
+                    <td key={i} className="border border-white/15 px-2 py-2 font-mono text-xs text-violet-100">
                       ({c[0]}, {c[1]})
                     </td>
                   ))}
@@ -1022,7 +1022,7 @@ function TableTab() {
                             : "border-white/15 text-slate-100")
                         }
                       />
-                      {isGraded && !okAt(i) ? <p className="mt-0.5 font-mono text-[10px] text-emerald-200">{fmt(truth[i], 0)}</p> : null}
+                      {isGraded && !okAt(i) ? <p className="mt-0.5 font-mono text-xs text-emerald-200">{fmt(truth[i], 0)}</p> : null}
                     </td>
                   ))}
                 </tr>

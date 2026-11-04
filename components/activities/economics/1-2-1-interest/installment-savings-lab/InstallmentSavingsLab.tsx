@@ -592,7 +592,7 @@ function ProblemTab() {
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {prob.given.map((g) => (
             <div key={g.label} className="rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-3 py-2">
-              <p className="text-[11px] text-slate-400">{g.label}</p>
+              <p className="text-xs text-slate-300">{g.label}</p>
               <p className="mt-0.5 text-sm font-bold text-sky-100">{g.value}</p>
             </div>
           ))}
@@ -612,7 +612,7 @@ function ProblemTab() {
         <div className="mt-1 rounded-lg bg-black/25 px-3 py-2 text-center font-mono text-xs text-slate-200">
           S = a(1+r){"{"}(1+r)<sup>n</sup> − 1{"}"} ÷ r
         </div>
-        <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
+        <p className="mt-1.5 text-xs leading-5 text-slate-400">
           ※ 문제에서 주어진 어림값(1.005²⁴ = 1.127 등)으로 계산하므로, 정확한 거듭제곱으로 계산하는 탭①의 값과 몇천 원 정도 다를 수 있어요.
         </p>
       </div>
@@ -675,16 +675,16 @@ function ProblemTab() {
                   {!ss.ok ? (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <button type="button" onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10">
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10">
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
                       {ss.tries >= 3 ? (
                         <button type="button" onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10">정답 보기</button>
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10">정답 보기</button>
                       ) : null}
-                      {ss.hint ? <span className="rounded-lg bg-black/25 px-2.5 py-1 font-mono text-[11px] text-slate-300">{step.hint}</span> : null}
+                      {ss.hint ? <span className="rounded-lg bg-black/25 px-3 py-1.5 font-mono text-sm leading-6 text-slate-200">{step.hint}</span> : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number" ? step.answer.toLocaleString("ko-KR") + step.suffix : step.options[step.answer]}
