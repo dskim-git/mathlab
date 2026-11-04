@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
 import {
@@ -54,6 +54,41 @@ function fmtM(m: number): string {
   return Number.isFinite(m) ? (Number.isInteger(m) ? m.toLocaleString("ko-KR") : m.toFixed(2)) : "∞";
 }
 function clamp01(x: number) { return Math.max(0, Math.min(1, x)); }
+/** 재생 중 m 표시 — 10 미만은 소수 한 자리, 그 위는 반올림 */
+function liveM(m: number): string {
+  return m < 10 ? m.toFixed(1) : Math.round(m).toLocaleString("ko-KR");
+}
+
+/**
+ * 확대 게이지: [from, to] 구간만 잘라 막대 전체 폭으로 늘린다. 배율 = 전체 구간 ÷ 이 구간.
+ * 값이 구간보다 작으면 왼쪽 끝에 붙은 채로 "아직 구간 밖" 을 표시한다.
+ */
+function ZoomGauge({ title, from, to, full, value, live, done }: { title: string; from: number; to: number; full: number; value: number; live: boolean; done: boolean }) {
+  const span = to - from;
+  if (span <= 0) return null;
+  const k = full / span;
+  const p = clamp01((value - from) / span);
+  const before = value < from - 1e-9;
+  const reached = done; // 연속복리를 골랐을 때만 — 1초 복리도 아주 조금 모자란다
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2 text-xs">
+        <span className="font-bold text-slate-300">
+          {title} <span className="font-mono text-amber-200">×{k >= 100 ? Math.round(k).toLocaleString("ko-KR") : k.toFixed(1)}</span>
+        </span>
+        <span className="font-mono text-slate-400">
+          {before ? "아직 이 구간 밖" : reached ? "끝에 닿음 (연속복리)" : to - value < 1 ? "남은 차이 1원 미만" : `남은 차이 ${won(to - value)}`}
+        </span>
+      </div>
+      <div className="relative mt-1 h-3 overflow-hidden rounded-full bg-white/10">
+        <div
+          className={"h-full rounded-full " + (reached ? "bg-emerald-400" : "bg-amber-300/80") + (live ? "" : " transition-all duration-500")}
+          style={{ width: `${p * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 // ─── 메인 ─────────────────────────────────────────────────────
 type Tab = "sim" | "compare" | "quest";
@@ -157,18 +192,54 @@ function SimTab(setup: Setup) {
   const { a, ratePct, years } = setup;
   const [idx, setIdx] = useState(0);
   const [auto, setAuto] = useState(false);
+  // 자동 재생 중의 m (연속값). log₁₀m 을 0 → 7.5(1초마다)로 끊김 없이 올린다
+  const [mLive, setMLive] = useState<number | null>(null);
+  const rafRef = useRef<number | null>(null);
   const r = ratePct / 100;
 
-  useEffect(() => {
-    if (!auto) return;
-    const id = setInterval(() => setIdx((i) => (i >= LAST ? i : i + 1)), 850);
-    const stop = setTimeout(() => setAuto(false), 850 * (LAST + 1));
-    return () => { clearInterval(id); clearTimeout(stop); };
-  }, [auto]);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+  function stopAuto() {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setAuto(false);
+    setMLive(null);
+  }
+  function play() {
+    stopAuto();
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setIdx(LAST);
+      return;
+    }
+    const uMax = Math.log10(CYCLES[CYCLES.length - 1].m);
+    const DUR = 6500, HOLD = 450;
+    const t0 = performance.now();
+    setAuto(true);
+    const tick = (now: number) => {
+      const el = now - t0;
+      if (el >= DUR + HOLD) {
+        rafRef.current = null;
+        setMLive(null);
+        setIdx(LAST);
+        setAuto(false);
+        return;
+      }
+      const f = Math.min(1, el / DUR);
+      const ease = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+      const mNow = Math.pow(10, ease * uMax);
+      setMLive(mNow);
+      let k = 0;
+      for (let i = 0; i < CYCLES.length; i++) if (CYCLES[i].m <= mNow * (1 + 1e-9)) k = i;
+      setIdx(k);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }
 
-  const isCont = idx >= LAST;
-  const cyc = isCont ? null : CYCLES[idx];
-  const m = isCont ? Infinity : cyc!.m;
+  const isCont = idx >= LAST && mLive === null;
+  const cyc = idx >= LAST ? null : CYCLES[idx];
+  const m = mLive ?? (isCont ? Infinity : cyc!.m);
   const value = isCont ? continuous(a, r, years) : compoundM(a, r, m, years);
 
   const vYear = compoundM(a, r, 1, years);
@@ -203,19 +274,19 @@ function SimTab(setup: Setup) {
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-bold text-slate-100">⏱️ 이자 계산 주기를 골라 보세요</p>
-          <button type="button" onClick={() => { setIdx(0); setAuto(true); }} disabled={auto}
+          <button type="button" onClick={play} disabled={auto}
             className="rounded-lg border-2 border-sky-400/55 bg-sky-400/15 px-3 py-1 text-xs font-bold text-sky-100 transition hover:bg-sky-400/25 disabled:opacity-50">
             {auto ? "쪼개는 중…" : "▶ 자동으로 쪼개 보기"}
           </button>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {CYCLES.map((c, i) => (
-            <button key={c.key} type="button" onClick={() => { setAuto(false); setIdx(i); }}
+            <button key={c.key} type="button" onClick={() => { stopAuto(); setIdx(i); }}
               className={"rounded-lg border px-2.5 py-1 text-xs font-bold transition " + (idx === i ? "border-sky-400/60 bg-sky-400/20 text-sky-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")}>
               {c.emoji} {c.short}
             </button>
           ))}
-          <button type="button" onClick={() => { setAuto(false); setIdx(LAST); }}
+          <button type="button" onClick={() => { stopAuto(); setIdx(LAST); }}
             className={"rounded-lg border px-2.5 py-1 text-xs font-bold transition " + (isCont ? "border-emerald-400/60 bg-emerald-400/20 text-emerald-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")}>
             {CONT_LABEL.emoji} {CONT_LABEL.short}
           </button>
@@ -224,11 +295,19 @@ function SimTab(setup: Setup) {
         {/* 계산식 전개 */}
         <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3">
           <p className="text-xs font-bold text-slate-400">
-            {isCont ? `${CONT_LABEL.emoji} ${CONT_LABEL.label}` : `${cyc!.emoji} ${cyc!.label} (m = ${fmtM(m)})`}
+            {isCont
+              ? `${CONT_LABEL.emoji} ${CONT_LABEL.label}`
+              : mLive !== null
+                ? `🔄 쪼개는 중 — 지금 m ≈ ${liveM(mLive)} (${cyc!.label}를 지나는 중)`
+                : `${cyc!.emoji} ${cyc!.label} (m = ${fmtM(m)})`}
           </p>
           <p className="mt-1 overflow-x-auto whitespace-nowrap font-mono text-sm text-slate-200">
             {isCont ? (
               <>{man(a, 0)} × e<sup>{r} × {years}</sup> = {man(a, 0)} × {Math.exp(r * years).toFixed(5)}</>
+            ) : mLive !== null ? (
+              <>
+                {man(a, 0)} × (1 + {ratePct}/{liveM(mLive)} ÷ 100)<sup>{liveM(mLive)}×{years}</sup>
+              </>
             ) : (
               <>
                 {man(a, 0)} × (1 + {ratePct}/{fmtM(m)} ÷ 100)<sup>{fmtM(m)}×{years}</sup> = {man(a, 0)} × ({(1 + r / m).toFixed(6)})<sup>{fmtM(m * years)}</sup>
@@ -241,18 +320,43 @@ function SimTab(setup: Setup) {
 
         {/* 수렴 게이지 */}
         <div className="mt-3">
-          <div className="flex items-baseline justify-between text-[11px] text-slate-400">
+          <div className="flex items-baseline justify-between text-xs text-slate-400">
             <span>연 1회 {man(vYear)}</span>
             <span className="font-bold text-emerald-300">연속복리 {man(vCont)}</span>
           </div>
           <div className="relative mt-1 h-4 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-500"
+            <div className={"h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 " + (mLive !== null ? "" : "transition-all duration-500")}
               style={{ width: `${progress * 100}%` }} />
           </div>
           <p className="mt-1 text-center text-xs text-slate-300">
             연속복리까지 <b className="font-mono text-emerald-200">{(progress * 100).toFixed(1)}%</b> 도달
             {!isCont ? <> · 연속복리와의 차이 <b className="font-mono text-amber-200">{won(vCont - value)}</b></> : null}
           </p>
+
+          {/* 끝부분 이중 확대 — 다가갈 뿐 넘지 않는다 */}
+          {vCont - vYear > 1 ? (
+            <div className="mt-3 space-y-2 rounded-xl border border-amber-300/30 bg-amber-300/[0.05] p-3">
+              <p className="text-xs font-bold text-amber-200">🔍 게이지 끝부분을 확대해 보면 — 가까워질 뿐 넘지 않아요</p>
+              <ZoomGauge
+                title="월 복리 ~ 연속복리"
+                from={compoundM(a, r, 12, years)}
+                to={vCont}
+                full={vCont - vYear}
+                value={value}
+                live={mLive !== null}
+                done={isCont}
+              />
+              <ZoomGauge
+                title="일 복리 ~ 연속복리"
+                from={compoundM(a, r, 365, years)}
+                to={vCont}
+                full={vCont - vYear}
+                value={value}
+                live={mLive !== null}
+                done={isCont}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 

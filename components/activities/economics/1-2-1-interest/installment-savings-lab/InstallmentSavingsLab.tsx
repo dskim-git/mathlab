@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
 import {
@@ -61,11 +61,12 @@ function sup(k: number): string {
 // ═════════════════════════════════════════════════════════
 //  회차별 납입금 다이어그램 (교과서 그림 재현)
 // ═════════════════════════════════════════════════════════
-function DepositTimeline({ a, ratePct, unit, n, active, onPick, reveal }: {
+function DepositTimeline({ a, ratePct, unit, n, active, onPick, reveal, playingK }: {
   a: number; ratePct: number; unit: PeriodUnit; n: number;
   active?: number | null;                 // 강조할 회차(1..n)
   onPick?: (k: number | null) => void;    // 회차 클릭
   reveal?: number;                        // 애니메이션: 여기까지의 회차만 표시
+  playingK?: number;                      // 재생 중 지금 납입하는 회차 — ⋯ 로 줄인 가운데 회차도 보이게
 }) {
   const u = UNIT[unit];
   const r = ratePct / 100;
@@ -113,10 +114,20 @@ function DepositTimeline({ a, ratePct, unit, n, active, onPick, reveal }: {
         {rows.map((row, ri) => {
           const y = TOP + ri * ROW + 6;
           if (row === "gap") {
+            const midK = playingK !== undefined && playingK > 3 && playingK < n ? playingK : undefined;
             return (
               <g key="gap">
                 <text x={LEFT - 8} y={y + 2} textAnchor="end" className="fill-slate-500" style={{ fontSize: 6 }}>⋮</text>
-                <text x={(LEFT + RIGHT) / 2} y={y + 2} textAnchor="middle" className="fill-slate-600" style={{ fontSize: 6 }}>⋱</text>
+                {midK !== undefined ? (
+                  <>
+                    <rect x={LEFT} y={y - 7} width={RIGHT - LEFT} height={ROW - 4} rx={3} fill="rgba(52,211,153,0.12)" />
+                    <text x={(LEFT + RIGHT) / 2} y={y + 2.5} textAnchor="middle" fontSize="7" fontWeight="bold" fill="#6ee7b7">
+                      제{midK}회 납입 → 만기까지 {n - midK + 1}{UNIT[unit].period}
+                    </text>
+                  </>
+                ) : (
+                  <text x={(LEFT + RIGHT) / 2} y={y + 2} textAnchor="middle" className="fill-slate-600" style={{ fontSize: 6 }}>⋱</text>
+                )}
                 <text x={RIGHT + 8} y={y + 2} className="fill-slate-500" style={{ fontSize: 6 }}>⋮</text>
               </g>
             );
@@ -157,6 +168,73 @@ function DepositTimeline({ a, ratePct, unit, n, active, onPick, reveal }: {
         })}
       </svg>
       {onPick ? <p className="mt-1 text-center text-[11px] text-slate-500">화살표를 누르면 그 회차의 만기 금액을 볼 수 있어요</p> : null}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  만기 금고 — 회차별 만기 금액 a(1+r)^(n−k+1) 이 왼쪽부터 쌓여 합계 S 가 된다
+//  조각 폭 = 그 회차 만기 금액 ÷ S, 조각 안은 원금 a(회색) + 이자(초록)
+// ═════════════════════════════════════════════════════════
+function MaturityStack({ a, r, n, prog, pick, onPick }: {
+  a: number; r: number; n: number;
+  prog?: number;                          // 재생 진행도 0..n (없으면 전부 쌓인 모습)
+  pick: number | null;
+  onPick: (k: number | null) => void;
+}) {
+  const S = maturity(a, r, n);
+  const done = prog === undefined ? n : Math.floor(prog);
+  const frac = prog === undefined ? 0 : prog - done;
+  let sum = 0;
+  for (let k = 1; k <= Math.min(done, n); k++) sum += depositValue(a, r, n, k);
+  if (done < n && frac > 0) {
+    const dv = depositValue(a, r, n, done + 1);
+    sum += a + (dv - a) * frac;
+  }
+  const playing = prog !== undefined && prog < n;
+
+  return (
+    <div className="mt-3 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.05] p-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm font-bold text-emerald-200">🏦 만기 금고 — 회차별 만기 금액이 쌓여 S 가 돼요</p>
+        <p className="font-mono text-sm text-slate-300">
+          {playing ? <span className="mr-2 text-xs text-emerald-300">제{Math.min(done + 1, n)}회까지</span> : null}
+          <b className="text-base text-emerald-100">{won(sum)}</b>
+          <span className="text-slate-400"> / {won(S)}</span>
+        </p>
+      </div>
+      <div className="mt-2 flex h-10 w-full overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]">
+        {Array.from({ length: n }, (_, i) => i + 1).map((k) => {
+          const dv = depositValue(a, r, n, k);
+          const state = k <= done ? "full" : k === done + 1 && frac > 0 ? "grow" : "empty";
+          const grow = state === "full" ? 1 : state === "grow" ? frac : 0;
+          const on = pick === k;
+          return (
+            <button
+              key={k}
+              type="button"
+              aria-label={`제${k}회 만기 금액 ${won(dv)}`}
+              onClick={() => onPick(on ? null : k)}
+              className={
+                "flex h-full shrink-0 border-r border-slate-950/70 transition-opacity " +
+                (state === "empty" ? "opacity-0" : "opacity-100") +
+                (on ? " outline outline-2 -outline-offset-2 outline-amber-300" : "")
+              }
+              style={{ width: `${(dv / S) * 100}%` }}
+            >
+              <span className={"h-full " + (on ? "bg-amber-200/70" : "bg-slate-400/60")} style={{ width: `${(a / dv) * 100}%` }} />
+              <span className={"h-full " + (on ? "bg-amber-400" : "bg-emerald-400")} style={{ width: `${((dv - a) / dv) * grow * 100}%` }} />
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+        <span className="flex items-center gap-3">
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-4 rounded-sm bg-slate-400/60" />원금 a</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-4 rounded-sm bg-emerald-400" />붙은 이자</span>
+        </span>
+        <span>← 제1회 · · · 제{n}회 →&nbsp; 앞 회차일수록 이자가 오래 붙어 초록 부분이 커요</span>
+      </div>
     </div>
   );
 }
@@ -210,20 +288,40 @@ function SimTab() {
   const [unit, setUnit] = useState<PeriodUnit>("month");
   const [n, setN] = useState(24);
   const [pick, setPick] = useState<number | null>(1);
-  const [reveal, setReveal] = useState<number | undefined>(undefined);
+  // 재생 진행도 0 → n (연속값). undefined = 재생 전(전부 보임)
+  const [prog, setProg] = useState<number | undefined>(undefined);
+  const rafRef = useRef<number | null>(null);
 
   const r = ratePct / 100;
   const u = UNIT[unit];
   const S = maturity(a, r, n);
   const paid = totalPaid(a, n);
   const interest = S - paid;
+  const p = prog === undefined ? undefined : Math.min(prog, n);
+  const playingK = p !== undefined && p < n ? Math.floor(p) + 1 : undefined;
 
-  useEffect(() => {
-    if (reveal === undefined) return;
-    if (reveal >= n) return;
-    const id = setTimeout(() => setReveal((v) => (v === undefined ? undefined : v + 1)), 260);
-    return () => clearTimeout(id);
-  }, [reveal, n]);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  /** ▶ 회차별로 쌓아 보기 — 회차 하나에 0.18초, 전체 2.5~6초로 끊김 없이 */
+  function play() {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    const total = n;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProg(total);
+      return;
+    }
+    const dur = Math.min(6000, Math.max(2500, total * 180));
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const f = Math.min(1, (now - t0) / dur);
+      setProg(f * total);
+      rafRef.current = f < 1 ? requestAnimationFrame(tick) : null;
+    };
+    setProg(0);
+    rafRef.current = requestAnimationFrame(tick);
+  }
 
   function pickUnit(next: PeriodUnit) {
     setUnit(next);
@@ -275,7 +373,7 @@ function SimTab() {
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-bold text-slate-100">🧭 회차별 납입금은 만기에 얼마가 될까?</p>
-          <button type="button" onClick={() => setReveal(0)}
+          <button type="button" onClick={play}
             className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/25">
             ▶ 회차별로 쌓아 보기
           </button>
@@ -285,8 +383,11 @@ function SimTab() {
           <b className="text-emerald-100">(n − k + 1){u.period}</b> 동안 이자가 붙어 <b className="font-mono text-emerald-100">a(1+r)<sup>n−k+1</sup></b>이 돼요.
         </p>
         <div className="mt-2">
-          <DepositTimeline a={a} ratePct={ratePct} unit={unit} n={n} active={pick} onPick={setPick} reveal={reveal} />
+          <DepositTimeline a={a} ratePct={ratePct} unit={unit} n={n} active={pick} onPick={setPick}
+            reveal={p === undefined ? undefined : Math.ceil(p)} playingK={playingK} />
         </div>
+        <MaturityStack a={a} r={r} n={n} prog={p} pick={pick} onPick={setPick} />
+
 
         {pick ? (
           <div className="mt-2 rounded-xl border border-amber-400/30 bg-amber-400/[0.08] px-4 py-2.5 text-center">
