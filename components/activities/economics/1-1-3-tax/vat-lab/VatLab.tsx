@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
 import {
@@ -12,6 +12,7 @@ import {
   SHOP_ITEMS,
   VAT_RATE,
   chainRows,
+  type ChainRow,
   receiptSummary,
   type Cart,
 } from "./data";
@@ -118,6 +119,41 @@ function ChainTab() {
   const [count, setCount] = useState(4);
   const [prices, setPrices] = useState<number[]>(CHAINS[0].stages.slice(0, 4).map((s) => s.price));
   const [shown, setShown] = useState(0); // 계산을 공개한 단계 수
+  // 세무서 금고: 새로 공개한 단계 조각(from 이상)이 t 0 → 1 로 자란다
+  const [grow, setGrow] = useState<{ from: number; t: number } | null>(null);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+  function reveal(next: number) {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    const from = shown;
+    setShown(next);
+    if (next <= from || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+      setGrow(null);
+      return;
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const f = Math.min(1, (now - t0) / 650);
+      if (f >= 1) {
+        setGrow(null);
+        rafRef.current = null;
+        return;
+      }
+      setGrow({ from, t: 1 - Math.pow(1 - f, 3) });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    setGrow({ from, t: 0 });
+    rafRef.current = requestAnimationFrame(tick);
+  }
+  function resetShown() {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setGrow(null);
+    setShown(0);
+  }
 
   const chain = CHAINS.find((c) => c.id === chainId)!;
   const stages = chain.stages.slice(0, count);
@@ -128,12 +164,12 @@ function ChainTab() {
     const c = CHAINS.find((x) => x.id === id)!;
     setChainId(id);
     setPrices(c.stages.slice(0, count).map((s) => s.price));
-    setShown(0);
+    resetShown();
   }
   function pickCount(k: number) {
     setCount(k);
     setPrices(chain.stages.slice(0, k).map((s) => s.price));
-    setShown(0);
+    resetShown();
   }
   function setPrice(i: number, v: number) {
     const next = [...prices];
@@ -141,7 +177,7 @@ function ChainTab() {
     for (let j = i + 1; j < next.length; j++) next[j] = Math.max(next[j], next[j - 1] + step);
     for (let j = i - 1; j >= 0; j--) next[j] = Math.min(next[j], next[j + 1] - step);
     setPrices(next.map((p) => Math.max(step, p)));
-    setShown(0);
+    resetShown();
   }
 
   const rows = chainRows(prices);
@@ -176,7 +212,7 @@ function ChainTab() {
               {k}단계
             </button>
           ))}
-          <span className="text-xs text-slate-500">단계를 늘려도 소비자가 부담하는 세금 총액은 달라지지 않아요 — 확인해 보세요!</span>
+          <span className="text-xs text-slate-400">단계를 늘려도 소비자가 부담하는 세금 총액은 달라지지 않아요 — 확인해 보세요!</span>
         </div>
         {chain.note ? (
           <p className="mt-2 rounded-lg border-l-4 border-amber-400/70 bg-amber-400/[0.08] px-3 py-1.5 text-xs leading-5 text-slate-300">
@@ -196,16 +232,16 @@ function ChainTab() {
                 <div className={"w-56 shrink-0 rounded-2xl border p-3 transition " + (open ? "border-sky-400/45 bg-sky-400/[0.08]" : "border-white/10 bg-slate-900/40")}>
                   <p className="text-xs font-bold text-slate-400">{i + 1}단계 · {st.role}</p>
                   <p className="mt-0.5 text-sm font-bold text-slate-100">{st.emoji} {st.label}</p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-400">{st.action}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-300">{st.action}</p>
 
-                  <label htmlFor={`p${i}`} className="mt-2 block text-[11px] font-bold text-slate-300">
+                  <label htmlFor={`p${i}`} className="mt-2 block text-xs font-bold text-slate-300">
                     판매가 <span className="font-mono text-sky-200">{won(prices[i])}</span>
                   </label>
                   <input id={`p${i}`} type="range" min={step * (i + 1)} max={max} step={step} value={prices[i]}
                     onChange={(e) => setPrice(i, Number(e.target.value))}
                     className="mt-1 w-full accent-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/40" />
 
-                  <div className="mt-2 space-y-0.5 rounded-lg bg-black/25 px-2.5 py-2 text-[12px]">
+                  <div className="mt-2 space-y-0.5 rounded-lg bg-black/25 px-2.5 py-2 text-[13px]">
                     <MiniLine label="판매가" value={won(r.sale)} />
                     <MiniLine label="매입가" value={i === 0 ? "—" : won(r.buy)} />
                     <div className="flex items-baseline justify-between border-t border-white/10 pt-0.5">
@@ -215,25 +251,25 @@ function ChainTab() {
                   </div>
 
                   {open ? (
-                    <div className="mt-1.5 space-y-0.5 rounded-lg border border-sky-400/30 bg-sky-400/10 px-2.5 py-2 text-[12px]">
+                    <div className="mt-1.5 space-y-0.5 rounded-lg border border-sky-400/30 bg-sky-400/10 px-2.5 py-2 text-[13px]">
                       <MiniLine label="매출세액(10%)" value={won(r.outTax)} />
                       <MiniLine label="매입세액(10%)" value={i === 0 ? "0원" : won(r.inTax)} />
                       <div className="flex items-baseline justify-between border-t border-white/10 pt-0.5">
                         <span className="font-bold text-sky-100">납부세액</span>
                         <span className="font-mono text-base font-bold text-sky-100">{won(r.pay)}</span>
                       </div>
-                      <p className="pt-0.5 text-[10px] leading-3 text-slate-400">
+                      <p className="pt-1 font-mono text-xs leading-4 text-slate-300">
                         {num(r.outTax)} − {num(r.inTax)} = {num(r.pay)} (= 부가가치 {num(r.added)}의 10%)
                       </p>
                     </div>
                   ) : (
-                    <div className="mt-1.5 rounded-lg border border-dashed border-white/15 bg-black/20 px-2.5 py-3 text-center text-[11px] text-slate-500">
+                    <div className="mt-1.5 rounded-lg border border-dashed border-white/15 bg-black/20 px-2.5 py-3 text-center text-xs text-slate-400">
                       이 단계의 납부세액은?<br />
-                      <span className="text-slate-400">부가가치 {won(r.added)}의 10%를 예상해 보세요</span>
+                      <span className="text-slate-300">부가가치 {won(r.added)}의 10%를 예상해 보세요</span>
                     </div>
                   )}
                 </div>
-                <div className="flex items-center text-xl text-slate-600" aria-hidden="true">▶</div>
+                <div className="flex items-center text-xl text-slate-500" aria-hidden="true">▶</div>
               </div>
             );
           })}
@@ -242,8 +278,8 @@ function ChainTab() {
           <div className={"w-56 shrink-0 rounded-2xl border p-3 " + (done ? "border-rose-400/45 bg-rose-400/[0.08]" : "border-white/10 bg-slate-900/40")}>
             <p className="text-xs font-bold text-slate-400">최종 소비자</p>
             <p className="mt-0.5 text-sm font-bold text-slate-100">🙋 소비자</p>
-            <p className="mt-0.5 text-[11px] leading-4 text-slate-400">{chain.product}을(를) 구입</p>
-            <div className="mt-2 space-y-0.5 rounded-lg bg-black/25 px-2.5 py-2 text-[12px]">
+            <p className="mt-0.5 text-xs leading-5 text-slate-300">{chain.product}을(를) 구입</p>
+            <div className="mt-2 space-y-0.5 rounded-lg bg-black/25 px-2.5 py-2 text-[13px]">
               <MiniLine label="물품 가격" value={won(finalPrice)} />
               <MiniLine label="부가가치세" value={won(finalVat)} />
               <div className="flex items-baseline justify-between border-t border-white/10 pt-0.5">
@@ -252,12 +288,12 @@ function ChainTab() {
               </div>
             </div>
             {done ? (
-              <p className="mt-1.5 rounded-lg border border-rose-400/30 bg-rose-400/10 px-2.5 py-2 text-[11px] leading-4 text-rose-100">
+              <p className="mt-1.5 rounded-lg border border-rose-400/30 bg-rose-400/10 px-2.5 py-2 text-xs leading-5 text-rose-100">
                 소비자는 가격에 포함된 부가가치세 <b className="font-mono">{won(finalVat)}</b>을 혼자 부담해요. 세무서에 낸 사람은
                 사업자들이지만, 실제로 부담한 사람은 소비자예요.
               </p>
             ) : (
-              <p className="mt-1.5 rounded-lg border border-dashed border-white/15 bg-black/20 px-2.5 py-3 text-center text-[11px] text-slate-500">
+              <p className="mt-1.5 rounded-lg border border-dashed border-white/15 bg-black/20 px-2.5 py-3 text-center text-xs text-slate-400">
                 단계별 납부세액의 합은<br />얼마가 될까요?
               </p>
             )}
@@ -265,17 +301,20 @@ function ChainTab() {
         </div>
       </div>
 
+      {/* 세무서 금고 — 단계마다 낸 세금이 쌓여 소비자 부가세 틀을 꼭 채운다 */}
+      <TaxVault rows={rows} shown={shown} grow={grow} finalVat={finalVat} />
+
       {/* 진행 버튼 */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <button type="button" disabled={done} onClick={() => setShown((n) => n + 1)}
+        <button type="button" disabled={done} onClick={() => reveal(shown + 1)}
           className="rounded-xl border-2 border-sky-400/55 bg-sky-400/15 px-5 py-2 text-sm font-bold text-sky-100 transition hover:bg-sky-400/25 disabled:opacity-40">
           {shown === 0 ? "▶ 1단계부터 세금 계산하기" : `▶ ${shown + 1}단계 계산하기`}
         </button>
-        <button type="button" disabled={done} onClick={() => setShown(stages.length)}
+        <button type="button" disabled={done} onClick={() => reveal(stages.length)}
           className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 disabled:opacity-40">
           전체 보기
         </button>
-        <button type="button" onClick={() => setShown(0)}
+        <button type="button" onClick={resetShown}
           className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10">
           ↺ 처음부터
         </button>
@@ -318,6 +357,64 @@ function ChainTab() {
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+// 단계 색 (정적 클래스 맵)
+const VAULT_TONE = ["bg-sky-400", "bg-violet-400", "bg-amber-400", "bg-emerald-400", "bg-fuchsia-400"];
+const VAULT_TEXT = ["text-sky-200", "text-violet-200", "text-amber-200", "text-emerald-200", "text-fuchsia-200"];
+
+/**
+ * 세무서 금고 막대: 틀 길이 = 소비자가 부담하는 부가세(최종 판매가 × 10%).
+ * 공개한 단계의 납부세액 조각을 왼쪽부터 쌓는다. 단계별 납부세액은 round(판매가×10%) − round(매입가×10%) 라
+ * 합이 망원합으로 정확히 round(최종 판매가×10%) 가 되어, 마지막 조각이 들어가면 틀이 꼭 찬다.
+ */
+function TaxVault({ rows, shown, grow, finalVat }: { rows: ChainRow[]; shown: number; grow: { from: number; t: number } | null; finalVat: number }) {
+  const total = Math.max(finalVat, 1);
+  const segs = rows.map((r, i) => ({ i, pay: r.pay, f: i >= shown ? 0 : grow && i >= grow.from ? grow.t : 1 }));
+  const sum = segs.reduce((acc, s) => acc + s.pay * s.f, 0);
+  const full = shown >= rows.length && !grow;
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm font-bold text-slate-100">🏛️ 세무서 금고 — 단계마다 낸 세금이 여기에 쌓여요</p>
+        <p className="font-mono text-sm text-slate-300">
+          <b className="text-base text-sky-100">{won(Math.round(sum))}</b>
+          <span className="text-slate-400"> / 소비자 부가세 {won(finalVat)}</span>
+        </p>
+      </div>
+      <div className="relative mt-2 h-11 w-full overflow-hidden rounded-lg border-2 border-dashed border-rose-300/50 bg-rose-400/[0.04]">
+        <div className="flex h-full">
+          {segs.map((s) =>
+            s.f > 0 ? (
+              <div
+                key={s.i}
+                className={"flex h-full shrink-0 items-center justify-center overflow-hidden border-r-2 border-slate-950/70 " + VAULT_TONE[s.i % VAULT_TONE.length]}
+                style={{ width: `${((s.pay * s.f) / total) * 100}%` }}
+              >
+                {s.f === 1 && s.pay / total >= 0.14 ? (
+                  <span className="whitespace-nowrap px-1 font-mono text-xs font-bold text-slate-950">
+                    {s.i + 1}단계 {num(s.pay)}
+                  </span>
+                ) : null}
+              </div>
+            ) : null,
+          )}
+        </div>
+      </div>
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="flex flex-wrap gap-x-3 gap-y-1">
+          {segs.map((s) => (
+            <span key={s.i} className={s.f > 0 ? VAULT_TEXT[s.i % VAULT_TEXT.length] : "text-slate-500"}>
+              {s.i + 1}단계 {s.f > 0 ? num(s.pay) : "?"}
+            </span>
+          ))}
+        </span>
+        <span className={full ? "font-bold text-emerald-300" : "text-slate-400"}>
+          {full ? "✅ 딱 맞아요! 나눠 낸 세금의 합 = 최종 판매가의 10%" : "점선 틀 = 소비자가 부담하는 부가세"}
+        </span>
+      </div>
     </div>
   );
 }

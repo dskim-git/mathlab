@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
@@ -392,7 +392,37 @@ function MuTab() {
   const muMin = Math.min(...mus, 0);
   const nextMu = n < c.nMax ? muOf(c, n + 1) : null;
 
+  // "한 개 더!" 연출: t 0 → 1 (0.7초). 분홍 MU 조각이 총효용 막대 위로 떨어지고, 아래 MU 막대가 함께 자란다
+  const [t, setT] = useState(1);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+  function stop() {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setT(1);
+  }
+  function eatOne() {
+    if (n >= c.nMax) return;
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    setN(n + 1);
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setT(1);
+      return;
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const f = Math.min(1, (now - t0) / 700);
+      setT(1 - Math.pow(1 - f, 3));
+      rafRef.current = f < 1 ? requestAnimationFrame(tick) : null;
+    };
+    setT(0);
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
   function pick(next: UtilCase) {
+    stop();
     setCid(next.id);
     setN(0);
   }
@@ -413,7 +443,7 @@ function MuTab() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="space-y-2">
           <BarChart
-            label={`총효용 U — ${c.emoji} ${c.name}을(를) 먹은 만큼`}
+            label={`총효용 U — ${c.emoji} ${c.name}을(를) 먹은 만큼 · 분홍 조각 = 마지막 한 ${c.unit}의 MU`}
             xs={ints}
             values={ints.map((i) => uOf(c, i))}
             hi={uMax}
@@ -421,6 +451,7 @@ function MuTab() {
             active={n}
             color={CURVE[c.tone]}
             unit={c.unit}
+            focus={n > 0 ? { mode: "stack", prev: uOf(c, n - 1), t } : undefined}
           />
           <BarChart
             label="한계효용 MU — 한 개 더 먹을 때 늘어난 만큼"
@@ -429,8 +460,9 @@ function MuTab() {
             hi={muMax}
             lo={muMin}
             active={n}
-            color="#f472b6"
+            color={MU_PINK}
             unit={c.unit}
+            focus={n > 0 ? { mode: "grow", prev: 0, t } : undefined}
           />
         </div>
 
@@ -459,7 +491,7 @@ function MuTab() {
             <button
               type="button"
               disabled={n >= c.nMax}
-              onClick={() => setN(n + 1)}
+              onClick={eatOne}
               className="flex-1 rounded-xl border-2 border-emerald-400/55 bg-emerald-400/15 px-3 py-2.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/25 disabled:opacity-40"
             >
               {c.emoji} 한 {c.unit} 더!
@@ -467,14 +499,14 @@ function MuTab() {
             <button
               type="button"
               disabled={n <= 0}
-              onClick={() => setN(n - 1)}
+              onClick={() => { stop(); setN(n - 1); }}
               className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
             >
               ↩️ 하나 빼기
             </button>
             <button
               type="button"
-              onClick={() => setN(0)}
+              onClick={() => { stop(); setN(0); }}
               className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               처음
@@ -585,6 +617,8 @@ const BW = 380,
   BT = 30,
   BB = 28;
 
+const MU_PINK = "#f472b6";
+
 function BarChart({
   label,
   xs,
@@ -594,6 +628,7 @@ function BarChart({
   active,
   color,
   unit,
+  focus,
 }: {
   label: string;
   xs: number[];
@@ -603,6 +638,12 @@ function BarChart({
   active: number;
   color: string;
   unit: string;
+  /**
+   * 마지막으로 먹은 막대(k = active) 연출
+   * stack: 총효용 막대를 'U(n−1) + 분홍 MU 조각'으로 나눠 그린다(t 0→1 로 조각이 떨어져 쌓임, MU<0 이면 깎인 부분 점선)
+   * grow : 한계효용 막대가 0 에서 자란다
+   */
+  focus?: { mode: "stack" | "grow"; prev: number; t: number };
 }) {
   const top = hi * 1.12 || 1;
   const bottom = Math.min(0, lo * 1.12);
@@ -610,16 +651,17 @@ function BarChart({
   const slot = (BW - BL - BR) / Math.max(xs.length, 1);
   const bw = Math.min(slot * 0.62, 26);
   const zero = Y(0);
+  const bar = (x: number, a: number, b: number) => ({ x, y: Math.min(Y(a), Y(b)), width: bw, height: Math.abs(Y(a) - Y(b)) });
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-2">
-      <p className="px-1 pt-1 text-[11px] font-bold text-slate-300">{label}</p>
+      <p className="px-1 pt-1 text-xs font-bold text-slate-300">{label}</p>
       <div className="overflow-x-auto overflow-y-hidden">
         <svg viewBox={`0 0 ${BW} ${BH}`} className="h-auto w-full min-w-[320px]" role="img" aria-label={label}>
           <rect x={0} y={0} width={BW} height={BH} rx={10} fill="#0b1220" />
           {[0, 0.5, 1].map((r) => (
             <g key={r}>
               <line x1={BL} y1={Y(bottom + r * (top - bottom))} x2={BW - BR} y2={Y(bottom + r * (top - bottom))} stroke="rgba(148,163,184,0.14)" strokeWidth={0.8} />
-              <text x={BL - 5} y={Y(bottom + r * (top - bottom))} dy={3} textAnchor="end" fill="#64748b" fontSize={8.5} fontFamily="monospace">
+              <text x={BL - 5} y={Y(bottom + r * (top - bottom))} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {fmt(bottom + r * (top - bottom), 1)}
               </text>
             </g>
@@ -627,26 +669,59 @@ function BarChart({
           {xs.map((k, i) => {
             const v = values[i];
             const cx = BL + slot * i + slot / 2;
+            const x = cx - bw / 2;
             const on = k <= active;
+            const isFocus = !!focus && k === active && active > 0;
+            const t = focus ? focus.t : 1;
+            // 보여 줄 막대 끝값: grow 는 0→v, stack(MU<0) 은 prev→v 로 줄어든다
+            const shown = isFocus
+              ? focus.mode === "grow"
+                ? v * t
+                : v < focus.prev
+                  ? focus.prev + (v - focus.prev) * t
+                  : v
+              : v;
+            const stackUp = isFocus && focus.mode === "stack" && v >= focus.prev;
+            const stackDown = isFocus && focus.mode === "stack" && v < focus.prev;
             return (
               <g key={k}>
-                <rect
-                  x={cx - bw / 2}
-                  y={Math.min(Y(v), zero)}
-                  width={bw}
-                  height={Math.abs(Y(v) - zero)}
-                  rx={2}
-                  fill={v < 0 ? "#f43f5e" : color}
-                  fillOpacity={on ? 0.95 : 0.22}
-                  stroke={k === active ? "#fff" : "none"}
-                  strokeWidth={k === active ? 1.6 : 0}
-                />
+                {stackUp ? (
+                  <>
+                    {/* 직전까지의 효용 U(n−1) */}
+                    <rect {...bar(x, 0, focus.prev)} rx={2} fill={focus.prev < 0 ? "#f43f5e" : color} fillOpacity={0.95} />
+                    {/* 이번 한 개가 더한 MU 조각 — 위에서 떨어져 쌓인다 */}
+                    <g transform={`translate(0 ${-(1 - t) * 28})`} opacity={Math.min(1, 0.2 + t * 1.2)}>
+                      <rect {...bar(x, focus.prev, v)} rx={2} fill={MU_PINK} stroke="#fff" strokeWidth={1.6} />
+                    </g>
+                  </>
+                ) : (
+                  <rect
+                    {...bar(x, 0, shown)}
+                    rx={2}
+                    fill={shown < 0 ? "#f43f5e" : color}
+                    fillOpacity={on ? 0.95 : 0.22}
+                    stroke={k === active ? "#fff" : "none"}
+                    strokeWidth={k === active ? 1.6 : 0}
+                  />
+                )}
+                {/* MU 가 음수: 깎여 나간 부분을 점선 상자로 */}
+                {stackDown ? (
+                  <rect {...bar(x, v, focus.prev)} rx={2} fill="rgba(244,63,94,0.12)" stroke="#fb7185" strokeWidth={1.4} strokeDasharray="3 2" opacity={t} />
+                ) : null}
                 {on ? (
-                  <text x={cx} y={v >= 0 ? Y(v) - 4 : Y(v) + 11} textAnchor="middle" fill={v < 0 ? "#fda4af" : "#e2e8f0"} fontSize={8.5} fontFamily="monospace" fontWeight={700}>
+                  <text
+                    x={cx}
+                    y={shown >= 0 ? (stackDown ? Y(focus.prev) : Y(shown)) - 4 : Math.min(Y(shown) + 12, BH - BB - 3)}
+                    textAnchor="middle"
+                    fill={shown < 0 ? (Y(shown) + 12 > BH - BB - 3 ? "#fff" : "#fda4af") : "#e2e8f0"}
+                    fontSize={9.5}
+                    fontFamily="monospace"
+                    fontWeight={700}
+                  >
                     {fmt(v, 1)}
                   </text>
                 ) : null}
-                <text x={cx} y={BH - BB + 12} textAnchor="middle" fill="#64748b" fontSize={8.5} fontFamily="monospace">
+                <text x={cx} y={BH - BB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                   {k}
                 </text>
               </g>
@@ -654,7 +729,7 @@ function BarChart({
           })}
           <line x1={BL} y1={zero} x2={BW - BR} y2={zero} stroke="#94a3b8" strokeWidth={1.2} />
           <line x1={BL} y1={BT} x2={BL} y2={BH - BB} stroke="#94a3b8" strokeWidth={1.2} />
-          <text x={BW - BR} y={BH - BB + 22} textAnchor="end" fill="#94a3b8" fontSize={9}>
+          <text x={BW - BR} y={BH - BB + 23} textAnchor="end" fill="#94a3b8" fontSize={9.5}>
             {unit}
           </text>
         </svg>

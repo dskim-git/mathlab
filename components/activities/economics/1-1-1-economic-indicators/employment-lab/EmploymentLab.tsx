@@ -393,6 +393,7 @@ function IdentityTab() {
 
   const w = (n: number) => (pop15 ? (n / pop15) * BOX.W : 0);
   const wEmp = w(employed), wUnemp = w(unemployed), wInact = w(inactive);
+  const zoom = zoomWindow(wEmp, wUnemp);
 
   return (
     <div className="rounded-2xl border border-violet-400/25 bg-gradient-to-br from-violet-500/[0.06] to-fuchsia-500/[0.04] p-4">
@@ -421,7 +422,12 @@ function IdentityTab() {
           <text x={Math.max(0, (wEmp + wUnemp) / 2)} y={102} textAnchor="middle" className="fill-violet-300 text-[10px] font-bold">경제활동인구 = {active.toLocaleString()}만 (취업률·실업률의 분모)</text>
           <line x1={0} y1={118} x2={BOX.W} y2={118} stroke="#eab308" strokeWidth={2} />
           <text x={BOX.W / 2} y={132} textAnchor="middle" className="fill-yellow-300 text-[10px] font-bold">15세 이상 인구 (고용률의 분모)</text>
+          {/* 확대할 창 */}
+          {zoom.show ? (
+            <rect x={zoom.left} y={24} width={zoom.width} height={58} rx={3} fill="none" stroke="#fde68a" strokeWidth={1.6} strokeDasharray="4 3" />
+          ) : null}
         </svg>
+        {zoom.show ? <ZoomStrip zoom={zoom} wEmp={wEmp} wUnemp={wUnemp} unemployed={unemployed} /> : null}
       </div>
 
       {/* 슬라이더 */}
@@ -460,6 +466,54 @@ function IdentityTab() {
   );
 }
 
+/**
+ * 실업자 칸 확대 창 — 실업자 칸 폭의 3배(최소 56)를 막대 전체 폭으로 늘려 보인다.
+ * 확대 안에서는 실업자 칸이 늘 전체의 약 1/3 이라 이름표가 들어간다. 1.5배 미만이면 확대가 필요 없어 접는다.
+ */
+type Zoom = { left: number; width: number; k: number; show: boolean };
+function zoomWindow(wEmp: number, wUnemp: number): Zoom {
+  const width = Math.min(BOX.W, Math.max(wUnemp * 3, 56));
+  const left = Math.min(Math.max(wEmp + wUnemp / 2 - width / 2, 0), BOX.W - width);
+  const k = BOX.W / width;
+  return { left, width, k, show: k >= 1.5 };
+}
+
+const ZH = 84;
+function ZoomStrip({ zoom, wEmp, wUnemp, unemployed }: { zoom: Zoom; wEmp: number; wUnemp: number; unemployed: number }) {
+  const Z = (x: number) => Math.min(BOX.W, Math.max(0, (x - zoom.left) * zoom.k));
+  const eR = Z(wEmp), uR = Z(wEmp + wUnemp);
+  const uW = uR - eR;
+  const inside = uW >= 96;
+  return (
+    <div className="mt-2">
+      <p className="mb-1 text-xs font-bold text-amber-200">
+        🔍 노란 점선 칸을 <span className="font-mono">×{zoom.k.toFixed(1)}</span> 배로 확대 — 실업자는 15세 이상 인구의 아주 작은 부분이에요
+      </p>
+      <svg viewBox={`0 0 ${BOX.W} ${ZH}`} className="w-full select-none" role="img" aria-label="실업자 칸 확대">
+        <rect x={0.8} y={10} width={BOX.W - 1.6} height={54} rx={5} fill="#0b1220" stroke="#fde68a" strokeWidth={1.6} strokeDasharray="4 3" />
+        {eR > 0 ? <rect x={2} y={12} width={Math.max(0, eR - 3)} height={50} fill="#34d399" opacity={0.85} /> : null}
+        {uW > 0 ? <rect x={eR} y={12} width={Math.max(0, uW - 1)} height={50} fill="#fb7185" opacity={0.9} /> : null}
+        {uR < BOX.W ? <rect x={uR} y={12} width={Math.max(0, BOX.W - 2 - uR)} height={50} fill="#64748b" opacity={0.7} /> : null}
+        {eR >= 84 ? (
+          <text x={eR - 10} y={42} textAnchor="end" fill="#022c22" fontSize={13} fontWeight={700}>◀ 취업자</text>
+        ) : null}
+        {BOX.W - uR >= 110 ? (
+          <text x={uR + 10} y={42} textAnchor="start" fill="#0f172a" fontSize={13} fontWeight={700}>비경제활동 ▶</text>
+        ) : null}
+        {inside ? (
+          <text x={(eR + uR) / 2} y={42} textAnchor="middle" fill="#0f172a" fontSize={14} fontWeight={700}>
+            실업자 {unemployed.toLocaleString()}만
+          </text>
+        ) : (
+          <text x={Math.min(Math.max((eR + uR) / 2, 70), BOX.W - 70)} y={80} textAnchor="middle" fill="#fda4af" fontSize={13} fontWeight={700}>
+            ▲ 실업자 {unemployed.toLocaleString()}만
+          </text>
+        )}
+      </svg>
+    </div>
+  );
+}
+
 function SliderBox({ label, color, value, setValue, max }: { label: string; color: "emerald" | "rose" | "slate"; value: number; setValue: (n: number) => void; max: number }) {
   const accent = color === "emerald" ? "accent-emerald-400" : color === "rose" ? "accent-rose-400" : "accent-slate-400";
   const text = color === "emerald" ? "text-emerald-200" : color === "rose" ? "text-rose-200" : "text-slate-300";
@@ -479,7 +533,7 @@ function RateCard({ label, sub, value, color }: { label: string; sub: string; va
   const [border, bg, textc] = c.split(" ");
   return (
     <div className={"rounded-xl border px-3 py-2.5 " + border + " " + bg}>
-      <p className="text-xs text-slate-400">{label} <span className="text-[10px] text-slate-500">({sub})</span></p>
+      <p className="text-xs text-slate-400">{label} <span className="text-xs text-slate-400">({sub})</span></p>
       <p className={"font-mono text-2xl font-bold " + textc}>{pct(value)}</p>
     </div>
   );

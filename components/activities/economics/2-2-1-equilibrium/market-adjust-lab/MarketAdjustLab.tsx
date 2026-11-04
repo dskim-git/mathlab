@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
@@ -198,7 +198,7 @@ function GapChart({ s, price, trail = [] }: { s: Shop; price: number; trail?: nu
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`x${r}`}>
               <line x1={X(r * s.xMax)} y1={PT} x2={X(r * s.xMax)} y2={H - PB} stroke="rgba(148,163,184,0.1)" strokeWidth={0.8} />
-              <text x={X(r * s.xMax)} y={H - PB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={X(r * s.xMax)} y={H - PB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {fmt(r * s.xMax, 0)}
               </text>
             </g>
@@ -536,8 +536,36 @@ function JourneyTab() {
   const eq = eqOf(s);
   const [hist, setHist] = useState<number[]>([SHOPS[0].startHigh]);
   const [playing, setPlaying] = useState(false);
+  // 하루 사이 그림 보간: 기록(hist)은 바로 바뀌고, 그래프의 가격선만 어제 → 오늘로 미끄러진다
+  const [tw, setTw] = useState<{ from: number; to: number; t: number } | null>(null);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+  const tween = useCallback((from: number, to: number) => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTw(null);
+      return;
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const f = Math.min(1, (now - t0) / 600);
+      if (f >= 1) {
+        setTw(null);
+        rafRef.current = null;
+        return;
+      }
+      setTw({ from, to, t: 1 - Math.pow(1 - f, 3) });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    setTw({ from, to, t: 0 });
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
 
   const price = hist[hist.length - 1];
+  const shownPrice = tw ? tw.from + (tw.to - tw.from) * tw.t : price;
   const atEq = Math.abs(price - eq.x) < 1e-9;
   const startedOver = excessOf(s, hist[0]) > 0;
   const flow = startedOver ? FLOW_OVER : FLOW_SHORT;
@@ -547,28 +575,31 @@ function JourneyTab() {
     if (!playing) return;
     const last = hist[hist.length - 1];
     if (Math.abs(last - eq.x) < 1e-9) return;
+    // 하루 움직임(0.6초)이 끝나고 잠깐 멈춘 뒤 다음 날로
     const id = setTimeout(() => {
-      setHist((h) => {
-        const l = h[h.length - 1];
-        const nx = nextPrice(s, l);
-        return nx === l ? h : [...h, nx];
-      });
-    }, 700);
+      const nx = nextPrice(s, last);
+      if (nx === last) return;
+      setHist([...hist, nx]);
+      tween(last, nx);
+    }, 900);
     return () => clearTimeout(id);
-  }, [playing, hist, eq.x, s]);
+  }, [playing, hist, eq.x, s, tween]);
 
   function reset(shop: Shop, high: boolean) {
     setPlaying(false);
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setTw(null);
     setSid(shop.id);
     setHist([high ? shop.startHigh : shop.startLow]);
   }
   function step() {
     setPlaying(false);
-    setHist((h) => {
-      const l = h[h.length - 1];
-      const nx = nextPrice(s, l);
-      return nx === l ? h : [...h, nx];
-    });
+    const l = hist[hist.length - 1];
+    const nx = nextPrice(s, l);
+    if (nx === l) return;
+    setHist([...hist, nx]);
+    tween(l, nx);
   }
 
   return (
@@ -620,8 +651,8 @@ function JourneyTab() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="space-y-2">
-          <GapChart s={s} price={price} trail={hist.slice(0, -1)} />
-          <PriceTimeline s={s} hist={hist} />
+          <GapChart s={s} price={shownPrice} trail={hist.slice(0, -1)} />
+          <PriceTimeline s={s} hist={hist} prog={tw ? tw.t : 1} />
         </div>
 
         <div className="space-y-2">
@@ -743,11 +774,17 @@ const TW = 380,
   TT = 30,
   TB = 30;
 
-function PriceTimeline({ s, hist }: { s: Shop; hist: number[] }) {
+function PriceTimeline({ s, hist, prog = 1 }: { s: Shop; hist: number[]; prog?: number }) {
   const eq = eqOf(s);
-  const n = Math.max(6, hist.length - 1);
+  const last = hist.length - 1;
+  // 마지막 날은 prog 만큼만 뻗어 간다 (가로 칸 수도 함께 보간해 7일째에 축이 튀지 않게)
+  const n = Math.max(6, last - 1 + prog);
   const X = (i: number) => TL + (i / n) * (TW - TL - TR);
   const Y = (v: number) => TH - TB - (v / s.xMax) * (TH - TT - TB);
+  const pts = hist.map((p, i) =>
+    i === last && last > 0 ? { x: X(last - 1 + prog), y: Y(hist[last - 1] + (p - hist[last - 1]) * prog) } : { x: X(i), y: Y(p) },
+  );
+  const dayTicks = Math.floor(n + 1e-9);
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-2">
       <div className="overflow-x-auto overflow-y-hidden">
@@ -756,33 +793,33 @@ function PriceTimeline({ s, hist }: { s: Shop; hist: number[] }) {
           {[0, 0.5, 1].map((r) => (
             <g key={r}>
               <line x1={TL} y1={Y(r * s.xMax)} x2={TW - TR} y2={Y(r * s.xMax)} stroke="rgba(148,163,184,0.12)" strokeWidth={0.8} />
-              <text x={TL - 5} y={Y(r * s.xMax)} dy={3} textAnchor="end" fill="#64748b" fontSize={8.5} fontFamily="monospace">
+              <text x={TL - 5} y={Y(r * s.xMax)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {fmt(r * s.xMax, 0)}
               </text>
             </g>
           ))}
           <line x1={TL} y1={Y(eq.x)} x2={TW - TR} y2={Y(eq.x)} stroke="#fbbf24" strokeWidth={1.4} strokeDasharray="5 4" />
-          <text x={TW - TR - 4} y={Y(eq.x) - 5} textAnchor="end" fill="#fcd34d" fontSize={9.5} fontWeight={700}>
+          <text x={TW - TR - 4} y={Y(eq.x) - 5} textAnchor="end" fill="#fcd34d" fontSize={10} fontWeight={700}>
             균형가격 {fmt(eq.x)}
           </text>
-          <polyline points={hist.map((p, i) => `${X(i)},${Y(p)}`).join(" ")} fill="none" stroke="#e879f9" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
-          {hist.map((p, i) => (
+          <polyline points={pts.map((q) => `${q.x},${q.y}`).join(" ")} fill="none" stroke="#e879f9" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
+          {pts.map((q, i) => (
             <g key={i}>
-              <circle cx={X(i)} cy={Y(p)} r={i === hist.length - 1 ? 5 : 3.2} fill={i === hist.length - 1 ? "#fff" : "#e879f9"} />
-              {i === hist.length - 1 ? <circle cx={X(i)} cy={Y(p)} r={3} fill="#e879f9" /> : null}
+              <circle cx={q.x} cy={q.y} r={i === last ? 5 : 3.2} fill={i === last ? "#fff" : "#e879f9"} />
+              {i === last ? <circle cx={q.x} cy={q.y} r={3} fill="#e879f9" /> : null}
             </g>
           ))}
-          {Array.from({ length: n + 1 }, (_, i) => (
-            <text key={i} x={X(i)} y={TH - TB + 12} textAnchor="middle" fill="#64748b" fontSize={8.5} fontFamily="monospace">
+          {Array.from({ length: dayTicks + 1 }, (_, i) => (
+            <text key={i} x={X(i)} y={TH - TB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
               {i}
             </text>
           ))}
           <line x1={TL} y1={TH - TB} x2={TW - TR} y2={TH - TB} stroke="#94a3b8" strokeWidth={1.1} />
           <line x1={TL} y1={TT} x2={TL} y2={TH - TB} stroke="#94a3b8" strokeWidth={1.1} />
-          <text x={TW - TR} y={TH - TB + 24} textAnchor="end" fill="#94a3b8" fontSize={9}>
+          <text x={TW - TR} y={TH - TB + 25} textAnchor="end" fill="#94a3b8" fontSize={9.5}>
             일째
           </text>
-          <text x={10} y={15} textAnchor="start" fill="#cbd5e1" fontSize={9.5} fontWeight={700}>
+          <text x={10} y={15} textAnchor="start" fill="#cbd5e1" fontSize={10} fontWeight={700}>
             시장가격 ({s.priceUnit})
           </text>
         </svg>

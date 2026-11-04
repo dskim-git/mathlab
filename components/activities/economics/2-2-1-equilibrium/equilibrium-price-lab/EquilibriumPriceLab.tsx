@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
@@ -175,6 +175,8 @@ function MarketChart({
   base = null,
   only = null,
   showEq = true,
+  qTopFix,
+  trail = false,
 }: {
   m: Market;
   dShift?: number;
@@ -183,8 +185,14 @@ function MarketChart({
   base?: { dShift: number; sShift: number } | null;
   only?: "demand" | null;
   showEq?: boolean;
+  /** 세로축 최댓값을 고정 — 곡선이 미끄러지는 동안 눈금이 출렁이지 않게 */
+  qTopFix?: number;
+  /** 옛 균형점 E₀ 을 남기고 새 균형점 E₁ 까지 화살표 */
+  trail?: boolean;
 }) {
-  const qTop = Math.max(qd(m, 0, dShift), qs(m, m.xMax, sShift), base ? qd(m, 0, base.dShift) : 0, base ? qs(m, m.xMax, base.sShift) : 0) * 1.1 || 1;
+  const qTop =
+    qTopFix ??
+    (Math.max(qd(m, 0, dShift), qs(m, m.xMax, sShift), base ? qd(m, 0, base.dShift) : 0, base ? qs(m, m.xMax, base.sShift) : 0) * 1.1 || 1);
   const X = (v: number) => PL + (v / m.xMax) * (W - PL - PR);
   const Y = (v: number) => H - PB - (v / qTop) * (H - PT - PB);
   const line = (f: (x: number) => number) =>
@@ -195,6 +203,25 @@ function MarketChart({
 
   const eq = eqOf(m, dShift, sShift);
   const showBase = base && (base.dShift !== dShift || base.sShift !== sShift);
+  const e0 = base ? eqOf(m, base.dShift, base.sShift) : null;
+  // E₀ → E₁ 이동 방향. 이름표는 E₀ 은 반대쪽, E₁ 은 진행 쪽에 둬서 서로 겹치지 않게 한다
+  const move = (() => {
+    if (!trail || !showBase || !e0) return null;
+    const x0 = X(e0.x), y0 = Y(e0.q), x1 = X(eq.x), y1 = Y(eq.q);
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    if (len < 1e-6) return null;
+    return { x0, y0, x1, y1, len, ux: (x1 - x0) / len, uy: (y1 - y0) / len };
+  })();
+  // 화살표 (끝을 점 테두리 앞에서 멈춘다)
+  const arrow = (() => {
+    if (!move || move.len < 14) return null;
+    const { x0, y0, x1, y1, ux, uy } = move;
+    const sx = x0 + ux * 8, sy = y0 + uy * 8, ex = x1 - ux * 9, ey = y1 - uy * 9;
+    const hx = ex - ux * 8, hy = ey - uy * 8;
+    return { sx, sy, ex, ey, head: `${ex},${ey} ${hx - uy * 4.5},${hy + ux * 4.5} ${hx + uy * 4.5},${hy - ux * 4.5}` };
+  })();
+  const e0Label = move ? { x: move.x0 - move.ux * 18, y: move.y0 - move.uy * 18 + 4 } : null;
+  const e1Label = move ? { x: move.x1 + move.ux * 18, y: move.y1 + move.uy * 18 + 4 } : null;
   const dNow = price === null ? 0 : qd(m, price, dShift);
   const sNow = price === null ? 0 : qs(m, price, sShift);
 
@@ -206,7 +233,7 @@ function MarketChart({
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`y${r}`}>
               <line x1={PL} y1={Y(r * qTop)} x2={W - PR} y2={Y(r * qTop)} stroke="rgba(148,163,184,0.13)" strokeWidth={0.8} />
-              <text x={PL - 6} y={Y(r * qTop)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={PL - 6} y={Y(r * qTop)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {Math.round(r * qTop)}
               </text>
             </g>
@@ -214,7 +241,7 @@ function MarketChart({
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`x${r}`}>
               <line x1={X(r * m.xMax)} y1={PT} x2={X(r * m.xMax)} y2={H - PB} stroke="rgba(148,163,184,0.12)" strokeWidth={0.8} />
-              <text x={X(r * m.xMax)} y={H - PB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={X(r * m.xMax)} y={H - PB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {fmt(r * m.xMax, 0)}
               </text>
             </g>
@@ -249,15 +276,39 @@ function MarketChart({
           <polyline points={line((x) => qd(m, x, dShift))} fill="none" stroke={D_COLOR} strokeWidth={3} strokeLinecap="round" />
           {only ? null : <polyline points={line((x) => qs(m, x, sShift))} fill="none" stroke={S_COLOR} strokeWidth={3} strokeLinecap="round" />}
 
+          {/* 옛 균형점 E₀ (빈 점) */}
+          {trail && showBase && e0 && !only ? (
+            <g>
+              <circle cx={X(e0.x)} cy={Y(e0.q)} r={6} fill="#0b1220" stroke="#94a3b8" strokeWidth={1.6} strokeDasharray="3 2" />
+              {e0Label ? (
+                <text x={e0Label.x} y={e0Label.y} textAnchor="middle" fill="#94a3b8" fontSize={11} fontWeight={700}>
+                  E₀
+                </text>
+              ) : null}
+            </g>
+          ) : null}
+          {arrow ? (
+            <g>
+              <line x1={arrow.sx} y1={arrow.sy} x2={arrow.ex} y2={arrow.ey} stroke="#fde68a" strokeWidth={2} strokeLinecap="round" />
+              <polygon points={arrow.head} fill="#fde68a" />
+            </g>
+          ) : null}
+
           {showEq && !only && eq.x >= 0 && eq.x <= m.xMax ? (
             <g>
               <line x1={X(eq.x)} y1={Y(eq.q)} x2={X(eq.x)} y2={H - PB} stroke="#fbbf24" strokeWidth={1.2} strokeDasharray="4 3" opacity={0.8} />
               <line x1={PL} y1={Y(eq.q)} x2={X(eq.x)} y2={Y(eq.q)} stroke="#fbbf24" strokeWidth={1.2} strokeDasharray="4 3" opacity={0.8} />
               <circle cx={X(eq.x)} cy={Y(eq.q)} r={6.5} fill="#fff" />
               <circle cx={X(eq.x)} cy={Y(eq.q)} r={3.6} fill="#fbbf24" />
-              <text x={X(eq.x) + 9} y={Y(eq.q) - 8} fill="#fcd34d" fontSize={10} fontWeight={700}>
-                균형점
-              </text>
+              {e1Label ? (
+                <text x={e1Label.x} y={e1Label.y} textAnchor="middle" fill="#fcd34d" fontSize={12} fontWeight={700}>
+                  E₁
+                </text>
+              ) : (
+                <text x={X(eq.x) + 9} y={Y(eq.q) - 8} fill="#fcd34d" fontSize={10} fontWeight={700}>
+                  균형점
+                </text>
+              )}
             </g>
           ) : null}
 
@@ -666,6 +717,20 @@ function TwoKnobs() {
 }
 
 // ─── ② -B 실생활 사건 게임 ───────────────────────────────────
+/** 사건 게임 그래프의 세로축 최댓값 — 여덟 사건의 이동 뒤 곡선까지 모두 담도록 한 번 정해 둔다 */
+const EVENT_QTOP =
+  Math.max(
+    qd(ICE, 0),
+    qs(ICE, ICE.xMax),
+    ...EVENTS.map((ev) =>
+      ev.kind === "shift"
+        ? ev.side === "demand"
+          ? qd(ICE, 0, ev.shift)
+          : qs(ICE, ICE.xMax, ev.shift)
+        : 0,
+    ),
+  ) * 1.1;
+
 function EventGame() {
   const [cur, setCur] = useState<string | null>(null);
   const [q1, setQ1] = useState<number | null>(null);
@@ -688,7 +753,32 @@ function EventGame() {
   const markPrice = applied && e && e.kind === "move" ? e.priceTo : eq0.x;
   const eq1 = eqOf(ICE, dShift, sShift);
 
+  // 정답을 맞히면 곡선(또는 가격 점)이 t: 0 → 1 로 미끄러져 간다. 숫자 카드는 처음부터 최종값
+  const [t, setT] = useState(1);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+  function glide() {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setT(1);
+      return;
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const f = Math.min(1, (now - t0) / 1100);
+      setT(f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2);
+      rafRef.current = f < 1 ? requestAnimationFrame(tick) : null;
+    };
+    setT(0);
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
   function open(id: string) {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setT(1);
     setCur(id);
     setQ1(null);
     setQ2(null);
@@ -742,7 +832,15 @@ function EventGame() {
 
       <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="space-y-2">
-          <MarketChart m={ICE} dShift={dShift} sShift={sShift} price={applied && e?.kind === "move" ? markPrice : null} base={{ dShift: 0, sShift: 0 }} />
+          <MarketChart
+            m={ICE}
+            dShift={dShift * t}
+            sShift={sShift * t}
+            price={applied && e?.kind === "move" ? eq0.x + (markPrice - eq0.x) * t : null}
+            base={{ dShift: 0, sShift: 0 }}
+            qTopFix={EVENT_QTOP}
+            trail
+          />
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center">
               <p className="text-[10px] text-slate-400">균형가격</p>
@@ -803,7 +901,10 @@ function EventGame() {
                   pick={q2}
                   onPick={(v) => {
                     setQ2(v);
-                    if (v === a2) setSolved((p) => ({ ...p, [e.id]: true }));
+                    if (v === a2) {
+                      setSolved((p) => ({ ...p, [e.id]: true }));
+                      if (q2 !== a2) glide();
+                    }
                   }}
                 />
               ) : null}
