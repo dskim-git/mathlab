@@ -130,7 +130,7 @@ function ChainTab() {
     rafRef.current = null;
     const from = shown;
     setShown(next);
-    if (next <= from || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+    if (next <= from) {
       setGrow(null);
       return;
     }

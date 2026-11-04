@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
@@ -1497,15 +1497,43 @@ function CardTab() {
   const ok = target.signs.every((s, i) => signs[i] === s);
   const madeFlat = Object.keys(solved).length > 0 && kinds.includes("none");
 
+  // 카드를 뒤집으면 이전 곡선이 새 곡선으로 휘어 바뀐다 (같은 x 321개, y 만 보간 — 범위 [−1, 1] 안)
+  const [morph, setMorph] = useState<{ from: [number, number][]; t: number } | null>(null);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const mine = sketchCurve(signs);
+  const shownMine: [number, number][] = morph
+    ? morph.from.map(([x, y], k) => [x, y + (mine[k][1] - y) * morph.t] as [number, number])
+    : mine;
+
   const put = (i: number, v: Sign) => {
+    if (signs[i] === v) return;
     const next = signs.map((z, k) => (k === i ? v : z));
+    const from = shownMine; // 모핑 도중이면 지금 보이는 모양에서 이어 간다
     setSigns(next);
     if (CARD_TARGETS[ti].signs.every((s, k) => next[k] === s)) {
       setSolved((z) => (z[CARD_TARGETS[ti].id] ? z : { ...z, [CARD_TARGETS[ti].id]: true }));
     }
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    let t0 = -1; // 첫 프레임의 시각을 출발점으로
+    const tick = (now: number) => {
+      if (t0 < 0) t0 = now;
+      const f = Math.min(1, (now - t0) / 550);
+      if (f >= 1) {
+        setMorph(null);
+        rafRef.current = null;
+        return;
+      }
+      setMorph({ from, t: f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2 });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    setMorph({ from, t: 0 });
+    rafRef.current = requestAnimationFrame(tick);
   };
-
-  const mine = sketchCurve(signs);
   const goal = sketchCurve(target.signs);
   const goals = [CARD_TARGETS.every((t) => solved[t.id]), madeFlat || CARD_TARGETS.some((t) => solved[t.id] && cardKinds(t.signs).includes("none"))];
 
@@ -1543,7 +1571,7 @@ function CardTab() {
           <Plot
             box={CARD_BOX}
             uid="card-mine"
-            segs={[{ tone: ok ? "up" : "line", pts: mine }]}
+            segs={[{ tone: ok && !morph ? "up" : "line", pts: shownMine }]}
             vlines={CARD_XS.map((x) => ({ at: x, tone: "guide" as RuleTone }))}
             bare
           />
@@ -1557,7 +1585,7 @@ function CardTab() {
         <div className="flex flex-wrap items-end gap-3">
           {signs.map((s, i) => (
             <div key={i} className="text-center">
-              <p className="mb-1 font-mono text-[11px] text-slate-400">
+              <p className="mb-1 font-mono text-xs text-slate-300">
                 {i === 0
                   ? `x < ${fmt(CARD_XS[0])}`
                   : i === CARD_XS.length
@@ -1603,7 +1631,7 @@ function CardTab() {
             <span
               key={i}
               className={
-                "rounded-lg border-2 px-2.5 py-1 text-[11px] font-bold " +
+                "rounded-lg border-2 px-2.5 py-1 text-xs font-bold " +
                 (k === "max"
                   ? "border-amber-400/60 bg-amber-400/15 text-amber-100"
                   : k === "min"

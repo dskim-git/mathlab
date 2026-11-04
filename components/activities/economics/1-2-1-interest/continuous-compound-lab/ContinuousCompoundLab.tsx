@@ -208,10 +208,6 @@ function SimTab(setup: Setup) {
   }
   function play() {
     stopAuto();
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setIdx(LAST);
-      return;
-    }
     const uMax = Math.log10(CYCLES[CYCLES.length - 1].m);
     const DUR = 6500, HOLD = 450;
     const t0 = performance.now();
