@@ -155,8 +155,8 @@ function PieceLine({ line }: { line: Piece[] }) {
 const PS = 320;
 const PML = 44;
 const PMR = 14;
-const PMT = 14;
-const PMB = 28;
+const PMT = 16;
+const PMB = 30;
 const CML = 30;
 const CMR = 10;
 const CMT = 10;
@@ -243,7 +243,7 @@ function Plot({
   const X = (v: number) => ml + ((v - box.xMin) / (box.xMax - box.xMin)) * pw;
   const Y = (v: number) => PS - mb - ((v - box.yMin) / (box.yMax - box.yMin)) * ph;
   const cid = `ex-${uid}`;
-  const fs = compact ? 7 : 8;
+  const fs = compact ? 10 : 11;
 
   const gx: number[] = [];
   for (let i = 0; i <= 24; i++) {
@@ -292,21 +292,21 @@ function Plot({
       {axisY ? <line x1={X(0)} y1={mt} x2={X(0)} y2={PS - mb} stroke="rgba(255,255,255,0.32)" /> : null}
 
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - mb + 12} textAnchor="middle" fontSize={fs} fill="#64748b">
+        <text key={`tx${v}`} x={X(v)} y={PS - mb + fs + 3} textAnchor="middle" fontSize={fs} fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={ml - 4} y={Y(v) + 3} textAnchor="end" fontSize={fs} fill="#64748b">
+        <text key={`ty${v}`} x={ml - 4} y={Y(v) + 4} textAnchor="end" fontSize={fs} fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - mr} y={PS - 3} textAnchor="end" fontSize={fs} fill="#475569">
+          <text x={PS - mr} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={mt - 3} textAnchor="start" fontSize={fs} fill="#475569">
+          <text x={2} y={mt - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
