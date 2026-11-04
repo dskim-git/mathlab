@@ -1311,8 +1311,8 @@ const RB_W = 320;
 const RB_H = 230;
 const RB_L = 40;
 const RB_R = 14;
-const RB_T = 20;
-const RB_B = 28;
+const RB_T = 22;
+const RB_B = 30;
 
 function RevenueRect({
   qty,
@@ -1337,6 +1337,15 @@ function RevenueRect({
   const ph = RB_H - RB_T - RB_B;
   const X = (v: number) => RB_L + (v / qMax) * pw;
   const Y = (v: number) => RB_H - RB_B - (v / pMax) * ph;
+  // 넓이 값: 직사각형 안에 들어가면 가운데, 가늘면 오른쪽 옆, 납작하면 위에 쓴다
+  const rw = X(qty) - RB_L;
+  const rh = RB_H - RB_B - Y(price);
+  const revW = won(rev).length * 13 * 0.62;
+  const narrow = rw < revW + 8;
+  const flat = rh < 13 + 6;
+  const revX = narrow ? X(qty) + 5 : (RB_L + X(qty)) / 2;
+  const revY = !narrow && flat ? Y(price) - 5 : (RB_H - RB_B + Y(price)) / 2 + 4;
+  const revAnchor = narrow ? "start" : "middle";
 
   return (
     <svg viewBox={"0 0 " + RB_W + " " + RB_H} className="w-full max-w-[320px]" role="img" aria-label="수입 직사각형">
@@ -1365,26 +1374,27 @@ function RevenueRect({
 
       {qty > 0 && price > 0 ? (
         <text
-          x={(RB_L + X(qty)) / 2}
-          y={(RB_H - RB_B + Y(price)) / 2 + 3}
-          textAnchor="middle"
-          fontSize="11"
+          x={revX}
+          y={revY}
+          textAnchor={revAnchor}
+          fontSize="13"
+          fontWeight="bold"
           fill={best ? "#6ee7b7" : "#bae6fd"}
         >
           {won(rev)}
         </text>
       ) : null}
 
-      <text x={X(qty)} y={RB_H - RB_B + 11} textAnchor="middle" fontSize="8" fill="#94a3b8">
+      <text x={X(qty)} y={RB_H - RB_B + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
         {won(qty)}
       </text>
-      <text x={RB_L - 4} y={Y(price) + 3} textAnchor="end" fontSize="8" fill="#94a3b8">
+      <text x={RB_L - 4} y={Y(price) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
         {fmt(price)}
       </text>
-      <text x={RB_W - RB_R} y={RB_H - 3} textAnchor="end" fontSize="8" fill="#475569">
+      <text x={RB_W - RB_R} y={RB_H - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
         판매량
       </text>
-      <text x={2} y={RB_T - 6} textAnchor="start" fontSize="8" fill="#475569">
+      <text x={2} y={RB_T - 8} textAnchor="start" fontSize="10" fill="#94a3b8">
         가격
       </text>
     </svg>

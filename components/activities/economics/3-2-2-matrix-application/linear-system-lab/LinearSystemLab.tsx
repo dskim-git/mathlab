@@ -215,14 +215,14 @@ function Plane({
       {gx
         .filter((v) => v !== 0)
         .map((v) => (
-          <text key={`tx${v}`} x={X(v)} y={S - MB + 13} textAnchor="middle" fontSize="9" fill="#64748b">
+          <text key={`tx${v}`} x={X(v)} y={S - MB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
             {v}
           </text>
         ))}
       {gy
         .filter((v) => v !== 0)
         .map((v) => (
-          <text key={`ty${v}`} x={ML - 5} y={Y(v) + 3} textAnchor="end" fontSize="9" fill="#64748b">
+          <text key={`ty${v}`} x={ML - 5} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
             {v}
           </text>
         ))}

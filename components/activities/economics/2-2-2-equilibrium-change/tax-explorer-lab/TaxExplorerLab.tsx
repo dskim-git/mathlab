@@ -503,7 +503,7 @@ function TableTab() {
       </div>
 
       <div className="overflow-x-auto overflow-y-hidden">
-        <table className="w-full min-w-[640px] border-collapse text-center text-xs">
+        <table className="w-full min-w-[640px] border-collapse text-center text-sm">
           <tbody>
             <tr>
               <th className="w-28 border border-white/15 bg-blue-600/70 px-2 py-2 font-bold text-white">
@@ -539,7 +539,7 @@ function TableTab() {
                               setGraded(false);
                             }}
                             className={
-                              "rounded-lg border px-1.5 py-1 text-[10px] transition " +
+                              "rounded-lg border px-2 py-1.5 text-xs transition " +
                               (sup[t] === i
                                 ? graded
                                   ? c.ok
@@ -580,7 +580,7 @@ function TableTab() {
                       }}
                       className={"w-full rounded-lg border-2 bg-slate-950 px-2 py-1.5 text-center font-mono text-sm outline-none transition focus:border-violet-300 " + cell(okPrice(t))}
                     />
-                    {graded && !okPrice(t) ? <p className="mt-0.5 font-mono text-[10px] text-emerald-200">{fmt(eqOf(f, t).x)}</p> : null}
+                    {graded && !okPrice(t) ? <p className="mt-1 font-mono text-xs font-bold text-emerald-200">{fmt(eqOf(f, t).x)}</p> : null}
                   </td>
                 ),
               )}
@@ -605,20 +605,20 @@ function TableTab() {
                       }}
                       className={"w-full rounded-lg border-2 bg-slate-950 px-2 py-1.5 text-center font-mono text-sm outline-none transition focus:border-violet-300 " + cell(okQty(t))}
                     />
-                    {graded && !okQty(t) ? <p className="mt-0.5 font-mono text-[10px] text-emerald-200">{fmt(eqOf(f, t).q)}</p> : null}
+                    {graded && !okQty(t) ? <p className="mt-1 font-mono text-xs font-bold text-emerald-200">{fmt(eqOf(f, t).q)}</p> : null}
                   </td>
                 ),
               )}
             </tr>
             <tr>
-              <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-slate-400">공학도구</th>
+              <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-xs font-bold text-slate-300">공학도구</th>
               {TABLE_TAXES.map((t) => (
                 <td key={t} className="border border-white/15 p-1">
                   <button
                     type="button"
                     onClick={() => setPeek(peek === t ? null : t)}
                     className={
-                      "w-full rounded-lg border px-1.5 py-1 text-[10px] font-bold transition " +
+                      "w-full rounded-lg border px-1.5 py-1.5 text-xs font-bold transition " +
                       (peek === t ? "border-amber-400/60 bg-amber-400/15 text-amber-100" : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10")
                     }
                   >
@@ -704,7 +704,7 @@ function RuleTab() {
       </div>
 
       <div className="overflow-x-auto overflow-y-hidden">
-        <table className="w-full min-w-[520px] border-collapse text-center text-xs">
+        <table className="w-full min-w-[520px] border-collapse text-center text-sm">
           <tbody>
             <tr>
               <th className="w-32 border border-white/15 bg-blue-600/70 px-2 py-2 font-bold text-white">
@@ -725,10 +725,10 @@ function RuleTab() {
               ))}
             </tr>
             <tr>
-              <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-slate-400">가격의 변화</th>
-              <td className="border border-white/15 px-2 py-1.5 text-slate-600">—</td>
+              <th className="border border-white/15 bg-orange-500/15 px-2 py-2 font-bold text-orange-100">가격의 변화</th>
+              <td className="border border-white/15 px-2 py-2 text-slate-500">—</td>
               {rows.slice(1).map((r, i) => (
-                <td key={r.t} className="border border-white/15 px-2 py-1.5 font-mono text-[11px] font-bold text-orange-200">
+                <td key={r.t} className="border border-white/15 px-2 py-2 font-mono text-lg font-bold text-orange-200">
                   +{fmt(r.x - rows[i].x)}
                 </td>
               ))}
@@ -742,10 +742,10 @@ function RuleTab() {
               ))}
             </tr>
             <tr>
-              <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-slate-400">거래량의 변화</th>
-              <td className="border border-white/15 px-2 py-1.5 text-slate-600">—</td>
+              <th className="border border-white/15 bg-sky-500/15 px-2 py-2 font-bold text-sky-100">거래량의 변화</th>
+              <td className="border border-white/15 px-2 py-2 text-slate-500">—</td>
               {rows.slice(1).map((r, i) => (
-                <td key={r.t} className="border border-white/15 px-2 py-1.5 font-mono text-[11px] font-bold text-sky-300">
+                <td key={r.t} className="border border-white/15 px-2 py-2 font-mono text-lg font-bold text-sky-200">
                   {fmt(r.q - rows[i].q)}
                 </td>
               ))}
@@ -765,10 +765,10 @@ function RuleTab() {
         <div className="mt-1 grid gap-2 sm:grid-cols-3">
           {LAB_PRESETS.map((p) => (
             <div key={p.id} className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center">
-              <p className="text-[11px] font-bold text-slate-200">
+              <p className="text-xs font-bold text-slate-200">
                 {p.emoji} {p.name}
               </p>
-              <p className="font-mono text-[10px] text-slate-500">
+              <p className="font-mono text-xs text-slate-400">
                 dA = {p.f.dA} · sA = {p.f.sA}
               </p>
               <p className="mt-0.5 font-mono text-sm font-bold text-amber-100">+{fmt(priceRate(p.f), 3)}</p>

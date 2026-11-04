@@ -319,7 +319,7 @@ function StepLine({ n, title, expr, value, tone = "slate" }: { n: number; title:
         </span>
         <span className="font-mono text-lg font-bold text-slate-100">{value}</span>
       </div>
-      <p className="mt-0.5 font-mono text-[11px] text-slate-400">{expr}</p>
+      <p className="mt-0.5 font-mono text-xs text-slate-400">{expr}</p>
     </div>
   );
 }
@@ -342,7 +342,8 @@ function Big({ label, value, tone }: { label: string; value: string; tone: strin
 // ══════════════════════════════════════════════════════════════
 // 탭 ② 기간별 그래프
 // ══════════════════════════════════════════════════════════════
-const CW = 330, CH = 180, PL = 44, PR = 10, PT = 12, PB = 22;
+// 두 그래프가 반 칸(약 480px)에 나란히 놓인다 — viewBox 를 그 폭에 맞춰 글자가 거의 1:1(약 11px)로 보이게
+const CW = 480, CH = 262, PL = 54, PR = 16, PT = 18, PB = 28;
 
 function GraphTab() {
   const [ratePct, setRatePct] = useState(6);
@@ -383,7 +384,7 @@ function GraphTab() {
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
           <p className="text-sm font-bold text-sky-200">📈 미래가치 — 지금 100만 원은 n년 뒤에?</p>
-          <p className="mt-0.5 font-mono text-[11px] text-slate-400">S = A(1 + rn) / A(1 + r)ⁿ &nbsp;→ 이자율로 <b className="text-sky-200">곱하기</b></p>
+          <p className="mt-0.5 font-mono text-xs text-slate-400">S = A(1 + rn) / A(1 + r)ⁿ &nbsp;→ 이자율로 <b className="text-sky-200">곱하기</b></p>
           <Chart series={[
             { key: "s", label: "단리", color: "#fb923c", values: fvS },
             { key: "c", label: "복리", color: "#38bdf8", values: fvC },
@@ -396,12 +397,12 @@ function GraphTab() {
 
         <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
           <p className="text-sm font-bold text-amber-200">📉 현재가치 — {n}년 뒤에 받을 100만 원은 지금 얼마?</p>
-          <p className="mt-0.5 font-mono text-[11px] text-slate-400">A = S ÷ (1 + rn) / (1 + r)ⁿ &nbsp;→ 할인율로 <b className="text-amber-200">나누기</b></p>
+          <p className="mt-0.5 font-mono text-xs text-slate-400">A = S ÷ (1 + rn) / (1 + r)ⁿ &nbsp;→ 할인율로 <b className="text-amber-200">나누기</b></p>
           <Chart series={[
             { key: "s", label: "단리", color: "#fb923c", values: pvS },
             { key: "c", label: "복리", color: "#fbbf24", values: pvC },
           ]} n={n} cursor={cur} baseLine={base} />
-          <p className="mt-1 rounded-lg border border-amber-400/30 bg-amber-400/[0.08] px-3 py-1.5 text-center text-[11px] leading-5 text-amber-100">
+          <p className="mt-1 rounded-lg border border-amber-400/30 bg-amber-400/[0.08] px-3 py-1.5 text-center text-xs leading-5 text-amber-100">
             ◀ <b>오른쪽에서 왼쪽으로</b> 읽어요. 오른쪽 끝({n}년)이 받게 될 <b>100만 원</b>, 왼쪽 끝(0년)이 그 돈의 <b>오늘 값어치</b>예요.
           </p>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -455,6 +456,28 @@ function GraphTab() {
 
 type Series = { key: string; label: string; color: string; values: number[] };
 
+// 범례 색 — 동적 색은 정적 클래스 맵으로
+const LEGEND_BG: Record<string, string> = {
+  "#fb923c": "bg-orange-400",
+  "#38bdf8": "bg-sky-400",
+  "#fbbf24": "bg-amber-400",
+};
+
+/** 세로 눈금 금액 — 1억 이상은 '억' 으로 줄여 왼쪽 여백을 넘지 않게 (20%·40년이면 약 147억) */
+function axisMoney(v: number): string {
+  if (v >= 1e8) return (v / 1e8).toFixed(1) + "억";
+  return Math.round(v / 10000).toLocaleString("ko-KR") + "만";
+}
+
+/** 가로 눈금: 기간이 짧으면 1년, 길면 5·10년 간격. 끝 시점 n 은 앞 눈금과 충분히 떨어져 있을 때만 덧붙인다 */
+function yearTicks(n: number): number[] {
+  const step = n <= 10 ? 1 : n <= 25 ? 5 : 10;
+  const t: number[] = [];
+  for (let i = 0; i <= n; i += step) t.push(i);
+  if (n - t[t.length - 1] >= step / 2) t.push(n);
+  return t;
+}
+
 function Chart({ series, n, cursor, baseLine }: { series: Series[]; n: number; cursor: number; baseLine: number }) {
   const all = series.flatMap((s) => s.values);
   const yMax = Math.max(...all, baseLine) * 1.06;
@@ -462,37 +485,41 @@ function Chart({ series, n, cursor, baseLine }: { series: Series[]; n: number; c
   const Y = (v: number) => CH - PB - (v / yMax) * (CH - PT - PB);
   const pts = (vals: number[]) => vals.map((v, i) => `${X(i)},${Y(v)}`).join(" ");
   return (
-    <div className="mt-2 overflow-x-auto">
-      <svg viewBox={`0 0 ${CW} ${CH}`} className="h-auto w-full min-w-[330px]" role="img" aria-label="가치 변화 그래프">
-        <rect x={0} y={0} width={CW} height={CH} fill="#0b1220" rx={8} />
-        {[0, 0.5, 1].map((t) => (
+    <div className="mt-2 overflow-x-auto overflow-y-hidden py-1">
+      <svg viewBox={`0 0 ${CW} ${CH}`} className="mx-auto h-auto w-full min-w-[330px] max-w-[560px]" role="img" aria-label="가치 변화 그래프">
+        <rect x={0} y={0} width={CW} height={CH} fill="#0b1220" rx={10} />
+        {[0, 0.25, 0.5, 0.75, 1].map((t) => (
           <g key={t}>
-            <line x1={PL} x2={CW - PR} y1={Y(yMax * t)} y2={Y(yMax * t)} stroke="rgba(255,255,255,0.08)" strokeWidth={0.6} />
-            <text x={PL - 4} y={Y(yMax * t) + 3} textAnchor="end" className="fill-slate-500" style={{ fontSize: 6 }}>
-              {Math.round((yMax * t) / 10000).toLocaleString("ko-KR")}만
+            <line x1={PL} x2={CW - PR} y1={Y(yMax * t)} y2={Y(yMax * t)} stroke="rgba(255,255,255,0.07)" strokeWidth={1} />
+            <text x={PL - 6} y={Y(yMax * t) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
+              {axisMoney(yMax * t)}
             </text>
           </g>
         ))}
-        <line x1={PL} x2={CW - PR} y1={Y(baseLine)} y2={Y(baseLine)} stroke="#64748b" strokeWidth={0.8} strokeDasharray="3 2" />
-        <text x={CW - PR} y={Y(baseLine) - 3} textAnchor="end" className="fill-slate-500" style={{ fontSize: 6 }}>100만원</text>
+        <line x1={PL} x2={CW - PR} y1={Y(baseLine)} y2={Y(baseLine)} stroke="#94a3b8" strokeWidth={1.2} strokeDasharray="5 3" />
+        <text x={CW - PR - 2} y={Y(baseLine) - 5} textAnchor="end" fontSize="11" fontWeight="bold" fill="#cbd5e1">
+          100만원
+        </text>
 
         {series.map((s) => (
-          <polyline key={s.key} points={pts(s.values)} fill="none" stroke={s.color} strokeWidth={1.8} />
+          <polyline key={s.key} points={pts(s.values)} fill="none" stroke={s.color} strokeWidth={2.6} strokeLinejoin="round" />
         ))}
-        <line x1={X(cursor)} x2={X(cursor)} y1={PT} y2={CH - PB} stroke="#a78bfa" strokeWidth={0.8} strokeDasharray="2 2" />
+        <line x1={X(cursor)} x2={X(cursor)} y1={PT} y2={CH - PB} stroke="#a78bfa" strokeWidth={1.2} strokeDasharray="3 3" />
         {series.map((s) => (
-          <circle key={s.key} cx={X(cursor)} cy={Y(s.values[cursor])} r={2.6} fill={s.color} stroke="#0b1220" strokeWidth={0.8} />
+          <circle key={s.key} cx={X(cursor)} cy={Y(s.values[cursor])} r={4.5} fill={s.color} stroke="#0b1220" strokeWidth={1.5} />
         ))}
 
-        <line x1={PL} x2={CW - PR} y1={CH - PB} y2={CH - PB} stroke="rgba(255,255,255,0.2)" strokeWidth={0.8} />
-        {[0, Math.round(n / 2), n].map((i, idx) => (
-          <text key={idx} x={X(i)} y={CH - PB + 10} textAnchor="middle" className="fill-slate-500" style={{ fontSize: 6 }}>{i}년</text>
+        <line x1={PL} x2={CW - PR} y1={CH - PB} y2={CH - PB} stroke="rgba(255,255,255,0.25)" strokeWidth={1} />
+        {yearTicks(n).map((i) => (
+          <text key={i} x={X(i)} y={CH - PB + 16} textAnchor="middle" fontSize="11" fill="#94a3b8">
+            {i}년
+          </text>
         ))}
       </svg>
-      <div className="mt-1 flex flex-wrap justify-center gap-3 text-[11px]">
+      <div className="mt-1 flex flex-wrap justify-center gap-3 text-xs">
         {series.map((s) => (
-          <span key={s.key} className="flex items-center gap-1 text-slate-300">
-            <span className="inline-block h-0.5 w-4" style={{ backgroundColor: s.color }} aria-hidden="true" />
+          <span key={s.key} className="flex items-center gap-1.5 text-slate-300">
+            <span className={"inline-block h-1 w-5 rounded-full " + (LEGEND_BG[s.color] ?? "bg-slate-400")} aria-hidden="true" />
             {s.label}
           </span>
         ))}
@@ -510,7 +537,7 @@ const MINI_TONE: Record<string, string> = {
 function Mini({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
     <div className={"rounded-lg border px-3 py-1.5 text-center " + MINI_TONE[tone]}>
-      <p className="text-[10px] opacity-80">{label}</p>
+      <p className="text-xs opacity-80">{label}</p>
       <p className="mt-0.5 font-mono text-sm font-bold">{value}</p>
     </div>
   );

@@ -786,23 +786,23 @@ const TABLE_CELL_TONE: Record<string, Tone> = {
 function DataTable({ t, showMat }: { t: TableDef; showMat: boolean }) {
   return (
     <div className={"rounded-xl border bg-slate-900/50 p-2 " + TABLE_TONE[t.tone]}>
-      <p className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-slate-300">
+      <p className="mb-2 flex flex-wrap items-center gap-1.5 text-sm font-bold text-slate-200">
         <span className={"rounded-md px-1.5 py-0.5 text-xs " + TABLE_HEAD[t.tone]}>
           <Katex expr={t.sym} />
         </span>
         <span>{t.caption}</span>
-        {t.unit ? <span className="font-normal text-slate-500">(단위 {t.unit})</span> : null}
+        {t.unit ? <span className="text-xs font-normal text-slate-400">(단위 {t.unit})</span> : null}
       </p>
       <div className="overflow-x-auto overflow-y-hidden py-1">
-        <table className="border-collapse text-xs">
+        <table className="border-collapse text-sm">
           <thead>
             <tr>
-              <th className="border border-white/10 px-2 py-1">
-                <span className="block text-right text-[9px] leading-3 text-slate-500">{t.cornerCol}</span>
-                <span className="block text-left text-[9px] leading-3 text-slate-500">{t.cornerRow}</span>
+              <th className="border border-white/10 px-2 py-1.5">
+                <span className="block text-right text-[11px] leading-4 text-slate-400">{t.cornerCol}</span>
+                <span className="block text-left text-[11px] leading-4 text-slate-400">{t.cornerRow}</span>
               </th>
               {t.colLabels.map((c) => (
-                <th key={c} className={"whitespace-nowrap border border-white/10 px-2.5 py-1 text-[11px] font-bold " + TABLE_HEAD[t.tone]}>
+                <th key={c} className={"whitespace-nowrap border border-white/10 px-3 py-1.5 text-sm font-bold " + TABLE_HEAD[t.tone]}>
                   {c}
                 </th>
               ))}
@@ -811,9 +811,9 @@ function DataTable({ t, showMat }: { t: TableDef; showMat: boolean }) {
           <tbody>
             {t.rowLabels.map((r, i) => (
               <tr key={r}>
-                <th className={"whitespace-nowrap border border-white/10 px-2.5 py-1 text-[11px] font-bold " + TABLE_HEAD[t.tone]}>{r}</th>
+                <th className={"whitespace-nowrap border border-white/10 px-3 py-1.5 text-sm font-bold " + TABLE_HEAD[t.tone]}>{r}</th>
                 {t.m[i].map((v, j) => (
-                  <td key={j} className="border border-white/10 px-2.5 py-1 text-right font-mono tabular-nums text-slate-100">
+                  <td key={j} className="border border-white/10 px-3 py-1.5 text-right font-mono text-base tabular-nums text-slate-100">
                     {won(v)}
                   </td>
                 ))}
