@@ -308,10 +308,6 @@ function SimTab() {
   function play() {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     const total = n;
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setProg(total);
-      return;
-    }
     const dur = Math.min(6000, Math.max(2500, total * 180));
     const t0 = performance.now();
     const tick = (now: number) => {

@@ -407,10 +407,6 @@ function MuTab() {
     if (n >= c.nMax) return;
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     setN(n + 1);
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setT(1);
-      return;
-    }
     const t0 = performance.now();
     const tick = (now: number) => {
       const f = Math.min(1, (now - t0) / 700);

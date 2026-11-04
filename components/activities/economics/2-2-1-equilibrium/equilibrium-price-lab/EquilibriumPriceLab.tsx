@@ -761,10 +761,6 @@ function EventGame() {
   }, []);
   function glide() {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setT(1);
-      return;
-    }
     const t0 = performance.now();
     const tick = (now: number) => {
       const f = Math.min(1, (now - t0) / 1100);

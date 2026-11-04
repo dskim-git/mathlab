@@ -545,10 +545,6 @@ function JourneyTab() {
   const tween = useCallback((from: number, to: number) => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setTw(null);
-      return;
-    }
     const t0 = performance.now();
     const tick = (now: number) => {
       const f = Math.min(1, (now - t0) / 600);

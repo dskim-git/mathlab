@@ -877,7 +877,7 @@ function TanTab() {
   const glide = (to: number, ms: number) => {
     stop();
     const from = s;
-    if (to <= from || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (to <= from) {
       setS(to);
       return;
     }

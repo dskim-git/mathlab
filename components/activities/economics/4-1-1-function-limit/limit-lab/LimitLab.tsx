@@ -768,10 +768,6 @@ function ZoomTab() {
     stop();
     const from = k;
     const to = k + 1;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setPos(to);
-      return;
-    }
     const start = performance.now();
     const tick = (t: number) => {
       const u = Math.min((t - start) / SCOPE_MS, 1);
