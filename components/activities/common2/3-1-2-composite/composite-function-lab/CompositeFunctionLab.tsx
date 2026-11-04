@@ -81,7 +81,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3.5 py-2 text-sm font-bold transition " +
+        "rounded-xl border-2 px-4 py-2.5 text-base font-bold transition " +
         (active ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -99,7 +99,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           type="button"
           onClick={() => onPick(i)}
           className={
-            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+            "h-10 min-w-[2.5rem] rounded-lg border-2 px-2 font-mono text-base font-bold transition " +
             (i === cur
               ? "border-cyan-400/70 bg-cyan-400/20 text-cyan-100"
               : done.includes(id)
@@ -110,7 +110,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           {done.includes(id) && i !== cur ? "✓" : i + 1}
         </button>
       ))}
-      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-base font-bold text-slate-300">
         {done.length} / {ids.length}
       </span>
     </div>
@@ -122,7 +122,7 @@ function NextBtn({ onClick, label = "다음 문제 ▶" }: { onClick: () => void
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-xl border-2 border-cyan-400/55 bg-cyan-400/15 px-3 py-2.5 text-sm font-bold text-cyan-100 transition hover:bg-cyan-400/25"
+      className="w-full rounded-xl border-2 border-cyan-400/55 bg-cyan-400/15 px-3 py-2.5 text-lg font-bold text-cyan-100 transition hover:bg-cyan-400/25"
     >
       {label}
     </button>
@@ -151,9 +151,9 @@ function PieceLine({ ps }: { ps: Piece[] }) {
 
 function Slider({ label, value, min, max, step, onChange, accent = "accent-cyan-400", show }: { label: React.ReactNode; value: number; min: number; max: number; step: number; onChange: (v: number) => void; accent?: string; show?: string }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400">
+    <label className="block text-base font-bold text-slate-400">
       <span className="inline-flex items-center gap-1.5">
-        {label} <span className="font-mono text-[13px] text-slate-100">{show ?? value}</span>
+        {label} <span className="font-mono text-lg text-slate-100">{show ?? value}</span>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className={"mt-0.5 w-full " + accent} />
     </label>
@@ -165,8 +165,8 @@ const ABC = ["①", "②", "③", "④"];
 function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-      <p className="text-[11px] font-bold text-slate-400">해 볼 것 세 가지</p>
-      <div className="mt-1 space-y-1 text-[12px] leading-6">
+      <p className="text-base font-bold text-slate-400">해 볼 것 세 가지</p>
+      <div className="mt-1 space-y-1 text-base leading-8">
         {goals.map((g, i) => (
           <p key={g} className={seen.includes(String(i)) ? "text-emerald-200" : "text-slate-400"}>
             {seen.includes(String(i)) ? "✓" : "○"} {g}
@@ -208,11 +208,13 @@ type ChainProps = {
   /** 맨 앞에서 맨 뒤로 잇는 합성 화살표 */
   composite?: { from: number; to: number; label: string; color: string } | null;
   fontPx?: number;
+  /** 그림 최대 폭 (넓은 칸에서 지나치게 커지지 않게) */
+  maxW?: string;
   onPickX?: (i: number) => void;
   selX?: number | null;
 };
 
-function ChainDia({ cols, names, maps, links, lit, litColor = "#fbbf24", lit2, lit2Color = "#f472b6", dots, composite = null, fontPx = 14, onPickX, selX = null }: ChainProps) {
+function ChainDia({ cols, names, maps, links, lit, litColor = "#fbbf24", lit2, lit2Color = "#f472b6", dots, composite = null, fontPx = 17, maxW = "", onPickX, selX = null }: ChainProps) {
   const counts = cols.map((c) => c.length);
   const g = chGeom(counts, Boolean(composite));
   const isLit = (s: number, i: number, arr?: [number, number][]) => Boolean(arr?.some(([a, b]) => a === s && b === i));
@@ -220,11 +222,11 @@ function ChainDia({ cols, names, maps, links, lit, litColor = "#fbbf24", lit2, l
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950/70">
-      <svg viewBox={`0 0 ${g.w} ${g.h}`} className="mx-auto block w-full touch-none select-none" role="img" aria-label="여러 집합을 차례로 잇는 대응 그림">
+      <svg viewBox={`0 0 ${g.w} ${g.h}`} className={"mx-auto block w-full touch-none select-none " + maxW} role="img" aria-label="여러 집합을 차례로 잇는 대응 그림">
         {cols.map((col, c) => (
           <g key={`col${c}`}>
             <ellipse cx={g.cxs[c]} cy={g.cy} rx={CH.rx} ry={g.rys[c]} fill="rgba(255,255,255,0.03)" stroke="rgba(226,232,240,0.55)" strokeWidth={2} />
-            <text x={g.cxs[c]} y={g.cy - g.rys[c] - 9} textAnchor="middle" className="fill-slate-300 text-[13px] font-bold">
+            <text x={g.cxs[c]} y={g.cy - g.rys[c] - 9} textAnchor="middle" className="fill-slate-300 text-base font-bold">
               {names[c]}
             </text>
           </g>
@@ -235,7 +237,7 @@ function ChainDia({ cols, names, maps, links, lit, litColor = "#fbbf24", lit2, l
           <g key={`map${s}`}>
             <line x1={g.cxs[s] + 26} y1={22} x2={g.cxs[s + 1] - 26} y2={22} stroke="rgba(226,232,240,0.45)" strokeWidth={1.6} />
             <polygon points={arrowHead(g.cxs[s] + 26, 22, g.cxs[s + 1] - 26, 22)} fill="rgba(226,232,240,0.45)" />
-            <text x={(g.cxs[s] + g.cxs[s + 1]) / 2} y={14} textAnchor="middle" className="fill-slate-300 text-[12px] font-bold italic">
+            <text x={(g.cxs[s] + g.cxs[s + 1]) / 2} y={14} textAnchor="middle" className="fill-slate-300 text-[15px] font-bold italic">
               {m}
             </text>
           </g>
@@ -279,7 +281,7 @@ function ChainDia({ cols, names, maps, links, lit, litColor = "#fbbf24", lit2, l
               )}
               fill={composite.color}
             />
-            <text x={(g.cxs[0] + g.cxs[cols.length - 1]) / 2} y={g.h - 16} textAnchor="middle" style={{ fill: composite.color }} className="text-[12px] font-bold italic">
+            <text x={(g.cxs[0] + g.cxs[cols.length - 1]) / 2} y={g.h - 16} textAnchor="middle" style={{ fill: composite.color }} className="text-[15px] font-bold italic">
               {composite.label}
             </text>
           </g>
@@ -301,7 +303,7 @@ function ChainDia({ cols, names, maps, links, lit, litColor = "#fbbf24", lit2, l
                 <circle
                   cx={g.cxs[c]}
                   cy={y}
-                  r={15}
+                  r={17}
                   fill={sel ? "rgba(34,211,238,0.3)" : on ? "rgba(52,211,153,0.25)" : clickable ? "rgba(255,255,255,0.07)" : "transparent"}
                   stroke={sel ? "#22d3ee" : on ? "#34d399" : "transparent"}
                   strokeWidth={2}
@@ -327,7 +329,7 @@ export default function CompositeFunctionLab() {
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
-        <p className="text-sm font-semibold text-cyan-300">미니활동 · 공통수학2</p>
+        <p className="text-lg font-semibold text-cyan-300">미니활동 · 공통수학2</p>
         <h3 className="mt-2 text-2xl font-bold">🔗 합성함수</h3>
         <p className="mt-2 leading-7 text-slate-300">
           함수를 <b className="text-violet-200">이어 붙이는 일</b>입니다. 두 번 거쳐 가는 길을 한 번에 가는 길로 바꾸어 보고, 순서를 바꾸면 무엇이 달라지는지 살펴보세요.
@@ -378,7 +380,7 @@ function PickRow({ items, picked, answer, onPick, tone }: { items: string[]; pic
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "rounded-xl border-2 px-2 py-2 font-mono text-[15px] font-bold transition disabled:cursor-default " +
+              "rounded-xl border-2 px-2 py-2 font-mono text-lg font-bold transition disabled:cursor-default " +
               (good ? tone : badPick ? "border-rose-400/70 bg-rose-400/20 text-rose-100" : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
@@ -396,28 +398,28 @@ function DefCard({ q, pick, onPick }: { q: DefTask; pick: boolean | undefined; o
     <div className="space-y-2">
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="rounded-xl border-2 border-violet-400/35 bg-violet-400/8 px-3 py-2.5">
-          <p className="text-[11px] font-bold text-violet-200">먼저 쓰는 함수</p>
-          <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-[15px] text-slate-100">
+          <p className="text-base font-bold text-violet-200">먼저 쓰는 함수</p>
+          <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-xl text-slate-100">
             <Katex expr={q.fTex} />
           </p>
-          <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-[12px] text-slate-300">
+          <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-base text-slate-300">
             <span className="font-bold text-emerald-200">치역</span>
             <PieceLine ps={q.fRange} />
           </p>
         </div>
         <div className="rounded-xl border-2 border-sky-400/35 bg-sky-400/8 px-3 py-2.5">
-          <p className="text-[11px] font-bold text-sky-200">나중에 쓰는 함수</p>
-          <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-[15px] text-slate-100">
+          <p className="text-base font-bold text-sky-200">나중에 쓰는 함수</p>
+          <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-xl text-slate-100">
             <Katex expr={q.gTex} />
           </p>
-          <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-[12px] text-slate-300">
+          <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-base text-slate-300">
             <span className="font-bold text-amber-200">정의역</span>
             <PieceLine ps={q.gDom} />
           </p>
         </div>
       </div>
 
-      <p className="text-center text-[13px] font-bold text-slate-100">
+      <p className="text-center text-base font-bold text-slate-100">
         <Katex expr="g \circ f" /> 를 만들 수 있을까요?
       </p>
       <div className="grid grid-cols-2 gap-1.5">
@@ -431,7 +433,7 @@ function DefCard({ q, pick, onPick }: { q: DefTask; pick: boolean | undefined; o
               onClick={() => onPick(v)}
               disabled={right}
               className={
-                "rounded-xl border-2 px-2 py-2.5 text-[13px] font-bold transition disabled:cursor-default " +
+                "rounded-xl border-2 px-2 py-2.5 text-base font-bold transition disabled:cursor-default " +
                 (good
                   ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                   : badPick
@@ -446,9 +448,9 @@ function DefCard({ q, pick, onPick }: { q: DefTask; pick: boolean | undefined; o
       </div>
       {pick !== undefined ? (
         right ? (
-          <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {q.why}</p>
+          <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-8 text-emerald-100">✅ {q.why}</p>
         ) : (
-          <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">
+          <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-base leading-8 text-rose-100">
             ❌ <b>f 의 치역</b>이 <b>g 의 정의역</b> 안에 온전히 들어가는지만 따지면 됩니다. 하나라도 삐져나오면 만들 수 없어요.
           </p>
         )
@@ -484,15 +486,15 @@ function IntroTab() {
     <div className="space-y-4">
       {/* 따라가기 */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🚶 두 번 거쳐 가는 길을 따라가 보세요</p>
-        <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-center text-[15px] leading-8 text-slate-100">
+        <p className="text-lg font-bold text-slate-100">🚶 두 번 거쳐 가는 길을 따라가 보세요</p>
+        <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-center text-lg leading-8 text-slate-100">
           <Katex expr="(g \circ f)(x) = g(f(x))" />
         </p>
-        <p className="mt-1 text-[12px] leading-6 text-slate-400">
+        <p className="mt-1 text-base leading-8 text-slate-400">
           왼쪽 원소를 고른 뒤 <b className="text-amber-200">f 로 가는 곳</b>과 <b className="text-pink-200">g 로 가는 곳</b>을 차례로 골라 보세요.
         </p>
 
-        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)]">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
           <ChainDia
             cols={[TRACE.xs, TRACE.ys, TRACE.zs]}
             names={["X", "Y", "Z"]}
@@ -514,7 +516,7 @@ function IntroTab() {
                   type="button"
                   onClick={() => setXi(i)}
                   className={
-                    "h-8 min-w-[2.2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+                    "h-10 min-w-[2.75rem] rounded-lg border-2 px-2 font-mono text-base font-bold transition " +
                     (i === xi
                       ? "border-cyan-400/70 bg-cyan-400/20 text-cyan-100"
                       : doneX[i]
@@ -525,13 +527,13 @@ function IntroTab() {
                   {doneX[i] && i !== xi ? "✓" : s}
                 </button>
               ))}
-              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-base font-bold text-slate-300">
                 {doneX.filter(Boolean).length} / {TRACE.xs.length}
               </span>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-              <p className="text-[12px] font-bold text-amber-200">
+              <p className="text-base font-bold text-amber-200">
                 1단계 · <Katex expr={`f(${TRACE.xs[xi]})`} /> 은 얼마일까요?
               </p>
               <div className="mt-1.5">
@@ -540,17 +542,17 @@ function IntroTab() {
             </div>
 
             <div className={"rounded-xl border px-3 py-2.5 transition " + (fOk ? "border-white/10 bg-black/25" : "pointer-events-none border-white/10 bg-black/25 opacity-40")}>
-              <p className="text-[12px] font-bold text-pink-200">
+              <p className="text-base font-bold text-pink-200">
                 2단계 · <Katex expr={`g(${fOk ? TRACE.ys[fAns] : "\\ \\ "})`} /> 은 얼마일까요?
               </p>
-              {!fOk ? <p className="mt-1 text-[11px] text-slate-500">1단계를 맞히면 열려요.</p> : null}
+              {!fOk ? <p className="mt-1 text-base text-slate-400">1단계를 맞히면 열려요.</p> : null}
               <div className="mt-1.5">
                 <PickRow items={TRACE.zs} picked={gPick[xi]} answer={gAns} onPick={(i) => setGPick((m) => ({ ...m, [xi]: i }))} tone="border-pink-400/70 bg-pink-400/20 text-pink-100" />
               </div>
             </div>
 
             {fOk && gOk ? (
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/12 px-3 py-2.5 text-center text-[14px] leading-8 text-emerald-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/12 px-3 py-2.5 text-center text-lg leading-8 text-emerald-100">
                 <Katex expr={`(g \\circ f)(${TRACE.xs[xi]}) = g(f(${TRACE.xs[xi]})) = g(${TRACE.ys[fAns]}) = ${TRACE.zs[gAns]}`} />
               </p>
             ) : null}
@@ -559,9 +561,9 @@ function IntroTab() {
 
         {allX ? (
           <div className="mt-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-400/12 p-3">
-            <p className="text-center text-[13px] font-extrabold text-emerald-100">🎉 세 원소를 모두 따라갔어요!</p>
+            <p className="text-center text-base font-extrabold text-emerald-100">🎉 세 원소를 모두 따라갔어요!</p>
             <div className="mt-2 overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 py-1">
-              <table className="w-full min-w-[260px] text-center font-mono text-[13px]">
+              <table className="w-full min-w-[260px] text-center font-mono text-base">
                 <thead>
                   <tr className="text-slate-400">
                     <th className="px-2 py-1 font-bold">x</th>
@@ -592,7 +594,7 @@ function IntroTab() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 rounded-lg bg-black/25 px-3 py-2 text-[12px] leading-7 text-slate-300">
+            <p className="mt-2 rounded-lg bg-black/25 px-3 py-2 text-base leading-8 text-slate-300">
               아래쪽 초록 화살표가 <Katex expr="g \circ f" /> 예요. 두 번 거쳐 가던 길이 <b className="text-white">한 번에 가는 길</b>이 되었습니다. 1 과 3 이 모두 10 으로 가듯, 합성함수도 서로 다른 x 가 같은 곳으로 갈 수 있어요.
             </p>
           </div>
@@ -602,10 +604,10 @@ function IntroTab() {
       {/* 합성이 될까 */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🔎 합성할 수 있을까?</p>
+          <p className="text-lg font-bold text-slate-100">🔎 합성할 수 있을까?</p>
           <Chips ids={DEF_TASKS.map((t) => t.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
-        <p className="mt-1 rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">
+        <p className="mt-1 rounded-lg bg-black/25 px-3 py-2 text-base leading-8 text-slate-300">
           📖 <b className="text-slate-300">따질 것은 하나뿐</b> — <Katex expr="f" /> 가 내놓는 값을 <Katex expr="g" /> 에 넣을 수 있어야 합니다. 곧 <Katex expr="f" /> 의 치역이 <Katex expr="g" /> 의 정의역에 온전히 들어가야 해요.
         </p>
         <div className="mt-2">
@@ -620,8 +622,8 @@ function IntroTab() {
 
       {doneIds.length === DEF_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             <Katex expr="g \circ f" /> 는 <b className="text-white">f 를 먼저</b>, g 를 나중에 쓰는데 기호는 거꾸로 적습니다. 안쪽 괄호부터 계산한다고 생각하면 헷갈리지 않아요.
           </p>
         </div>
@@ -643,7 +645,7 @@ function CompPlane({ gf, fg, x, same }: { gf: (v: number) => number; fg: (v: num
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950/70">
-      <svg viewBox={`0 0 ${PV.size} ${PV.size}`} className="mx-auto block w-full max-w-[300px]" role="img" aria-label="두 합성함수를 한 좌표평면에 겹쳐 그린 그래프">
+      <svg viewBox={`0 0 ${PV.size} ${PV.size}`} className="mx-auto block w-full max-w-[340px]" role="img" aria-label="두 합성함수를 한 좌표평면에 겹쳐 그린 그래프">
         <defs>
           <clipPath id={`cp-${uid}`}>
             <rect x={PV.pad - 1} y={PV.pad - 1} width={PV.size - 2 * PV.pad + 2} height={PV.size - 2 * PV.pad + 2} />
@@ -671,10 +673,10 @@ function CompPlane({ gf, fg, x, same }: { gf: (v: number) => number; fg: (v: num
 
         {inBox(y2) ? <circle cx={pvX(x)} cy={pvY(y2)} r={5.5} fill="#38bdf8" stroke="#0f172a" strokeWidth={2} /> : null}
         {inBox(y1) ? <circle cx={pvX(x)} cy={pvY(y1)} r={5.5} fill="#f472b6" stroke="#0f172a" strokeWidth={2} /> : null}
-        <text x={PV.size - PV.pad + 1} y={pvY(0) - 6} textAnchor="end" className="fill-slate-500 text-[10px] font-bold italic">
+        <text x={PV.size - PV.pad + 1} y={pvY(0) - 6} textAnchor="end" className="fill-slate-400 text-sm font-bold italic">
           x
         </text>
-        <text x={pvX(0) + 7} y={PV.pad + 9} className="fill-slate-500 text-[10px] font-bold italic">
+        <text x={pvX(0) + 7} y={PV.pad + 9} className="fill-slate-400 text-sm font-bold italic">
           y
         </text>
       </svg>
@@ -687,7 +689,7 @@ function LawRowCard({ id, name, numTex, fnTex, holds, why, pick, onPick }: { id:
   return (
     <div className={"rounded-xl border-2 px-3 py-2.5 transition " + (right ? (holds ? "border-emerald-400/45 bg-emerald-400/10" : "border-rose-400/45 bg-rose-400/10") : pick !== undefined ? "border-amber-400/45 bg-amber-400/10" : "border-white/10 bg-black/25")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[12px] font-bold text-slate-200">{name}</p>
+        <p className="text-base font-bold text-slate-200">{name}</p>
         <div className="flex gap-1.5">
           {[true, false].map((v) => {
             const good = pick === v && v === holds;
@@ -699,7 +701,7 @@ function LawRowCard({ id, name, numTex, fnTex, holds, why, pick, onPick }: { id:
                 onClick={() => onPick(v)}
                 disabled={right}
                 className={
-                  "rounded-lg border-2 px-3 py-1.5 text-[12px] font-bold transition disabled:cursor-default " +
+                  "rounded-lg border-2 px-3 py-1.5 text-base font-bold transition disabled:cursor-default " +
                   (good
                     ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                     : badPick
@@ -714,16 +716,16 @@ function LawRowCard({ id, name, numTex, fnTex, holds, why, pick, onPick }: { id:
         </div>
       </div>
       <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
-        <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-white/5 px-2.5 py-1.5 text-center text-[13px] leading-7 text-sky-100">
+        <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-white/5 px-2.5 py-1.5 text-center text-lg leading-8 text-sky-100">
           <Katex expr={numTex} />
         </p>
-        <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-white/5 px-2.5 py-1.5 text-center text-[13px] leading-7 text-violet-100">
+        <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-white/5 px-2.5 py-1.5 text-center text-lg leading-8 text-violet-100">
           <Katex expr={fnTex} />
         </p>
       </div>
-      {right ? <p className="mt-1.5 rounded-lg bg-black/25 px-3 py-2 text-[12px] leading-6 text-slate-300">{holds ? "✅" : "⚠️"} {why}</p> : null}
+      {right ? <p className="mt-1.5 rounded-lg bg-black/25 px-3 py-2 text-base leading-8 text-slate-300">{holds ? "✅" : "⚠️"} {why}</p> : null}
       {pick !== undefined && !right ? (
-        <p className="mt-1.5 rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] leading-6 text-amber-100">🤔 다시 생각해 보세요. 구체적인 함수를 하나 넣어 두 쪽을 직접 계산해 보면 금방 드러납니다.</p>
+        <p className="mt-1.5 rounded-lg bg-amber-400/10 px-3 py-2 text-base leading-8 text-amber-100">🤔 다시 생각해 보세요. 구체적인 함수를 하나 넣어 두 쪽을 직접 계산해 보면 금방 드러납니다.</p>
       ) : null}
       <span className="sr-only">{id}</span>
     </div>
@@ -780,14 +782,14 @@ function LawsTab() {
     <div className="space-y-4">
       {/* 교환법칙 */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🔄 순서를 바꾸면 달라질까?</p>
-        <p className="mt-1 text-[12px] leading-6 text-slate-400">
+        <p className="text-lg font-bold text-slate-100">🔄 순서를 바꾸면 달라질까?</p>
+        <p className="mt-1 text-base leading-8 text-slate-400">
           <Katex expr="f" /> 와 <Katex expr="g" /> 를 골라 <Katex expr="g \circ f" /> 와 <Katex expr="f \circ g" /> 를 견주어 보세요.
         </p>
 
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-[11px] font-bold text-pink-200">먼저 쓰는 함수 f</p>
+            <p className="mb-1 text-base font-bold text-pink-200">먼저 쓰는 함수 f</p>
             <div className="grid grid-cols-2 gap-1.5">
               {F_LIST.map((v, i) => (
                 <button
@@ -795,7 +797,7 @@ function LawsTab() {
                   type="button"
                   onClick={() => { setFi(i); note(i, gi); }}
                   className={
-                    "rounded-lg border-2 px-2 py-1.5 text-[13px] font-bold transition " +
+                    "rounded-lg border-2 px-2 py-1.5 text-base font-bold transition " +
                     (i === fi ? "border-pink-400/70 bg-pink-400/20 text-pink-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                   }
                 >
@@ -805,7 +807,7 @@ function LawsTab() {
             </div>
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-bold text-sky-200">나중에 쓰는 함수 g</p>
+            <p className="mb-1 text-base font-bold text-sky-200">나중에 쓰는 함수 g</p>
             <div className="grid grid-cols-2 gap-1.5">
               {G_LIST.map((v, i) => (
                 <button
@@ -813,7 +815,7 @@ function LawsTab() {
                   type="button"
                   onClick={() => { setGi(i); note(fi, i); }}
                   className={
-                    "rounded-lg border-2 px-2 py-1.5 text-[13px] font-bold transition " +
+                    "rounded-lg border-2 px-2 py-1.5 text-base font-bold transition " +
                     (i === gi ? "border-sky-400/70 bg-sky-400/20 text-sky-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                   }
                 >
@@ -824,20 +826,20 @@ function LawsTab() {
           </div>
         </div>
 
-        <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+        <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
           <CompPlane gf={c.gfEval} fg={c.fgEval} x={cx} same={c.same} />
           <div className="space-y-2">
             <div className="space-y-1.5">
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-[14px] leading-8 text-pink-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-lg leading-8 text-pink-100">
                 <Katex expr={`(g \\circ f)(x) = ${c.gfTex}`} />
               </p>
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-[14px] leading-8 text-sky-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-lg leading-8 text-sky-100">
                 <Katex expr={`(f \\circ g)(x) = ${c.fgTex}`} />
               </p>
             </div>
             <Slider label={<Katex expr="x" />} value={cx} min={-5} max={5} step={0.5} onChange={setCx} accent="accent-violet-400" />
             <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-white/10 bg-black/25 py-1">
-              <table className="w-full min-w-[220px] text-center font-mono text-[12px]">
+              <table className="w-full min-w-[220px] text-center font-mono text-lg">
                 <tbody>
                   <tr>
                     <td className="px-2 py-1 font-bold text-pink-300">(g∘f)({cx})</td>
@@ -850,10 +852,10 @@ function LawsTab() {
                 </tbody>
               </table>
             </div>
-            <p className={"rounded-lg px-3 py-2 text-center text-[13px] font-extrabold " + (c.same ? "bg-emerald-400/15 text-emerald-100" : "bg-rose-400/15 text-rose-100")}>
+            <p className={"rounded-lg px-3 py-2 text-center text-base font-extrabold " + (c.same ? "bg-emerald-400/15 text-emerald-100" : "bg-rose-400/15 text-rose-100")}>
               {c.same ? "두 합성이 같아요 (그래프가 포개집니다)" : "두 합성이 달라요"}
             </p>
-            <p className="rounded-lg bg-black/25 px-3 py-2 text-[12px] leading-6 text-slate-300">🔍 {c.note}</p>
+            <p className="rounded-lg bg-black/25 px-3 py-2 text-base leading-8 text-slate-300">🔍 {c.note}</p>
             <GoalList goals={COMM_GOALS} seen={seen} />
           </div>
         </div>
@@ -861,8 +863,8 @@ function LawsTab() {
 
       {/* 결합법칙 */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🔁 묶는 방법을 바꾸면 달라질까?</p>
-        <p className="mt-1 text-[12px] leading-6 text-slate-400">
+        <p className="text-lg font-bold text-slate-100">🔁 묶는 방법을 바꾸면 달라질까?</p>
+        <p className="mt-1 text-base leading-8 text-slate-400">
           왼쪽 원소를 눌러 <b className="text-amber-200">먼저 g∘f 로 묶은 길</b>과 <b className="text-pink-200">먼저 h∘g 로 묶은 길</b>을 견주어 보세요. 도착하는 곳이 같습니다.
         </p>
 
@@ -889,25 +891,25 @@ function LawsTab() {
 
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <div className="rounded-xl border-2 border-amber-400/35 bg-amber-400/8 px-3 py-2.5">
-            <p className="text-[11px] font-bold text-amber-200">먼저 g∘f 로 묶기</p>
-            <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-[13px] leading-8 text-slate-100">
+            <p className="text-base font-bold text-amber-200">먼저 g∘f 로 묶기</p>
+            <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-lg leading-9 text-slate-100">
               <Katex expr={`(h \\circ (g \\circ f))(${A.xs[ai]}) = h(${A.zs[aGf]}) = ${A.ws[aEnd]}`} />
             </p>
           </div>
           <div className="rounded-xl border-2 border-pink-400/35 bg-pink-400/8 px-3 py-2.5">
-            <p className="text-[11px] font-bold text-pink-200">먼저 h∘g 로 묶기</p>
-            <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-[13px] leading-8 text-slate-100">
+            <p className="text-base font-bold text-pink-200">먼저 h∘g 로 묶기</p>
+            <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-lg leading-9 text-slate-100">
               <Katex expr={`((h \\circ g) \\circ f)(${A.xs[ai]}) = (h \\circ g)(${A.ys[A.f[ai]]}) = ${A.ws[aEnd]}`} />
             </p>
           </div>
         </div>
-        <p className="mt-2 rounded-lg bg-emerald-400/12 px-3 py-2 text-center text-[13px] font-bold text-emerald-100">
+        <p className="mt-2 rounded-lg bg-emerald-400/12 px-3 py-2 text-center text-base font-bold text-emerald-100">
           두 길 모두 <span className="font-mono">{A.ws[aEnd]}</span> 에 닿습니다
         </p>
 
         <div className="mt-2 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-          <p className="text-[11px] font-bold text-slate-400">식으로도 확인해 보기</p>
-          <p className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] text-slate-200">
+          <p className="text-base font-bold text-slate-400">식으로도 확인해 보기</p>
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-lg text-slate-200">
             <Katex expr={ASSOC_FN.fTex} />
             <Katex expr={ASSOC_FN.gTex} />
             <Katex expr={ASSOC_FN.hTex} />
@@ -916,7 +918,7 @@ function LawsTab() {
             <Slider label={<Katex expr="x" />} value={ax} min={-5} max={5} step={1} onChange={setAx} accent="accent-emerald-400" />
           </div>
           <div className="mt-1 overflow-x-auto overflow-y-hidden rounded-lg bg-white/5 py-1">
-            <table className="w-full min-w-[260px] text-center font-mono text-[12px]">
+            <table className="w-full min-w-[260px] text-center font-mono text-lg">
               <tbody>
                 <tr>
                   <td className="px-2 py-1 font-bold text-amber-300">h((g∘f)(x))</td>
@@ -941,15 +943,15 @@ function LawsTab() {
       {/* 수의 곱과 견주기 */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">✖️ 수의 곱과 견주어 보기</p>
-          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+          <p className="text-lg font-bold text-slate-100">✖️ 수의 곱과 견주어 보기</p>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-base font-bold text-slate-300">
             {lawDone} / {law.length}
           </span>
         </div>
-        <p className="mt-1 text-[12px] leading-6 text-slate-400">
+        <p className="mt-1 text-base leading-8 text-slate-400">
           함수의 합성을 <b className="text-sky-200">수의 곱</b>으로, 항등함수 <Katex expr="I" /> 를 <b className="text-sky-200">1</b> 로, 영함수 <Katex expr="O" /> 를 <b className="text-sky-200">0</b> 으로 생각해 보세요. 왼쪽은 모두 성립하는데 오른쪽은 어떨까요?
         </p>
-        <div className="mt-2 grid gap-1.5 text-center text-[11px] font-bold sm:grid-cols-2">
+        <div className="mt-2 grid gap-1.5 text-center text-base font-bold sm:grid-cols-2">
           <p className="rounded-lg bg-sky-400/10 py-1 text-sky-200">수의 곱</p>
           <p className="rounded-lg bg-violet-400/10 py-1 text-violet-200">함수의 합성</p>
         </div>
@@ -970,7 +972,7 @@ function LawsTab() {
         </div>
 
         <div className="mt-2 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-          <p className="text-[11px] font-bold text-slate-400">직접 확인해 보기</p>
+          <p className="text-base font-bold text-slate-400">직접 확인해 보기</p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {ZERO_FS.map((v, i) => (
               <button
@@ -978,7 +980,7 @@ function LawsTab() {
                 type="button"
                 onClick={() => setZi(i)}
                 className={
-                  "rounded-lg border-2 px-2.5 py-1.5 text-[13px] font-bold transition " +
+                  "rounded-lg border-2 px-2.5 py-1.5 text-base font-bold transition " +
                   (i === zi ? "border-violet-400/70 bg-violet-400/20 text-violet-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                 }
               >
@@ -987,17 +989,17 @@ function LawsTab() {
             ))}
           </div>
           <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
-            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/10 px-3 py-2 text-center text-[13px] leading-8 text-emerald-100">
+            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/10 px-3 py-2 text-center text-lg leading-9 text-emerald-100">
               <Katex expr={`(f \\circ I)(x) = (I \\circ f)(x) = f(x)`} />
             </p>
-            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/10 px-3 py-2 text-center text-[13px] leading-8 text-emerald-100">
+            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/10 px-3 py-2 text-center text-lg leading-9 text-emerald-100">
               <Katex expr={`(O \\circ f)(x) = 0`} />
             </p>
-            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-rose-400/10 px-3 py-2 text-center text-[13px] leading-8 text-rose-100 sm:col-span-2">
+            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-rose-400/10 px-3 py-2 text-center text-lg leading-9 text-rose-100 sm:col-span-2">
               <Katex expr={`(f \\circ O)(x) = f(0) = ${z0}`} />
             </p>
           </div>
-          <p className="mt-1.5 rounded-lg bg-white/5 px-3 py-2 text-[12px] leading-6 text-slate-300">
+          <p className="mt-1.5 rounded-lg bg-white/5 px-3 py-2 text-base leading-8 text-slate-300">
             ⚠️ <Katex expr={`f \\circ O`} /> 는 값이 늘 <span className="font-mono text-white">{z0}</span> 인 상수함수예요. <span className="font-mono text-white">{z0}</span> 가 0 이 아니니 영함수가 아닙니다. 수에서 <Katex expr="a \times 0 = 0" /> 이던 것이 여기서 갈라집니다.
           </p>
         </div>
@@ -1005,8 +1007,8 @@ function LawsTab() {
 
       {lawDone === law.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 다섯 성질을 모두 가려냈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 다섯 성질을 모두 가려냈어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             함수의 합성은 수의 곱과 꽤 닮았지만 <b className="text-white">교환법칙</b>과 <b className="text-white">f ∘ O</b> 두 군데에서 갈라집니다. 닮은 점만 믿고 순서를 바꾸면 틀리게 되는 까닭이에요.
           </p>
         </div>
@@ -1024,7 +1026,7 @@ function LawsTab() {
  *  · 막대는 valX 앞의 valW 만큼을 비워 두고 끝나므로 금액 글자와 겹치지 않는다.
  *  · 아래 문구는 마지막 줄이 끝난 뒤 충분히 내려 그린다.
  */
-const BAR = { w: 320, h: 136, pad: 10, rowH: 30, barX: 66, barH: 16, valX: 314, valW: 46, lineY: 104, noteY: 122 };
+const BAR = { w: 380, h: 170, pad: 12, rowH: 38, barX: 90, barH: 22, valX: 372, valW: 68, lineY: 130, noteY: 158 };
 const BAR_MAX = BAR.valX - BAR.valW - BAR.barX;
 
 function PriceBars({ x, c }: { x: number; c: Coupon }) {
@@ -1039,23 +1041,23 @@ function PriceBars({ x, c }: { x: number; c: Coupon }) {
   ];
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950/70">
-      <svg viewBox={`0 0 ${BAR.w} ${BAR.h}`} className="mx-auto block w-full max-w-[330px]" role="img" aria-label="두 순서로 계산한 금액 비교 막대">
+      <svg viewBox={`0 0 ${BAR.w} ${BAR.h}`} className="mx-auto block w-full max-w-[400px]" role="img" aria-label="두 순서로 계산한 금액 비교 막대">
         {rows.map((row, i) => {
           const y = BAR.pad + i * BAR.rowH;
           return (
             <g key={row.name}>
-              <text x={BAR.pad} y={y + 15} className="fill-slate-400 text-[10px] font-bold">
+              <text x={BAR.pad} y={y + 21} className="fill-slate-300 text-base font-bold">
                 {row.name}
               </text>
-              <rect x={BAR.barX} y={y + 3} width={bw(row.v)} height={BAR.barH} rx={4} fill={row.color} />
-              <text x={BAR.valX} y={y + 15} textAnchor="end" className="fill-slate-200 font-mono text-[10px] font-bold">
+              <rect x={BAR.barX} y={y + 5} width={bw(row.v)} height={BAR.barH} rx={4} fill={row.color} />
+              <text x={BAR.valX} y={y + 21} textAnchor="end" className="fill-slate-100 font-mono text-base font-bold">
                 {won(row.v)}
               </text>
             </g>
           );
         })}
         <line x1={BAR.barX} y1={BAR.lineY} x2={BAR.valX} y2={BAR.lineY} stroke="rgba(226,232,240,0.15)" strokeWidth={1} />
-        <text x={BAR.w / 2} y={BAR.noteY} textAnchor="middle" className="fill-emerald-300 text-[11px] font-bold">
+        <text x={BAR.w / 2} y={BAR.noteY} textAnchor="middle" className="fill-emerald-300 text-base font-bold">
           정률을 먼저 쓰면 {won(gapOf(c))}원 더 싸다
         </text>
       </svg>
@@ -1068,7 +1070,7 @@ function CouponCard({ q, pick, onPick }: { q: CouponTask; pick: number | undefin
   const right = pick === q.answer;
   return (
     <div className="space-y-2">
-      <p className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-[13px] leading-7 text-slate-100">{q.story}</p>
+      <p className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-lg leading-8 text-slate-100">{q.story}</p>
       <div className={"grid gap-1.5 " + (items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
         {items.map((s, i) => {
           const good = pick === i && i === q.answer;
@@ -1080,7 +1082,7 @@ function CouponCard({ q, pick, onPick }: { q: CouponTask; pick: number | undefin
               onClick={() => onPick(i)}
               disabled={right}
               className={
-                "rounded-xl border-2 px-2.5 py-2 text-left text-[13px] font-bold transition disabled:cursor-default " +
+                "rounded-xl border-2 px-3 py-2.5 text-left text-lg font-bold transition disabled:cursor-default " +
                 (good
                   ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                   : badPick
@@ -1096,9 +1098,9 @@ function CouponCard({ q, pick, onPick }: { q: CouponTask; pick: number | undefin
       </div>
       {pick !== undefined ? (
         right ? (
-          <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {q.why}</p>
+          <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-8 text-emerald-100">✅ {q.why}</p>
         ) : (
-          <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {q.choiceWhy[pick]}</p>
+          <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-base leading-8 text-rose-100">❌ {q.choiceWhy[pick]}</p>
         )
       ) : null}
     </div>
@@ -1131,8 +1133,8 @@ function CouponTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🎟️ 쿠폰 두 장, 어느 것을 먼저 쓸까?</p>
-        <p className="mt-1 text-[12px] leading-6 text-slate-400">
+        <p className="text-lg font-bold text-slate-100">🎟️ 쿠폰 두 장, 어느 것을 먼저 쓸까?</p>
+        <p className="mt-1 text-base leading-8 text-slate-300">
           정액 할인은 <Katex expr="f(x)=x-a" />, 정률 할인은 <Katex expr="g(x)=(1-p)x" /> 예요. 두 순서는 곧 <Katex expr="g \circ f" /> 와 <Katex expr="f \circ g" /> 입니다.
         </p>
 
@@ -1143,7 +1145,7 @@ function CouponTab() {
               type="button"
               onClick={() => { setCi(i); setSeen((s) => [...new Set([...s, "2"])]); }}
               className={
-                "rounded-lg border-2 px-2.5 py-1.5 text-[12px] font-bold transition " +
+                "rounded-lg border-2 px-3 py-2 text-base font-bold transition " +
                 (i === ci ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -1152,7 +1154,7 @@ function CouponTab() {
           ))}
         </div>
 
-        <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
           <div className="space-y-2">
             <PriceBars x={price} c={c} />
             <Slider label="물건값" value={price} min={PRICE.min} max={PRICE.max} step={PRICE.step} onChange={movePrice} accent="accent-emerald-400" show={`${won(price)}원`} />
@@ -1160,29 +1162,29 @@ function CouponTab() {
 
           <div className="space-y-2">
             <div className="space-y-1.5">
-              <div className="rounded-xl border-2 border-amber-400/35 bg-amber-400/8 px-3 py-2">
-                <p className="text-[11px] font-bold text-amber-200">정액 먼저 — 쿠폰을 빼고 나서 할인율 적용</p>
-                <p className="mt-0.5 overflow-x-auto overflow-y-hidden py-1 text-[13px] leading-8 text-slate-100">
+              <div className="rounded-xl border-2 border-amber-400/35 bg-amber-400/8 px-4 py-2.5">
+                <p className="text-base font-bold text-amber-200">정액 먼저 — 쿠폰을 빼고 나서 할인율 적용</p>
+                <p className="mt-0.5 overflow-x-auto overflow-y-hidden py-1 text-xl leading-9 text-slate-100">
                   <Katex expr={`(g \\circ f)(x) = ${1 - rate}(x - ${c.amount})`} />
                 </p>
-                <p className="mt-0.5 font-mono text-[14px] font-bold text-amber-100">{won(a)}원</p>
+                <p className="mt-0.5 font-mono text-2xl font-bold text-amber-100">{won(a)}원</p>
               </div>
-              <div className="rounded-xl border-2 border-emerald-400/35 bg-emerald-400/8 px-3 py-2">
-                <p className="text-[11px] font-bold text-emerald-200">정률 먼저 — 할인율 적용하고 나서 쿠폰을 뺌</p>
-                <p className="mt-0.5 overflow-x-auto overflow-y-hidden py-1 text-[13px] leading-8 text-slate-100">
+              <div className="rounded-xl border-2 border-emerald-400/35 bg-emerald-400/8 px-4 py-2.5">
+                <p className="text-base font-bold text-emerald-200">정률 먼저 — 할인율 적용하고 나서 쿠폰을 뺌</p>
+                <p className="mt-0.5 overflow-x-auto overflow-y-hidden py-1 text-xl leading-9 text-slate-100">
                   <Katex expr={`(f \\circ g)(x) = ${1 - rate}x - ${c.amount}`} />
                 </p>
-                <p className="mt-0.5 font-mono text-[14px] font-bold text-emerald-100">{won(r)}원</p>
+                <p className="mt-0.5 font-mono text-2xl font-bold text-emerald-100">{won(r)}원</p>
               </div>
             </div>
-            <p className="rounded-lg bg-black/25 px-3 py-2 text-center text-[13px] font-extrabold text-slate-100">
+            <p className="rounded-lg bg-black/25 px-3 py-2.5 text-center text-xl font-extrabold text-slate-100">
               차이 <span className="text-emerald-300">{won(gap)}원</span>
-              <span className="ml-2 text-[11px] font-bold text-slate-400">
+              <span className="ml-2 text-base font-bold text-slate-400">
                 = {won(c.amount)} × {c.rate}%
               </span>
             </p>
             <GoalList goals={COUPON_GOALS} seen={seen} />
-            <p className="rounded-lg bg-violet-400/10 px-3 py-2 text-[12px] leading-6 text-violet-100">
+            <p className="rounded-lg bg-violet-400/10 px-3 py-2.5 text-base leading-8 text-violet-100">
               🔍 물건값을 아무리 바꾸어도 차이는 그대로예요. 두 식을 빼 보면 <Katex expr="x" /> 가 사라지고 <Katex expr="a \times p" /> 만 남기 때문입니다.
             </p>
           </div>
@@ -1191,7 +1193,7 @@ function CouponTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🧾 어느 쪽이 이득일까?</p>
+          <p className="text-lg font-bold text-slate-100">🧾 어느 쪽이 이득일까?</p>
           <Chips ids={COUPON_TASKS.map((t) => t.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2">
@@ -1206,8 +1208,8 @@ function CouponTab() {
 
       {doneIds.length === COUPON_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             정률끼리는 곱셈이라, 정액끼리는 뺄셈이라 순서가 상관없어요. <b className="text-white">섞일 때만</b> 순서가 문제가 되고, 그때는 늘 <b className="text-white">정률을 먼저</b> 쓰는 쪽이 (할인권 액수) × (할인율) 만큼 쌉니다.
           </p>
         </div>
@@ -1224,28 +1226,28 @@ function ChainBoxes({ c, reveal }: { c: LifeCase; reveal: boolean }) {
   const tones = ["border-slate-400/40 bg-white/5 text-slate-100", "border-amber-400/50 bg-amber-400/12 text-amber-100", "border-emerald-400/50 bg-emerald-400/12 text-emerald-100"];
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 p-3">
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         {cells.map((v, i) => (
-          <div key={c.boxes[i]} className="flex items-center gap-1.5">
+          <div key={c.boxes[i]} className="flex items-center gap-2">
             {i > 0 ? (
               <div className="flex flex-col items-center px-0.5">
-                <span className="font-mono text-[11px] font-bold italic text-slate-400">{i === 1 ? "f" : "g"}</span>
-                <span className="text-[15px] leading-4 text-slate-500">→</span>
+                <span className="font-mono text-lg font-bold italic text-slate-300">{i === 1 ? "f" : "g"}</span>
+                <span className="text-2xl leading-5 text-slate-400">→</span>
               </div>
             ) : null}
-            <div className={"min-w-[84px] rounded-xl border-2 px-2.5 py-2 text-center " + tones[i]}>
-              <p className="text-[10px] font-bold opacity-70">{c.boxes[i]}</p>
-              <p className="mt-0.5 font-mono text-[14px] font-bold">{v}</p>
+            <div className={"min-w-[124px] rounded-xl border-2 px-4 py-2.5 text-center " + tones[i]}>
+              <p className="text-base font-bold opacity-80">{c.boxes[i]}</p>
+              <p className="mt-1 font-mono text-2xl font-bold">{v}</p>
             </div>
           </div>
         ))}
       </div>
-      <div className="mt-2 grid gap-1 text-[11px] leading-6 text-slate-400 sm:grid-cols-2">
+      <div className="mt-3 grid gap-1 text-base leading-8 text-slate-300 sm:grid-cols-2">
         <p>
-          <span className="font-mono font-bold italic text-slate-300">f</span> · {c.fName}
+          <span className="font-mono font-bold italic text-white">f</span> · {c.fName}
         </p>
         <p>
-          <span className="font-mono font-bold italic text-slate-300">g</span> · {c.gName}
+          <span className="font-mono font-bold italic text-white">g</span> · {c.gName}
         </p>
       </div>
     </div>
@@ -1258,8 +1260,8 @@ function LifeCard({ c, pick, swapPick, onPick, onSwap }: { c: LifeCase; pick: nu
 
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-bold leading-7 text-slate-100">
-        <span className="mr-1.5 text-lg">{c.icon}</span>
+      <p className="text-xl font-bold leading-8 text-slate-100">
+        <span className="mr-2 text-2xl">{c.icon}</span>
         {c.title}
       </p>
 
@@ -1271,13 +1273,14 @@ function LifeCard({ c, pick, swapPick, onPick, onSwap }: { c: LifeCase; pick: nu
           links={[L1_DIA.f, L1_DIA.g]}
           dots={right ? [[0, 1], [1, L1_DIA.f[1]], [2, L1_DIA.g[L1_DIA.f[1]]]] : [[0, 1]]}
           composite={right ? { from: 0, to: 2, label: "g∘f", color: "#34d399" } : null}
-          fontPx={12}
+          fontPx={16}
+          maxW="max-w-[600px]"
         />
       ) : (
         <ChainBoxes c={c} reveal={right} />
       )}
 
-      <p className="text-center text-[13px] font-bold text-slate-100">
+      <p className="text-center text-lg font-bold text-slate-100">
         <Katex expr="g \circ f" /> 로 <span className="font-mono text-cyan-200">{c.input}</span> 을(를) 보내면?
       </p>
       <div className="grid gap-1.5 sm:grid-cols-2">
@@ -1291,7 +1294,7 @@ function LifeCard({ c, pick, swapPick, onPick, onSwap }: { c: LifeCase; pick: nu
               onClick={() => onPick(i)}
               disabled={right}
               className={
-                "rounded-xl border-2 px-2.5 py-2 text-left text-[13px] font-bold transition disabled:cursor-default " +
+                "rounded-xl border-2 px-3 py-2.5 text-left text-lg font-bold transition disabled:cursor-default " +
                 (good
                   ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                   : badPick
@@ -1307,17 +1310,17 @@ function LifeCard({ c, pick, swapPick, onPick, onSwap }: { c: LifeCase; pick: nu
       </div>
       {pick !== undefined ? (
         right ? (
-          <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {c.why}</p>
+          <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-8 text-emerald-100">✅ {c.why}</p>
         ) : (
-          <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {c.choiceWhy[pick]}</p>
+          <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-base leading-8 text-rose-100">❌ {c.choiceWhy[pick]}</p>
         )
       ) : null}
 
       <div className={"rounded-xl border-2 p-3 transition " + (right ? "border-white/10 bg-slate-900/40" : "pointer-events-none border-white/10 bg-slate-900/40 opacity-40")}>
-        <p className="text-[13px] font-bold text-slate-100">
+        <p className="text-lg font-bold text-slate-100">
           그럼 <Katex expr="f \circ g" /> 로 순서를 바꾸면 어떻게 될까요?
         </p>
-        {!right ? <p className="mt-1 text-[11px] text-slate-500">앞 문제를 맞히면 열려요.</p> : null}
+        {!right ? <p className="mt-1 text-base text-slate-400">앞 문제를 맞히면 열려요.</p> : null}
         <div className="mt-1.5 grid gap-1.5 sm:grid-cols-3">
           {SWAP_CHOICES.map((s, i) => {
             const good = swapPick === i && i === c.swap;
@@ -1329,7 +1332,7 @@ function LifeCard({ c, pick, swapPick, onPick, onSwap }: { c: LifeCase; pick: nu
                 onClick={() => onSwap(i)}
                 disabled={swapRight}
                 className={
-                  "rounded-xl border-2 px-2 py-2 text-[12px] font-bold transition disabled:cursor-default " +
+                  "rounded-xl border-2 px-2 py-2.5 text-base font-bold transition disabled:cursor-default " +
                   (good
                     ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                     : badPick
@@ -1342,9 +1345,9 @@ function LifeCard({ c, pick, swapPick, onPick, onSwap }: { c: LifeCase; pick: nu
             );
           })}
         </div>
-        {swapRight ? <p className="mt-1.5 rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {c.swapWhy}</p> : null}
+        {swapRight ? <p className="mt-1.5 rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-8 text-emerald-100">✅ {c.swapWhy}</p> : null}
         {swapPick !== undefined && !swapRight ? (
-          <p className="mt-1.5 rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">
+          <p className="mt-1.5 rounded-lg bg-rose-400/10 px-3 py-2 text-base leading-8 text-rose-100">
             ❌ 다시 생각해 보세요. <b>g 가 내놓는 것을 f 에 넣을 수 있는지</b>부터 따지고, 넣을 수 있다면 값을 실제로 셈해 견주면 됩니다.
           </p>
         ) : null}
@@ -1366,7 +1369,7 @@ function LifeTab() {
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🏭 일상생활에서 두 번 거쳐 가는 일 찾기</p>
+          <p className="text-lg font-bold text-slate-100">🏭 일상생활에서 두 번 거쳐 가는 일 찾기</p>
           <Chips ids={LIFE_CASES.map((q) => q.id)} cur={ci} done={done} onPick={setCi} />
         </div>
         <div className="mt-2">
@@ -1387,8 +1390,8 @@ function LifeTab() {
 
       {done.length === LIFE_CASES.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여덟 사례를 모두 살폈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여덟 사례를 모두 살폈어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             순서를 바꾸었을 때는 <b className="text-white">셋 중 하나</b>가 일어납니다. 값이 같거나, 값이 달라지거나, 아예 넣을 수 없어 합성 자체가 안 되거나. 마지막 경우가 바로 <b className="text-white">치역과 정의역이 맞지 않는</b> 때예요.
           </p>
         </div>
