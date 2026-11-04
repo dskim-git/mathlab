@@ -205,7 +205,7 @@ function CurveChart({ c, x }: { c: MarketCase; x: number }) {
           {ticks.map((r) => (
             <g key={`y${r}`}>
               <line x1={PL} y1={Y(r * qMax)} x2={CW - PR} y2={Y(r * qMax)} stroke="rgba(148,163,184,0.15)" strokeWidth={0.8} />
-              <text x={PL - 6} y={Y(r * qMax)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={PL - 6} y={Y(r * qMax)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {Math.round(r * qMax).toLocaleString("ko-KR")}
               </text>
             </g>
@@ -213,7 +213,7 @@ function CurveChart({ c, x }: { c: MarketCase; x: number }) {
           {ticks.map((r) => (
             <g key={`x${r}`}>
               <line x1={X(r * c.xMax)} y1={PT} x2={X(r * c.xMax)} y2={CH - PB} stroke="rgba(148,163,184,0.12)" strokeWidth={0.8} />
-              <text x={X(r * c.xMax)} y={CH - PB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={X(r * c.xMax)} y={CH - PB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {fmt(r * c.xMax, 1)}
               </text>
             </g>
@@ -399,10 +399,10 @@ function MarketTab({ side }: { side: Side }) {
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
         <p className="text-sm font-bold text-slate-200">🔢 가격에 따른 {isD ? "수요량" : "공급량"}</p>
         <div className="mt-2 overflow-x-auto overflow-y-hidden">
-          <table className="w-full min-w-[380px] border-collapse text-center font-mono text-xs">
+          <table className="w-full min-w-[380px] border-collapse text-center font-mono text-sm">
             <tbody>
               <tr>
-                <th className="border border-white/10 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-slate-400">
+                <th className="border border-white/10 bg-white/5 px-2 py-1.5 text-xs font-bold text-slate-400">
                   가격 ({c.priceUnit})
                 </th>
                 {c.table.map((p) => (
@@ -418,7 +418,7 @@ function MarketTab({ side }: { side: Side }) {
                 ))}
               </tr>
               <tr>
-                <th className={"border border-white/10 px-2 py-1.5 text-[10px] font-bold " + (isD ? "bg-emerald-400/10 text-emerald-200" : "bg-sky-400/10 text-sky-200")}>
+                <th className={"border border-white/10 px-2 py-1.5 text-xs font-bold " + (isD ? "bg-emerald-400/10 text-emerald-200" : "bg-sky-400/10 text-sky-200")}>
                   {isD ? "수요량" : "공급량"} ({c.qtyUnit})
                 </th>
                 {c.table.map((p) => (
@@ -840,7 +840,7 @@ function ProblemTab() {
           </div>
           {prob.table ? (
             <div className="overflow-x-auto overflow-y-hidden">
-              <table className="w-full min-w-[200px] border-collapse text-center text-xs">
+              <table className="w-full min-w-[200px] border-collapse text-center text-sm">
                 <thead>
                   <tr>
                     {prob.table.head.map((h) => (
@@ -868,7 +868,7 @@ function ProblemTab() {
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           {prob.given.map((gv) => (
             <div key={gv.label} className="rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-3 py-2">
-              <p className="text-[11px] text-slate-400">{gv.label}</p>
+              <p className="text-xs text-slate-300">{gv.label}</p>
               <p className="mt-0.5 text-sm font-bold text-sky-100">{gv.value}</p>
             </div>
           ))}
@@ -984,7 +984,7 @@ function ProblemTab() {
                       <button
                         type="button"
                         onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
@@ -992,16 +992,16 @@ function ProblemTab() {
                         <button
                           type="button"
                           onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                         >
                           정답 보기
                         </button>
                       ) : null}
                       {ss.hint ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span>
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span>
                       ) : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number"

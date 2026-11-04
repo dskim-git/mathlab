@@ -274,7 +274,7 @@ function TwoPointTab() {
               {Array.from({ length: GX_MAX + 1 }, (_, i) => (
                 <g key={`gx${i}`}>
                   <line x1={X(i)} y1={T1} x2={X(i)} y2={H1 - B1} stroke="rgba(148,163,184,0.13)" strokeWidth={0.8} />
-                  <text x={X(i)} y={H1 - B1 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+                  <text x={X(i)} y={H1 - B1 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                     {i}
                   </text>
                 </g>
@@ -283,7 +283,7 @@ function TwoPointTab() {
                 <g key={`gy${i}`}>
                   <line x1={L1} y1={Y(i)} x2={W1 - R1} y2={Y(i)} stroke="rgba(148,163,184,0.13)" strokeWidth={0.8} />
                   {i % 2 === 0 ? (
-                    <text x={L1 - 6} y={Y(i)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+                    <text x={L1 - 6} y={Y(i)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                       {i}
                     </text>
                   ) : null}
@@ -406,13 +406,13 @@ function TwoPointTab() {
                 setGraded(false);
                 setAns({});
               }}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               {quiz ? "👀 값 보기" : "🙈 가리고 직접 채우기"}
             </button>
           </div>
           <div className="mt-2 overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[420px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[420px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 font-bold text-sky-50">가격 x</th>
@@ -452,7 +452,7 @@ function TwoPointTab() {
                               : "border-white/15 text-slate-100 focus:border-violet-300")
                           }
                         />
-                        {graded && !hit ? <p className="mt-0.5 font-mono text-[10px] text-emerald-200">{fmt(want, 3)}</p> : null}
+                        {graded && !hit ? <p className="mt-0.5 font-mono text-xs text-emerald-200">{fmt(want, 3)}</p> : null}
                       </td>
                     );
                   })}
@@ -579,7 +579,7 @@ function LsqTab() {
             <p className="text-[11px] text-slate-400">(a는 상수)</p>
           </div>
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[240px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[240px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 font-bold text-sky-50">
@@ -622,7 +622,7 @@ function LsqTab() {
                 {[0, 0.25, 0.5, 0.75, 1].map((r) => (
                   <g key={`y${r}`}>
                     <line x1={L2} y1={Y(yLo + r * (yHi - yLo))} x2={W2 - R2} y2={Y(yLo + r * (yHi - yLo))} stroke="rgba(148,163,184,0.14)" strokeWidth={0.8} />
-                    <text x={L2 - 6} y={Y(yLo + r * (yHi - yLo))} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+                    <text x={L2 - 6} y={Y(yLo + r * (yHi - yLo))} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                       {fmt(yLo + r * (yHi - yLo), 0)}
                     </text>
                   </g>
@@ -630,7 +630,7 @@ function LsqTab() {
                 {Array.from({ length: xMax + 1 }, (_, i) => (
                   <g key={`x${i}`}>
                     <line x1={X(i)} y1={T2} x2={X(i)} y2={H2 - B2} stroke="rgba(148,163,184,0.12)" strokeWidth={0.8} />
-                    <text x={X(i)} y={H2 - B2 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+                    <text x={X(i)} y={H2 - B2 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                       {i}
                     </text>
                   </g>
@@ -681,7 +681,7 @@ function LsqTab() {
                 {[0, 0.25, 0.5, 0.75, 1].map((r) => (
                   <g key={`cy${r}`}>
                     <line x1={L2} y1={CY(r * cHi)} x2={W2 - R2} y2={CY(r * cHi)} stroke="rgba(148,163,184,0.14)" strokeWidth={0.8} />
-                    <text x={L2 - 6} y={CY(r * cHi)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+                    <text x={L2 - 6} y={CY(r * cHi)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                       {fmt(r * cHi, 0)}
                     </text>
                   </g>
@@ -691,7 +691,7 @@ function LsqTab() {
                   return (
                     <g key={`cx${r}`}>
                       <line x1={CX(v)} y1={T2} x2={CX(v)} y2={H2 - B2} stroke="rgba(148,163,184,0.12)" strokeWidth={0.8} />
-                      <text x={CX(v)} y={H2 - B2 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+                      <text x={CX(v)} y={H2 - B2 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                         {fmt(v, 1)}
                       </text>
                     </g>
@@ -764,11 +764,11 @@ function LsqTab() {
           </div>
 
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[280px] border-collapse text-center font-mono text-xs">
+            <table className="w-full min-w-[280px] border-collapse text-center font-mono text-sm">
               <thead>
                 <tr>
                   {["가격", "실제", "예측", "차", "차²"].map((h) => (
-                    <th key={h} className="border border-white/10 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-slate-400">
+                    <th key={h} className="border border-white/10 bg-white/5 px-2 py-1.5 text-xs font-bold text-slate-400">
                       {h}
                     </th>
                   ))}
@@ -789,7 +789,7 @@ function LsqTab() {
                   );
                 })}
                 <tr>
-                  <td colSpan={4} className="border border-white/10 bg-white/5 px-2 py-1.5 text-right text-[10px] font-bold text-slate-400">
+                  <td colSpan={4} className="border border-white/10 bg-white/5 px-2 py-1.5 text-right text-xs font-bold text-slate-400">
                     합계 C
                   </td>
                   <td className="border border-white/10 bg-rose-400/15 px-2 py-1.5 font-bold text-rose-100">{fmt(C, 2)}</td>
@@ -906,7 +906,7 @@ function ProblemTab() {
         {prob.tex ? <FormulaLine expr={prob.tex} className="mt-1 text-slate-100" /> : null}
         {prob.table ? (
           <div className="mt-2 overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[280px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[280px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   {prob.table.head.map((h, i) => (
@@ -1051,7 +1051,7 @@ function ProblemTab() {
                       <button
                         type="button"
                         onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
@@ -1059,16 +1059,16 @@ function ProblemTab() {
                         <button
                           type="button"
                           onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                         >
                           정답 보기
                         </button>
                       ) : null}
                       {ss.hint ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span>
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span>
                       ) : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number"

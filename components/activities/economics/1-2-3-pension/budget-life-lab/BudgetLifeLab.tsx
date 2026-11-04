@@ -460,7 +460,7 @@ function SavingTab({ plans, added }: { plans: AllPlans; added: string[] }) {
           <p className="text-emerald-200">= a × {factor.toFixed(2)}</p>
         </div>
         <button type="button" onClick={() => setExact((v) => !v)}
-          className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10">
+          className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10">
           {exact ? "교과서 어림값(1.005¹²⁰ = 1.82)으로 보기" : "정확한 값(1.005¹²⁰ = 1.819397…)으로 보기"}
         </button>
       </div>

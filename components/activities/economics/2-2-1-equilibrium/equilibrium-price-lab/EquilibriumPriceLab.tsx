@@ -524,10 +524,10 @@ function EqTab() {
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
         <p className="text-sm font-bold text-slate-200">🔢 가격에 따른 수요량과 공급량</p>
         <div className="mt-2 overflow-x-auto overflow-y-hidden">
-          <table className="w-full min-w-[420px] border-collapse text-center font-mono text-xs">
+          <table className="w-full min-w-[420px] border-collapse text-center font-mono text-sm">
             <tbody>
               <tr>
-                <th className="border border-white/15 bg-blue-600/70 px-2 py-1.5 text-[10px] font-bold text-white">
+                <th className="border border-white/15 bg-blue-600/70 px-2 py-1.5 text-xs font-bold text-white">
                   가격 ({m.priceUnit})
                 </th>
                 {ticks.map((t) => (
@@ -543,7 +543,7 @@ function EqTab() {
                 ))}
               </tr>
               <tr>
-                <th className="border border-white/15 px-2 py-1.5 text-[10px] font-bold text-pink-100" style={{ background: "rgba(244,114,182,0.18)" }}>
+                <th className="border border-white/15 px-2 py-1.5 text-xs font-bold text-pink-100" style={{ background: "rgba(244,114,182,0.18)" }}>
                   수요량
                 </th>
                 {ticks.map((t) => (
@@ -553,7 +553,7 @@ function EqTab() {
                 ))}
               </tr>
               <tr>
-                <th className="border border-white/15 px-2 py-1.5 text-[10px] font-bold text-emerald-100" style={{ background: "rgba(52,211,153,0.18)" }}>
+                <th className="border border-white/15 px-2 py-1.5 text-xs font-bold text-emerald-100" style={{ background: "rgba(52,211,153,0.18)" }}>
                   공급량
                 </th>
                 {ticks.map((t) => (
@@ -563,7 +563,7 @@ function EqTab() {
                 ))}
               </tr>
               <tr>
-                <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-slate-300">차이</th>
+                <th className="border border-white/15 bg-white/5 px-2 py-1.5 text-xs font-bold text-slate-300">차이</th>
                 {ticks.map((t) => {
                   const g = qs(m, t) - qd(m, t);
                   return (
@@ -800,7 +800,7 @@ function EventGame() {
               setQ1(null);
               setQ2(null);
             }}
-            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
           >
             ↩️ 다시
           </button>
@@ -1073,7 +1073,7 @@ function ProblemTab() {
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {prob.texList.map((t) => (
               <div key={t.label} className="rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-3 py-2">
-                <p className="text-[11px] font-bold text-sky-200">{t.label}</p>
+                <p className="text-xs font-bold text-sky-200">{t.label}</p>
                 <div className="overflow-x-auto overflow-y-hidden py-0.5 text-slate-100">
                   <Katex expr={t.tex} />
                 </div>
@@ -1192,7 +1192,7 @@ function ProblemTab() {
                       <button
                         type="button"
                         onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
@@ -1200,16 +1200,16 @@ function ProblemTab() {
                         <button
                           type="button"
                           onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                         >
                           정답 보기
                         </button>
                       ) : null}
                       {ss.hint ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span>
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span>
                       ) : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number"

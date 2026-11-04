@@ -1117,10 +1117,10 @@ function RuleTab() {
                       <button type="button" onClick={() => check(c.id, c.answer)}
                         className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/25">확인</button>
                       <button type="button" onClick={() => toggleHint(c.id)}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10">
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10">
                         💡 힌트 {st.hint ? "닫기" : "보기"}
                       </button>
-                      {st.hint ? <span className="rounded-lg bg-black/25 px-2.5 py-1 font-mono text-[11px] text-slate-300">{c.hint}</span> : null}
+                      {st.hint ? <span className="rounded-lg bg-black/25 px-3 py-1.5 font-mono text-sm leading-6 text-slate-200">{c.hint}</span> : null}
                     </>
                   ) : null}
                 </div>

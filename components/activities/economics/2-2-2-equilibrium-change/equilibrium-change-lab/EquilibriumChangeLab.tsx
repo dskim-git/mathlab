@@ -246,7 +246,7 @@ function ShiftChart({
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`y${r}`}>
               <line x1={PL} y1={Y(r * qTop)} x2={W - PR} y2={Y(r * qTop)} stroke="rgba(148,163,184,0.11)" strokeWidth={0.8} />
-              <text x={PL - 6} y={Y(r * qTop)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={PL - 6} y={Y(r * qTop)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {Math.round(r * qTop)}
               </text>
             </g>
@@ -254,7 +254,7 @@ function ShiftChart({
           {[0, 0.25, 0.5, 0.75, 1].map((r) => (
             <g key={`x${r}`}>
               <line x1={X(r * m.xMax)} y1={PT} x2={X(r * m.xMax)} y2={H - PB} stroke="rgba(148,163,184,0.1)" strokeWidth={0.8} />
-              <text x={X(r * m.xMax)} y={H - PB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+              <text x={X(r * m.xMax)} y={H - PB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                 {fmt(r * m.xMax, 0)}
               </text>
             </g>
@@ -706,7 +706,7 @@ function CardGame({ side, cards }: { side: "demand" | "supply"; cards: Card[] })
                 setQ1(null);
                 setQ2(null);
               }}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               ↩️ 다시
             </button>
@@ -953,7 +953,7 @@ function ProblemTab() {
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
             {prob.texList.map((t) => (
               <div key={t.label} className="rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-3 py-2">
-                <p className="text-[11px] font-bold text-sky-200">{t.label}</p>
+                <p className="text-xs font-bold text-sky-200">{t.label}</p>
                 <div className="overflow-x-auto overflow-y-hidden py-0.5 text-slate-100">
                   <Katex expr={t.tex} />
                 </div>
@@ -1072,7 +1072,7 @@ function ProblemTab() {
                       <button
                         type="button"
                         onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
@@ -1080,16 +1080,16 @@ function ProblemTab() {
                         <button
                           type="button"
                           onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                         >
                           정답 보기
                         </button>
                       ) : null}
                       {ss.hint ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span>
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span>
                       ) : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number"

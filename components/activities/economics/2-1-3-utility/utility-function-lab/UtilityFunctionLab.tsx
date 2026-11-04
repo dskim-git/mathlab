@@ -260,7 +260,7 @@ function FnTab() {
                 {[0, 0.25, 0.5, 0.75, 1].map((r) => (
                   <g key={`y${r}`}>
                     <line x1={PL} y1={Y(yLo + r * (yHi - yLo))} x2={W - PR} y2={Y(yLo + r * (yHi - yLo))} stroke="rgba(148,163,184,0.14)" strokeWidth={0.8} />
-                    <text x={PL - 6} y={Y(yLo + r * (yHi - yLo))} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+                    <text x={PL - 6} y={Y(yLo + r * (yHi - yLo))} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                       {fmt(yLo + r * (yHi - yLo), 1)}
                     </text>
                   </g>
@@ -268,7 +268,7 @@ function FnTab() {
                 {ints.map((i) => (
                   <g key={`x${i}`}>
                     <line x1={X(i)} y1={PT} x2={X(i)} y2={H - PB} stroke="rgba(148,163,184,0.1)" strokeWidth={0.7} />
-                    <text x={X(i)} y={H - PB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+                    <text x={X(i)} y={H - PB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                       {i}
                     </text>
                   </g>
@@ -334,7 +334,7 @@ function FnTab() {
             <table className="w-full min-w-[320px] border-collapse text-center font-mono text-xs">
               <tbody>
                 <tr>
-                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-[10px] font-bold text-sky-50">
+                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-xs font-bold text-sky-50">
                     x ({c.unit})
                   </th>
                   {ints.map((i) => (
@@ -350,7 +350,7 @@ function FnTab() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-[10px] font-bold text-sky-50">U</th>
+                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-xs font-bold text-sky-50">U</th>
                   {ints.map((i) => (
                     <td
                       key={i}
@@ -540,7 +540,7 @@ function MuTab() {
             <table className="w-full min-w-[320px] border-collapse text-center font-mono text-xs">
               <tbody>
                 <tr>
-                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-[10px] font-bold text-sky-50">n</th>
+                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-xs font-bold text-sky-50">n</th>
                   {ints.map((i) => (
                     <td key={i} className={"border border-white/15 px-1.5 py-1.5 font-bold " + (i === n ? "bg-amber-400/25 text-amber-100" : "bg-white/5 text-slate-300")}>
                       {i}
@@ -548,7 +548,7 @@ function MuTab() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="border border-white/15 bg-emerald-500/20 px-2 py-1.5 text-[10px] font-bold text-emerald-100">U</th>
+                  <th className="border border-white/15 bg-emerald-500/20 px-2 py-1.5 text-xs font-bold text-emerald-100">U</th>
                   {ints.map((i) => (
                     <td key={i} className={"border border-white/15 px-1.5 py-1.5 " + (i === n ? "bg-amber-400/25 font-bold text-amber-100" : "text-slate-300")}>
                       {fmt(uOf(c, i), 1)}
@@ -556,7 +556,7 @@ function MuTab() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="border border-white/15 bg-pink-500/20 px-2 py-1.5 text-[10px] font-bold text-pink-100">MU</th>
+                  <th className="border border-white/15 bg-pink-500/20 px-2 py-1.5 text-xs font-bold text-pink-100">MU</th>
                   <td className="border border-white/15 px-1.5 py-1.5 text-slate-600">—</td>
                   {ints.slice(1).map((i) => (
                     <td
@@ -855,7 +855,7 @@ function DrawTab() {
               {Array.from({ length: DRAW_UMAX + 1 }, (_, i) => (
                 <g key={`gy${i}`}>
                   <line x1={DL} y1={Y(i)} x2={DW - DR} y2={Y(i)} stroke="rgba(148,163,184,0.13)" strokeWidth={0.8} />
-                  <text x={DL - 6} y={Y(i)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+                  <text x={DL - 6} y={Y(i)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                     {i}
                   </text>
                 </g>
@@ -863,7 +863,7 @@ function DrawTab() {
               {Array.from({ length: DRAW_NMAX + 1 }, (_, i) => (
                 <g key={`gx${i}`}>
                   <line x1={X(i)} y1={DT} x2={X(i)} y2={DH - DB} stroke="rgba(148,163,184,0.13)" strokeWidth={0.8} />
-                  <text x={X(i)} y={DH - DB + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+                  <text x={X(i)} y={DH - DB + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
                     {i}
                   </text>
                 </g>
@@ -914,7 +914,7 @@ function DrawTab() {
             <button
               type="button"
               onClick={() => setVals(Array(DRAW_NMAX + 1).fill(null))}
-              className="ml-auto rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="ml-auto rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
             >
               ↩️ 지우기
             </button>
@@ -933,10 +933,10 @@ function DrawTab() {
 
         <div className="space-y-2">
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[300px] border-collapse text-center font-mono text-xs">
+            <table className="w-full min-w-[300px] border-collapse text-center font-mono text-sm">
               <tbody>
                 <tr>
-                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-[10px] font-bold text-sky-50">
+                  <th className="border border-white/15 bg-sky-500/25 px-2 py-1.5 text-xs font-bold text-sky-50">
                     {it.name} ({it.unit})
                   </th>
                   {Array.from({ length: DRAW_NMAX + 1 }, (_, i) => (
@@ -946,7 +946,7 @@ function DrawTab() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="border border-white/15 bg-emerald-500/20 px-2 py-1.5 text-[10px] font-bold text-emerald-100">효용 U</th>
+                  <th className="border border-white/15 bg-emerald-500/20 px-2 py-1.5 text-xs font-bold text-emerald-100">효용 U</th>
                   {mine.map((v, i) => (
                     <td key={i} className={"border border-white/15 px-1.5 py-1.5 " + (v === null ? "text-slate-600" : "text-emerald-100")}>
                       {v === null ? "?" : fmt(v, 1)}
@@ -954,7 +954,7 @@ function DrawTab() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="border border-white/15 bg-pink-500/20 px-2 py-1.5 text-[10px] font-bold text-pink-100">MU</th>
+                  <th className="border border-white/15 bg-pink-500/20 px-2 py-1.5 text-xs font-bold text-pink-100">MU</th>
                   <td className="border border-white/15 px-1.5 py-1.5 text-slate-600">—</td>
                   {Array.from({ length: DRAW_NMAX }, (_, i) => {
                     const a = mine[i],
@@ -1099,7 +1099,7 @@ function ProblemTab() {
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {prob.texList.map((t) => (
               <div key={t.label} className="rounded-xl border border-sky-400/25 bg-sky-400/[0.07] px-3 py-2">
-                <p className="text-[11px] font-bold text-sky-200">{t.label}</p>
+                <p className="text-xs font-bold text-sky-200">{t.label}</p>
                 <div className="overflow-x-auto overflow-y-hidden py-0.5 text-slate-100">
                   <Katex expr={t.tex} />
                 </div>
@@ -1109,7 +1109,7 @@ function ProblemTab() {
         ) : null}
         {prob.table ? (
           <div className="mt-2 overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[300px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[300px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   {prob.table.head.map((h, i) => (
@@ -1254,7 +1254,7 @@ function ProblemTab() {
                       <button
                         type="button"
                         onClick={() => update(step.id, { hint: !ss.hint })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         💡 힌트 {ss.hint ? "닫기" : "보기"}
                       </button>
@@ -1262,16 +1262,16 @@ function ProblemTab() {
                         <button
                           type="button"
                           onClick={() => update(step.id, { shown: true })}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                         >
                           정답 보기
                         </button>
                       ) : null}
                       {ss.hint ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span>
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span>
                       ) : null}
                       {ss.shown ? (
-                        <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                        <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                           정답:{" "}
                           <b className="font-mono text-emerald-200">
                             {step.kind === "number"

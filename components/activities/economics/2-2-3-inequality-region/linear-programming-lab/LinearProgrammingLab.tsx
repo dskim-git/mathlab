@@ -226,12 +226,12 @@ function Plane({
         </g>
 
         {gx.filter((v) => v !== 0 && v % tick === 0).map((v) => (
-          <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="monospace">
+          <text key={`tx${v}`} x={X(v)} y={y0 + 13} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
             {v}
           </text>
         ))}
         {gy.filter((v) => v !== 0 && v % tick === 0).map((v) => (
-          <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#64748b" fontSize={9} fontFamily="monospace">
+          <text key={`ty${v}`} x={x0 - 6} y={Y(v)} dy={3} textAnchor="end" fill="#94a3b8" fontSize={9} fontFamily="monospace">
             {v}
           </text>
         ))}
@@ -282,12 +282,12 @@ function CornerTable({
 }) {
   return (
     <div className="overflow-x-auto overflow-y-hidden">
-      <table className="w-full min-w-[280px] border-collapse text-center text-xs">
+      <table className="w-full min-w-[280px] border-collapse text-center text-sm">
         <tbody>
           <tr>
             <th className="w-20 border border-white/15 bg-blue-600/70 px-2 py-1.5 font-bold text-white">꼭짓점</th>
             {corners.map((c, i) => (
-              <td key={i} className="border border-white/15 px-2 py-1.5 font-mono text-[11px] text-violet-100">
+              <td key={i} className="border border-white/15 px-2 py-1.5 font-mono text-xs text-violet-100">
                 ({c[0]}, {c[1]})
               </td>
             ))}
@@ -360,7 +360,7 @@ function SetupTab() {
         </p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[220px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[220px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   <th className="border border-white/15 bg-slate-800 px-2 py-1.5 font-bold text-slate-200">(단위: 천원)</th>
@@ -716,7 +716,7 @@ function ProfitTab() {
                 <button
                   type="button"
                   onClick={() => setK(best.value)}
-                  className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                  className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                 >
                   최대로 밀기
                 </button>
@@ -790,7 +790,7 @@ function CostTab() {
         </p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[240px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[240px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   <th className="border border-white/15 bg-slate-800 px-2 py-1.5 font-bold text-slate-200">한 봉에</th>
@@ -908,7 +908,7 @@ function CostTab() {
                 <button
                   type="button"
                   onClick={() => setK(lo.value)}
-                  className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                  className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                 >
                   최소로 밀기
                 </button>
@@ -1041,7 +1041,7 @@ function DrillTab() {
         <p className="mt-1.5 text-sm leading-7 text-slate-300">{d.scenario}</p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full min-w-[240px] border-collapse text-center text-xs">
+            <table className="w-full min-w-[240px] border-collapse text-center text-sm">
               <tbody>
                 <tr>
                   {d.tableHead.map((h, i) => (
@@ -1283,7 +1283,7 @@ function StepList({
                     <button
                       type="button"
                       onClick={() => update(step.id, { hint: !ss.hint })}
-                      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                     >
                       💡 힌트 {ss.hint ? "닫기" : "보기"}
                     </button>
@@ -1291,14 +1291,14 @@ function StepList({
                       <button
                         type="button"
                         onClick={() => update(step.id, { shown: true })}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-slate-400 transition hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10"
                       >
                         정답 보기
                       </button>
                     ) : null}
-                    {ss.hint ? <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">{step.hint}</span> : null}
+                    {ss.hint ? <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">{step.hint}</span> : null}
                     {ss.shown ? (
-                      <span className="rounded-lg bg-black/25 px-2.5 py-1 text-[11px] text-slate-300">
+                      <span className="rounded-lg bg-black/25 px-3 py-1.5 text-sm leading-6 text-slate-200">
                         정답:{" "}
                         <b className="font-mono text-emerald-200">
                           {step.kind === "number"
