@@ -798,7 +798,8 @@ function DetectTab() {
         <SignTable cuts={q.cuts} signs={signs} vals={vals} kinds={kinds} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* 눈금 숫자가 풀이 근거라 4열(약 250px)에서는 너무 작다 — 2열, 폭을 묶어 그래프 하나 약 370px */}
+      <div className="mx-auto grid max-w-3xl gap-3 sm:grid-cols-2">
         {q.options.map((o, i) => {
           const box = fitBox(o.c, o.from, o.to);
           const chosen = pick === i;

@@ -562,8 +562,8 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
 const PS = 330;
 const PML = 40;
 const PMR = 14;
-const PMT = 14;
-const PMB = 28;
+const PMT = 18;
+const PMB = 30;
 const DEMAND = "#38bdf8";
 const SUPPLY = "#fbbf24";
 
@@ -613,19 +613,19 @@ function MarketPlane({
         <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.06)" />
       ))}
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 13} textAnchor="middle" fontSize="9" fill="#64748b">
+        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
           {v}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={PML - 5} y={Y(v) + 3} textAnchor="end" fontSize="9" fill="#64748b">
+        <text key={`ty${v}`} x={PML - 5} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
           {v}
         </text>
       ))}
-      <text x={PS - PMR} y={PS - 4} textAnchor="end" fontSize="9" fill="#475569">
+      <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
         가격
       </text>
-      <text x={4} y={PMT + 8} textAnchor="start" fontSize="9" fill="#475569">
+      <text x={4} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
         수량
       </text>
 

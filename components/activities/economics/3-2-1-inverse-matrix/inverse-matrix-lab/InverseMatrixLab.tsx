@@ -887,12 +887,14 @@ function CipherMaker() {
               type="button"
               onClick={() => tap(ch)}
               className={
-                "flex h-9 flex-col items-center justify-center rounded-md border text-sm font-bold transition " +
+                "flex h-11 flex-col items-center justify-center gap-0.5 rounded-md border text-sm font-bold transition " +
                 (on ? "border-violet-400/70 bg-violet-400/25 text-violet-50" : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
               }
             >
               <span>{ch}</span>
-              <span className="font-mono text-[8px] leading-none text-slate-500">{codeOf(ch)}</span>
+              <span className={"font-mono text-xs font-normal leading-none " + (on ? "text-violet-200" : "text-slate-400")}>
+                {codeOf(ch)}
+              </span>
             </button>
           );
         })}
@@ -1087,12 +1089,12 @@ function CipherSolver() {
       </div>
 
       <div className="mt-3">
-        <p className="mb-1 text-[11px] font-bold text-slate-400">글자표</p>
+        <p className="mb-1 text-xs font-bold text-slate-400">글자표</p>
         <div className="grid grid-cols-10 gap-1">
           {ALPHABET.map((ch) => (
-            <div key={ch} className="flex h-9 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-sm font-bold text-slate-200">
+            <div key={ch} className="flex h-11 flex-col items-center justify-center gap-0.5 rounded-md border border-white/10 bg-white/[0.04] text-sm font-bold text-slate-200">
               <span>{ch}</span>
-              <span className="font-mono text-[8px] leading-none text-slate-500">{codeOf(ch)}</span>
+              <span className="font-mono text-xs font-normal leading-none text-slate-400">{codeOf(ch)}</span>
             </div>
           ))}
         </div>

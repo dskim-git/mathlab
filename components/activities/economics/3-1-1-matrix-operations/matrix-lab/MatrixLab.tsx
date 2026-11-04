@@ -1361,23 +1361,23 @@ function SheetGrid({
     <div className="overflow-x-auto overflow-y-hidden py-1">
       <div className="inline-block rounded-lg border border-white/15 bg-slate-900/70 p-1">
         <div className="flex">
-          <div className="h-6 w-7 shrink-0" />
+          <div className="h-7 w-8 shrink-0" />
           {Array.from({ length: SHEET_COLS }, (_, c) => (
-            <div key={c} className="flex h-6 w-[54px] shrink-0 items-center justify-center border-b border-white/10 text-[10px] font-bold text-slate-400">
+            <div key={c} className="flex h-7 w-[72px] shrink-0 items-center justify-center border-b border-white/10 text-xs font-bold text-slate-400">
               {colName(c)}
             </div>
           ))}
         </div>
         {Array.from({ length: SHEET_ROWS }, (_, r) => (
           <div key={r} className="flex">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center border-r border-white/10 text-[10px] font-bold text-slate-400">
+            <div className="flex h-9 w-8 shrink-0 items-center justify-center border-r border-white/10 text-xs font-bold text-slate-400">
               {r + 1}
             </div>
             {Array.from({ length: SHEET_COLS }, (_, c) => {
               const cell = map[`${c},${r}`];
               const picked = inSel(c, r);
               const cls =
-                "flex h-7 w-[54px] shrink-0 items-center justify-end border-b border-r border-white/[0.07] px-1 font-mono text-[11px] tabular-nums transition " +
+                "flex h-9 w-[72px] shrink-0 items-center justify-end border-b border-r border-white/[0.07] px-1.5 font-mono text-sm tabular-nums transition " +
                 (cell ? SHEET_CELL_TONE[cell.kind] : SHEET_CELL_TONE.empty) +
                 (picked ? " outline outline-2 -outline-offset-2 outline-emerald-400/80" : "");
               if (onPick) {
@@ -1429,8 +1429,8 @@ function SheetRunner({ def, accent, intro }: { def: SheetDef; accent: Accent; in
 
       {/* 수식 입력줄 */}
       <div className="flex items-center gap-2 rounded-lg border border-white/15 bg-slate-900/70 px-2 py-1.5">
-        <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-300">fx</span>
-        <span className="truncate font-mono text-xs text-slate-200">
+        <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs font-bold text-slate-300">fx</span>
+        <span className="truncate font-mono text-sm text-slate-200">
           {fOk && ran ? formulaText : fPick !== null && fGraded ? formulaText : sel ? rangeName(sel.c, sel.r, sel.w, sel.h) + " 선택됨" : ""}
         </span>
       </div>
@@ -1674,23 +1674,23 @@ const TABLE_CELL_TONE: Record<string, Tone> = {
 function DataTable({ t, showMat }: { t: TableDef; showMat: boolean }) {
   return (
     <div className={"rounded-xl border bg-slate-900/50 p-2 " + TABLE_TONE[t.tone]}>
-      <p className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-slate-300">
+      <p className="mb-2 flex flex-wrap items-center gap-1.5 text-sm font-bold text-slate-200">
         <span className={"rounded-md px-1.5 py-0.5 text-xs " + TABLE_HEAD[t.tone]}>
           <Katex expr={t.sym} />
         </span>
         <span>{t.caption}</span>
-        {t.unit ? <span className="font-normal text-slate-500">(단위 {t.unit})</span> : null}
+        {t.unit ? <span className="text-xs font-normal text-slate-400">(단위 {t.unit})</span> : null}
       </p>
       <div className="overflow-x-auto overflow-y-hidden py-1">
-        <table className="border-collapse text-xs">
+        <table className="border-collapse text-sm">
           <thead>
             <tr>
-              <th className="border border-white/10 px-2 py-1">
-                <span className="block text-right text-[9px] leading-3 text-slate-500">{t.cornerCol}</span>
-                <span className="block text-left text-[9px] leading-3 text-slate-500">{t.cornerRow}</span>
+              <th className="border border-white/10 px-2 py-1.5">
+                <span className="block text-right text-[11px] leading-4 text-slate-400">{t.cornerCol}</span>
+                <span className="block text-left text-[11px] leading-4 text-slate-400">{t.cornerRow}</span>
               </th>
               {t.colLabels.map((c) => (
-                <th key={c} className={"whitespace-nowrap border border-white/10 px-2.5 py-1 text-[11px] font-bold " + TABLE_HEAD[t.tone]}>
+                <th key={c} className={"whitespace-nowrap border border-white/10 px-3 py-1.5 text-sm font-bold " + TABLE_HEAD[t.tone]}>
                   {c}
                 </th>
               ))}
@@ -1699,9 +1699,9 @@ function DataTable({ t, showMat }: { t: TableDef; showMat: boolean }) {
           <tbody>
             {t.rowLabels.map((r, i) => (
               <tr key={r}>
-                <th className={"whitespace-nowrap border border-white/10 px-2.5 py-1 text-[11px] font-bold " + TABLE_HEAD[t.tone]}>{r}</th>
+                <th className={"whitespace-nowrap border border-white/10 px-3 py-1.5 text-sm font-bold " + TABLE_HEAD[t.tone]}>{r}</th>
                 {t.m[i].map((v, j) => (
-                  <td key={j} className="border border-white/10 px-2.5 py-1 text-right font-mono tabular-nums text-slate-100">
+                  <td key={j} className="border border-white/10 px-3 py-1.5 text-right font-mono text-base tabular-nums text-slate-100">
                     {won(v)}
                   </td>
                 ))}
