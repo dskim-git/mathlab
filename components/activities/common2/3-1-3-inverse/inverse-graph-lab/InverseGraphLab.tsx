@@ -77,7 +77,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3.5 py-2 text-sm font-bold transition " +
+        "rounded-xl border-2 px-4 py-2.5 text-base font-bold transition " +
         (active ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -95,7 +95,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           type="button"
           onClick={() => onPick(i)}
           className={
-            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+            "h-10 min-w-[2.5rem] rounded-lg border-2 px-2 font-mono text-base font-bold transition " +
             (i === cur
               ? "border-cyan-400/70 bg-cyan-400/20 text-cyan-100"
               : done.includes(id)
@@ -106,7 +106,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           {done.includes(id) && i !== cur ? "✓" : i + 1}
         </button>
       ))}
-      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-base font-bold text-slate-300">
         {done.length} / {ids.length}
       </span>
     </div>
@@ -118,7 +118,7 @@ function NextBtn({ onClick, label = "다음 문제 ▶" }: { onClick: () => void
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-xl border-2 border-cyan-400/55 bg-cyan-400/15 px-3 py-2.5 text-sm font-bold text-cyan-100 transition hover:bg-cyan-400/25"
+      className="w-full rounded-xl border-2 border-cyan-400/55 bg-cyan-400/15 px-3 py-2.5 text-lg font-bold text-cyan-100 transition hover:bg-cyan-400/25"
     >
       {label}
     </button>
@@ -147,9 +147,9 @@ function PieceLine({ ps }: { ps: Piece[] }) {
 
 function Slider({ label, value, min, max, step, onChange, accent = "accent-cyan-400" }: { label: React.ReactNode; value: number; min: number; max: number; step: number; onChange: (v: number) => void; accent?: string }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400">
+    <label className="block text-base font-bold text-slate-300">
       <span className="inline-flex items-center gap-1.5">
-        {label} <span className="font-mono text-[13px] text-slate-100">{nx(value)}</span>
+        {label} <span className="font-mono text-lg text-slate-100">{nx(value)}</span>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className={"mt-0.5 w-full " + accent} />
     </label>
@@ -161,8 +161,8 @@ const ABC = ["①", "②", "③", "④"];
 function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-      <p className="text-[11px] font-bold text-slate-400">해 볼 것 세 가지</p>
-      <div className="mt-1 space-y-1 text-[12px] leading-6">
+      <p className="text-base font-bold text-slate-400">해 볼 것 세 가지</p>
+      <div className="mt-1 space-y-1 text-base leading-7">
         {goals.map((g, i) => (
           <p key={g} className={seen.includes(String(i)) ? "text-emerald-200" : "text-slate-400"}>
             {seen.includes(String(i)) ? "✓" : "○"} {g}
@@ -187,7 +187,7 @@ function TexChoices({ items, pick, answer, onPick }: { items: string[]; pick: nu
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "overflow-x-auto overflow-y-hidden rounded-xl border-2 px-2.5 py-2 text-[14px] font-bold transition disabled:cursor-default " +
+              "overflow-x-auto overflow-y-hidden rounded-xl border-2 px-3 py-2.5 text-xl font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : badPick
@@ -195,7 +195,7 @@ function TexChoices({ items, pick, answer, onPick }: { items: string[]; pick: nu
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="mr-1 text-[12px] text-slate-400">{ABC[i]}</span>
+            <span className="mr-1.5 text-lg text-slate-400">{ABC[i]}</span>
             <Katex expr={s} />
           </button>
         );
@@ -219,7 +219,7 @@ function KindChoices({ pick, answer, onPick }: { pick: number | undefined; answe
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "rounded-xl border-2 px-2.5 py-2 text-[12px] font-bold leading-6 transition disabled:cursor-default " +
+              "rounded-xl border-2 px-3 py-2.5 text-lg font-bold leading-8 transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : badPick
@@ -238,9 +238,9 @@ function KindChoices({ pick, answer, onPick }: { pick: number | undefined; answe
 
 function Verdict({ right, why, hint }: { right: boolean; why: string; hint: string }) {
   return right ? (
-    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {why}</p>
+    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-7 text-emerald-100">✅ {why}</p>
   ) : (
-    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {hint}</p>
+    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-base leading-7 text-rose-100">❌ {hint}</p>
   );
 }
 
@@ -269,7 +269,7 @@ function Plane({ curves, dots, segs, trail, trailColor = "#f472b6", diag = true,
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950/70">
-      <svg viewBox={`0 0 ${PV.size} ${PV.size}`} className="mx-auto block w-full max-w-[320px]" role="img" aria-label="함수와 역함수의 그래프">
+      <svg viewBox={`0 0 ${PV.size} ${PV.size}`} className="mx-auto block w-full max-w-[440px]" role="img" aria-label="함수와 역함수의 그래프">
         <defs>
           <clipPath id={`cp-${uid}`}>
             <rect x={PV.pad - 1} y={PV.pad - 1} width={PV.size - 2 * PV.pad + 2} height={PV.size - 2 * PV.pad + 2} />
@@ -322,19 +322,19 @@ function Plane({ curves, dots, segs, trail, trailColor = "#f472b6", diag = true,
             strokeWidth={2.2}
           />
         ))}
-        <text x={PV.size - PV.pad + 1} y={pvY(0) - 6} textAnchor="end" className="fill-slate-500 text-[10px] font-bold italic">
+        <text x={PV.size - PV.pad + 1} y={pvY(0) - 6} textAnchor="end" className="fill-slate-400 text-[11px] font-bold italic">
           x
         </text>
-        <text x={pvX(0) + 7} y={PV.pad + 9} className="fill-slate-500 text-[10px] font-bold italic">
+        <text x={pvX(0) + 7} y={PV.pad + 9} className="fill-slate-400 text-[11px] font-bold italic">
           y
         </text>
         {diag ? (
-          <text x={PV.size - PV.pad - 2} y={PV.pad + 13} textAnchor="end" className="fill-slate-500 text-[10px] font-bold italic">
+          <text x={PV.size - PV.pad - 2} y={PV.pad + 13} textAnchor="end" className="fill-slate-400 text-[11px] font-bold italic">
             y=x
           </text>
         ) : null}
         {label ? (
-          <text x={PV.size / 2} y={PV.size - 4} textAnchor="middle" className="fill-slate-400 text-[10px] font-bold">
+          <text x={PV.size / 2} y={PV.size - 4} textAnchor="middle" className="fill-slate-300 text-[11px] font-bold">
             {label}
           </text>
         ) : null}
@@ -343,10 +343,10 @@ function Plane({ curves, dots, segs, trail, trailColor = "#f472b6", diag = true,
   );
 }
 
-function MiniPlane({ fn, dom, color, tone }: { fn: (x: number) => number | null; dom: [number, number]; color: string; tone: string }) {
+function MiniPlane({ fn, dom, color, tone, maxW = "max-w-[220px]" }: { fn: (x: number) => number | null; dom: [number, number]; color: string; tone: string; maxW?: string }) {
   const polys = useMemo(() => traceFn(fn, dom, SMALL), [fn, dom]);
   return (
-    <svg viewBox={`0 0 ${MV.size} ${MV.size}`} className={"mx-auto block w-full max-w-[150px] rounded-lg border " + tone} role="img" aria-label="보기 그래프">
+    <svg viewBox={`0 0 ${MV.size} ${MV.size}`} className={"mx-auto block w-full rounded-lg border " + maxW + " " + tone} role="img" aria-label="보기 그래프">
       <line x1={MV.pad} y1={mvY(0)} x2={MV.size - MV.pad} y2={mvY(0)} stroke="rgba(226,232,240,0.4)" strokeWidth={1.2} />
       <line x1={mvX(0)} y1={MV.pad} x2={mvX(0)} y2={MV.size - MV.pad} stroke="rgba(226,232,240,0.4)" strokeWidth={1.2} />
       <line x1={mvX(MV.min)} y1={mvY(MV.min)} x2={mvX(MV.max)} y2={mvY(MV.max)} stroke="rgba(226,232,240,0.22)" strokeWidth={1.1} strokeDasharray="4 3" />
@@ -366,7 +366,7 @@ export default function InverseGraphLab() {
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
-        <p className="text-sm font-semibold text-cyan-300">미니활동 · 공통수학2</p>
+        <p className="text-lg font-semibold text-cyan-300">미니활동 · 공통수학2</p>
         <h3 className="mt-2 text-2xl font-bold">🪞 역함수의 그래프</h3>
         <p className="mt-2 leading-7 text-slate-300">
           역함수의 그래프는 <b className="text-pink-200">직선 y = x 로 접은 모습</b>입니다. 점을 하나씩 옮겨 보며 그 까닭을 찾고, 흔히 하는 오해도 반례로 깨뜨려 보세요.
@@ -411,7 +411,7 @@ function PtCard({ q, pick, onPick }: { q: PtTask; pick: number | undefined; onPi
   const right = pick === q.answer;
   return (
     <div className="space-y-2">
-      <p className="rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-[14px] font-bold leading-9 text-slate-100">
+      <p className="rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-xl font-bold leading-10 text-slate-100">
         <PieceLine ps={q.prompt} />
       </p>
       <TexChoices items={q.choices} pick={pick} answer={q.answer} onPick={onPick} />
@@ -457,8 +457,8 @@ function SymTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🪞 점 하나를 옮기면 짝도 함께 움직여요</p>
-        <p className="mt-1 text-[12px] leading-6 text-slate-400">
+        <p className="text-lg font-bold text-slate-100">🪞 점 하나를 옮기면 짝도 함께 움직여요</p>
+        <p className="mt-1 text-base leading-7 text-slate-400">
           슬라이더를 왼쪽 끝에서 오른쪽 끝까지 천천히 훑어 보세요. 분홍 점이 지나간 자리가 그대로 <b className="text-pink-200">역함수의 그래프</b>가 됩니다.
         </p>
 
@@ -469,7 +469,7 @@ function SymTab() {
               type="button"
               onClick={() => setSi(i)}
               className={
-                "rounded-lg border-2 px-2.5 py-1.5 text-[13px] font-bold transition " +
+                "rounded-lg border-2 px-3 py-2 text-lg font-bold transition " +
                 (i === si ? "border-sky-400/70 bg-sky-400/20 text-sky-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -478,7 +478,7 @@ function SymTab() {
           ))}
         </div>
 
-        <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
           <Plane
             curves={curves}
             trail={trailPts}
@@ -494,16 +494,16 @@ function SymTab() {
           <div className="space-y-2">
             <Slider label={<Katex expr="a" />} value={a} min={s.dom[0]} max={s.dom[1]} step={SYM_STEP} onChange={move} accent="accent-sky-400" />
             <div className="space-y-1">
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-[14px] leading-8 text-sky-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-xl leading-9 text-sky-100">
                 <Katex expr={`P(${tx(a)},\\ ${tx(b)})`} />
               </p>
-              <p className="text-center text-[11px] font-bold text-slate-400">좌표를 맞바꾸면</p>
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-[14px] leading-8 text-pink-100">
+              <p className="text-center text-base font-bold text-slate-400">좌표를 맞바꾸면</p>
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-xl leading-9 text-pink-100">
                 <Katex expr={`P'(${tx(b)},\\ ${tx(a)})`} />
               </p>
             </div>
 
-            <div className="space-y-1 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-[12px] leading-7 text-slate-300">
+            <div className="space-y-1 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-base leading-7 text-slate-300">
               <p>
                 두 점의 중점 <Katex expr={`\\left(${tx((a + b) / 2)},\\ ${tx((a + b) / 2)}\\right)`} /> 은 <Katex expr="y=x" /> 위에 있어요
               </p>
@@ -513,26 +513,26 @@ function SymTab() {
             </div>
 
             <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+              <div className="flex items-center justify-between text-base font-bold text-slate-400">
                 <span>훑은 자리</span>
                 <span className="font-mono text-slate-200">
                   {seen.length} / {total}
                 </span>
               </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-pink-400 transition-all" style={{ width: `${Math.min(100, ratio * 100)}%` }} />
               </div>
               {doneTrail ? (
-                <p className="mt-2 rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">🎉 {s.note}</p>
+                <p className="mt-2 rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-7 text-emerald-100">🎉 {s.note}</p>
               ) : (
-                <p className="mt-2 text-[11px] leading-6 text-slate-500">슬라이더를 끝에서 끝까지 훑으면 역함수의 그래프가 나타나요.</p>
+                <p className="mt-2 text-base leading-7 text-slate-400">슬라이더를 끝에서 끝까지 훑으면 역함수의 그래프가 나타나요.</p>
               )}
             </div>
 
             <button
               type="button"
               onClick={() => { setTrail((m) => ({ ...m, [s.id]: [] })); setAMap((m) => ({ ...m, [s.id]: s.dom[0] })); }}
-              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
             >
               ↺ 자취 지우기
             </button>
@@ -542,7 +542,7 @@ function SymTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🔎 좌표를 맞바꿔 보기</p>
+          <p className="text-lg font-bold text-slate-100">🔎 좌표를 맞바꿔 보기</p>
           <Chips ids={PT_TASKS.map((t) => t.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2">
@@ -557,8 +557,8 @@ function SymTab() {
 
       {doneIds.length === PT_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-7 text-slate-300">
             역함수의 그래프를 다루는 일은 결국 <b className="text-white">좌표를 맞바꾸는 일</b>이에요. <Katex expr="y" />절편이 <Katex expr="x" />절편이 되는 것도 그 때문입니다.
           </p>
         </div>
@@ -589,17 +589,17 @@ function CrossTaskCard({ c, pick, onPick }: { c: CrossTask; pick: number | undef
   const right = pick === c.answer;
   return (
     <div className="space-y-2">
-      <p className="overflow-x-auto overflow-y-hidden rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-[17px] font-bold leading-9 text-slate-100">
+      <p className="overflow-x-auto overflow-y-hidden rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-2xl font-bold leading-9 text-slate-100">
         <Katex expr={c.fTex} />
       </p>
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <Plane
           curves={crossCurves(c, c.same)}
           dots={right ? crossDots(c) : undefined}
           label={right ? (c.same ? "두 그래프가 통째로 겹쳐요" : c.pts.length === 0 ? "만나는 점이 없어요" : "노란 점이 y = x 를 벗어난 교점") : "파랑이 f, 분홍이 f⁻¹"}
         />
         <div className="space-y-2">
-          <p className="text-[13px] font-bold text-slate-100">두 그래프의 교점은 어디에 있을까요?</p>
+          <p className="text-lg font-bold text-slate-100">두 그래프의 교점은 어디에 있을까요?</p>
           <KindChoices pick={pick} answer={c.answer} onPick={onPick} />
           {pick !== undefined ? <Verdict right={right} why={c.why} hint={c.choiceWhy[pick]} /> : null}
         </div>
@@ -623,8 +623,8 @@ function CrossTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🎯 교점이 늘 직선 y = x 위에 있을까?</p>
-        <p className="mt-1 rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">
+        <p className="text-lg font-bold text-slate-100">🎯 교점이 늘 직선 y = x 위에 있을까?</p>
+        <p className="mt-1 rounded-lg bg-black/25 px-3 py-2 text-base leading-8 text-slate-300">
           📖 <Katex expr="y=f(x)" /> 와 <Katex expr="y=x" /> 의 교점은 언제나 <Katex expr="y=f^{-1}(x)" /> 위에도 있어요. 그래서 교점을 찾을 때 <Katex expr="f(x)=x" /> 를 풀곤 합니다. 그런데 <b className="text-slate-300">그 방법으로 모든 교점을 찾을 수 있을까요?</b>
         </p>
 
@@ -635,7 +635,7 @@ function CrossTab() {
               type="button"
               onClick={() => setCi(i)}
               className={
-                "rounded-lg border-2 px-2.5 py-1.5 text-[13px] font-bold transition " +
+                "rounded-lg border-2 px-3 py-2 text-lg font-bold transition " +
                 (i === ci ? "border-violet-400/70 bg-violet-400/20 text-violet-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -644,7 +644,7 @@ function CrossTab() {
           ))}
         </div>
 
-        <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
           <Plane
             curves={crossCurves(c, c.same)}
             dots={crossDots(c)}
@@ -652,14 +652,14 @@ function CrossTab() {
           />
           <div className="space-y-2">
             <div className="grid gap-1.5 sm:grid-cols-2">
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-[13px] leading-8 text-sky-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-xl leading-9 text-sky-100">
                 <Katex expr={c.fTex} />
               </p>
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-[13px] leading-8 text-pink-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-xl leading-9 text-pink-100">
                 <Katex expr={c.invTex} />
               </p>
             </div>
-            <div className="space-y-1 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-[12px] leading-7 text-slate-300">
+            <div className="space-y-1 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-base leading-7 text-slate-300">
               <p>
                 <span className="font-bold text-slate-400">모양</span> · {c.rising ? "쭉 오르는 함수" : "쭉 내리는 함수"}
               </p>
@@ -679,18 +679,18 @@ function CrossTab() {
                 )}
               </p>
             </div>
-            <p className={"rounded-lg px-3 py-2 text-center text-[13px] font-extrabold " + (c.kind === 1 ? "bg-amber-400/15 text-amber-100" : c.kind === 0 ? "bg-emerald-400/15 text-emerald-100" : "bg-white/5 text-slate-300")}>
+            <p className={"rounded-lg px-3 py-2 text-center text-lg font-extrabold " + (c.kind === 1 ? "bg-amber-400/15 text-amber-100" : c.kind === 0 ? "bg-emerald-400/15 text-emerald-100" : "bg-white/5 text-slate-300")}>
               {CROSS_CHOICES[c.kind]}
             </p>
-            <p className="rounded-lg bg-black/25 px-3 py-2 text-[12px] leading-6 text-slate-300">🔍 {c.why}</p>
+            <p className="rounded-lg bg-black/25 px-3 py-2 text-base leading-7 text-slate-300">🔍 {c.why}</p>
           </div>
         </div>
 
         <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
-          <p className="rounded-lg bg-emerald-400/10 px-3 py-2 text-[12px] leading-6 text-emerald-100">
+          <p className="rounded-lg bg-emerald-400/10 px-3 py-2 text-base leading-7 text-emerald-100">
             ↗ <b>쭉 오르는 함수</b>면 교점은 반드시 <Katex expr="y=x" /> 위에 있어요.
           </p>
-          <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] leading-6 text-amber-100">
+          <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-base leading-7 text-amber-100">
             ↘ <b>쭉 내리는 함수</b>면 <Katex expr="y=x" /> 를 벗어난 교점이 생길 수 있어요.
           </p>
         </div>
@@ -698,7 +698,7 @@ function CrossTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🧭 직접 가려내 보기</p>
+          <p className="text-lg font-bold text-slate-100">🧭 직접 가려내 보기</p>
           <Chips ids={CROSS_TASKS.map((t) => t.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2">
@@ -713,8 +713,8 @@ function CrossTab() {
 
       {doneIds.length === CROSS_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-7 text-slate-300">
             <Katex expr="f(x)=x" /> 를 풀어 찾은 것은 <b className="text-white">언제나 교점이 맞지만 그것이 전부는 아닐 수 있어요.</b> 내리는 함수라면 <Katex expr="y=x" /> 를 벗어난 교점이 있는지 꼭 살펴야 합니다.
           </p>
         </div>
@@ -730,16 +730,16 @@ function PickCard({ t, pick, onPick }: { t: GraphTask; pick: number | undefined;
   const right = pick === t.answer;
   return (
     <div className="space-y-2">
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,200px)_minmax(0,1fr)]">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
         <div className="space-y-1.5">
-          <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-[14px] leading-8 text-sky-100">
+          <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-xl leading-9 text-sky-100">
             <Katex expr={t.fTex} />
           </p>
-          <MiniPlane fn={t.f} dom={t.dom} color="#38bdf8" tone="border-sky-400/40 bg-slate-950/70" />
-          <p className="text-center text-[11px] font-bold text-slate-400">주어진 함수</p>
+          <MiniPlane fn={t.f} dom={t.dom} color="#38bdf8" tone="border-sky-400/40 bg-slate-950/70" maxW="max-w-[280px]" />
+          <p className="text-center text-base font-bold text-slate-400">주어진 함수</p>
         </div>
         <div className="space-y-1.5">
-          <p className="text-[13px] font-bold text-slate-100">
+          <p className="text-lg font-bold text-slate-100">
             이 함수의 <Katex expr="y=f^{-1}(x)" /> 그래프는 어느 것일까요?
           </p>
           <div className="grid grid-cols-2 gap-1.5">
@@ -753,7 +753,7 @@ function PickCard({ t, pick, onPick }: { t: GraphTask; pick: number | undefined;
                   onClick={() => onPick(i)}
                   disabled={right}
                   className={
-                    "rounded-xl border-2 p-1.5 transition disabled:cursor-default " +
+                    "rounded-xl border-2 p-2 transition disabled:cursor-default " +
                     (good
                       ? "border-emerald-400/70 bg-emerald-400/15"
                       : badPick
@@ -761,7 +761,7 @@ function PickCard({ t, pick, onPick }: { t: GraphTask; pick: number | undefined;
                         : "border-white/10 bg-white/5 hover:bg-white/10")
                   }
                 >
-                  <p className="text-left text-[11px] font-bold text-slate-400">{ABC[i]}</p>
+                  <p className="text-left text-base font-bold text-slate-400">{ABC[i]}</p>
                   <MiniPlane fn={c.g} dom={c.dom} color={good ? "#34d399" : badPick ? "#fb7185" : "#f472b6"} tone="border-white/10 bg-slate-950/70" />
                 </button>
               );
@@ -773,14 +773,14 @@ function PickCard({ t, pick, onPick }: { t: GraphTask; pick: number | undefined;
       {pick !== undefined ? (
         <div className="space-y-1.5">
           {right ? (
-            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/12 px-3 py-2 text-center text-[15px] leading-9 text-emerald-100">
+            <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-emerald-400/12 px-3 py-2 text-center text-xl leading-9 text-emerald-100">
               <Katex expr={t.choices[t.answer].tex} />
             </p>
           ) : null}
           <Verdict right={right} why={t.why} hint={t.choiceWhy[pick]} />
         </div>
       ) : (
-        <p className="rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">
+        <p className="rounded-lg bg-black/25 px-3 py-2 text-base leading-8 text-slate-300">
           💡 네 그림 모두 점선 <Katex expr="y=x" /> 가 함께 그려져 있어요. <b className="text-slate-300">그 선으로 접었을 때 주어진 그래프와 포개지는 것</b>을 고르면 됩니다.
         </p>
       )}
@@ -800,7 +800,7 @@ function PickTab() {
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🧩 접으면 포개지는 그래프 찾기</p>
+          <p className="text-lg font-bold text-slate-100">🧩 접으면 포개지는 그래프 찾기</p>
           <Chips ids={GRAPH_TASKS.map((v) => v.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2">
@@ -815,8 +815,8 @@ function PickTab() {
 
       {doneIds.length === GRAPH_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 다섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 다섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-7 text-slate-300">
             <Katex expr="x" />축·<Katex expr="y" />축·원점에 대한 대칭과 헷갈리지 마세요. 역함수는 <b className="text-white">직선 <Katex expr="y=x" /> 에 대한 대칭</b>이라 가파른 것이 완만해지고 절편이 축을 바꿔 탑니다.
           </p>
         </div>
@@ -860,12 +860,12 @@ function SlopeTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">📐 기울기를 바꾸면 교점이 어떻게 될까?</p>
-        <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-center text-[15px] leading-8 text-slate-100">
+        <p className="text-lg font-bold text-slate-100">📐 기울기를 바꾸면 교점이 어떻게 될까?</p>
+        <p className="mt-1 overflow-x-auto overflow-y-hidden py-1 text-center text-xl leading-8 text-slate-100">
           <Katex expr="y = ax + b \quad (a \ne 0)" />
         </p>
 
-        <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
           <Plane
             curves={curves}
             dots={point ? [{ p: point, color: "#34d399", r: 6 }] : undefined}
@@ -879,19 +879,19 @@ function SlopeTab() {
             </div>
 
             <div className="grid gap-1.5 sm:grid-cols-2">
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-[13px] leading-8 text-sky-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-sky-400/10 px-3 py-2 text-center text-xl leading-9 text-sky-100">
                 <Katex expr={`y = ${tx(a)}x ${b < 0 ? "-" : "+"} ${tx(Math.abs(b))}`} />
               </p>
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-[13px] leading-8 text-pink-100">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-pink-400/10 px-3 py-2 text-center text-xl leading-9 text-pink-100">
                 {kind === null ? "역함수가 없어요" : <Katex expr={`y = \\dfrac{x ${b < 0 ? "+" : "-"} ${tx(Math.abs(b))}}{${tx(a)}}`} />}
               </p>
             </div>
 
-            <p className={"rounded-lg px-3 py-2 text-center text-[13px] font-extrabold " + (kind === null ? "bg-white/5 text-slate-300" : kind === 1 ? "bg-amber-400/15 text-amber-100" : kind === 0 ? "bg-emerald-400/15 text-emerald-100" : "bg-white/5 text-slate-300")}>
+            <p className={"rounded-lg px-3 py-2 text-center text-lg font-extrabold " + (kind === null ? "bg-white/5 text-slate-300" : kind === 1 ? "bg-amber-400/15 text-amber-100" : kind === 0 ? "bg-emerald-400/15 text-emerald-100" : "bg-white/5 text-slate-300")}>
               {kind === null ? "기울기가 0 이라 역함수가 없어요" : CROSS_CHOICES[kind]}
             </p>
             {point ? (
-              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-2 text-center text-[13px] leading-8 text-slate-200">
+              <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-2 text-center text-xl leading-9 text-slate-200">
                 <Katex expr={`\\text{cross} = (${tx(point[0])},\\ ${tx(point[1])})`} />
               </p>
             ) : null}
@@ -901,13 +901,13 @@ function SlopeTab() {
         </div>
 
         <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
-          <p className="rounded-lg bg-emerald-400/10 px-3 py-2 text-[12px] leading-6 text-emerald-100">
+          <p className="rounded-lg bg-emerald-400/10 px-3 py-2 text-base leading-7 text-emerald-100">
             <Katex expr="a \ne 1,\ a \ne -1" /> 이면 교점이 하나뿐이고 늘 <Katex expr="y=x" /> 위
           </p>
-          <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] leading-6 text-amber-100">
+          <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-base leading-7 text-amber-100">
             <Katex expr="a = -1" /> 이면 두 그래프가 통째로 겹쳐 <Katex expr="y=x" /> 밖에도 교점
           </p>
-          <p className="rounded-lg bg-white/5 px-3 py-2 text-[12px] leading-6 text-slate-300">
+          <p className="rounded-lg bg-white/5 px-3 py-2 text-base leading-7 text-slate-300">
             <Katex expr="a = 1,\ b \ne 0" /> 이면 나란해서 교점이 없음
           </p>
         </div>
@@ -915,14 +915,14 @@ function SlopeTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🔎 값을 보고 가려내 보기</p>
+          <p className="text-lg font-bold text-slate-100">🔎 값을 보고 가려내 보기</p>
           <Chips ids={AB_TASKS.map((t) => t.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2 space-y-2">
-          <p className="overflow-x-auto overflow-y-hidden rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-[17px] font-bold leading-9 text-slate-100">
+          <p className="overflow-x-auto overflow-y-hidden rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-2xl font-bold leading-9 text-slate-100">
             <Katex expr={`y = ${tx(q.a)}x ${q.b < 0 ? "-" : "+"} ${tx(Math.abs(q.b))}`} />
           </p>
-          <p className="text-[13px] font-bold text-slate-100">이 함수와 그 역함수의 교점은 어디에 있을까요?</p>
+          <p className="text-lg font-bold text-slate-100">이 함수와 그 역함수의 교점은 어디에 있을까요?</p>
           <KindChoices pick={pick[q.id]} answer={q.answer} onPick={(i) => setPick((m) => ({ ...m, [q.id]: i }))} />
           {pick[q.id] !== undefined ? (
             <Verdict right={cleared} why={q.why} hint={q.choiceWhy[pick[q.id]]} />
@@ -937,8 +937,8 @@ function SlopeTab() {
 
       {doneIds.length === AB_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-7 text-slate-300">
             일차함수에서 <Katex expr="y=x" /> 를 벗어난 교점이 생기는 것은 <b className="text-white"><Katex expr="a=-1" /> 일 때뿐</b>이에요. <Katex expr="a=-3" /> 처럼 내리는 직선이어도 교점은 <Katex expr="y=x" /> 위에 하나뿐이었습니다.
           </p>
         </div>
