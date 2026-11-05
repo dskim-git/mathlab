@@ -101,7 +101,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3 py-2 text-sm font-bold transition " +
+        "rounded-xl border-2 px-4 py-2.5 text-base font-bold transition " +
         (active
           ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-100"
           : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
@@ -138,7 +138,7 @@ function PieceLine({ line }: { line: Piece[] }) {
 //  공용 — 보수표
 // ══════════════════════════════════════════════════════════════
 const GW = 380;
-const GH = 330;
+const GH = 350;
 const GX = 124;
 const GY = 86;
 const CW = 122;
@@ -187,24 +187,24 @@ function PayoffGrid({
       : null;
 
   return (
-    <svg viewBox={"0 0 " + GW + " " + GH} className="w-full max-w-[380px]" role="img" aria-label="보수표">
+    <svg viewBox={"0 0 " + GW + " " + GH} className="w-full max-w-[440px]" role="img" aria-label="보수표">
       {/* 머리말 */}
       <rect x={GX} y={10} width={CW * 2} height={22} rx={6} fill="rgba(251,191,36,0.16)" stroke="rgba(251,191,36,0.5)" />
-      <text x={GX + CW} y={25} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#fcd34d">
+      <text x={GX + CW} y={25} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#fcd34d">
         {meName}의 선택
       </text>
-      <rect x={4} y={GY + CH - 11} width={110} height={22} rx={6} fill="rgba(56,189,248,0.16)" stroke="rgba(56,189,248,0.5)" />
-      <text x={59} y={GY + CH + 4} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#7dd3fc">
+      <rect x={0} y={GY + CH - 11} width={120} height={22} rx={6} fill="rgba(56,189,248,0.16)" stroke="rgba(56,189,248,0.5)" />
+      <text x={60} y={GY + CH + 4} textAnchor="middle" fontSize="13" fontWeight="bold" fill="#7dd3fc">
         {youName}의 선택
       </text>
 
       {cols.map((c, j) => (
-        <text key={"ch" + j} x={GX + CW * j + CW / 2} y={GY - 10} textAnchor="middle" fontSize="12" fontWeight="bold" fill="#e2e8f0">
+        <text key={"ch" + j} x={GX + CW * j + CW / 2} y={GY - 10} textAnchor="middle" fontSize="15" fontWeight="bold" fill="#e2e8f0">
           {label(c)}
         </text>
       ))}
       {rows.map((r, i) => (
-        <text key={"rh" + i} x={GX - 8} y={GY + CH * i + CH / 2 + 4} textAnchor="end" fontSize="12" fontWeight="bold" fill="#e2e8f0">
+        <text key={"rh" + i} x={GX - 8} y={GY + CH * i + CH / 2 + 4} textAnchor="end" fontSize="15" fontWeight="bold" fill="#e2e8f0">
           {label(r)}
         </text>
       ))}
@@ -241,15 +241,15 @@ function PayoffGrid({
                 strokeWidth={isEq || isBetter ? 3 : 1.2}
                 className={isEq ? "animate-pulse" : undefined}
               />
-              <text x={x + CW - 10} y={y + 28} textAnchor="end" fontSize="16" fontWeight="bold" fill="#fcd34d">
+              <text x={x + CW - 10} y={y + 32} textAnchor="end" fontSize="22" fontWeight="bold" fill="#fcd34d">
                 {won(mine)}
               </text>
-              <text x={x + 10} y={y + CH - 14} textAnchor="start" fontSize="16" fontWeight="bold" fill="#7dd3fc">
+              <text x={x + 10} y={y + CH - 14} textAnchor="start" fontSize="22" fontWeight="bold" fill="#7dd3fc">
                 {won(theirs)}
               </text>
               {/* 체크는 대각선 위가 아니라 내 쪽(오른쪽 위) 삼각형 안에 둔다 */}
               {isBetter ? (
-                <text x={x + CW * 0.74} y={y + CH * 0.58} textAnchor="middle" fontSize="20" fill="#34d399">
+                <text x={x + CW * 0.74} y={y + CH * 0.58} textAnchor="middle" fontSize="24" fill="#34d399">
                   ✓
                 </text>
               ) : null}
@@ -258,10 +258,10 @@ function PayoffGrid({
         }),
       )}
 
-      <text x={GX} y={GH - 8} textAnchor="start" fontSize="10" fill="#fcd34d">
+      <text x={GX} y={GH - 26} textAnchor="start" fontSize="13" fontWeight="bold" fill="#fcd34d">
         ◥ 오른쪽 위 노랑 = {meName}
       </text>
-      <text x={GX + CW * 2} y={GH - 8} textAnchor="end" fontSize="10" fill="#7dd3fc">
+      <text x={GX} y={GH - 7} textAnchor="start" fontSize="13" fontWeight="bold" fill="#7dd3fc">
         왼쪽 아래 파랑 = {youName} ◣
       </text>
     </svg>
@@ -273,7 +273,7 @@ function PayoffGrid({
 // ══════════════════════════════════════════════════════════════
 function TipBox({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-400">
+    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-base leading-7 text-slate-400">
       💡 {children}
     </p>
   );
@@ -282,7 +282,7 @@ function GoalList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-1">
       {items.map((t, i) => (
-        <li key={i} className="flex gap-2 text-xs leading-6 text-slate-300">
+        <li key={i} className="flex gap-2 text-base leading-7 text-slate-300">
           <span className="text-slate-500">{ABC[i] ?? "·"}</span>
           <span>{t}</span>
         </li>
@@ -294,7 +294,7 @@ function Verdict({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <p
       className={
-        "rounded-xl border-l-4 px-3 py-2 text-xs leading-6 " +
+        "rounded-xl border-l-4 px-3 py-2 text-base leading-7 " +
         (ok ? "border-emerald-400 bg-emerald-400/[0.08] text-emerald-100" : "border-amber-400 bg-amber-400/[0.08] text-amber-100")
       }
     >
@@ -353,7 +353,7 @@ function PickRow({
           type="button"
           onClick={() => onPick(i)}
           className={
-            "rounded-lg border px-2.5 py-1.5 text-xs font-bold transition " +
+            "rounded-lg border px-2.5 py-1.5 text-base font-bold transition " +
             (at === i ? ACC_CHIP[accent] : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
           }
         >
@@ -386,10 +386,10 @@ function Knob({
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <span className="text-[11px] font-bold text-slate-300">{label}</span>
-        <span className="font-mono text-sm text-slate-100">
+        <span className="text-base font-bold text-slate-300">{label}</span>
+        <span className="font-mono text-lg text-slate-100">
           {won(value)}
-          {suffix ? <span className="ml-0.5 text-[10px] text-slate-400">{suffix}</span> : null}
+          {suffix ? <span className="ml-0.5 text-sm text-slate-400">{suffix}</span> : null}
         </span>
       </div>
       <input
@@ -431,7 +431,7 @@ function ChoiceList({
             type="button"
             onClick={() => onPick(i)}
             className={
-              "flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-left text-sm font-semibold transition " +
+              "flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-left text-lg font-semibold transition " +
               (right
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : wrong
@@ -494,7 +494,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
                 disabled={!open}
                 onClick={() => setAt(i)}
                 className={
-                  "rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-35 " +
+                  "rounded-lg border px-2.5 py-1 text-base font-bold transition disabled:opacity-35 " +
                   (i === at
                     ? ACC_CHIP[accent]
                     : cleared
@@ -508,12 +508,12 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
             );
           })}
         </div>
-        <span className="font-mono text-xs text-slate-400">
+        <span className="font-mono text-base text-slate-400">
           해결 {clearedCount} / {steps.length}
         </span>
       </div>
 
-      <p className="text-sm font-bold leading-6 text-slate-100">{s.ask}</p>
+      <p className="text-lg font-bold leading-7 text-slate-100">{s.ask}</p>
 
       {s.kind === "choice" ? (
         <ChoiceList
@@ -538,11 +538,11 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
               setGraded((z) => ({ ...z, [s.id]: false }));
             }}
             className={
-              "h-10 w-40 rounded-xl border-2 px-3 text-center font-mono text-sm tabular-nums outline-none transition " +
+              "h-10 w-40 rounded-xl border-2 px-3 text-center font-mono text-lg tabular-nums outline-none transition " +
               INPUT_MARK[isGraded ? (okNow ? "right" : "wrong") : "none"]
             }
           />
-          {s.unit ? <span className="text-sm font-bold text-slate-300">{s.unit}</span> : null}
+          {s.unit ? <span className="text-lg font-bold text-slate-300">{s.unit}</span> : null}
         </div>
       )}
 
@@ -551,7 +551,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           type="button"
           disabled={!canAnswer}
           onClick={() => setGraded((z) => ({ ...z, [s.id]: true }))}
-          className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN[accent]}
+          className={"rounded-lg border-2 px-4 py-1.5 text-base font-bold transition disabled:opacity-40 " + ACC_BTN[accent]}
         >
           확인
         </button>
@@ -559,7 +559,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           <button
             type="button"
             onClick={() => setHints((z) => ({ ...z, [s.id]: !z[s.id] }))}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
           >
             💡 힌트
           </button>
@@ -567,7 +567,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
         <button
           type="button"
           onClick={() => setGraded((z) => ({ ...z, [s.id]: false }))}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
         >
           ↩️ 다시
         </button>
@@ -575,7 +575,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           <button
             type="button"
             onClick={() => setAt(at + 1)}
-            className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/25"
+            className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-base font-bold text-emerald-100 transition hover:bg-emerald-400/25"
           >
             다음 단계 →
           </button>
@@ -596,8 +596,8 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
 
       {allClear && finale ? (
         <div className="rounded-2xl border-2 border-emerald-400/45 bg-emerald-400/[0.10] p-3 text-center">
-          <p className="text-sm font-bold text-emerald-100">🎉 모두 해결했어요!</p>
-          <p className="mx-auto mt-1 max-w-2xl text-xs leading-6 text-slate-200">{finale}</p>
+          <p className="text-lg font-bold text-emerald-100">🎉 모두 해결했어요!</p>
+          <p className="mx-auto mt-1 max-w-2xl text-base leading-7 text-slate-200">{finale}</p>
         </div>
       ) : null}
     </div>
@@ -623,7 +623,7 @@ function DomTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-sky-400/25 bg-gradient-to-br from-sky-500/[0.07] to-amber-500/[0.04] p-4">
-        <p className="text-sm font-bold text-sky-200">🔍 상대의 선택을 하나씩 고정해 두고 내 두 선택을 견주어 보세요</p>
+        <p className="text-lg font-bold text-sky-200">🔍 상대의 선택을 하나씩 고정해 두고 내 두 선택을 견주어 보세요</p>
 
         <div className="mt-2">
           <PickRow
@@ -638,11 +638,11 @@ function DomTab() {
           />
         </div>
 
-        <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-300">
+        <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-base leading-7 text-slate-300">
           {g.emoji} {g.story} <span className="text-slate-500">(숫자가 클수록 좋아요 · 단위 {g.unit})</span>
         </p>
 
-        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
           <div className="flex justify-center">
             <PayoffGrid
               p={g}
@@ -662,7 +662,7 @@ function DomTab() {
                 type="button"
                 onClick={() => look("C")}
                 className={
-                  "rounded-lg border-2 px-3 py-1.5 text-xs font-bold transition " +
+                  "rounded-lg border-2 px-3 py-1.5 text-base font-bold transition " +
                   (lock === "C" ? ACC_CHIP.sky : ACC_BTN.sky)
                 }
               >
@@ -672,7 +672,7 @@ function DomTab() {
                 type="button"
                 onClick={() => look("D")}
                 className={
-                  "rounded-lg border-2 px-3 py-1.5 text-xs font-bold transition " +
+                  "rounded-lg border-2 px-3 py-1.5 text-base font-bold transition " +
                   (lock === "D" ? ACC_CHIP.rose : ACC_BTN.rose)
                 }
               >
@@ -684,7 +684,7 @@ function DomTab() {
                   setLock(null);
                   setSeen({});
                 }}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
               >
                 ↩️ 처음으로
               </button>
@@ -692,7 +692,7 @@ function DomTab() {
 
             {lock !== null ? (
               <div className="rounded-xl border-2 border-emerald-400/45 bg-emerald-400/[0.08] px-3 py-3">
-                <p className="text-[11px] font-bold text-emerald-200">
+                <p className="text-base font-bold text-emerald-200">
                   {g.you}가 「{lock === "C" ? g.coop : g.defect}」 할 때 {g.me}의 보수
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-center">
@@ -704,7 +704,7 @@ function DomTab() {
                         : "border-white/10 bg-white/5")
                     }
                   >
-                    <p className="text-[10px] text-slate-400">{g.coop}</p>
+                    <p className="text-sm text-slate-400">{g.coop}</p>
                     <p className="font-mono text-lg font-bold text-amber-100">{won(payoff(g, "C", lock))}</p>
                   </div>
                   <div
@@ -715,11 +715,11 @@ function DomTab() {
                         : "border-white/10 bg-white/5")
                     }
                   >
-                    <p className="text-[10px] text-slate-400">{g.defect}</p>
+                    <p className="text-sm text-slate-400">{g.defect}</p>
                     <p className="font-mono text-lg font-bold text-amber-100">{won(payoff(g, "D", lock))}</p>
                   </div>
                 </div>
-                <p className="mt-2 text-center text-xs font-bold text-emerald-100">
+                <p className="mt-2 text-center text-base font-bold text-emerald-100">
                   → 「{payoff(g, "D", lock) > payoff(g, "C", lock) ? g.defect : g.coop}」 가 {" "}
                   {won(Math.abs(payoff(g, "D", lock) - payoff(g, "C", lock)))} {g.unit} 더 이득
                 </p>
@@ -730,13 +730,13 @@ function DomTab() {
 
             {both ? (
               <div className="space-y-2 rounded-2xl border-2 border-rose-400/50 bg-rose-400/[0.10] p-3">
-                <p className="text-sm font-bold text-rose-100">😮 상대가 무엇을 하든 「{g.defect}」 가 이득이었어요</p>
-                <p className="text-xs leading-6 text-slate-200">
+                <p className="text-lg font-bold text-rose-100">😮 상대가 무엇을 하든 「{g.defect}」 가 이득이었어요</p>
+                <p className="text-base leading-7 text-slate-200">
                   이렇게 상대의 선택과 상관없이 늘 더 나은 선택을 <b className="text-rose-200">지배전략</b>이라고 해요. 둘 다
                   그렇게 고르면 분홍 칸에 닿아 각자 <b className="text-rose-200">{won(g.P)}</b> {g.unit} — 둘 다 「{g.coop}」
                   했다면 <b className="text-emerald-200">{won(g.R)}</b> {g.unit} 였을 텐데요.
                 </p>
-                <p className="text-xs font-bold text-amber-200">
+                <p className="text-base font-bold text-amber-200">
                   각자 가장 똑똑하게 골랐는데 둘 다 {won(g.R - g.P)} {g.unit} 씩 손해 — 이것이 죄수의 딜레마예요.
                 </p>
               </div>
@@ -773,7 +773,7 @@ function MoveChip({ m, coop, defect }: { m: Move; coop: string; defect: string }
   return (
     <span
       className={
-        "inline-block rounded-lg border px-2 py-0.5 text-[11px] font-bold " +
+        "inline-block rounded-lg border px-2 py-0.5 text-base font-bold " +
         (m === "C" ? "border-emerald-400/55 bg-emerald-400/15 text-emerald-100" : "border-rose-400/55 bg-rose-400/15 text-rose-100")
       }
     >
@@ -835,7 +835,7 @@ function DuelTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-violet-400/25 bg-gradient-to-br from-violet-500/[0.07] to-emerald-500/[0.04] p-4">
-        <p className="text-sm font-bold text-violet-200">🎮 상대를 고르고 직접 겨뤄 보세요 — 상대의 선택은 누른 뒤에 정해져요</p>
+        <p className="text-lg font-bold text-violet-200">🎮 상대를 고르고 직접 겨뤄 보세요 — 상대의 선택은 누른 뒤에 정해져요</p>
 
         <div className="mt-2 space-y-2">
           <PickRow items={GAMES} at={gi} accent="violet" onPick={(i) => { setGi(i); reset(); }} />
@@ -849,7 +849,7 @@ function DuelTab() {
                   reset();
                 }}
                 className={
-                  "rounded-lg border px-2.5 py-1.5 text-xs font-bold transition " +
+                  "rounded-lg border px-2.5 py-1.5 text-base font-bold transition " +
                   (ri === i ? ACC_CHIP.emerald : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                 }
               >
@@ -859,7 +859,7 @@ function DuelTab() {
           </div>
         </div>
 
-        <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-300">
+        <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-base leading-7 text-slate-300">
           {g.emoji} {g.story} · 상대는 {rv.emoji} <b className="text-emerald-200">{rv.name}</b> — {rv.desc}
         </p>
 
@@ -868,7 +868,7 @@ function DuelTab() {
             <div className="rounded-2xl border-2 border-white/10 bg-slate-900/60 p-4 text-center">
               <div className="grid grid-cols-3 items-center gap-2">
                 <div>
-                  <p className="text-[11px] font-bold text-amber-200">{g.me}</p>
+                  <p className="text-base font-bold text-amber-200">{g.me}</p>
                   <p className="mt-1 text-3xl">🙂</p>
                   <div className="mt-1 min-h-[24px]">
                     {phase === "reveal" && cur ? <MoveChip m={cur.mine} coop={g.coop} defect={g.defect} /> : null}
@@ -876,11 +876,11 @@ function DuelTab() {
                 </div>
                 <p className="text-2xl font-bold text-slate-500">VS</p>
                 <div>
-                  <p className="text-[11px] font-bold text-sky-200">{rv.name}</p>
+                  <p className="text-base font-bold text-sky-200">{rv.name}</p>
                   <p className="mt-1 text-3xl">{rv.emoji}</p>
                   <div className="mt-1 min-h-[24px]">
                     {phase === "thinking" ? (
-                      <span className="inline-block animate-pulse rounded-lg border border-white/15 bg-white/5 px-2 py-0.5 text-[11px] font-bold text-slate-300">
+                      <span className="inline-block animate-pulse rounded-lg border border-white/15 bg-white/5 px-2 py-0.5 text-base font-bold text-slate-300">
                         고민 중 · · ·
                       </span>
                     ) : phase === "reveal" && cur ? (
@@ -894,20 +894,20 @@ function DuelTab() {
                 {phase === "reveal" && cur ? (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border-2 border-amber-400/50 bg-amber-400/[0.12] px-2 py-2">
-                      <p className="text-[10px] text-slate-400">{g.me} 이번 판</p>
+                      <p className="text-sm text-slate-400">{g.me} 이번 판</p>
                       <p className="font-mono text-xl font-bold text-amber-100">
                         +{won(payoff(g, cur.mine, cur.theirs))}
                       </p>
                     </div>
                     <div className="rounded-xl border-2 border-sky-400/50 bg-sky-400/[0.12] px-2 py-2">
-                      <p className="text-[10px] text-slate-400">{rv.name} 이번 판</p>
+                      <p className="text-sm text-slate-400">{rv.name} 이번 판</p>
                       <p className="font-mono text-xl font-bold text-sky-100">
                         +{won(payoff(g, cur.theirs, cur.mine))}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <p className="pt-4 text-xs text-slate-500">아래에서 내 선택을 고르면 상대도 동시에 고릅니다</p>
+                  <p className="pt-4 text-base text-slate-500">아래에서 내 선택을 고르면 상대도 동시에 고릅니다</p>
                 )}
               </div>
             </div>
@@ -917,7 +917,7 @@ function DuelTab() {
                 type="button"
                 disabled={phase === "thinking"}
                 onClick={() => pick("C")}
-                className={"rounded-lg border-2 px-4 py-2 text-sm font-bold transition disabled:opacity-40 " + ACC_BTN.emerald}
+                className={"rounded-lg border-2 px-4 py-2 text-lg font-bold transition disabled:opacity-40 " + ACC_BTN.emerald}
               >
                 🤝 {g.coop}
               </button>
@@ -925,14 +925,14 @@ function DuelTab() {
                 type="button"
                 disabled={phase === "thinking"}
                 onClick={() => pick("D")}
-                className={"rounded-lg border-2 px-4 py-2 text-sm font-bold transition disabled:opacity-40 " + ACC_BTN.rose}
+                className={"rounded-lg border-2 px-4 py-2 text-lg font-bold transition disabled:opacity-40 " + ACC_BTN.rose}
               >
                 😈 {g.defect}
               </button>
               <button
                 type="button"
                 onClick={reset}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
               >
                 🧹 처음부터
               </button>
@@ -940,32 +940,32 @@ function DuelTab() {
 
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="rounded-xl border-2 border-amber-400/50 bg-amber-400/[0.10] px-3 py-2 text-center">
-                <p className="text-[11px] font-bold text-amber-200">{g.me} 누적</p>
+                <p className="text-base font-bold text-amber-200">{g.me} 누적</p>
                 <p className="mt-0.5 font-mono text-2xl font-bold text-amber-100">
-                  {won(myTotal)} <span className="text-[11px] font-normal text-slate-400">{g.unit}</span>
+                  {won(myTotal)} <span className="text-base font-normal text-slate-400">{g.unit}</span>
                 </p>
               </div>
               <div className="rounded-xl border-2 border-sky-400/50 bg-sky-400/[0.10] px-3 py-2 text-center">
-                <p className="text-[11px] font-bold text-sky-200">{rv.name} 누적</p>
+                <p className="text-base font-bold text-sky-200">{rv.name} 누적</p>
                 <p className="mt-0.5 font-mono text-2xl font-bold text-sky-100">
-                  {won(theirTotal)} <span className="text-[11px] font-normal text-slate-400">{g.unit}</span>
+                  {won(theirTotal)} <span className="text-base font-normal text-slate-400">{g.unit}</span>
                 </p>
               </div>
             </div>
 
             {log.length > 0 ? (
               <div className="overflow-x-auto overflow-y-hidden py-1">
-                <table className="w-full border-collapse text-xs">
+                <table className="w-full border-collapse text-base">
                   <thead>
                     <tr>
-                      <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-[11px] font-bold text-slate-200">판</th>
-                      <th className="border border-white/10 bg-amber-400/[0.12] px-2 py-1 text-[11px] font-bold text-amber-100">
+                      <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-base font-bold text-slate-200">판</th>
+                      <th className="border border-white/10 bg-amber-400/[0.12] px-2 py-1 text-base font-bold text-amber-100">
                         {g.me}
                       </th>
-                      <th className="border border-white/10 bg-sky-400/[0.12] px-2 py-1 text-[11px] font-bold text-sky-100">
+                      <th className="border border-white/10 bg-sky-400/[0.12] px-2 py-1 text-base font-bold text-sky-100">
                         {rv.name}
                       </th>
-                      <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-[11px] font-bold text-slate-200">
+                      <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-base font-bold text-slate-200">
                         점수
                       </th>
                     </tr>
@@ -973,14 +973,14 @@ function DuelTab() {
                   <tbody>
                     {log.slice(-8).map((r) => (
                       <tr key={r.n}>
-                        <td className="border border-white/10 px-2 py-1 text-center font-mono text-[11px] text-slate-400">{r.n}</td>
+                        <td className="border border-white/10 px-2 py-1 text-center font-mono text-base text-slate-400">{r.n}</td>
                         <td className="border border-white/10 px-2 py-1 text-center">
                           <MoveChip m={r.mine} coop={g.coop} defect={g.defect} />
                         </td>
                         <td className="border border-white/10 px-2 py-1 text-center">
                           <MoveChip m={r.theirs} coop={g.coop} defect={g.defect} />
                         </td>
-                        <td className="border border-white/10 px-2 py-1 text-center font-mono text-[11px] text-slate-200">
+                        <td className="border border-white/10 px-2 py-1 text-center font-mono text-base text-slate-200">
                           {won(r.got)} : {won(r.lost)}
                         </td>
                       </tr>
@@ -1002,7 +1002,7 @@ function DuelTab() {
                 equilibrium={phase === "reveal" && cur ? [cur.mine, cur.theirs] : null}
               />
             </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">
+            <p className="text-center text-sm leading-6 text-slate-400">
               이번 판이 닿은 칸이 분홍으로 반짝여요
             </p>
             <TipBox>
@@ -1134,7 +1134,7 @@ function LeagueTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.07] to-sky-500/[0.04] p-4">
-        <p className="text-sm font-bold text-amber-200">🏆 전략 둘을 골라 {ROUNDS}판을 붙여 보고, 리그도 열어 보세요</p>
+        <p className="text-lg font-bold text-amber-200">🏆 전략 둘을 골라 {ROUNDS}판을 붙여 보고, 리그도 열어 보세요</p>
 
         <div className="mt-2">
           <PickRow items={GAMES} at={gi} accent="amber" onPick={(i) => { setGi(i); reset(); }} />
@@ -1142,7 +1142,7 @@ function LeagueTab() {
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-amber-400/35 bg-amber-400/[0.06] p-2">
-            <p className="text-[11px] font-bold text-amber-200">🅰️ 전략</p>
+            <p className="text-base font-bold text-amber-200">🅰️ 전략</p>
             <div className="mt-1.5 flex flex-wrap gap-1">
               {STRATEGIES.map((s, i) => (
                 <button
@@ -1154,7 +1154,7 @@ function LeagueTab() {
                     reset();
                   }}
                   className={
-                    "rounded-lg border px-2 py-1 text-[11px] font-bold transition disabled:opacity-40 " +
+                    "rounded-lg border px-2 py-1 text-base font-bold transition disabled:opacity-40 " +
                     (ai === i ? ACC_CHIP.amber : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                   }
                 >
@@ -1162,10 +1162,10 @@ function LeagueTab() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-[11px] leading-5 text-slate-400">{A.desc}</p>
+            <p className="mt-1.5 text-base leading-7 text-slate-400">{A.desc}</p>
           </div>
           <div className="rounded-xl border border-sky-400/35 bg-sky-400/[0.06] p-2">
-            <p className="text-[11px] font-bold text-sky-200">🅱️ 전략</p>
+            <p className="text-base font-bold text-sky-200">🅱️ 전략</p>
             <div className="mt-1.5 flex flex-wrap gap-1">
               {STRATEGIES.map((s, i) => (
                 <button
@@ -1177,7 +1177,7 @@ function LeagueTab() {
                     reset();
                   }}
                   className={
-                    "rounded-lg border px-2 py-1 text-[11px] font-bold transition disabled:opacity-40 " +
+                    "rounded-lg border px-2 py-1 text-base font-bold transition disabled:opacity-40 " +
                     (bi === i ? ACC_CHIP.sky : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                   }
                 >
@@ -1185,7 +1185,7 @@ function LeagueTab() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-[11px] leading-5 text-slate-400">{B.desc}</p>
+            <p className="mt-1.5 text-base leading-7 text-slate-400">{B.desc}</p>
           </div>
         </div>
 
@@ -1194,7 +1194,7 @@ function LeagueTab() {
             type="button"
             disabled={running || at >= ROUNDS}
             onClick={() => setAt(at + 1)}
-            className={"rounded-lg border-2 px-3 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN.amber}
+            className={"rounded-lg border-2 px-3 py-1.5 text-base font-bold transition disabled:opacity-40 " + ACC_BTN.amber}
           >
             ▶️ 한 판씩
           </button>
@@ -1202,18 +1202,18 @@ function LeagueTab() {
             type="button"
             disabled={running}
             onClick={auto}
-            className={"rounded-lg border-2 px-3 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN.emerald}
+            className={"rounded-lg border-2 px-3 py-1.5 text-base font-bold transition disabled:opacity-40 " + ACC_BTN.emerald}
           >
             ⏩ 자동으로 쭉
           </button>
           <button
             type="button"
             onClick={reset}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
           >
             ↩️ 처음으로
           </button>
-          <span className="font-mono text-[11px] text-slate-400">
+          <span className="font-mono text-base text-slate-400">
             {at} / {ROUNDS} 판
           </span>
         </div>
@@ -1230,7 +1230,7 @@ function LeagueTab() {
                     (on ? "border-white/20 bg-white/[0.06]" : "border-white/5 bg-white/[0.02] opacity-30")
                   }
                 >
-                  <p className="text-[9px] text-slate-500">{i + 1}판</p>
+                  <p className="text-sm text-slate-400">{i + 1}판</p>
                   <p className={"text-base " + (on && x === "C" ? "text-emerald-300" : on ? "text-rose-300" : "text-slate-700")}>
                     {on ? (x === "C" ? "🤝" : "😈") : "·"}
                   </p>
@@ -1265,11 +1265,11 @@ function LeagueTab() {
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/40 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-bold text-slate-200">🏟️ 리그 — 여섯 전략이 모두 서로 겨룬 총점</p>
+            <p className="text-base font-bold text-slate-200">🏟️ 리그 — 여섯 전략이 모두 서로 겨룬 총점</p>
             <button
               type="button"
               onClick={() => setOpenLeague(!openLeague)}
-              className={"rounded-lg border-2 px-3 py-1.5 text-[11px] font-bold transition " + ACC_BTN.sky}
+              className={"rounded-lg border-2 px-3 py-1.5 text-base font-bold transition " + ACC_BTN.sky}
             >
               {openLeague ? "리그 접기" : "리그 열기"}
             </button>
@@ -1278,21 +1278,21 @@ function LeagueTab() {
           {openLeague ? (
             <div className="mt-2 space-y-2">
               <div className="overflow-x-auto overflow-y-hidden py-1">
-                <table className="w-full border-collapse text-xs">
+                <table className="w-full border-collapse text-base">
                   <thead>
                     <tr>
-                      <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-slate-200">
+                      <th className="border border-white/10 bg-white/[0.06] px-2 py-1 text-sm font-bold text-slate-200">
                         전략 \ 상대
                       </th>
                       {STRATEGIES.map((s) => (
-                        <th key={s.id} className="border border-white/10 bg-white/[0.04] px-1 py-1 text-[14px]">
+                        <th key={s.id} className="border border-white/10 bg-white/[0.04] px-1 py-1 text-lg">
                           <span title={s.name}>{s.emoji}</span>
                         </th>
                       ))}
-                      <th className="border border-white/10 bg-amber-400/[0.14] px-2 py-1 text-[10px] font-bold text-amber-100">
+                      <th className="border border-white/10 bg-amber-400/[0.14] px-2 py-1 text-sm font-bold text-amber-100">
                         총점
                       </th>
-                      <th className="border border-white/10 bg-emerald-400/[0.14] px-2 py-1 text-[10px] font-bold text-emerald-100">
+                      <th className="border border-white/10 bg-emerald-400/[0.14] px-2 py-1 text-sm font-bold text-emerald-100">
                         순위
                       </th>
                     </tr>
@@ -1300,21 +1300,21 @@ function LeagueTab() {
                   <tbody>
                     {STRATEGIES.map((a, i) => (
                       <tr key={a.id}>
-                        <td className="border border-white/10 px-2 py-1 text-[11px] font-bold text-slate-200">
+                        <td className="border border-white/10 px-2 py-1 text-base font-bold text-slate-200">
                           {a.emoji} {a.name}
                         </td>
                         {STRATEGIES.map((b) => (
                           <td
                             key={b.id}
-                            className="border border-white/10 px-1 py-1 text-right font-mono text-[11px] tabular-nums text-slate-300"
+                            className="border border-white/10 px-1 py-1 text-right font-mono text-base tabular-nums text-slate-300"
                           >
                             {won(duel(g, a, b).scoreA)}
                           </td>
                         ))}
-                        <td className="border border-white/10 bg-amber-400/[0.08] px-2 py-1 text-right font-mono text-[11px] font-bold text-amber-100">
+                        <td className="border border-white/10 bg-amber-400/[0.08] px-2 py-1 text-right font-mono text-base font-bold text-amber-100">
                           {won(tot[i])}
                         </td>
-                        <td className="border border-white/10 bg-emerald-400/[0.08] px-2 py-1 text-center text-[11px] font-bold text-emerald-100">
+                        <td className="border border-white/10 bg-emerald-400/[0.08] px-2 py-1 text-center text-base font-bold text-emerald-100">
                           {MEDAL[rk[i] - 1] ?? ""}
                           {rk[i]}등
                         </td>
@@ -1365,9 +1365,9 @@ function EscapeTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.07] to-rose-500/[0.04] p-4">
-        <p className="text-sm font-bold text-emerald-200">🔧 네 수를 바꿔 가며 어떤 판일 때 딜레마가 되는지 찾아보세요</p>
+        <p className="text-lg font-bold text-emerald-200">🔧 네 수를 바꿔 가며 어떤 판일 때 딜레마가 되는지 찾아보세요</p>
 
-        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
           <div className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Knob label="R — 둘 다 협력" value={k.R} min={KNOB_MIN} max={KNOB_MAX} step={KNOB_STEP} accent="emerald" onChange={(z) => setK({ ...k, R: z })} />
@@ -1383,8 +1383,8 @@ function EscapeTab() {
                   (k.T > k.R ? "border-rose-400/55 bg-rose-400/[0.10]" : "border-emerald-400/55 bg-emerald-400/[0.10]")
                 }
               >
-                <p className="text-[11px] font-bold text-slate-300">상대가 협력할 때</p>
-                <p className={"mt-0.5 text-sm font-bold " + (k.T > k.R ? "text-rose-100" : "text-emerald-100")}>
+                <p className="text-base font-bold text-slate-300">상대가 협력할 때</p>
+                <p className={"mt-0.5 text-lg font-bold " + (k.T > k.R ? "text-rose-100" : "text-emerald-100")}>
                   {k.T > k.R ? "배신이 유리 (T > R)" : k.T < k.R ? "협력이 유리 (R > T)" : "똑같음 (R = T)"}
                 </p>
               </div>
@@ -1394,8 +1394,8 @@ function EscapeTab() {
                   (k.P > k.S ? "border-rose-400/55 bg-rose-400/[0.10]" : "border-emerald-400/55 bg-emerald-400/[0.10]")
                 }
               >
-                <p className="text-[11px] font-bold text-slate-300">상대가 배신할 때</p>
-                <p className={"mt-0.5 text-sm font-bold " + (k.P > k.S ? "text-rose-100" : "text-emerald-100")}>
+                <p className="text-base font-bold text-slate-300">상대가 배신할 때</p>
+                <p className={"mt-0.5 text-lg font-bold " + (k.P > k.S ? "text-rose-100" : "text-emerald-100")}>
                   {k.P > k.S ? "배신이 유리 (P > S)" : k.P < k.S ? "협력이 유리 (S > P)" : "똑같음 (P = S)"}
                 </p>
               </div>
@@ -1411,17 +1411,17 @@ function EscapeTab() {
                 {v.dilemma ? "⚠️ " : "🕊️ "}
                 {v.label}
               </p>
-              <p className="mt-1 text-xs leading-6 text-slate-200">{v.why}</p>
+              <p className="mt-1 text-base leading-7 text-slate-200">{v.why}</p>
               <div className="mt-2 overflow-x-auto overflow-y-hidden py-1">
                 <Katex expr="T > R > P > S" className="whitespace-nowrap text-base text-slate-300" />
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-base text-slate-400">
                 지금은 T {k.T} · R {k.R} · P {k.P} · S {k.S}
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-              <p className="text-xs font-bold text-slate-200">🎯 미션 — 협력이 지배전략인 판을 만들어 보세요</p>
+              <p className="text-base font-bold text-slate-200">🎯 미션 — 협력이 지배전략인 판을 만들어 보세요</p>
               <div className="mt-2">
                 {v.coopDominant ? (
                   <Verdict ok>
@@ -1448,7 +1448,7 @@ function EscapeTab() {
                 equilibrium={eq}
               />
             </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">
+            <p className="text-center text-sm leading-6 text-slate-400">
               지배전략이 있으면 둘이 닿는 칸이 분홍으로 반짝여요
             </p>
           </div>
@@ -1456,27 +1456,27 @@ function EscapeTab() {
       </div>
 
       <div className="rounded-2xl border border-rose-400/25 bg-gradient-to-br from-rose-500/[0.07] to-emerald-500/[0.04] p-4">
-        <p className="text-sm font-bold text-rose-200">
+        <p className="text-lg font-bold text-rose-200">
           💰 벌금으로 빠져나오기 — 「{fg.defect}」 를 하면 벌금을 내게 하면 어떻게 될까요?
         </p>
-        <p className="mt-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-300">
+        <p className="mt-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-base leading-7 text-slate-300">
           {fg.emoji} {fg.title} (R {fg.R} · T {fg.T} · P {fg.P} · S {fg.S}) 를 그대로 두고, 「{fg.defect}」 를 고른 쪽만 벌금을
           냅니다.
         </p>
 
-        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
           <div className="space-y-3">
             <Knob label="벌금" value={fine} min={0} max={FINE_MAX} step={1} accent="rose" suffix={fg.unit} onChange={setFine} />
 
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center">
-                <p className="text-[11px] font-bold text-slate-300">나만 배신했을 때</p>
+                <p className="text-base font-bold text-slate-300">나만 배신했을 때</p>
                 <p className="mt-0.5 font-mono text-lg font-bold text-amber-100">
                   {won(fg.T)} - {won(fine)} = {won(fined.T)}
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center">
-                <p className="text-[11px] font-bold text-slate-300">둘 다 배신했을 때</p>
+                <p className="text-base font-bold text-slate-300">둘 다 배신했을 때</p>
                 <p className="mt-0.5 font-mono text-lg font-bold text-amber-100">
                   {won(fg.P)} - {won(fine)} = {won(fined.P)}
                 </p>
@@ -1493,11 +1493,11 @@ function EscapeTab() {
                 {fv.dilemma ? "⚠️ " : "🕊️ "}
                 {fv.label}
               </p>
-              <p className="mt-1 text-xs leading-6 text-slate-200">{fv.why}</p>
+              <p className="mt-1 text-base leading-7 text-slate-200">{fv.why}</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-              <p className="text-xs font-bold text-slate-200">🎯 미션 — 「{fg.coop}」 가 지배전략이 되게 만들어 보세요</p>
+              <p className="text-base font-bold text-slate-200">🎯 미션 — 「{fg.coop}」 가 지배전략이 되게 만들어 보세요</p>
               <div className="mt-2">
                 {fv.coopDominant ? (
                   <Verdict ok>
@@ -1528,7 +1528,7 @@ function EscapeTab() {
                 equilibrium={feq}
               />
             </div>
-            <p className="text-center text-[10px] leading-4 text-slate-500">벌금을 올리면 분홍 칸이 옮겨 갑니다</p>
+            <p className="text-center text-sm leading-6 text-slate-400">벌금을 올리면 분홍 칸이 옮겨 갑니다</p>
           </div>
         </div>
 
@@ -1546,7 +1546,7 @@ function EscapeTab() {
 
       <StepRunner steps={ESCAPE_STEPS} accent="emerald" finale="딜레마를 읽고, 겨뤄 보고, 빠져나오는 길까지 모두 살펴봤어요!" />
 
-      <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] leading-5 text-slate-400">
+      <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-base leading-7 text-slate-400">
         {REAL_NOTE}
       </p>
     </div>
