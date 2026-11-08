@@ -188,7 +188,8 @@ export const SYM_STEP = 0.25;
 export type PtTask = {
   id: string;
   prompt: Piece[];
-  choices: string[];
+  /** 보기 — 한글과 식이 섞이므로 조각(Piece) 배열로 둔다(KaTeX 안에 한글을 넣지 않는다). */
+  choices: Piece[][];
   answer: number;
   choiceWhy: string[];
   why: string;
@@ -198,7 +199,7 @@ export const PT_TASKS: PtTask[] = [
   {
     id: "p1",
     prompt: [{ tex: "y=f(x)" }, { pre: " 의 그래프가 점 " }, { tex: "(3,\\ 7)" }, { pre: " 을 지날 때 " }, { tex: "y=f^{-1}(x)" }, { pre: " 의 그래프가 반드시 지나는 점은?" }],
-    choices: ["(3,\\ 7)", "(7,\\ 3)", "(-3,\\ -7)", "(-7,\\ -3)"],
+    choices: [[{ tex: "(3,\\ 7)" }], [{ tex: "(7,\\ 3)" }], [{ tex: "(-3,\\ -7)" }], [{ tex: "(-7,\\ -3)" }]],
     answer: 1,
     choiceWhy: [
       "그대로 옮겨 적으면 안 돼요. 두 좌표를 맞바꾸어야 합니다.",
@@ -211,7 +212,7 @@ export const PT_TASKS: PtTask[] = [
   {
     id: "p2",
     prompt: [{ tex: "y=f^{-1}(x)" }, { pre: " 의 그래프가 점 " }, { tex: "(-2,\\ 5)" }, { pre: " 를 지날 때 " }, { tex: "y=f(x)" }, { pre: " 의 그래프가 지나는 점은?" }],
-    choices: ["(2,\\ -5)", "(-5,\\ 2)", "(5,\\ -2)", "(-2,\\ 5)"],
+    choices: [[{ tex: "(2,\\ -5)" }], [{ tex: "(-5,\\ 2)" }], [{ tex: "(5,\\ -2)" }], [{ tex: "(-2,\\ 5)" }]],
     answer: 2,
     choiceWhy: [
       "부호를 바꾸는 것이 아니라 좌표를 맞바꾸어야 해요.",
@@ -225,10 +226,10 @@ export const PT_TASKS: PtTask[] = [
     id: "p3",
     prompt: [{ tex: "f(1)=1" }, { pre: " 일 때 점 " }, { tex: "(1,\\ 1)" }, { pre: " 에 대하여 옳은 것은?" }],
     choices: [
-      "y=f(x) \\ \\text{only}",
-      "y=f^{-1}(x) \\ \\text{only}",
-      "\\text{neither}",
-      "\\text{both}",
+      [{ tex: "y=f(x)", post: "의 그래프 위에만 있다" }],
+      [{ tex: "y=f^{-1}(x)", post: "의 그래프 위에만 있다" }],
+      [{ pre: "어느 그래프 위에도 없다" }],
+      [{ pre: "두 그래프 위에 모두 있다" }],
     ],
     answer: 3,
     choiceWhy: [
@@ -243,10 +244,10 @@ export const PT_TASKS: PtTask[] = [
     id: "p4",
     prompt: [{ tex: "y=f(x)" }, { pre: " 의 " }, { tex: "y" }, { pre: "절편이 " }, { tex: "4" }, { pre: " 일 때 " }, { tex: "y=f^{-1}(x)" }, { pre: " 에 대하여 알 수 있는 것은?" }],
     choices: [
-      "y \\text{-intercept} = 4",
-      "x \\text{-intercept} = 4",
-      "y \\text{-intercept} = -4",
-      "x \\text{-intercept} = -4",
+      [{ tex: "y", post: "절편이" }, { tex: "4" }],
+      [{ tex: "x", post: "절편이" }, { tex: "4" }],
+      [{ tex: "y", post: "절편이" }, { tex: "-4" }],
+      [{ tex: "x", post: "절편이" }, { tex: "-4" }],
     ],
     answer: 1,
     choiceWhy: [
@@ -260,7 +261,7 @@ export const PT_TASKS: PtTask[] = [
   {
     id: "p5",
     prompt: [{ pre: "두 그래프가 모두 점 " }, { tex: "(2,\\ 2)" }, { pre: " 를 지날 때 그 점이 놓인 직선은?" }],
-    choices: ["y=-x", "y=2x", "y=x", "x=2"],
+    choices: [[{ tex: "y=-x" }], [{ tex: "y=2x" }], [{ tex: "y=x" }], [{ tex: "x=2" }]],
     answer: 2,
     choiceWhy: [
       "두 좌표의 부호가 서로 반대여야 이 직선 위에 놓입니다.",
@@ -273,7 +274,12 @@ export const PT_TASKS: PtTask[] = [
   {
     id: "p6",
     prompt: [{ pre: "점 " }, { tex: "(a,\\ b)" }, { pre: " 와 점 " }, { tex: "(b,\\ a)" }, { pre: " 를 이은 선분의 중점은 어디에 있을까요?" }],
-    choices: ["\\text{on } y=x", "\\text{on } y=-x", "\\text{at the origin}", "\\text{nowhere fixed}"],
+    choices: [
+      [{ pre: "직선", tex: "y=x", post: "위" }],
+      [{ pre: "직선", tex: "y=-x", post: "위" }],
+      [{ pre: "원점" }],
+      [{ pre: "정해진 자리가 없다" }],
+    ],
     answer: 0,
     choiceWhy: [
       "",
