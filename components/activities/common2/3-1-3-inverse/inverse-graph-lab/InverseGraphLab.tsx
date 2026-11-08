@@ -173,16 +173,17 @@ function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
   );
 }
 
-function TexChoices({ items, pick, answer, onPick }: { items: string[]; pick: number | undefined; answer: number; onPick: (i: number) => void }) {
+/** 보기 — 한글과 식을 조각(Piece)으로 나누어 담는다 */
+function PieceChoices({ items, pick, answer, onPick }: { items: Piece[][]; pick: number | undefined; answer: number; onPick: (i: number) => void }) {
   const right = pick === answer;
   return (
     <div className="grid gap-1.5 sm:grid-cols-2">
-      {items.map((s, i) => {
+      {items.map((row, i) => {
         const good = pick === i && i === answer;
         const badPick = pick === i && i !== answer;
         return (
           <button
-            key={s}
+            key={row.map((p) => (p.pre ?? "") + (p.tex ?? "") + (p.post ?? "")).join("|")}
             type="button"
             onClick={() => onPick(i)}
             disabled={right}
@@ -196,7 +197,7 @@ function TexChoices({ items, pick, answer, onPick }: { items: string[]; pick: nu
             }
           >
             <span className="mr-1.5 text-lg text-slate-400">{ABC[i]}</span>
-            <Katex expr={s} />
+            <PieceLine ps={row} />
           </button>
         );
       })}
@@ -414,7 +415,7 @@ function PtCard({ q, pick, onPick }: { q: PtTask; pick: number | undefined; onPi
       <p className="rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-xl font-bold leading-10 text-slate-100">
         <PieceLine ps={q.prompt} />
       </p>
-      <TexChoices items={q.choices} pick={pick} answer={q.answer} onPick={onPick} />
+      <PieceChoices items={q.choices} pick={pick} answer={q.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={right} why={q.why} hint={q.choiceWhy[pick]} /> : null}
     </div>
   );
@@ -892,7 +893,8 @@ function SlopeTab() {
             </p>
             {point ? (
               <p className="overflow-x-auto overflow-y-hidden rounded-lg bg-black/25 px-3 py-2 text-center text-xl leading-9 text-slate-200">
-                <Katex expr={`\\text{cross} = (${tx(point[0])},\\ ${tx(point[1])})`} />
+                교점{" "}
+                <Katex expr={`(${tx(point[0])},\\ ${tx(point[1])})`} />
               </p>
             ) : null}
 

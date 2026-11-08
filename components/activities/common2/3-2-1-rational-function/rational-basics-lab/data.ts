@@ -45,17 +45,17 @@ export type Zone = "outer" | "rational" | "poly" | "const";
 /** 중첩 상자 지도 — 고른 식(함수)이 앉는 고리가 빛난다. 탭 ① 과 ③ 이 이름만 바꿔 함께 쓴다. */
 export const MAP = {
   w: 360,
-  h: 200,
+  h: 218,
   boxes: [
-    { key: "outer" as Zone, label: "식", x: 8, y: 26, w: 344, h: 166, lx: 16, ly: 46 },
-    { key: "rational" as Zone, label: "유리식", x: 80, y: 48, w: 260, h: 132, lx: 88, ly: 68 },
-    { key: "poly" as Zone, label: "다항식", x: 152, y: 70, w: 176, h: 98, lx: 160, ly: 90 },
-    { key: "const" as Zone, label: "상수", x: 222, y: 92, w: 94, h: 64, lx: 230, ly: 112 },
+    { key: "outer" as Zone, label: "식", x: 8, y: 26, w: 344, h: 184, lx: 16, ly: 48 },
+    { key: "rational" as Zone, label: "유리식", x: 80, y: 54, w: 260, h: 144, lx: 88, ly: 76 },
+    { key: "poly" as Zone, label: "다항식", x: 152, y: 82, w: 176, h: 104, lx: 160, ly: 104 },
+    { key: "const" as Zone, label: "상수", x: 222, y: 110, w: 94, h: 64, lx: 230, ly: 132 },
   ],
 };
 
 /** 이름표 글자 크기 — 상자를 벗어나지 않는지 검증 스크립트가 검사한다. */
-export const MAP_LABEL_FS = 15;
+export const MAP_LABEL_FS = 17;
 
 /** 함수 쪽 지도(탭 ③)는 같은 자리에 이름만 바꿔 쓴다. */
 export const FN_MAP_LABELS: Record<Zone, string> = {
@@ -584,7 +584,7 @@ export const FN_X = { min: -6, max: 6, step: 0.5, init: 2 };
 // 탭 ④ 정의역 구멍 사냥
 // ══════════════════════════════════════════════════════════════
 
-export const LINE = { w: 480, h: 104, left: 32, right: 452, y: 58, x0: -8, x1: 8 };
+export const LINE = { w: 480, h: 110, left: 32, right: 452, y: 58, x0: -8, x1: 8 };
 export const DOM_X = { min: -8, max: 8, step: 0.5, init: 1 };
 
 export type DomTask = {
@@ -752,7 +752,7 @@ export type LifeGraph = {
 };
 
 /** 좌표평면 칸의 치수 — 점이 모두 이 안에 들어오는지 검증 스크립트가 검사한다. */
-export const PLOT = { w: 300, h: 220, left: 44, right: 288, top: 24, bottom: 176 };
+export const PLOT = { w: 306, h: 220, left: 44, right: 288, top: 24, bottom: 176 };
 
 export type LifeQ = {
   prompt: string;
