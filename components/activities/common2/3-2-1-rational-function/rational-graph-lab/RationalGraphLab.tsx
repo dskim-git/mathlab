@@ -79,7 +79,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3.5 py-2 text-sm font-bold transition " +
+        "rounded-xl border-2 px-3.5 py-2 text-lg font-bold transition " +
         (active ? "border-sky-400/60 bg-sky-400/15 text-sky-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -97,7 +97,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           type="button"
           onClick={() => onPick(i)}
           className={
-            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+            "h-10 min-w-[2.5rem] rounded-lg border-2 px-1.5 font-mono text-sm font-bold transition " +
             (i === cur
               ? "border-sky-400/70 bg-sky-400/20 text-sky-100"
               : done.includes(id)
@@ -108,7 +108,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           {done.includes(id) && i !== cur ? "✓" : i + 1}
         </button>
       ))}
-      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-base font-bold text-slate-300">
         {done.length} / {ids.length}
       </span>
     </div>
@@ -120,7 +120,7 @@ function NextBtn({ onClick, label = "다음 ▶" }: { onClick: () => void; label
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-xl border-2 border-sky-400/55 bg-sky-400/15 px-3 py-2.5 text-sm font-bold text-sky-100 transition hover:bg-sky-400/25"
+      className="w-full rounded-xl border-2 border-sky-400/55 bg-sky-400/15 px-3 py-2.5 text-lg font-bold text-sky-100 transition hover:bg-sky-400/25"
     >
       {label}
     </button>
@@ -146,14 +146,14 @@ function PieceText({ items }: { items: Piece[] }) {
 }
 
 function TipBox({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">{children}</p>;
+  return <p className="rounded-lg bg-black/25 px-3 py-2 text-base leading-7 text-slate-400">{children}</p>;
 }
 
 function Verdict({ right, why, hint }: { right: boolean; why: string; hint: string }) {
   return right ? (
-    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {why}</p>
+    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-7 text-emerald-100">✅ {why}</p>
   ) : (
-    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {hint}</p>
+    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-base leading-7 text-rose-100">❌ {hint}</p>
   );
 }
 
@@ -177,9 +177,9 @@ function Slider({
   show?: string;
 }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400">
+    <label className="block text-base font-bold text-slate-400">
       <span className="inline-flex items-center gap-1.5">
-        {label} <span className="font-mono text-[13px] text-slate-100">{show ?? value}</span>
+        {label} <span className="font-mono text-lg text-slate-100">{show ?? value}</span>
       </span>
       <input
         type="range"
@@ -197,8 +197,8 @@ function Slider({
 function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-      <p className="text-[11px] font-bold text-slate-400">해 볼 것 세 가지</p>
-      <div className="mt-1 space-y-1 text-[12px] leading-6">
+      <p className="text-base font-bold text-slate-400">해 볼 것 세 가지</p>
+      <div className="mt-1 space-y-1 text-base leading-7">
         {goals.map((g, i) => (
           <p key={g} className={seen.includes(String(i)) ? "text-emerald-200" : "text-slate-400"}>
             {seen.includes(String(i)) ? "✓" : "○"} {g}
@@ -211,8 +211,8 @@ function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span className="inline-flex min-w-0 flex-wrap items-baseline gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[12px] font-bold text-slate-200">
-      <span className="text-[10px] text-slate-400">{label}</span>
+    <span className="inline-flex min-w-0 flex-wrap items-baseline gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-base font-bold text-slate-200">
+      <span className="text-sm text-slate-400">{label}</span>
       {children}
     </span>
   );
@@ -243,7 +243,7 @@ function MixedChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-default " +
+              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-lg font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -251,7 +251,7 @@ function MixedChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="shrink-0 text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="shrink-0 text-base text-slate-400">{ABC[i]}</span>
             <span className="flex min-w-0 flex-wrap items-baseline gap-x-1">
               <PieceText items={row} />
             </span>
@@ -287,7 +287,7 @@ function TexChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex min-w-0 items-center gap-1.5 rounded-xl border-2 px-2.5 py-2.5 text-[15px] transition disabled:cursor-default " +
+              "flex min-w-0 items-center gap-1.5 rounded-xl border-2 px-2.5 py-2.5 text-xl transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -295,7 +295,7 @@ function TexChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="text-base text-slate-400">{ABC[i]}</span>
             <span className="min-w-0 py-0.5">
               <Katex expr={s} />
             </span>
@@ -331,7 +331,7 @@ function WideChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex w-full items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-default " +
+              "flex w-full items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-lg font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -339,7 +339,7 @@ function WideChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="text-base text-slate-400">{ABC[i]}</span>
             {s}
           </button>
         );
@@ -352,7 +352,7 @@ function WideChoices({
 function QuizCard({ q, pick, onPick }: { q: Quiz; pick: number | undefined; onPick: (i: number) => void }) {
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-bold text-slate-100">{q.prompt}</p>
+      <p className="text-lg font-bold text-slate-100">{q.prompt}</p>
       <MixedChoices items={q.choices} pick={pick} answer={q.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={pick === q.answer} why={q.why} hint={q.choiceWhy[pick]} /> : null}
     </div>
@@ -391,7 +391,7 @@ function Plane({
   showAsymLabel?: boolean;
 }) {
   return (
-    <svg viewBox={`0 0 ${PLANE.w} ${PLANE.h}`} className="mx-auto block w-full max-w-[340px]" role="img" aria-label="유리함수의 그래프">
+    <svg viewBox={`0 0 ${PLANE.w} ${PLANE.h}`} className="mx-auto block w-full max-w-[460px]" role="img" aria-label="유리함수의 그래프">
       <rect x={0} y={0} width={PLANE.w} height={PLANE.h} fill="#020617" rx={12} />
 
       {quad ? (
@@ -421,15 +421,15 @@ function Plane({
       <line x1={planeX(0)} y1={AX.y0} x2={planeX(0)} y2={AX.y1} stroke="#64748b" strokeWidth={1.6} />
       {NUMBERED.map((t) => (
         <g key={"n" + t}>
-          <text x={planeX(t)} y={planeY(0) + 13} fontSize={9.5} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={planeX(t)} y={planeY(0) + 15} fontSize={11.5} textAnchor="middle" fill="#94a3b8" fontFamily="ui-monospace, monospace">
             {t}
           </text>
-          <text x={planeX(0) - 5} y={planeY(t) + 3.5} fontSize={9.5} textAnchor="end" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={planeX(0) - 5} y={planeY(t) + 4} fontSize={11.5} textAnchor="end" fill="#94a3b8" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
       ))}
-      <text x={planeX(0) - 5} y={planeY(0) + 13} fontSize={9.5} textAnchor="end" fill="#64748b">
+      <text x={planeX(0) - 5} y={planeY(0) + 15} fontSize={11.5} textAnchor="end" fill="#94a3b8">
         O
       </text>
 
@@ -437,7 +437,7 @@ function Plane({
         <g>
           <line x1={planeX(asymP)} y1={AX.y0} x2={planeX(asymP)} y2={AX.y1} stroke="#fbbf24" strokeWidth={1.5} strokeDasharray="6 4" />
           {showAsymLabel ? (
-            <text x={planeX(asymP) + 5} y={AX.y0 + 11} fontSize={11} fontWeight={700} fill="#fcd34d">
+            <text x={planeX(asymP) + 5} y={AX.y0 + 13} fontSize={13.5} fontWeight={700} fill="#fcd34d">
               x = {asymP}
             </text>
           ) : null}
@@ -447,7 +447,7 @@ function Plane({
         <g>
           <line x1={AX.x0} y1={planeY(asymQ)} x2={AX.x1} y2={planeY(asymQ)} stroke="#fbbf24" strokeWidth={1.5} strokeDasharray="6 4" />
           {showAsymLabel ? (
-            <text x={AX.x1 - 4} y={planeY(asymQ) - 6} fontSize={11} fontWeight={700} textAnchor="end" fill="#fcd34d">
+            <text x={AX.x1 - 4} y={planeY(asymQ) - 7} fontSize={13.5} fontWeight={700} textAnchor="end" fill="#fcd34d">
               y = {asymQ}
             </text>
           ) : null}
@@ -497,7 +497,7 @@ export default function RationalGraphLab() {
       <div className="border-b border-white/10 pb-5">
         <p className="text-sm font-semibold text-sky-300">미니활동 · 공통수학2</p>
         <h3 className="mt-2 text-2xl font-bold">📉 유리함수의 그래프</h3>
-        <p className="mt-2 leading-7 text-slate-300">
+        <p className="mt-2 leading-8 text-slate-300">
           <b className="text-amber-200">점근선</b>은 곡선이 한없이 다가가지만 끝내 만나지 못하는 직선입니다. 슬라이더를 움직여 곡선이 어떻게 자리를 잡는지 직접 살펴보세요.
         </p>
       </div>
@@ -574,16 +574,16 @@ function KTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🔬 k 를 움직여 보기</p>
+        <p className="text-lg font-bold text-slate-100">🔬 k 를 움직여 보기</p>
         <TipBox>
           📖 <Katex expr="y=\dfrac{k}{x}" /> 에서 <Katex expr="k" /> 하나가 그래프의 모든 것을 정합니다. 부호는 놓이는 사분면을, 절댓값은 원점에서 떨어진 정도를 바꿔요.
         </TipBox>
 
-        <div className="mt-2 grid gap-2 sm:grid-cols-5">
-          <div className="sm:col-span-3">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
+          <div>
             <Plane curves={curves} dots={dots} quad={k > 0 ? "13" : "24"} linkOrigin={sym} showAsymLabel={false} />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2">
             <Slider
               label={<Katex expr="k=" />}
               value={ki}
@@ -595,7 +595,7 @@ function KTab() {
               show={String(k)}
             />
             <div className="flex flex-wrap gap-1.5">
-              <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[12px] font-bold text-slate-200">
+              <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-base font-bold text-slate-200">
                 {k > 0 ? "제1·3사분면" : "제2·4사분면"}
               </span>
               <Info label="점근선">
@@ -612,7 +612,7 @@ function KTab() {
               type="button"
               onClick={() => setBase((v) => !v)}
               className={
-                "w-full rounded-xl border-2 px-3 py-2 text-[12px] font-bold transition " +
+                "w-full rounded-xl border-2 px-3 py-2 text-base font-bold transition " +
                 (base ? "border-slate-400/60 bg-white/10 text-slate-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -623,7 +623,7 @@ function KTab() {
               type="button"
               onClick={() => setSym((v) => !v)}
               className={
-                "w-full rounded-xl border-2 px-3 py-2 text-[12px] font-bold transition " +
+                "w-full rounded-xl border-2 px-3 py-2 text-base font-bold transition " +
                 (sym ? "border-lime-400/60 bg-lime-400/15 text-lime-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -642,7 +642,7 @@ function KTab() {
                   accent="accent-lime-400"
                   show={String(a)}
                 />
-                <p className="flex flex-wrap items-baseline gap-x-1 text-[11px] leading-6 text-lime-100">
+                <p className="flex flex-wrap items-baseline gap-x-1 text-base leading-7 text-lime-100">
                   <Katex expr={`\\left(${a},\\ ${(k / a).toFixed(2)}\\right)`} />
                   <span>와</span>
                   <Katex expr={`\\left(${-a},\\ ${(-k / a).toFixed(2)}\\right)`} />
@@ -660,7 +660,7 @@ function KTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">✏️ 확인 문제</p>
+          <p className="text-lg font-bold text-slate-100">✏️ 확인 문제</p>
           <Chips ids={K_QUIZ.map((v) => v.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2">
@@ -675,8 +675,8 @@ function KTab() {
 
       {doneIds.length === K_QUIZ.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 문제를 모두 풀었어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             <Katex expr="y=\dfrac{k}{x}" /> 는 <b className="text-white">언제나 x축과 y축이 점근선</b>이고 <b className="text-white">원점에 대하여 대칭</b>이에요. k 가 바꾸는 것은 사분면과 원점에서 떨어진 정도뿐입니다.
           </p>
         </div>
@@ -691,7 +691,7 @@ function KTab() {
 function MissionCard({ m, done, showHint, onHint }: { m: Mission; done: boolean; showHint: boolean; onHint: () => void }) {
   return (
     <div className={"space-y-2 rounded-xl border-2 px-3 py-2.5 " + (done ? "border-emerald-400/50 bg-emerald-400/10" : "border-white/10 bg-black/25")}>
-      <p className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] font-bold text-slate-100">
+      <p className="flex flex-wrap items-baseline gap-x-1.5 text-lg font-bold text-slate-100">
         <span>🎯 점근선이</span>
         <Katex expr={`x=${m.p}`} />
         <span>,</span>
@@ -701,14 +701,14 @@ function MissionCard({ m, done, showHint, onHint }: { m: Mission; done: boolean;
         <span>를 지나도록 맞춰 보세요.</span>
       </p>
       {done ? (
-        <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {m.why}</p>
+        <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-base leading-7 text-emerald-100">✅ {m.why}</p>
       ) : showHint ? (
-        <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] leading-6 text-amber-100">💡 {m.hint}</p>
+        <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-base leading-7 text-amber-100">💡 {m.hint}</p>
       ) : (
         <button
           type="button"
           onClick={onHint}
-          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-base font-bold text-slate-300 transition hover:bg-white/10"
         >
           힌트 보기
         </button>
@@ -756,17 +756,17 @@ function MoveTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🎯 점근선을 맞춰라</p>
+        <p className="text-lg font-bold text-slate-100">🎯 점근선을 맞춰라</p>
         <TipBox>
           📖 <Katex expr="y=\dfrac{k}{x-p}+q" /> 는 <Katex expr="y=\dfrac{k}{x}" /> 를 x축 방향으로 <Katex expr="p" />, y축 방향으로 <Katex expr="q" /> 만큼 평행이동한 그래프예요. 모양은 <Katex expr="k" /> 만 바꿉니다.
         </TipBox>
 
-        <div className="mt-2 grid gap-2 sm:grid-cols-5">
-          <div className="sm:col-span-3">
+        <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
+          <div>
             <Plane curves={curves} asymP={p} asymQ={q} dots={dots} />
           </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <div className="flex justify-center rounded-xl border border-white/10 bg-black/25 px-2 py-2 text-[17px]">
+          <div className="space-y-2">
+            <div className="flex justify-center rounded-xl border border-white/10 bg-black/25 px-2 py-2 text-[22px]">
               <span className="min-w-0">
                 <Katex expr={fnTex} />
               </span>
@@ -822,7 +822,7 @@ function MoveTab() {
               type="button"
               onClick={() => setBase((v) => !v)}
               className={
-                "w-full rounded-xl border-2 px-3 py-2 text-[12px] font-bold transition " +
+                "w-full rounded-xl border-2 px-3 py-2 text-base font-bold transition " +
                 (base ? "border-slate-400/60 bg-white/10 text-slate-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -833,7 +833,7 @@ function MoveTab() {
         </div>
 
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[12px] font-bold text-slate-400">미션</p>
+          <p className="text-base font-bold text-slate-400">미션</p>
           <Chips ids={MISSIONS.map((v) => v.id)} cur={mi} done={cleared} onPick={setMi} />
         </div>
         <div className="mt-1.5">
@@ -853,7 +853,7 @@ function MoveTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">✏️ 확인 문제</p>
+          <p className="text-lg font-bold text-slate-100">✏️ 확인 문제</p>
           <Chips ids={MOVE_QUIZ.map((v) => v.id)} cur={qi} done={doneIds} onPick={setQi} />
         </div>
         <div className="mt-2">
@@ -868,8 +868,8 @@ function MoveTab() {
 
       {cleared.length === MISSIONS.length && doneIds.length === MOVE_QUIZ.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 미션과 문제를 모두 끝냈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 미션과 문제를 모두 끝냈어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             <b className="text-white">점근선 두 개와 지나는 점 하나</b>를 알면 k, p, q 가 하나로 정해져요. 그래프를 그리는 일은 곧 점근선을 먼저 긋는 일입니다.
           </p>
         </div>
@@ -896,7 +896,7 @@ function FormCard({
 
   return (
     <div className="space-y-2">
-      <div className="flex min-h-[68px] items-center justify-center rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-[20px]">
+      <div className="flex min-h-[68px] items-center justify-center rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-[26px]">
         <span className="min-w-0 py-1">
           <Katex expr={task.rawTex} />
         </span>
@@ -908,10 +908,10 @@ function FormCard({
         return (
           <div key={task.id + si} className="space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
             <div className="flex flex-wrap items-baseline gap-2">
-              <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-100">
+              <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-1.5 py-0.5 text-sm font-bold text-amber-100">
                 {s.badge}
               </span>
-              <p className="text-[13px] font-bold text-slate-100">{s.q}</p>
+              <p className="text-lg font-bold text-slate-100">{s.q}</p>
             </div>
             <TexChoices items={s.choices} pick={pick} answer={s.answer} onPick={(i) => onPick(si, i)} />
             {pick !== undefined ? <Verdict right={pick === s.answer} why={s.why} hint={s.choiceWhy[pick]} /> : null}
@@ -921,11 +921,11 @@ function FormCard({
 
       {allDone ? (
         <div className="space-y-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 px-3 py-3">
-          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[17px] text-emerald-100">
+          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[22px] text-emerald-100">
             <span className="min-w-0">
               <Katex expr={task.rawTex} />
             </span>
-            <span className="text-[13px] text-emerald-300">⟹</span>
+            <span className="text-lg text-emerald-300">⟹</span>
             <span className="min-w-0">
               <Katex expr={task.formTex} />
             </span>
@@ -939,7 +939,7 @@ function FormCard({
             asymQ={task.q}
             dots={[{ x: task.p, y: task.q, color: "#fbbf24" }]}
           />
-          <p className="text-center text-[11px] leading-6 text-slate-400">
+          <p className="text-center text-base leading-7 text-slate-400">
             굵은 회색은 처음 식, 가는 초록은 고쳐 쓴 식이에요. 두 곡선이 완전히 겹칩니다.
           </p>
         </div>
@@ -966,7 +966,7 @@ function FormTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🏭 점근선이 보이는 꼴로 변신시키기</p>
+        <p className="text-lg font-bold text-slate-100">🏭 점근선이 보이는 꼴로 변신시키기</p>
         <TipBox>
           📖 <Katex expr="y=\dfrac{ax+b}{cx+d}" /> 는 분자를 분모로 나누어 <Katex expr="y=\dfrac{k}{x-p}+q" /> 꼴로 고칠 수 있어요. <b className="text-amber-200">몫이 가로 점근선의 높이</b>가 되고 <b className="text-amber-200">나머지가 k</b> 가 됩니다.
         </TipBox>
@@ -978,7 +978,7 @@ function FormTab() {
                 type="button"
                 onClick={() => setTi(i)}
                 className={
-                  "rounded-lg border-2 px-2.5 py-1.5 text-[13px] transition " +
+                  "rounded-lg border-2 px-2.5 py-1.5 text-lg transition " +
                   (i === ti
                     ? "border-sky-400/70 bg-sky-400/20 text-sky-100"
                     : doneIds.includes(t.id)
@@ -1006,14 +1006,14 @@ function FormTab() {
 
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🧐 이 그래프는 곡선일까?</p>
+          <p className="text-lg font-bold text-slate-100">🧐 이 그래프는 곡선일까?</p>
           <Chips ids={SHAPE_TASKS.map((t) => t.id)} cur={si} done={sDone} onPick={setSi} />
         </div>
         <TipBox>
           📖 <Katex expr="y=\dfrac{ax+b}{cx+d}" /> 가 점근선이 있는 곡선이 되려면 <Katex expr="c\neq 0" /> 이고 <Katex expr="ad-bc\neq 0" /> 이어야 해요.
         </TipBox>
         <div className="mt-2 space-y-2">
-          <div className="flex min-h-[60px] items-center justify-center rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-[19px]">
+          <div className="flex min-h-[60px] items-center justify-center rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-[24px]">
             <span className="min-w-0 py-1">
               <Katex expr={sTask.tex} />
             </span>
@@ -1037,8 +1037,8 @@ function FormTab() {
 
       {doneIds.length === FORM_TASKS.length && sDone.length === SHAPE_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 변신 공장을 모두 돌렸어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 변신 공장을 모두 돌렸어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             세로 점근선은 <b className="text-white">분모를 0 으로 만드는 x</b>, 가로 점근선은 <b className="text-white">분자와 분모의 x 계수의 비</b>예요. 나눗셈 한 번이면 그래프의 자리가 다 보입니다.
           </p>
         </div>
@@ -1061,10 +1061,10 @@ function DetectCard({ task, pick, onPick }: { task: DetectTask; pick: number | u
         dots={[{ x: task.mx, y: task.my, color: "#f472b6" }]}
         showAsymLabel={right}
       />
-      <p className="rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">
+      <p className="rounded-lg bg-black/25 px-3 py-2 text-base leading-7 text-slate-400">
         🔍 노란 점선 두 개가 점근선이고 분홍 점은 곡선 위의 한 점이에요. 점근선으로 <Katex expr="p,\ q" /> 를 읽고 점으로 <Katex expr="k" /> 를 구하세요.
       </p>
-      <p className="text-[13px] font-bold text-slate-100">이 그래프의 식은?</p>
+      <p className="text-lg font-bold text-slate-100">이 그래프의 식은?</p>
       <TexChoices items={task.choices} pick={pick} answer={task.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={right} why={task.why} hint={task.choiceWhy[pick]} /> : null}
     </div>
@@ -1083,7 +1083,7 @@ function DetectTab() {
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold text-slate-100">🔍 그래프만 보고 식을 찾아라</p>
+          <p className="text-lg font-bold text-slate-100">🔍 그래프만 보고 식을 찾아라</p>
           <Chips ids={DETECT_TASKS.map((t) => t.id)} cur={ti} done={doneIds} onPick={setTi} />
         </div>
         <div className="mt-2">
@@ -1098,8 +1098,8 @@ function DetectTab() {
 
       {doneIds.length === DETECT_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 여섯 그래프를 모두 알아냈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 여섯 그래프를 모두 알아냈어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             점근선이 같아도 <b className="text-white">k 가 다르면 굽은 정도가 달라져요</b>. 그래서 점근선 두 개에 곡선 위의 점 하나가 더 있어야 식이 하나로 정해집니다.
           </p>
         </div>
@@ -1117,20 +1117,23 @@ function fmtMoney(v: number, digits: number): string {
   return a.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (b ? "." + b : "");
 }
 
+/** 텃밭 그림 — 가로 x, 세로 36/x (2~18 m). 한 칸 = 140/18 단위. */
+const GD = { w: 240, h: 206, left: 60, bottom: 172, s: 140 / 18 };
+
 function GardenViz({ x }: { x: number }) {
   const y = 36 / x;
-  const s = 140 / 18;
+  const s = GD.s;
   return (
-    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[190px]" role="img" aria-label="텃밭 모양">
-      <rect x={0} y={0} width={200} height={170} fill="#020617" rx={12} />
-      <rect x={28} y={150 - y * s} width={x * s} height={y * s} fill="#166534" stroke="#4ade80" strokeWidth={1.6} rx={3} />
-      <text x={28 + (x * s) / 2} y={164} fontSize={11} fontWeight={700} textAnchor="middle" fill="#86efac">
+    <svg viewBox={`0 0 ${GD.w} ${GD.h}`} className="mx-auto block w-full max-w-[340px]" role="img" aria-label="텃밭 모양">
+      <rect x={0} y={0} width={GD.w} height={GD.h} fill="#020617" rx={12} />
+      <rect x={GD.left} y={GD.bottom - y * s} width={x * s} height={y * s} fill="#166534" stroke="#4ade80" strokeWidth={1.8} rx={3} />
+      <text x={GD.left + (x * s) / 2} y={GD.bottom + 20} fontSize={14} fontWeight={700} textAnchor="middle" fill="#86efac">
         {x} m
       </text>
-      <text x={22} y={150 - (y * s) / 2 + 4} fontSize={11} fontWeight={700} textAnchor="end" fill="#86efac">
+      <text x={GD.left - 6} y={GD.bottom - (y * s) / 2 + 5} fontSize={14} fontWeight={700} textAnchor="end" fill="#86efac">
         {y.toFixed(1)}
       </text>
-      <text x={100} y={16} fontSize={11} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
+      <text x={GD.w / 2} y={20} fontSize={14} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
         넓이는 늘 36 m²
       </text>
     </svg>
@@ -1140,7 +1143,7 @@ function GardenViz({ x }: { x: number }) {
 function BusViz({ x }: { x: number }) {
   const seats = Array.from({ length: 50 }, (_, i) => i);
   return (
-    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[190px]" role="img" aria-label="버스 좌석">
+    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[340px]" role="img" aria-label="버스 좌석">
       <rect x={0} y={0} width={200} height={170} fill="#020617" rx={12} />
       <rect x={16} y={24} width={168} height={104} rx={12} fill="#0f172a" stroke="#64748b" strokeWidth={1.6} />
       <rect x={26} y={32} width={148} height={16} rx={5} fill="#1e293b" />
@@ -1152,54 +1155,53 @@ function BusViz({ x }: { x: number }) {
             key={i}
             cx={32 + col * 15}
             cy={62 + row * 15}
-            r={5}
+            r={5.4}
             fill={i < x ? "#38bdf8" : "#1e293b"}
             stroke={i < x ? "#7dd3fc" : "#334155"}
             strokeWidth={1}
           />
         );
       })}
-      <circle cx={48} cy={136} r={10} fill="#1e293b" stroke="#64748b" strokeWidth={1.6} />
-      <circle cx={152} cy={136} r={10} fill="#1e293b" stroke="#64748b" strokeWidth={1.6} />
-      <text x={100} y={16} fontSize={11} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
+      <circle cx={48} cy={138} r={11} fill="#1e293b" stroke="#64748b" strokeWidth={1.6} />
+      <circle cx={152} cy={138} r={11} fill="#1e293b" stroke="#64748b" strokeWidth={1.6} />
+      <text x={100} y={17} fontSize={13} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
         {x} 명이 함께 가요
       </text>
     </svg>
   );
 }
 
+/** 반 인원과 점수 — 줄마다 이름·값을 막대 위에 두어 막대와 글씨가 겹치지 않는다 */
+const CV = { w: 240, h: 196, left: 10, right: 230, rows: [36, 84, 140] };
+
 function ClassViz({ x }: { x: number }) {
-  const bar = (n: number) => Math.max(3, (n / 60) * 104);
+  const span = CV.right - CV.left;
+  const avg = (1440 + 100 * x) / (20 + x);
+  const rows = [
+    { name: "기존", value: "20명 · 72점", len: (20 / 60) * span, fill: "#475569", tone: "#cbd5e1" },
+    { name: "새 학생", value: `${x}명 · 100점`, len: (x / 60) * span, fill: "#34d399", tone: "#6ee7b7" },
+    { name: "반 평균", value: `${avg.toFixed(2)}점`, len: (avg / 110) * span, fill: "#f472b6", tone: "#f9a8d4" },
+  ];
   return (
-    <svg viewBox="0 0 220 170" className="mx-auto block w-full max-w-[210px]" role="img" aria-label="반 인원과 점수">
-      <rect x={0} y={0} width={220} height={170} fill="#020617" rx={12} />
-      <text x={110} y={20} fontSize={11} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
+    <svg viewBox={`0 0 ${CV.w} ${CV.h}`} className="mx-auto block w-full max-w-[340px]" role="img" aria-label="반 인원과 점수">
+      <rect x={0} y={0} width={CV.w} height={CV.h} fill="#020617" rx={12} />
+      <text x={CV.w / 2} y={20} fontSize={14} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
         사람 수와 점수
       </text>
-      <text x={8} y={52} fontSize={10.5} fontWeight={700} fill="#94a3b8">
-        기존
-      </text>
-      <rect x={52} y={40} width={bar(20)} height={16} rx={8} fill="#475569" />
-      <text x={212} y={53} fontSize={11} fontWeight={700} textAnchor="end" fill="#cbd5e1" fontFamily="ui-monospace, monospace">
-        20명 · 72점
-      </text>
-      <text x={8} y={90} fontSize={10.5} fontWeight={700} fill="#94a3b8">
-        새 학생
-      </text>
-      <rect x={52} y={78} width={bar(x)} height={16} rx={8} fill="#34d399" />
-      <text x={212} y={91} fontSize={11} fontWeight={700} textAnchor="end" fill="#6ee7b7" fontFamily="ui-monospace, monospace">
-        {x}명 · 100점
-      </text>
-      <line x1={8} y1={112} x2={212} y2={112} stroke="#1e293b" strokeWidth={1} />
-      <text x={8} y={134} fontSize={10.5} fontWeight={700} fill="#94a3b8">
-        반 평균
-      </text>
-      <rect x={52} y={122} width={Math.max(3, ((1440 + 100 * x) / (20 + x) / 110) * 104)} height={16} rx={8} fill="#f472b6" />
-      <text x={212} y={135} fontSize={11} fontWeight={700} textAnchor="end" fill="#f9a8d4" fontFamily="ui-monospace, monospace">
-        {((1440 + 100 * x) / (20 + x)).toFixed(2)}점
-      </text>
-      <text x={110} y={160} fontSize={10} textAnchor="middle" fill="#64748b">
-        막대 길이는 사람 수에 맞췄어요
+      <line x1={CV.left} y1={128} x2={CV.right} y2={128} stroke="#1e293b" strokeWidth={1} />
+      {rows.map((r, i) => (
+        <g key={r.name}>
+          <text x={CV.left} y={CV.rows[i] + 14} fontSize={13} fontWeight={700} fill="#94a3b8">
+            {r.name}
+          </text>
+          <text x={CV.right} y={CV.rows[i] + 14} fontSize={13} fontWeight={700} textAnchor="end" fill={r.tone} fontFamily="ui-monospace, monospace">
+            {r.value}
+          </text>
+          <rect x={CV.left} y={CV.rows[i] + 20} width={Math.max(3, r.len)} height={14} rx={7} fill={r.fill} />
+        </g>
+      ))}
+      <text x={CV.w / 2} y={CV.h - 8} fontSize={11.5} textAnchor="middle" fill="#94a3b8">
+        막대 길이 = 사람 수 (평균은 점수)
       </text>
     </svg>
   );
@@ -1224,7 +1226,7 @@ function LifePlane({ cs, x }: { cs: LifeCase; x: number }) {
       {cs.yTicks.map((t) => (
         <g key={"y" + t}>
           <line x1={L.left} y1={py(t)} x2={L.right} y2={py(t)} stroke="#1e293b" strokeWidth={1} />
-          <text x={L.left - 6} y={py(t) + 4} fontSize={10.5} textAnchor="end" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={L.left - 6} y={py(t) + 4} fontSize={12} textAnchor="end" fill="#94a3b8" fontFamily="ui-monospace, monospace">
             {fmtMoney(t, 0)}
           </text>
         </g>
@@ -1232,22 +1234,22 @@ function LifePlane({ cs, x }: { cs: LifeCase; x: number }) {
       {cs.xTicks.map((t) => (
         <g key={"x" + t}>
           <line x1={px(t)} y1={L.top} x2={px(t)} y2={L.bottom} stroke="#1e293b" strokeWidth={1} />
-          <text x={px(t)} y={L.bottom + 16} fontSize={10.5} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={px(t)} y={L.bottom + 17} fontSize={12} textAnchor="middle" fill="#94a3b8" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
       ))}
       <line x1={L.left} y1={L.top - 6} x2={L.left} y2={L.bottom} stroke="#64748b" strokeWidth={1.6} />
       <line x1={L.left} y1={L.bottom} x2={L.right + 6} y2={L.bottom} stroke="#64748b" strokeWidth={1.6} />
-      <text x={6} y={14} fontSize={10.5} fontWeight={700} fill="#94a3b8">
+      <text x={6} y={14} fontSize={12.5} fontWeight={700} fill="#94a3b8">
         {cs.yName}
       </text>
-      <text x={L.right} y={L.h - 6} fontSize={10.5} fontWeight={700} textAnchor="end" fill="#94a3b8">
+      <text x={L.right} y={L.h - 5} fontSize={12.5} fontWeight={700} textAnchor="end" fill="#94a3b8">
         {cs.xName}
       </text>
 
       <line x1={L.left} y1={py(cs.q)} x2={L.right} y2={py(cs.q)} stroke="#fbbf24" strokeWidth={1.5} strokeDasharray="6 4" />
-      <text x={L.left + 5} y={py(cs.q) - 6} fontSize={11} fontWeight={700} fill="#fcd34d">
+      <text x={L.left + 5} y={py(cs.q) - 7} fontSize={13} fontWeight={700} fill="#fcd34d">
         {cs.asymLabel}
       </text>
 
@@ -1279,13 +1281,13 @@ function LifePanel({
   return (
     <div className="space-y-2">
       <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-3">
-        <p className="flex flex-wrap items-center gap-2 text-[13px] font-bold text-slate-100">
+        <p className="flex flex-wrap items-center gap-2 text-lg font-bold text-slate-100">
           <span>
             {cs.icon} {cs.title}
           </span>
-          <span className="rounded-md border border-sky-400/40 bg-sky-400/15 px-1.5 py-0.5 text-[10px] text-sky-100">{cs.form}</span>
+          <span className="rounded-md border border-sky-400/40 bg-sky-400/15 px-1.5 py-0.5 text-sm text-sky-100">{cs.form}</span>
         </p>
-        <div className="mt-1 space-y-0.5 text-[12px] leading-6 text-slate-300">
+        <div className="mt-1 space-y-0.5 text-base leading-7 text-slate-300">
           {cs.story.map((s) => (
             <p key={s}>{s}</p>
           ))}
@@ -1303,27 +1305,29 @@ function LifePanel({
         show={`${x} ${cs.xUnit}`}
       />
 
-      <div className="grid gap-2 sm:grid-cols-5">
-        <div className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-3 sm:col-span-2">
-          {cs.id === "V1" ? <GardenViz x={x} /> : null}
-          {cs.id === "V2" ? <BusViz x={x} /> : null}
-          {cs.id === "V3" ? <ClassViz x={x} /> : null}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-[12px] font-bold text-pink-100">
-              {cs.yLabel} <span className="font-mono text-[14px] text-white">{fmtMoney(v, cs.digits)}</span> {cs.yUnit}
+      <div className="grid gap-2 md:grid-cols-2">
+        <div className="flex flex-col rounded-xl border border-white/10 bg-black/25 px-2.5 py-3">
+          <div className="flex flex-1 items-center justify-center">
+            {cs.id === "V1" ? <GardenViz x={x} /> : null}
+            {cs.id === "V2" ? <BusViz x={x} /> : null}
+            {cs.id === "V3" ? <ClassViz x={x} /> : null}
+          </div>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-base font-bold text-pink-100">
+              {cs.yLabel} <span className="font-mono text-xl text-white">{fmtMoney(v, cs.digits)}</span> {cs.yUnit}
             </span>
           </div>
         </div>
-        <div className="rounded-xl border border-white/10 bg-black/25 px-2 py-3 sm:col-span-3">
+        <div className="rounded-xl border border-white/10 bg-black/25 px-2 py-3">
           <LifePlane cs={cs} x={x} />
-          <p className="mt-1 text-center text-[11px] leading-6 text-slate-500">
+          <p className="mt-1 text-center text-base leading-7 text-slate-400">
             노란 점선이 가로 점근선이에요. 곡선이 다가가기만 하고 넘지 못합니다.
           </p>
         </div>
       </div>
 
       <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-        <p className="text-[13px] font-bold text-slate-100">{cs.qs[0].prompt}</p>
+        <p className="text-lg font-bold text-slate-100">{cs.qs[0].prompt}</p>
         <MixedChoices items={cs.qs[0].choices} pick={picks[`${cs.id}:0`]} answer={cs.qs[0].answer} onPick={(i) => onPick(0, i)} />
         {picks[`${cs.id}:0`] !== undefined ? (
           <Verdict right={q0} why={cs.qs[0].why} hint={cs.qs[0].choiceWhy[picks[`${cs.id}:0`]]} />
@@ -1332,7 +1336,7 @@ function LifePanel({
 
       {q0 ? (
         <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-          <p className="text-[13px] font-bold text-slate-100">{cs.qs[1].prompt}</p>
+          <p className="text-lg font-bold text-slate-100">{cs.qs[1].prompt}</p>
           <MixedChoices items={cs.qs[1].choices} pick={picks[`${cs.id}:1`]} answer={cs.qs[1].answer} onPick={(i) => onPick(1, i)} />
           {picks[`${cs.id}:1`] !== undefined ? (
             <Verdict right={allDone} why={cs.qs[1].why} hint={cs.qs[1].choiceWhy[picks[`${cs.id}:1`]]} />
@@ -1342,12 +1346,12 @@ function LifePanel({
 
       {allDone ? (
         <div className="rounded-xl border-2 border-sky-400/45 bg-sky-400/12 px-3 py-3">
-          <div className="flex justify-center py-1 text-[18px] text-sky-100">
+          <div className="flex justify-center py-1 text-[22px] text-sky-100">
             <span className="min-w-0">
               <Katex expr={cs.fnTex} />
             </span>
           </div>
-          <p className="mt-1 text-[12px] leading-7 text-slate-300">💡 {cs.insight}</p>
+          <p className="mt-1 text-base leading-8 text-slate-300">💡 {cs.insight}</p>
         </div>
       ) : null}
     </div>
@@ -1371,7 +1375,7 @@ function LifeTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-3">
-        <p className="text-sm font-bold text-slate-100">🚌 일상생활에서 만나는 점근선</p>
+        <p className="text-lg font-bold text-slate-100">🚌 일상생활에서 만나는 점근선</p>
         <TipBox>
           📖 세 상황이 각각 <Katex expr="y=\dfrac{k}{x}" />, <Katex expr="y=\dfrac{k}{x}+q" />, <Katex expr="y=\dfrac{ax+b}{cx+d}" /> 꼴이에요. 가로 점근선이 <b className="text-amber-200">닿지 못하는 값</b>이라는 뜻을 상황 속에서 읽어 보세요.
         </TipBox>
@@ -1383,7 +1387,7 @@ function LifeTab() {
                 type="button"
                 onClick={() => setCi(i)}
                 className={
-                  "rounded-lg border-2 px-2.5 py-1.5 text-[12px] font-bold transition " +
+                  "rounded-lg border-2 px-2.5 py-1.5 text-base font-bold transition " +
                   (i === ci
                     ? "border-pink-400/70 bg-pink-400/20 text-pink-100"
                     : doneIds.includes(c.id)
@@ -1416,8 +1420,8 @@ function LifeTab() {
 
       {doneIds.length === LIFE_CASES.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
-          <p className="text-center text-sm font-extrabold text-emerald-100">🎉 세 상황을 모두 살펴봤어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="text-center text-lg font-extrabold text-emerald-100">🎉 세 상황을 모두 살펴봤어요!</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-base leading-8 text-slate-300">
             점근선은 그림 속의 선일 뿐 아니라 <b className="text-white">현실에서 넘을 수 없는 한계</b>를 뜻해요. 입장료 8000 원, 만점 100 점처럼 말이지요.
           </p>
         </div>
