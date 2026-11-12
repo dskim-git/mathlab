@@ -123,7 +123,7 @@ export default function StockIndexLab() {
           <b className="text-emerald-200">시가총액이 지수를 움직이는 원리</b>를 체험해 봐요.
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          데이터 기준일 {AS_OF} · 출처 Yahoo Finance (지수 시계열·종목 시가총액)
+          내장 스냅샷 기준일 {AS_OF} · 새로고침 후 각 탭에 최신 응답 시각 표시 · 출처 Yahoo Finance
         </p>
       </div>
 
@@ -184,10 +184,6 @@ type LiveQuote = { price: number | null; prevClose: number | null; time: number 
 
 const CHART = { W: 560, H: 300, X0: 54, X1: 544, Y0: 250, Y1: 22 };
 
-function seriesOf(k: IndexKey, p: Period): SeriesPoint[] {
-  return INDICES[k][p];
-}
-
 function SeriesTab() {
   const [period, setPeriod] = useState<Period>("monthly");
   const [mode, setMode] = useState<ViewMode>("rebase");
@@ -199,28 +195,47 @@ function SeriesTab() {
   });
   const [hoverI, setHoverI] = useState<number | null>(null);
   const [live, setLive] = useState<Record<string, LiveQuote> | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [currentSeries, setCurrentSeries] = useState<Record<IndexKey, { yearly: SeriesPoint[]; monthly: SeriesPoint[]; daily: SeriesPoint[] }>>(() => ({
+    kospi: { yearly: INDICES.kospi.yearly, monthly: INDICES.kospi.monthly, daily: INDICES.kospi.daily },
+    kosdaq: { yearly: INDICES.kosdaq.yearly, monthly: INDICES.kosdaq.monthly, daily: INDICES.kosdaq.daily },
+    kospi200: { yearly: INDICES.kospi200.yearly, monthly: INDICES.kospi200.monthly, daily: INDICES.kospi200.daily },
+    nasdaq: { yearly: INDICES.nasdaq.yearly, monthly: INDICES.nasdaq.monthly, daily: INDICES.nasdaq.daily },
+  }));
   const [liveState, setLiveState] = useState<"idle" | "loading" | "error">("idle");
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const shown = ORDER.filter((k) => visible[k]);
-  const refSeries = seriesOf("kospi", period);
+  const seriesOf = (k: IndexKey) => currentSeries[k][period];
+  const refSeries = seriesOf("kospi");
   const L = refSeries.length;
 
-  // 각 지수의 값 배열(모드에 따라 실제값 또는 100기준 환산)
+  // 코스피 날짜 축에 맞춰 각 지수의 직전 종가를 채워 거래일 차이를 정렬한다.
   const lines = useMemo(() => {
     return shown.map((k) => {
-      const raw = seriesOf(k, period).map((p) => p.close);
-      const base = raw[0] || 1;
-      const vals = mode === "rebase" ? raw.map((v) => (v / base) * 100) : raw;
-      return { key: k, vals };
+      const points = seriesOf(k);
+      const rawValues: (number | null)[] = [];
+      let pointIndex = 0;
+      let previous: number | null = null;
+      for (const axisPoint of refSeries) {
+        while (pointIndex < points.length && points[pointIndex].date <= axisPoint.date) {
+          previous = points[pointIndex].close;
+          pointIndex += 1;
+        }
+        rawValues.push(previous);
+      }
+      const base = rawValues.find((v): v is number => v !== null) || 1;
+      const vals = rawValues.map((v) => (v === null ? null : mode === "rebase" ? (v / base) * 100 : v));
+      return { key: k, vals, rawValues };
     });
-  }, [shown, period, mode]);
+  }, [shown, period, mode, currentSeries, refSeries]);
 
   const { yMin, yMax } = useMemo(() => {
     let lo = Infinity;
     let hi = -Infinity;
     for (const ln of lines)
       for (const v of ln.vals) {
+        if (v === null) continue;
         if (v < lo) lo = v;
         if (v > hi) hi = v;
       }
@@ -254,7 +269,7 @@ function SeriesTab() {
 
   function onMove(e: React.MouseEvent) {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg || L < 1) return;
     const rect = svg.getBoundingClientRect();
     const fx = (e.clientX - rect.left) / rect.width; // 0~1
     const svgX = fx * CHART.W;
@@ -265,13 +280,39 @@ function SeriesTab() {
 
   async function refresh() {
     setLiveState("loading");
+    setLiveError(null);
+    setHoverI(null);
     try {
       const res = await fetch("/api/economics/stock-index", { cache: "no-store" });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || "실패");
+      const histories = json.quotes as Record<IndexKey, { price: number | null; time: number | null; series: { yearly: SeriesPoint[]; monthly: SeriesPoint[]; daily: SeriesPoint[] } | null }>;
+      const mergeCurrentPoint = (key: IndexKey) => {
+        const history = histories[key];
+        if (history.series?.daily.length) return history.series;
+        if (history.price == null || history.time == null) return currentSeries[key];
+        const date = new Date(history.time * 1000).toISOString().slice(0, 10);
+        const merge = (points: SeriesPoint[], periodDate: string) => {
+          const next = points.filter((point) => point.date !== periodDate);
+          next.push({ date: periodDate, close: history.price as number });
+          return next.sort((a, b) => a.date.localeCompare(b.date));
+        };
+        return {
+          yearly: merge(INDICES[key].yearly, date.slice(0, 4)),
+          monthly: merge(INDICES[key].monthly, date.slice(0, 7)),
+          daily: merge(INDICES[key].daily, date),
+        };
+      };
+      setCurrentSeries({
+        kospi: mergeCurrentPoint("kospi"),
+        kosdaq: mergeCurrentPoint("kosdaq"),
+        kospi200: mergeCurrentPoint("kospi200"),
+        nasdaq: mergeCurrentPoint("nasdaq"),
+      });
       setLive(json.quotes as Record<string, LiveQuote>);
       setLiveState("idle");
-    } catch {
+    } catch (error) {
+      setLiveError(error instanceof Error ? error.message : "알 수 없는 오류");
       setLiveState("error");
     }
   }
@@ -392,17 +433,32 @@ function SeriesTab() {
 
           {/* 선 */}
           {lines.map((ln) => {
-            const d = ln.vals.map((v, i) => `${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`).join(" L ");
-            return <path key={ln.key} d={`M ${d}`} fill="none" stroke={IDX_STYLE[ln.key].stroke} strokeWidth={2} />;
+            let drawing = false;
+            const d = ln.vals
+              .map((v, i) => {
+                if (v === null || !Number.isFinite(v)) {
+                  drawing = false;
+                  return "";
+                }
+                const command = drawing ? "L" : "M";
+                drawing = true;
+                return `${command} ${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`;
+              })
+              .filter(Boolean)
+              .join(" ");
+            return <path key={ln.key} d={d} fill="none" stroke={IDX_STYLE[ln.key].stroke} strokeWidth={2} />;
           })}
 
           {/* 호버 */}
           {hoverI !== null ? (
             <g>
               <line x1={xAt(hoverI)} y1={CHART.Y1} x2={xAt(hoverI)} y2={CHART.Y0} stroke="rgba(255,255,255,0.3)" strokeWidth={1} strokeDasharray="3 3" />
-              {lines.map((ln) => (
-                <circle key={ln.key} cx={xAt(hoverI)} cy={yAt(ln.vals[hoverI])} r={3.5} fill={IDX_STYLE[ln.key].stroke} stroke="#0f172a" strokeWidth={1.2} />
-              ))}
+              {lines.map((ln) => {
+                const value = ln.vals[hoverI];
+                return value !== null && Number.isFinite(value) ? (
+                  <circle key={ln.key} cx={xAt(hoverI)} cy={yAt(value)} r={3.5} fill={IDX_STYLE[ln.key].stroke} stroke="#0f172a" strokeWidth={1.2} />
+                ) : null;
+              })}
             </g>
           ) : null}
         </svg>
@@ -414,8 +470,9 @@ function SeriesTab() {
           <span className="font-mono text-slate-300">{refSeries[hoverI]?.date}</span>
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
             {shown.map((k) => {
-              const raw = seriesOf(k, period)[hoverI]?.close;
-              const base = seriesOf(k, period)[0]?.close || 1;
+              const line = lines.find((item) => item.key === k);
+              const raw = line?.rawValues[hoverI] ?? null;
+              const base = line?.rawValues.find((value): value is number => value !== null) || 1;
               return (
                 <span key={k} className="font-mono">
                   <span className={"mr-1 font-bold " + IDX_STYLE[k].text}>{INDICES[k].label}</span>
@@ -452,11 +509,11 @@ function SeriesTab() {
             })}
           </div>
           <p className="mt-1 text-[11px] text-slate-500">
-            내장 그래프는 {AS_OF} 스냅샷이에요. 위 값은 방금 서버가 가져온 현재가라 그래프 끝값과 다를 수 있어요.
+            {live.kospi?.time ? `그래프 시계열을 갱신했어요 · 마지막 거래 시각 ${new Date(live.kospi.time * 1000).toLocaleString("ko-KR")}` : `내장 그래프 기준일 ${AS_OF}`}
           </p>
         </div>
       ) : liveState === "error" ? (
-        <p className="mt-2 text-xs text-amber-300/90">⚠️ 최신값을 불러오지 못했어요(장 마감·네트워크 등). 내장 스냅샷으로 계속 진행해요.</p>
+        <p className="mt-2 text-xs text-amber-300/90">⚠️ 최신값을 불러오지 못했어요: {liveError || "네트워크 연결 실패"}. 내장 스냅샷으로 계속 진행해요.</p>
       ) : null}
     </div>
   );
@@ -531,6 +588,7 @@ const TM = { W: 560, H: 320, PAD: 2 };
 function ComposeTab() {
   const [idx, setIdx] = useState<IndexKey>("kospi");
   const [live, setLive] = useState<{ idx: IndexKey; at: number; caps: Record<string, { price: number | null; mcap: number | null }> } | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
   const [liveState, setLiveState] = useState<"idle" | "loading" | "error">("idle");
 
   const currency = INDICES[idx].currency;
@@ -555,14 +613,16 @@ function ComposeTab() {
 
   async function refresh() {
     setLiveState("loading");
+    setLiveError(null);
     try {
       const tickers = CONSTITUENTS[idx].map((i) => i.ticker).join(",");
       const res = await fetch(`/api/economics/stock-index?tickers=${encodeURIComponent(tickers)}`, { cache: "no-store" });
       const json = await res.json();
-      if (!json.ok || !json.caps) throw new Error();
+      if (!json.ok || !json.caps) throw new Error(json.error || "시가총액 응답이 비어 있습니다.");
       setLive({ idx, at: json.fetchedAt, caps: json.caps as Record<string, { price: number | null; mcap: number | null }> });
       setLiveState("idle");
-    } catch {
+    } catch (error) {
+      setLiveError(error instanceof Error ? error.message : "알 수 없는 오류");
       setLiveState("error");
     }
   }
@@ -605,7 +665,7 @@ function ComposeTab() {
         {idx === "kospi200" ? " · 코스피200은 코스피 대형주로 구성됩니다" : ""}
       </p>
       {liveState === "error" ? (
-        <p className="mt-1 text-xs text-amber-300/90">⚠️ 최신 시가총액을 불러오지 못했어요(장 마감·네트워크 등). 내장 스냅샷을 그대로 보여줘요.</p>
+        <p className="mt-1 text-xs text-amber-300/90">⚠️ 최신 시가총액을 불러오지 못했어요: {liveError || "네트워크 연결 실패"}. 내장 스냅샷을 그대로 보여줘요.</p>
       ) : null}
 
       {/* 트리맵 */}
@@ -697,9 +757,33 @@ function ComposeTab() {
 // 탭 ③ 코스피 조작 시뮬레이션 (시가총액 가중)
 // ══════════════════════════════════════════════════════════════
 function SimTab() {
-  const stocks = KOSPI_SIM.stocks;
-  const base = KOSPI_SIM.baseIndex;
+  const [stocks, setStocks] = useState(KOSPI_SIM.stocks);
+  const [base, setBase] = useState(KOSPI_SIM.baseIndex);
+  const [liveAt, setLiveAt] = useState<number | null>(null);
+  const [liveState, setLiveState] = useState<"idle" | "loading" | "error">("idle");
   const [pct, setPct] = useState<Record<string, number>>({});
+
+  async function refresh() {
+    setLiveState("loading");
+    try {
+      const tickers = KOSPI_SIM.stocks.map((stock) => stock.ticker).join(",");
+      const response = await fetch(`/api/economics/stock-index?tickers=${encodeURIComponent(tickers)}`, { cache: "no-store" });
+      const json = await response.json();
+      if (!json.ok || !json.caps || !json.kospiQuote?.price) throw new Error("실시간 시뮬레이션 자료를 가져오지 못했습니다.");
+      const updated = KOSPI_SIM.stocks.map((stock) => {
+        const quote = json.caps[stock.ticker];
+        return quote?.mcap ? { ...stock, mcap: quote.mcap, price: quote.price ?? stock.price } : stock;
+      });
+      const totalMcap = updated.reduce((sum, stock) => sum + stock.mcap, 0);
+      setStocks(updated.map((stock) => ({ ...stock, weight: stock.mcap / totalMcap })));
+      setBase(json.kospiQuote.price);
+      setLiveAt(json.fetchedAt);
+      setPct({});
+      setLiveState("idle");
+    } catch {
+      setLiveState("error");
+    }
+  }
 
   // 지수 변화율 = Σ (비중 × 주가변동률).  기여 지수 = base × 비중 × 변동률
   const contrib = (ticker: string, weight: number) => base * weight * ((pct[ticker] ?? 0) / 100);
@@ -717,6 +801,14 @@ function SimTab() {
         슬라이더로 올리거나 내려 보세요. 코스피는 <b className="text-emerald-200">시가총액 가중</b> 방식이라,{" "}
         <b className="text-emerald-200">비중이 큰 기업일수록</b> 같은 % 변동이라도 지수를 훨씬 크게 움직여요.
       </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button type="button" onClick={refresh} disabled={liveState === "loading"} className="rounded-lg border border-emerald-400/45 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/20 disabled:opacity-50">
+          {liveState === "loading" ? "불러오는 중…" : "🔄 기준 데이터 새로고침"}
+        </button>
+        <span className="text-xs text-slate-500">{liveAt ? `실시간 기준 · ${new Date(liveAt).toLocaleString("ko-KR")}` : `내장 기준 · ${AS_OF}`}</span>
+        {liveState === "error" ? <span className="text-xs text-amber-300">현재 데이터를 가져오지 못해 기존 기준을 유지하고 있어요.</span> : null}
+      </div>
 
       {/* 지수 헤드라인 */}
       <div className="mt-3 rounded-xl border border-emerald-400/40 bg-emerald-400/[0.08] px-4 py-3">

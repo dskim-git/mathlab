@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic"; // 네트워크 호출 → 캐시 금지
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
+const YAHOO_API = "https://query2.finance.yahoo.com";
 
 const INDEX_SYMBOLS: Record<string, string> = {
   kospi: "%5EKS11",
@@ -25,10 +26,62 @@ const INDEX_SYMBOLS: Record<string, string> = {
 
 type IndexQuote = { price: number | null; prevClose: number | null; time: number | null };
 type Cap = { price: number | null; mcap: number | null };
+type SeriesPoint = { date: string; close: number };
+
+async function fetchIndexHistory(sym: string) {
+  const period2 = Math.floor(Date.now() / 1000);
+  const period1 = period2 - 10 * 365 * 24 * 60 * 60;
+  const url = `${YAHOO_API}/v8/finance/chart/${sym}?period1=${period1}&period2=${period2}&interval=1d&_=${Date.now()}`;
+  const res = await fetch(url, { headers: { "User-Agent": UA }, cache: "no-store" });
+  if (!res.ok) throw new Error(`${sym} history -> ${res.status}`);
+  const result = (await res.json())?.chart?.result?.[0];
+  if (!result) throw new Error(`${sym} -> no history`);
+
+  const timestamps: number[] = result.timestamp || [];
+  const closes: (number | null)[] = result.indicators?.quote?.[0]?.close || [];
+  const timezone = result.meta?.exchangeTimezoneName || "UTC";
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const points: SeriesPoint[] = timestamps.flatMap((timestamp, i) => {
+    const close = closes[i];
+    if (typeof close !== "number" || !Number.isFinite(close)) return [];
+    return [{ date: dateFormatter.format(new Date(timestamp * 1000)), close }];
+  });
+  const current = result.meta?.regularMarketPrice;
+  const currentTime = result.meta?.regularMarketTime;
+  if (typeof current === "number" && typeof currentTime === "number") {
+    const date = dateFormatter.format(new Date(currentTime * 1000));
+    const last = points[points.length - 1];
+    if (last?.date === date) last.close = current;
+    else points.push({ date, close: current });
+  }
+
+  const monthly = new Map<string, SeriesPoint>();
+  const yearly = new Map<string, SeriesPoint>();
+  for (const point of points) {
+    monthly.set(point.date.slice(0, 7), { date: point.date.slice(0, 7), close: point.close });
+    yearly.set(point.date.slice(0, 4), { date: point.date.slice(0, 4), close: point.close });
+  }
+  const latestDate = points[points.length - 1]?.date || "";
+  const dailyStart = new Date();
+  dailyStart.setMonth(dailyStart.getMonth() - 6);
+  const daily = points.filter((point) => point.date >= dailyStart.toISOString().slice(0, 10));
+  return {
+    price: typeof current === "number" ? current : null,
+    prevClose: typeof result.meta?.chartPreviousClose === "number" ? result.meta.chartPreviousClose : null,
+    time: typeof currentTime === "number" ? currentTime : null,
+    asOf: latestDate,
+    series: { yearly: [...yearly.values()], monthly: [...monthly.values()], daily },
+  };
+}
 
 // ── 지수 현재가(차트 API meta — 크럼 불필요) ──
 async function fetchIndexQuote(sym: string): Promise<IndexQuote> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1d&interval=1d`;
+  const url = `${YAHOO_API}/v8/finance/chart/${sym}?range=1d&interval=1d&_=${Date.now()}`;
   const res = await fetch(url, { headers: { "User-Agent": UA }, cache: "no-store" });
   if (!res.ok) throw new Error(`${sym} -> ${res.status}`);
   const meta = (await res.json())?.chart?.result?.[0]?.meta;
@@ -50,7 +103,7 @@ async function getCookieCrumb(): Promise<{ cookie: string; crumb: string }> {
   const r1 = await fetch("https://fc.yahoo.com", { headers: { "User-Agent": UA } }).catch(() => null);
   const raw = (r1 && r1.headers.get("set-cookie")) || "";
   const cookie = raw.split(";")[0];
-  const r2 = await fetch("https://query1.finance.yahoo.com/v1/test/getcrumb", {
+  const r2 = await fetch(`${YAHOO_API}/v1/test/getcrumb`, {
     headers: { "User-Agent": UA, Cookie: cookie },
   });
   const crumb = await r2.text();
@@ -63,7 +116,7 @@ async function fetchCaps(tickers: string[]): Promise<Record<string, Cap>> {
   const out: Record<string, Cap> = {};
   for (let i = 0; i < tickers.length; i += 15) {
     const batch = tickers.slice(i, i + 15);
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(
+    const url = `${YAHOO_API}/v7/finance/quote?symbols=${encodeURIComponent(
       batch.join(",")
     )}&crumb=${encodeURIComponent(crumb)}`;
     const res = await fetch(url, { headers: { "User-Agent": UA, Cookie: cookie }, cache: "no-store" });
@@ -88,10 +141,18 @@ export async function GET(req: Request) {
         .filter(Boolean)
         .slice(0, 40);
       const caps = await fetchCaps(tickers);
-      return NextResponse.json({ ok: true, fetchedAt: Date.now(), caps });
+      const kospiQuote = await fetchIndexQuote(INDEX_SYMBOLS.kospi).catch(() => null);
+      return NextResponse.json({ ok: true, fetchedAt: Date.now(), caps, kospiQuote });
     }
     const entries = await Promise.all(
-      Object.entries(INDEX_SYMBOLS).map(async ([key, sym]) => [key, await fetchIndexQuote(sym)] as const)
+      Object.entries(INDEX_SYMBOLS).map(async ([key, sym]) => {
+        try {
+          return [key, await fetchIndexHistory(sym)] as const;
+        } catch (historyError) {
+          const quote = await fetchIndexQuote(sym);
+          return [key, { ...quote, asOf: quote.time ? new Date(quote.time * 1000).toISOString().slice(0, 10) : null, series: null, historyError: historyError instanceof Error ? historyError.message : "history failed" }] as const;
+        }
+      })
     );
     return NextResponse.json({ ok: true, fetchedAt: Date.now(), quotes: Object.fromEntries(entries) });
   } catch (e) {
