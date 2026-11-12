@@ -11,6 +11,38 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const CODES = ["USD", "CNY", "JPY", "EUR", "GBP", "AUD", "CAD", "CHF", "HKD", "SGD"];
+const SERIES_START = "2014-12-31";
+
+type RateSeries = { dates: string[]; rates: Record<string, (number | null)[]> };
+
+function makeSeries(points: Array<{ date: string; rates: Record<string, number | null> }>): RateSeries {
+  return {
+    dates: points.map((point) => point.date),
+    rates: Object.fromEntries(CODES.map((code) => [code, points.map((point) => point.rates[code] ?? null)])),
+  };
+}
+
+function toKrwSeries(raw: Record<string, Record<string, number>>) {
+  const points = Object.entries(raw)
+    .map(([date, rates]) => ({
+      date,
+      rates: Object.fromEntries(CODES.map((code) => {
+        const eurKrw = rates.KRW;
+        const perEur = code === "EUR" ? 1 : rates[code];
+        const value = eurKrw && perEur ? eurKrw / perEur : null;
+        return [code, value == null ? null : Math.round(value * 100) / 100];
+      })) as Record<string, number | null>,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const daily = points.slice(-180);
+  const groupBy = (sliceLength: number): RateSeries => {
+    const grouped = new Map<string, (typeof points)[number]>();
+    for (const point of points) grouped.set(point.date.slice(0, sliceLength), point);
+    return makeSeries([...grouped.values()]);
+  };
+  return { daily: makeSeries(daily), monthly: groupBy(7), yearly: groupBy(4) };
+}
 
 async function fetchOil(): Promise<number | null> {
   try {
@@ -23,8 +55,22 @@ async function fetchOil(): Promise<number | null> {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    if (new URL(req.url).searchParams.get("history") === "1") {
+      const symbols = ["KRW", ...CODES.filter((code) => code !== "EUR")].join(",");
+      const url = `https://api.frankfurter.dev/v1/${SERIES_START}..?base=EUR&symbols=${symbols}`;
+      const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" });
+      if (!res.ok) throw new Error(`frankfurter history ${res.status}`);
+      const json = await res.json();
+      const series = toKrwSeries(json?.rates || {});
+      if (!series.daily.dates.length) throw new Error("no exchange-rate history");
+      return NextResponse.json(
+        { ok: true, date: json.end_date || series.daily.dates.at(-1), series },
+        { headers: { "Cache-Control": "no-store, max-age=0" } }
+      );
+    }
+
     const url = `https://api.frankfurter.dev/v1/latest?base=EUR&symbols=KRW,${CODES.join(",")}`;
     const [res, oil] = await Promise.all([
       fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" }),
