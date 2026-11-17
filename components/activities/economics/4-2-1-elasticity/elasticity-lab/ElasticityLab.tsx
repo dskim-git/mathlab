@@ -69,24 +69,25 @@ const REFLECTION_QUESTIONS: ReflectionQuestion[] = [
 ];
 
 const ABC = ["①", "②", "③", "④"];
+const SALE_PLOT_BOX: Box = { xMin: 0, xMax: 55, yMin: 0, yMax: 420, gx: 10, gy: 50 };
 
 type Tab = "sale" | "limit" | "judge" | "rev" | "goods";
 
 export default function ElasticityLab() {
   const [tab, setTab] = useState<Tab>("sale");
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
-      <div className="border-b border-white/10 pb-5">
-        <p className="text-sm font-semibold text-emerald-300">미니활동 · 경제수학</p>
-        <h3 className="mt-2 text-2xl font-bold">🎈 수요의 가격 탄력성</h3>
-        <p className="mt-2 leading-7 text-slate-300">
+    <section className="relative overflow-hidden rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-slate-950 via-slate-950 to-emerald-950/30 p-4 shadow-2xl shadow-emerald-950/20 sm:p-6">
+      <div className="border-b border-white/10 pb-5 sm:pb-6">
+        <p className="inline-flex rounded-full border border-emerald-300/20 bg-emerald-300/[0.08] px-3 py-1 text-xs font-bold tracking-wide text-emerald-200">미니활동 · 경제수학</p>
+        <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-white">🎈 수요의 가격 탄력성</h3>
+        <p className="mt-2 max-w-4xl text-base leading-7 text-slate-300">
           값을 내리면 얼마나 더 팔릴까요? <b className="text-sky-200">두 변화율의 비</b>로 민감함을 재어 보고, 할인폭을
           좁혀 <b className="text-violet-200">미분을 쓴 식</b>에 닿은 뒤, 사장님이 되어{" "}
           <b className="text-emerald-200">가장 많이 버는 가격</b>을 찾아봐요.
         </p>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-white/[0.06] bg-slate-900/45 p-1.5">
         <TabButton active={tab === "sale"} onClick={() => setTab("sale")}>① 할인 실험실</TabButton>
         <TabButton active={tab === "limit"} onClick={() => setTab("limit")}>② 좁혀 보기</TabButton>
         <TabButton active={tab === "judge"} onClick={() => setTab("judge")}>③ 탄력성 판별기</TabButton>
@@ -102,7 +103,7 @@ export default function ElasticityLab() {
         {tab === "goods" ? <GoodsTab /> : null}
       </div>
 
-      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] leading-5 text-slate-400">
+      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-6 text-slate-400">
         {REAL_NOTE}
       </p>
 
@@ -117,10 +118,10 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3 py-2 text-sm font-bold transition " +
+        "rounded-xl border px-4 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 " +
         (active
-          ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-100"
-          : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
+          ? "border-emerald-300/35 bg-gradient-to-r from-emerald-400/20 to-teal-400/10 text-emerald-50 shadow-sm shadow-emerald-950/30"
+          : "border-transparent bg-white/[0.03] text-slate-300 hover:border-white/10 hover:bg-white/[0.07]")
       }
     >
       {children}
@@ -153,18 +154,19 @@ function PieceLine({ line }: { line: Piece[] }) {
 // ══════════════════════════════════════════════════════════════
 //  공용 — 그래프판
 // ══════════════════════════════════════════════════════════════
-const PS = 320;
-const PML = 46;
-const PMR = 14;
-const PMT = 16;
-const PMB = 30;
+const PS = 400;
+const PML = 58;
+const PMR = 18;
+const PMT = 24;
+const PMB = 42;
 
-type Stroke = "line" | "elastic" | "inelastic" | "rev" | "ghost";
+type Stroke = "line" | "elastic" | "inelastic" | "rev" | "tangent" | "ghost";
 const STROKE_COLOR: Record<Stroke, string> = {
   line: "#38bdf8",
   elastic: "#fb7185",
   inelastic: "#38bdf8",
   rev: "#34d399",
+  tangent: "#fbbf24",
   ghost: "rgba(148,163,184,0.35)",
 };
 
@@ -182,8 +184,8 @@ const RULE_COLOR: Record<RuleTone, string> = {
   hot: "rgba(251,191,36,0.6)",
 };
 
-type PlotSeg = { tone: Stroke; pts: [number, number][] };
-type PlotDot = { x: number; y: number; tone: DotTone; label?: string; filled?: boolean };
+type PlotSeg = { tone: Stroke; pts: [number, number][]; dashed?: boolean };
+type PlotDot = { x: number; y: number; tone: DotTone; label?: string; filled?: boolean; labelDx?: number };
 type PlotRule = { at: number; tone: RuleTone };
 
 function Plot({
@@ -238,21 +240,21 @@ function Plot({
         <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.06)" />
       ))}
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
+      <text key={`tx${v}`} x={X(v)} y={PS - PMB + 17} textAnchor="middle" fontSize="13" fill="#a8b6ca">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
+      <text key={`ty${v}`} x={PML - 7} y={Y(v) + 5} textAnchor="end" fontSize="13" fill="#a8b6ca">
           {fmt(v, 4)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
+          <text x={PS - PMR} y={PS - 4} textAnchor="end" fontSize="11" fill="#a8b6ca">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
+          <text x={2} y={PMT - 9} textAnchor="start" fontSize="11" fill="#a8b6ca">
             {axis[1]}
           </text>
         </>
@@ -271,7 +273,8 @@ function Plot({
             points={s.pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}
             fill="none"
             stroke={STROKE_COLOR[s.tone]}
-            strokeWidth={s.tone === "ghost" ? 1.6 : 2.6}
+            strokeWidth={s.tone === "ghost" ? 2 : 3.2}
+            strokeDasharray={s.dashed ? "6 5" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -285,13 +288,13 @@ function Plot({
             <circle
               cx={X(d.x)}
               cy={Y(d.y)}
-              r="5"
+              r="6"
               fill={d.filled === false ? "#0b1220" : DOT_COLOR[d.tone]}
               stroke={DOT_COLOR[d.tone]}
-              strokeWidth="2"
+              strokeWidth="2.5"
             />
             {d.label ? (
-              <text x={X(d.x)} y={Y(d.y) - 10} textAnchor="middle" fontSize="11" fill={DOT_COLOR[d.tone]}>
+              <text x={X(d.x) + (d.labelDx ?? 0)} y={Y(d.y) - 12} textAnchor="middle" fontSize="13" fontWeight="700" fill={DOT_COLOR[d.tone]}>
                 {d.label}
               </text>
             ) : null}
@@ -306,7 +309,7 @@ function Plot({
 // ══════════════════════════════════════════════════════════════
 function TipBox({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-400">
+    <p className="rounded-xl border border-white/10 bg-slate-900/55 px-4 py-3 text-sm leading-6 text-slate-300">
       💡 {children}
     </p>
   );
@@ -315,7 +318,7 @@ function GoalList({ items, done }: { items: string[]; done: boolean[] }) {
   return (
     <ul className="space-y-1">
       {items.map((t, i) => (
-        <li key={i} className="flex gap-2 text-xs leading-6 text-slate-300">
+        <li key={i} className="flex gap-2 text-sm leading-6 text-slate-300">
           <span className={done[i] ? "text-emerald-300" : "text-slate-500"}>{done[i] ? "✅" : (ABC[i] ?? "·")}</span>
           <span className={done[i] ? "text-emerald-200" : undefined}>{t}</span>
         </li>
@@ -431,7 +434,7 @@ function PickButton({
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3 py-2 text-left text-xs font-bold transition " +
+        "rounded-xl border-2 px-3.5 py-2.5 text-left text-sm font-bold transition " +
         (active ? ACC_CHIP[accent] : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -623,22 +626,25 @@ function EBadge({ e }: { e: number }) {
 }
 
 /** 1 을 기준으로 삼는 탄력성 저울 */
-function EGauge({ e }: { e: number }) {
+function EGauge({ e, compact = false }: { e: number; compact?: boolean }) {
   const k = eKind(e);
   const EMAX = 4;
   const X = (v: number) => 20 + (Math.min(EMAX, Math.max(0, v)) / EMAX) * 260;
+  const barY = compact ? 20 : 22;
+  const barHeight = compact ? 9 : 14;
+  const markerY = barY + barHeight / 2;
   return (
-    <svg viewBox="0 0 300 62" className="w-full" role="img" aria-label="탄력성 저울">
-      <rect x={X(0)} y="22" width={X(1) - X(0)} height="14" rx="3" fill="rgba(56,189,248,0.35)" />
-      <rect x={X(1)} y="22" width={X(EMAX) - X(1)} height="14" rx="3" fill="rgba(251,113,133,0.35)" />
-      <line x1={X(1)} y1="16" x2={X(1)} y2="42" stroke="#fbbf24" strokeWidth="2.5" />
-      <text x={X(1)} y="54" textAnchor="middle" fontSize="9" fill="#fbbf24">
+    <svg viewBox={`0 0 300 ${compact ? 52 : 62}`} className={compact ? "mx-auto w-full max-w-[520px]" : "w-full"} role="img" aria-label="탄력성 저울">
+      <rect x={X(0)} y={barY} width={X(1) - X(0)} height={barHeight} rx="3" fill="rgba(56,189,248,0.35)" />
+      <rect x={X(1)} y={barY} width={X(EMAX) - X(1)} height={barHeight} rx="3" fill="rgba(251,113,133,0.35)" />
+      <line x1={X(1)} y1={compact ? 15 : 16} x2={X(1)} y2={compact ? 35 : 42} stroke="#fbbf24" strokeWidth={compact ? 2 : 2.5} />
+      <text x={X(1)} y={compact ? 47 : 54} textAnchor="middle" fontSize="9" fill="#fbbf24">
         1
       </text>
-      <text x={X(0)} y="54" textAnchor="middle" fontSize="9" fill="#64748b">
+      <text x={X(0)} y={compact ? 47 : 54} textAnchor="middle" fontSize="9" fill="#64748b">
         0
       </text>
-      <text x={X(EMAX)} y="54" textAnchor="middle" fontSize="9" fill="#64748b">
+      <text x={X(EMAX)} y={compact ? 47 : 54} textAnchor="middle" fontSize="9" fill="#64748b">
         {EMAX}+
       </text>
       <text x={X(0.5)} y="15" textAnchor="middle" fontSize="9" fill="#7dd3fc">
@@ -647,8 +653,8 @@ function EGauge({ e }: { e: number }) {
       <text x={X(2.5)} y="15" textAnchor="middle" fontSize="9" fill="#fda4af">
         탄력적
       </text>
-      <polygon points={`${X(e)},18 ${X(e) - 6},6 ${X(e) + 6},6`} fill={E_FILL[k]} />
-      <circle cx={X(e)} cy="29" r="6" fill={E_FILL[k]} stroke="#0b1220" strokeWidth="2" />
+      <polygon points={`${X(e)},${compact ? 17 : 18} ${X(e) - (compact ? 5 : 6)},${compact ? 8 : 6} ${X(e) + (compact ? 5 : 6)},${compact ? 8 : 6}`} fill={E_FILL[k]} />
+      <circle cx={X(e)} cy={markerY} r={compact ? 5 : 6} fill={E_FILL[k]} stroke="#0b1220" strokeWidth="2" />
     </svg>
   );
 }
@@ -732,10 +738,13 @@ function SaleTab() {
   const tried = SALE_RATES.filter((r) => rates[`${it.id}:${r}`]).length;
   const goals = [seen.elastic === true, seen.inelastic === true, seen.unit === true, tried >= 2];
 
-  const segs: PlotSeg[] = lines(samplePath(it.f, 0, it.box.xMax, it.box), "line");
+  const segs: PlotSeg[] = [
+    ...lines(samplePath(it.f, 0, SALE_PLOT_BOX.xMax, SALE_PLOT_BOX), "line"),
+    ...lines(samplePath(it.f, x1, x0, SALE_PLOT_BOX), "elastic"),
+  ];
   const dots: PlotDot[] = [
-    { x: x0, y: q0, tone: "ghost", filled: false, label: "할인 전" },
-    { x: x1, y: q1, tone: "live", label: "할인 후" },
+    { x: x0, y: q0, tone: "ghost", filled: false, label: "할인 전", labelDx: 22 },
+    { x: x1, y: q1, tone: "live", label: "할인 후", labelDx: -22 },
   ];
 
   return (
@@ -757,8 +766,8 @@ function SaleTab() {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-sky-400/25 bg-sky-500/[0.06] p-4">
-        <p className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-sky-200">
+      <div className="rounded-2xl border border-sky-300/25 bg-gradient-to-r from-sky-500/[0.10] to-slate-900/50 p-4 sm:p-5">
+        <p className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-sky-100">
           <span>얼마나 깎아 볼까요?</span>
           <span className="font-mono text-slate-100">
             {fmt(x0)} → {fmt(x1)} 천원
@@ -774,7 +783,7 @@ function SaleTab() {
                 mark(si, r);
               }}
               className={
-                "rounded-xl border-2 px-4 py-2 text-sm font-bold transition " +
+              "rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition " +
                 (i === ri ? ACC_CHIP.sky : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -784,28 +793,34 @@ function SaleTab() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-center text-sm font-bold text-sky-200">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)]">
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-slate-900/45 p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-slate-950/50 px-3 py-2">
+            <p className="text-sm font-bold text-sky-200">
             <Katex expr={it.tex} />
-          </p>
+            </p>
+            <span className="rounded-full border border-sky-300/20 bg-sky-300/[0.08] px-2.5 py-1 text-xs font-bold text-sky-100">기울기 {fmt(it.d1(x0), 1)}</span>
+          </div>
           <Plot
-            box={it.box}
+            box={SALE_PLOT_BOX}
             uid={`sale-${it.id}`}
             segs={segs}
             dots={dots}
-            vlines={[{ at: x1, tone: "guide" }]}
+            vlines={[{ at: x1, tone: "guide" }, { at: x0, tone: "hot" }]}
             axis={["가격 (천원)", "수요량 (개)"]}
           />
-          <div className="flex justify-center">
+          <p className="rounded-lg border border-sky-300/15 bg-sky-300/[0.05] px-3 py-2 text-xs leading-5 text-slate-300">
+            네 사례에 같은 축 범위를 적용했어요. 선의 기울기 차이를 같은 눈금에서 비교해 보세요.
+          </p>
+          <div className="flex justify-center rounded-xl bg-slate-950/40 p-2">
             <ChangeBars dPrice={dPrice} dQty={dQty} />
           </div>
         </div>
 
         <div className="space-y-3">
-          <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-xs font-bold text-slate-300">🧮 두 변화율을 견줘 봐요</p>
-            <table className="w-full border-collapse text-left text-sm">
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-slate-900/45 p-4 sm:p-5">
+            <p className="text-sm font-bold text-slate-100">🧮 두 변화율을 견줘 봐요</p>
+            <table className="w-full border-collapse text-left text-base">
               <tbody>
                 <tr className="border-b border-white/10">
                   <th className="py-2 pr-2 font-normal text-slate-400">가격</th>
@@ -833,7 +848,7 @@ function SaleTab() {
               </tbody>
             </table>
             <EGauge e={e} />
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl bg-slate-950/40 px-3 py-2">
               <EBadge e={e} />
               <span className="text-xs leading-6 text-slate-300">{E_WHY[k]}</span>
             </div>
@@ -878,6 +893,36 @@ function ValueCell({ value, goal }: { value: number; goal: string }) {
   );
 }
 
+function niceTick(span: number): number {
+  const raw = span / 4;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const scaled = raw / power;
+  return (scaled <= 1 ? 1 : scaled <= 2 ? 2 : scaled <= 5 ? 5 : 10) * power;
+}
+
+function focusedLimitBox(base: Box, from: number, f: (x: number) => number, x0: number, x1: number): Box {
+  const gap = Math.max(Math.abs(x0 - x1), 1e-6);
+  const radius = Math.max(gap * 3, x0 * 0.01);
+  const xMin = Math.max(base.xMin, from, Math.min(x0, x1) - radius);
+  const xMax = Math.min(base.xMax, Math.max(x0, x1) + radius);
+  const values = Array.from({ length: 33 }, (_, i) => f(xMin + ((xMax - xMin) * i) / 32));
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const padding = (high - low) * 0.14 || Math.max(Math.abs(high) * 0.01, 0.01);
+  const yMin = Math.max(base.yMin, low - padding);
+  const yMax = Math.min(base.yMax, high + padding);
+
+  return {
+    ...base,
+    xMin,
+    xMax,
+    yMin,
+    yMax,
+    gx: niceTick(xMax - xMin),
+    gy: niceTick(yMax - yMin),
+  };
+}
+
 function LimitTab() {
   const [li, setLi] = useState(1);
   const [step, setStep] = useState(1);
@@ -892,6 +937,7 @@ function LimitTab() {
     return { r, x1, q1: g.f(x1), e: arcE(g.f, g.x0, x1) };
   });
   const last = rows[rows.length - 1];
+  const plotBox = focusedLimitBox(g.box, g.from, g.f, g.x0, last.x1);
 
   const flat = LIMIT_FNS.filter((z) => Math.abs(arcE(z.f, z.x0, z.x0 * 0.8) - pointE(z.f, z.d1, z.x0)) < 1e-9);
   const goals = [
@@ -900,10 +946,22 @@ function LimitTab() {
     LIMIT_FNS.every((z) => deep[z.id]),
   ];
 
-  const segs: PlotSeg[] = lines(samplePath(g.f, g.from, g.to, g.box), "line");
+  const tangent: PlotSeg = {
+    tone: "tangent",
+    dashed: true,
+    pts: [
+      [plotBox.xMin, g.f(g.x0) + g.d1(g.x0) * (plotBox.xMin - g.x0)],
+      [plotBox.xMax, g.f(g.x0) + g.d1(g.x0) * (plotBox.xMax - g.x0)],
+    ],
+  };
+  const segs: PlotSeg[] = [
+    ...lines(samplePath(g.f, plotBox.xMin, plotBox.xMax, plotBox), "line"),
+    ...lines(samplePath(g.f, last.x1, g.x0, plotBox), "elastic"),
+    tangent,
+  ];
   const dots: PlotDot[] = [
-    { x: g.x0, y: g.f(g.x0), tone: "unit", label: "x₀" },
-    { x: last.x1, y: last.q1, tone: "live" },
+    { x: g.x0, y: g.f(g.x0), tone: "unit", label: "x₀", labelDx: 20 },
+    { x: last.x1, y: last.q1, tone: "live", label: "x₁", labelDx: -20 },
   ];
 
   const widen = (n: number) => {
@@ -931,49 +989,56 @@ function LimitTab() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-center text-sm font-bold text-violet-200">
-            <Katex expr={g.tex} />
-          </p>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-slate-900/45 p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-slate-950/50 px-3 py-2">
+            <p className="text-sm font-bold text-violet-200"><Katex expr={g.tex} /></p>
+            <span className="rounded-full border border-violet-300/20 bg-violet-300/[0.08] px-2.5 py-1 text-xs font-bold text-violet-100">점 탄력성 {fmt(pe, 3)}</span>
+          </div>
           <Plot
-            box={g.box}
+            box={plotBox}
             uid={`lim-${g.id}`}
             segs={segs}
             dots={dots}
-            vlines={[{ at: g.x0, tone: "hot" }]}
+            vlines={[{ at: last.x1, tone: "guide" }, { at: g.x0, tone: "hot" }]}
             axis={["가격 (천원)", "수요량 (개)"]}
           />
-          <p className="text-center font-mono text-[11px] text-slate-400">
+          <p className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
+            <span><i className="mr-1 inline-block h-0.5 w-3 bg-sky-400 align-middle" />수요곡선</span>
+            <span><i className="mr-1 inline-block h-0.5 w-3 bg-rose-400 align-middle" />구간 할선</span>
+            <span><i className="mr-1 inline-block w-3 border-t border-dashed border-amber-300 align-middle" />접선</span>
+          </p>
+          <p className="text-center text-[11px] text-violet-300/80">할인폭이 줄어들면 두 점 주변으로 축 범위가 자동 확대됩니다.</p>
+          <p className="rounded-lg bg-slate-950/40 px-3 py-2 text-center font-mono text-xs text-slate-300">
             x₀ = {fmt(g.x0)} · f(x₀) = {fmt(g.f(g.x0), 3)}
           </p>
         </div>
 
         <div className="space-y-3">
-          <div className="space-y-3 rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] p-4">
+          <div className="space-y-3 rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.09] to-slate-900/50 p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 disabled={step >= LIMIT_RATES.length}
                 onClick={() => widen(step + 1)}
-                className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN.violet}
+                className={"rounded-lg border-2 px-4 py-2 text-sm font-bold transition disabled:opacity-40 " + ACC_BTN.violet}
               >
                 🔎 할인폭을 더 줄이기
               </button>
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10"
               >
                 ↩️ 처음부터
               </button>
-              <span className="font-mono text-xs text-slate-400">
+              <span className="rounded-full bg-slate-950/50 px-3 py-1.5 font-mono text-xs text-slate-300">
                 {step} / {LIMIT_RATES.length} 단계
               </span>
             </div>
 
             <div className="overflow-x-auto overflow-y-hidden py-1">
-              <table className="w-full min-w-[420px] border-collapse text-center text-xs">
+              <table className="w-full min-w-[460px] border-collapse text-center text-sm">
                 <tbody>
                   <tr className="border-b border-white/10 text-slate-400">
                     <th className="px-2 py-1.5 font-normal">할인폭</th>
@@ -984,8 +1049,8 @@ function LimitTab() {
                   {rows.map((z) => (
                     <tr key={z.r} className="border-b border-white/5">
                       <td className="px-2 py-1.5 font-mono text-slate-300">{fmt(z.r, 2)}%</td>
-                      <td className="px-2 py-1.5 font-mono text-[11px] text-sky-200">{pct(-z.r / 100, 2)}</td>
-                      <td className="px-2 py-1.5 font-mono text-[11px] text-orange-300">
+                      <td className="px-2 py-2 font-mono text-xs text-sky-200">{pct(-z.r / 100, 2)}</td>
+                      <td className="px-2 py-2 font-mono text-xs text-orange-300">
                         {pct((z.q1 - g.f(g.x0)) / g.f(g.x0), 3)}
                       </td>
                       <td className="px-2 py-1.5">
@@ -997,12 +1062,12 @@ function LimitTab() {
               </table>
             </div>
 
-            <div className="rounded-xl border-2 border-violet-400/45 bg-violet-400/[0.10] p-3 text-center">
-              <p className="text-xs text-slate-300">미분으로 구한 점 탄력성</p>
+            <div className="rounded-xl border-2 border-violet-400/45 bg-violet-400/[0.10] p-4 text-center">
+              <p className="text-sm text-slate-200">미분으로 구한 점 탄력성</p>
               <p className="mt-1 text-sm font-bold text-violet-100">
                 <Katex expr={`\\varepsilon_d = -\\dfrac{x f'(x)}{f(x)}`} />
               </p>
-              <p className="mt-1 font-mono text-[11px] text-slate-400">
+              <p className="mt-1 font-mono text-xs text-slate-300">
                 <Katex expr={g.dtex} />
               </p>
               <p className="mt-1 font-mono text-2xl font-black text-violet-200">{fmt(pe, 4)}</p>
@@ -1255,7 +1320,7 @@ function RevTab() {
               </p>
             </div>
           </div>
-          <EGauge e={e} />
+          <EGauge e={e} compact />
         </div>
 
         <div className="grid gap-3 lg:grid-cols-2">
