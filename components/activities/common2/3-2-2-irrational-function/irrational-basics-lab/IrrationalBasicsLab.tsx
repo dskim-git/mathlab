@@ -75,7 +75,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3.5 py-2 text-sm font-bold transition " +
+        "rounded-xl border-2 px-4 py-2.5 text-base font-bold transition " +
         (active ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -93,7 +93,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           type="button"
           onClick={() => onPick(i)}
           className={
-            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+            "h-9 min-w-[2.25rem] rounded-lg border-2 px-2 font-mono text-sm font-bold transition " +
             (i === cur
               ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
               : done.includes(id)
@@ -104,7 +104,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           {done.includes(id) && i !== cur ? "✓" : i + 1}
         </button>
       ))}
-      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-xs font-bold text-slate-300">
         {done.length} / {ids.length}
       </span>
     </div>
@@ -116,7 +116,7 @@ function NextBtn({ onClick, label = "다음 ▶" }: { onClick: () => void; label
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-xl border-2 border-emerald-400/55 bg-emerald-400/15 px-3 py-2.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/25"
+      className="w-full rounded-xl border-2 border-emerald-400/55 bg-emerald-400/15 px-3 py-3 text-base font-bold text-emerald-100 transition hover:bg-emerald-400/25"
     >
       {label}
     </button>
@@ -142,14 +142,14 @@ function PieceText({ items }: { items: Piece[] }) {
 }
 
 function TipBox({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">{children}</p>;
+  return <p className="rounded-lg bg-black/25 px-3 py-2.5 text-[13px] leading-6 text-slate-300">{children}</p>;
 }
 
 function Verdict({ right, why, hint }: { right: boolean; why: string; hint: string }) {
   return right ? (
-    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {why}</p>
+    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-sm leading-6 text-emerald-100">✅ {why}</p>
   ) : (
-    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {hint}</p>
+    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-sm leading-6 text-rose-100">❌ {hint}</p>
   );
 }
 
@@ -173,9 +173,9 @@ function Slider({
   show?: string;
 }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400">
+    <label className="block text-[13px] font-bold text-slate-300">
       <span className="inline-flex items-center gap-1.5">
-        {label} <span className="font-mono text-[13px] text-slate-100">{show ?? value}</span>
+        {label} <span className="font-mono text-[15px] text-slate-100">{show ?? value}</span>
       </span>
       <input
         type="range"
@@ -192,7 +192,7 @@ function Slider({
 
 function BigTex({ tex, tone = "" }: { tex: string; tone?: string }) {
   return (
-    <div className={"flex min-h-[66px] items-center justify-center rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-[20px] " + tone}>
+    <div className={"flex min-h-[72px] items-center justify-center rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-[22px] " + tone}>
       <span className="min-w-0 py-1">
         <Katex expr={tex} />
       </span>
@@ -224,7 +224,7 @@ function WideChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex w-full items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-default " +
+              "flex w-full items-center gap-2 rounded-xl border-2 px-3 py-3 text-left text-sm font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -232,7 +232,7 @@ function WideChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="text-xs text-slate-400">{ABC[i]}</span>
             {s}
           </button>
         );
@@ -265,7 +265,7 @@ function TexChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex min-w-0 items-center gap-1.5 rounded-xl border-2 px-2.5 py-2.5 text-[15px] transition disabled:cursor-default " +
+              "flex min-w-0 items-center gap-1.5 rounded-xl border-2 px-3 py-3 text-base transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -273,7 +273,7 @@ function TexChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="text-xs text-slate-400">{ABC[i]}</span>
             <span className="min-w-0 py-0.5">
               <Katex expr={s} />
             </span>
@@ -308,7 +308,7 @@ function MixedChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-default " +
+              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-3 text-left text-sm font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -316,7 +316,7 @@ function MixedChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="shrink-0 text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="shrink-0 text-xs text-slate-400">{ABC[i]}</span>
             <span className="flex min-w-0 flex-wrap items-baseline gap-x-1">
               <PieceText items={row} />
             </span>
@@ -361,7 +361,7 @@ function RangeLine({
         <g key={t}>
           <line x1={lineX(t)} y1={LINE.y - 4} x2={lineX(t)} y2={LINE.y + 4} stroke="#475569" strokeWidth={1.2} />
           {t % 2 === 0 ? (
-            <text x={lineX(t)} y={LINE.y + 20} fontSize={10} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={lineX(t)} y={LINE.y + 20} fontSize={12} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
               {t}
             </text>
           ) : null}
@@ -392,7 +392,7 @@ function RangeLine({
         <g>
           <line x1={lineX(cur)} y1={26} x2={lineX(cur)} y2={LINE.y - 8} stroke={curOk ? "#a3e635" : "#fb7185"} strokeWidth={1.3} strokeDasharray="3 3" />
           <circle cx={lineX(cur)} cy={LINE.y} r={4.6} fill={curOk ? "#a3e635" : "#fb7185"} stroke="#020617" strokeWidth={1.2} />
-          <text x={lineX(cur)} y={20} fontSize={11} fontWeight={700} textAnchor="middle" fill={curOk ? "#bef264" : "#fda4af"}>
+          <text x={lineX(cur)} y={20} fontSize={13} fontWeight={700} textAnchor="middle" fill={curOk ? "#bef264" : "#fda4af"}>
             {cur}
           </text>
         </g>
@@ -410,9 +410,9 @@ export default function IrrationalBasicsLab() {
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
-        <p className="text-sm font-semibold text-emerald-300">미니활동 · 공통수학2</p>
-        <h3 className="mt-2 text-2xl font-bold">√ 무리식과 무리함수</h3>
-        <p className="mt-2 leading-7 text-slate-300">
+        <p className="text-base font-semibold text-emerald-300">미니활동 · 공통수학2</p>
+        <h3 className="mt-2 text-3xl font-bold">√ 무리식과 무리함수</h3>
+        <p className="mt-2 text-base leading-7 text-slate-300">
           근호 안에 <b className="text-emerald-200">문자</b>가 들어오면 아무 수나 넣을 수 없게 됩니다. 넣어도 되는 자리를 직접 찾아보며 무리식과 무리함수를 익혀 보세요.
         </p>
       </div>
@@ -477,21 +477,21 @@ function RangeCard({
             <span
               key={p.label}
               className={
-                "inline-flex min-w-0 flex-wrap items-baseline gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-bold " +
+                "inline-flex min-w-0 flex-wrap items-baseline gap-1.5 rounded-lg border px-3 py-2 text-sm font-bold " +
                 (okPart ? "border-lime-400/40 bg-lime-400/10 text-lime-100" : "border-rose-400/40 bg-rose-400/10 text-rose-100")
               }
             >
-              <span className="text-[10px] text-slate-400">{p.label}</span>
+              <span className="text-xs text-slate-400">{p.label}</span>
               <Katex expr={p.tex} />
               <span className="text-slate-500">=</span>
-              <span className="font-mono text-[13px] text-white">{fmt(v)}</span>
-              <span className="text-[10px]">{p.strict ? "(0 보다 커야)" : "(0 이상이어야)"}</span>
+              <span className="font-mono text-sm text-white">{fmt(v)}</span>
+              <span className="text-xs">{p.strict ? "(0 보다 커야)" : "(0 이상이어야)"}</span>
             </span>
           );
         })}
         <span
           className={
-            "inline-flex items-center rounded-lg px-2.5 py-1.5 text-[12px] font-extrabold " +
+            "inline-flex items-center rounded-lg px-3 py-2 text-sm font-extrabold " +
             (good ? "bg-lime-400/20 text-lime-100" : "bg-rose-400/20 text-rose-100")
           }
         >
@@ -506,11 +506,11 @@ function RangeCard({
         dots={visited.map((v) => ({ x: v, ok: inRange(task, v) }))}
         aria="값이 실수가 되는 범위"
       />
-      <p className="text-center text-[11px] leading-6 text-slate-500">
+      <p className="text-center text-xs leading-6 text-slate-400">
         {solved ? "초록 띠가 값이 실수가 되는 범위예요. 속이 빈 동그라미는 그 수를 넣을 수 없다는 뜻입니다." : "슬라이더를 움직인 자리마다 아래에 점이 남아요. 초록은 되는 자리, 붉은색은 안 되는 자리입니다."}
       </p>
 
-      <p className="text-[13px] font-bold text-slate-100">값이 실수가 되도록 하는 x 의 범위는?</p>
+      <p className="text-sm font-bold text-slate-100">값이 실수가 되도록 하는 x 의 범위는?</p>
       <MixedChoices items={task.choices} pick={pick} answer={task.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={solved} why={task.why} hint={task.choiceWhy[pick]} /> : null}
     </div>
@@ -594,7 +594,7 @@ function IrrTab() {
       {cDone.length === IRR_CARDS.length && rDone.length === RANGE_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 무리식을 모두 가려냈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             근호 안에 <b className="text-white">문자</b>가 있어야 무리식이고, 근호 안이 <b className="text-white">완전제곱</b>이면 근호가 벗겨져 무리식이 아니에요. 값이 실수가 되는 범위는 근호 안이 0 이상, 분모는 0 이 아니어야 합니다.
           </p>
         </div>
@@ -616,15 +616,15 @@ function PropLab({ prop, a, b, onA, onB }: { prop: SqrtProp; a: number; b: numbe
     <div className="space-y-2">
       <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-3">
         <div className="flex flex-wrap items-baseline gap-2">
-          <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-100">{prop.no}</span>
-          <p className="text-[13px] font-bold text-slate-100">{prop.title}</p>
+              <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-bold text-amber-100">{prop.no}</span>
+              <p className="text-sm font-bold text-slate-100">{prop.title}</p>
         </div>
-        <div className="mt-1.5 flex justify-center py-1 text-[17px]">
+        <div className="mt-1.5 flex justify-center py-1 text-lg">
           <span className="min-w-0">
             <Katex expr={prop.lawTex} />
           </span>
         </div>
-        <p className="text-center text-[11px] font-bold text-amber-200">{prop.cond}</p>
+        <p className="text-center text-xs font-bold text-amber-200">{prop.cond}</p>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -636,28 +636,28 @@ function PropLab({ prop, a, b, onA, onB }: { prop: SqrtProp; a: number; b: numbe
 
       <div className="grid grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-sky-400/30 bg-sky-400/10 px-2.5 py-2.5">
-          <p className="text-[10px] font-bold text-sky-300">왼쪽</p>
-          <div className="mt-1 flex min-h-[40px] items-center py-1 text-[16px]">
+          <p className="text-xs font-bold text-sky-300">왼쪽</p>
+          <div className="mt-1 flex min-h-[44px] items-center py-1 text-lg">
             <span className="min-w-0">
               <Katex expr={prop.leftTex} />
             </span>
           </div>
-          <p className={"mt-1 font-mono text-[15px] font-bold " + (L === null ? "text-rose-300" : "text-sky-100")}>{L === null ? "값 없음" : fmt(L, 4)}</p>
+          <p className={"mt-1 font-mono text-base font-bold " + (L === null ? "text-rose-300" : "text-sky-100")}>{L === null ? "값 없음" : fmt(L, 4)}</p>
         </div>
         <div className="rounded-xl border border-pink-400/30 bg-pink-400/10 px-2.5 py-2.5">
-          <p className="text-[10px] font-bold text-pink-300">오른쪽</p>
-          <div className="mt-1 flex min-h-[40px] items-center py-1 text-[16px]">
+          <p className="text-xs font-bold text-pink-300">오른쪽</p>
+          <div className="mt-1 flex min-h-[44px] items-center py-1 text-lg">
             <span className="min-w-0">
               <Katex expr={prop.rightTex} />
             </span>
           </div>
-          <p className={"mt-1 font-mono text-[15px] font-bold " + (R === null ? "text-rose-300" : "text-pink-100")}>{R === null ? "값 없음" : fmt(R, 4)}</p>
+          <p className={"mt-1 font-mono text-base font-bold " + (R === null ? "text-rose-300" : "text-pink-100")}>{R === null ? "값 없음" : fmt(R, 4)}</p>
         </div>
       </div>
 
       <p
         className={
-          "rounded-lg px-3 py-2 text-[12px] leading-6 " +
+          "rounded-lg px-3 py-2 text-sm leading-6 " +
           (same ? "bg-emerald-400/12 text-emerald-100" : both ? "bg-rose-400/12 text-rose-100" : "bg-amber-400/12 text-amber-100")
         }
       >
@@ -682,8 +682,8 @@ function CalcCard({ task, picks, onPick }: { task: CalcTask; picks: Record<strin
         return (
           <div key={task.id + si} className="space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
             <div className="flex flex-wrap items-baseline gap-2">
-              <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-100">{s.badge}</span>
-              <p className="text-[13px] font-bold text-slate-100">{s.q}</p>
+              <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-bold text-amber-100">{s.badge}</span>
+              <p className="text-sm font-bold text-slate-100">{s.q}</p>
             </div>
             <TexChoices items={s.choices} pick={pick} answer={s.answer} onPick={(i) => onPick(si, i)} />
             {pick !== undefined ? <Verdict right={pick === s.answer} why={s.why} hint={s.choiceWhy[pick]} /> : null}
@@ -692,13 +692,13 @@ function CalcCard({ task, picks, onPick }: { task: CalcTask; picks: Record<strin
       })}
       {allDone ? (
         <div className="rounded-xl border-2 border-emerald-400/50 bg-emerald-400/12 px-3 py-3">
-          <p className="text-center text-[11px] font-bold text-emerald-200">정리하면</p>
-          <div className="mt-1 flex justify-center py-1 text-[20px] text-emerald-100">
+          <p className="text-center text-xs font-bold text-emerald-200">정리하면</p>
+          <div className="mt-1 flex justify-center py-1 text-[22px] text-emerald-100">
             <span className="min-w-0">
               <Katex expr={task.resultTex} />
             </span>
           </div>
-          <p className="mt-1 text-center text-[11px] leading-6 text-slate-300">{task.note}</p>
+          <p className="mt-1 text-center text-xs leading-6 text-slate-300">{task.note}</p>
         </div>
       ) : null}
     </div>
@@ -734,7 +734,7 @@ function CalcTab() {
               type="button"
               onClick={() => setPi(i)}
               className={
-                "rounded-lg border-2 px-2.5 py-1.5 text-[13px] transition " +
+                "rounded-lg border-2 px-3 py-2 text-sm transition " +
                 (i === pi ? "border-amber-400/70 bg-amber-400/20 text-amber-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -773,7 +773,7 @@ function CalcTab() {
       {doneIds.length === CALC_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 네 문제를 모두 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             근호가 있는 식도 <b className="text-white">합과 차의 곱</b>과 <b className="text-white">유리화</b> 두 도구면 웬만큼 정리돼요. 분모에서 근호를 없애면 크기를 어림하기도 쉬워집니다.
           </p>
         </div>
@@ -810,13 +810,13 @@ function DomCard({
       <Slider label="넣는 수 x =" value={x} min={LINE_X.min} max={LINE_X.max} step={LINE_X.step} onChange={onX} accent="accent-sky-400" />
 
       <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/25 px-3 py-3">
-        <span className="inline-flex h-10 min-w-[3.2rem] items-center justify-center rounded-xl border-2 border-sky-400/50 bg-sky-400/15 px-2 font-mono text-[15px] font-bold text-sky-100">
+        <span className="inline-flex h-11 min-w-[3.5rem] items-center justify-center rounded-xl border-2 border-sky-400/50 bg-sky-400/15 px-2.5 font-mono text-base font-bold text-sky-100">
           {x}
         </span>
         <span className="text-slate-500">▶</span>
         <span
           className={
-            "inline-flex h-10 min-w-0 items-center gap-1.5 rounded-xl border-2 px-2.5 text-[13px] font-bold " +
+            "inline-flex h-11 min-w-0 items-center gap-1.5 rounded-xl border-2 px-3 text-sm font-bold " +
             (inner >= 0 ? "border-lime-400/50 bg-lime-400/10 text-lime-100" : "border-rose-400/50 bg-rose-400/10 text-rose-100")
           }
         >
@@ -827,7 +827,7 @@ function DomCard({
         <span className="text-slate-500">▶</span>
         <span
           className={
-            "inline-flex h-10 min-w-[4.4rem] items-center justify-center rounded-xl border-2 px-2 font-mono text-[15px] font-bold " +
+            "inline-flex h-11 min-w-[4.8rem] items-center justify-center rounded-xl border-2 px-2.5 font-mono text-base font-bold " +
             (y === null ? "border-rose-400/60 bg-rose-400/15 text-rose-100" : "border-emerald-400/50 bg-emerald-400/15 text-emerald-100")
           }
         >
@@ -836,7 +836,7 @@ function DomCard({
       </div>
 
       <div className="space-y-1">
-        <p className="text-[11px] font-bold text-slate-400">넣는 수 x 의 자리</p>
+        <p className="text-xs font-bold text-slate-300">넣는 수 x 의 자리</p>
         <RangeLine
           band={solved ? task.domain : null}
           bandColor="#38bdf8"
@@ -848,15 +848,15 @@ function DomCard({
       </div>
       {solved ? (
         <div className="space-y-1">
-          <p className="text-[11px] font-bold text-slate-400">나오는 값 y 의 자리</p>
+          <p className="text-xs font-bold text-slate-300">나오는 값 y 의 자리</p>
           <RangeLine band={task.rangeY} bandColor="#f472b6" cur={y} curOk={true} aria="치역 수직선" />
         </div>
       ) : null}
-      <p className="text-center text-[11px] leading-6 text-slate-500">
+      <p className="text-center text-xs leading-6 text-slate-400">
         {solved ? "파란 띠가 정의역, 분홍 띠가 치역이에요." : "슬라이더를 움직인 자리마다 점이 남아요. 붉은 점은 값이 없는 자리입니다."}
       </p>
 
-      <p className="text-[13px] font-bold text-slate-100">이 함수의 정의역과 치역은?</p>
+      <p className="text-sm font-bold text-slate-100">이 함수의 정의역과 치역은?</p>
       <MixedChoices items={task.choices} pick={pick} answer={task.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={solved} why={task.why} hint={task.choiceWhy[pick]} /> : null}
     </div>
@@ -940,7 +940,7 @@ function FnTab() {
       {cDone.length === FN_CARDS.length && dDone.length === DOM_TASKS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 무리함수를 모두 살펴봤어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             정의역은 <b className="text-white">근호 안이 0 이상</b>인 곳, 치역은 <b className="text-white">근호의 값 0 이상</b>에서 출발해 앞의 부호로 뒤집히고 뒤에 더한 수만큼 옮겨집니다.
           </p>
         </div>
@@ -959,7 +959,7 @@ function SwingViz({ x, period }: { x: number; period: number }) {
   const px = SWING.px;
   const py = SWING.py;
   return (
-    <svg viewBox={`0 0 ${SWING.w} ${SWING.h}`} className="mx-auto block w-full max-w-[190px]" role="img" aria-label="그네">
+    <svg viewBox={`0 0 ${SWING.w} ${SWING.h}`} className="mx-auto block w-full max-w-[330px]" role="img" aria-label="그네">
       <rect x={0} y={0} width={SWING.w} height={SWING.h} fill="#020617" rx={12} />
       <line x1={28} y1={py} x2={172} y2={py} stroke="#64748b" strokeWidth={4} strokeLinecap="round" />
       <line x1={34} y1={py} x2={20} y2={150} stroke="#475569" strokeWidth={3} strokeLinecap="round" />
@@ -982,10 +982,10 @@ function SwingViz({ x, period }: { x: number; period: number }) {
         <rect x={px - 13} y={py + len - 4} width={26} height={7} rx={3} fill="#4d7c0f" stroke="#a3e635" strokeWidth={1.4} />
         <circle cx={px} cy={py + len - 12} r={5} fill="#facc15" />
       </g>
-      <text x={100} y={16} fontSize={11} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
+      <text x={100} y={16} fontSize={13} fontWeight={700} textAnchor="middle" fill="#cbd5e1">
         줄 {x} m · 왕복 {period.toFixed(2)} 초
       </text>
-      <text x={100} y={166} fontSize={10} textAnchor="middle" fill="#64748b">
+      <text x={100} y={166} fontSize={12} textAnchor="middle" fill="#64748b">
         줄이 길수록 천천히 흔들려요
       </text>
     </svg>
@@ -999,7 +999,7 @@ function HorizonViz({ x, xMax }: { x: number; xMax: number }) {
   const R = HORIZON.R;
   const arc = `M ${HORIZON.cx} ${HORIZON.cy - R} A ${R} ${R} 0 0 1 ${g.px.toFixed(2)} ${g.py.toFixed(2)}`;
   return (
-    <svg viewBox={`0 0 ${HORIZON.w} ${HORIZON.h}`} className="mx-auto block w-full max-w-[190px]" role="img" aria-label="지평선까지 보이는 거리">
+    <svg viewBox={`0 0 ${HORIZON.w} ${HORIZON.h}`} className="mx-auto block w-full max-w-[330px]" role="img" aria-label="지평선까지 보이는 거리">
       <rect x={0} y={0} width={HORIZON.w} height={HORIZON.h} fill="#020617" rx={12} />
       <circle cx={HORIZON.cx} cy={HORIZON.cy} r={R} fill="#0b2545" stroke="#334155" strokeWidth={1.4} />
 
@@ -1032,16 +1032,16 @@ function HorizonViz({ x, xMax }: { x: number; xMax: number }) {
       <line x1={HORIZON.cx} y1={g.ty} x2={g.px} y2={g.py} stroke="#facc15" strokeWidth={1.5} strokeDasharray="4 3" />
       <circle cx={g.px} cy={g.py} r={3.4} fill="#38bdf8" stroke="#020617" strokeWidth={1} />
 
-      <text x={HORIZON.cx - 8} y={g.ty + g.h / 2} fontSize={10.5} fontWeight={700} textAnchor="end" fill="#e2e8f0">
+      <text x={HORIZON.cx - 8} y={g.ty + g.h / 2} fontSize={12} fontWeight={700} textAnchor="end" fill="#e2e8f0">
         {x} m
       </text>
-      <text x={g.px + 6} y={g.py + 3} fontSize={10} fontWeight={700} fill="#7dd3fc">
+      <text x={g.px + 6} y={g.py + 3} fontSize={11} fontWeight={700} fill="#7dd3fc">
         지평선
       </text>
-      <text x={100} y={14} fontSize={10.5} fontWeight={700} textAnchor="middle" fill="#fcd34d">
+      <text x={100} y={14} fontSize={12} fontWeight={700} textAnchor="middle" fill="#fcd34d">
         노란 점선이 눈에 닿는 끝
       </text>
-      <text x={100} y={164} fontSize={10} textAnchor="middle" fill="#64748b">
+      <text x={100} y={164} fontSize={11} textAnchor="middle" fill="#64748b">
         하늘색 호가 보이는 거리 · 회색 배는 너머라 안 보여요
       </text>
     </svg>
@@ -1055,7 +1055,7 @@ function TentViz({ x }: { x: number }) {
   const bx = 52;
   const by = 132;
   return (
-    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[190px]" role="img" aria-label="텐트 줄">
+    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[330px]" role="img" aria-label="텐트 줄">
       <rect x={0} y={0} width={200} height={170} fill="#020617" rx={12} />
       <line x1={20} y1={by} x2={180} y2={by} stroke="#475569" strokeWidth={2} />
       <line x1={bx} y1={by} x2={bx} y2={by - h} stroke="#94a3b8" strokeWidth={4} />
@@ -1063,13 +1063,13 @@ function TentViz({ x }: { x: number }) {
       <line x1={bx} y1={by} x2={bx + w} y2={by} stroke="#38bdf8" strokeWidth={2.4} />
       <path d={`M ${bx} ${by - 12} l 12 0 l 0 12`} fill="none" stroke="#64748b" strokeWidth={1.2} />
       <circle cx={bx + w} cy={by} r={4} fill="#1e293b" stroke="#94a3b8" strokeWidth={1.4} />
-      <text x={bx - 6} y={by - h / 2} fontSize={10.5} fontWeight={700} textAnchor="end" fill="#cbd5e1">
+      <text x={bx - 6} y={by - h / 2} fontSize={12} fontWeight={700} textAnchor="end" fill="#cbd5e1">
         {x} m
       </text>
-      <text x={bx + w / 2} y={by + 16} fontSize={10.5} fontWeight={700} textAnchor="middle" fill="#7dd3fc">
+      <text x={bx + w / 2} y={by + 16} fontSize={12} fontWeight={700} textAnchor="middle" fill="#7dd3fc">
         3 m
       </text>
-      <text x={100} y={16} fontSize={11} fontWeight={700} textAnchor="middle" fill="#f9a8d4">
+      <text x={100} y={16} fontSize={12} fontWeight={700} textAnchor="middle" fill="#f9a8d4">
         분홍색이 줄의 길이
       </text>
     </svg>
@@ -1087,7 +1087,7 @@ function LifePlot({ cs, x, visited }: { cs: LifeCase; x: number; visited: number
       {cs.yTicks.map((t) => (
         <g key={"y" + t}>
           <line x1={PLOT.left} y1={py(t)} x2={PLOT.right} y2={py(t)} stroke="#1e293b" strokeWidth={1} />
-          <text x={PLOT.left - 6} y={py(t) + 4} fontSize={12} textAnchor="end" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={PLOT.left - 6} y={py(t) + 4} fontSize={14} textAnchor="end" fill="#64748b" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
@@ -1095,17 +1095,17 @@ function LifePlot({ cs, x, visited }: { cs: LifeCase; x: number; visited: number
       {cs.xTicks.map((t) => (
         <g key={"x" + t}>
           <line x1={px(t)} y1={PLOT.top} x2={px(t)} y2={PLOT.bottom} stroke="#1e293b" strokeWidth={1} />
-          <text x={px(t)} y={PLOT.bottom + 16} fontSize={12} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={px(t)} y={PLOT.bottom + 16} fontSize={14} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
       ))}
       <line x1={PLOT.left} y1={PLOT.top - 6} x2={PLOT.left} y2={PLOT.bottom} stroke="#64748b" strokeWidth={1.6} />
       <line x1={PLOT.left} y1={PLOT.bottom} x2={PLOT.right + 6} y2={PLOT.bottom} stroke="#64748b" strokeWidth={1.6} />
-      <text x={4} y={14} fontSize={11} fontWeight={700} fill="#94a3b8">
+      <text x={4} y={14} fontSize={13} fontWeight={700} fill="#94a3b8">
         {cs.yName}
       </text>
-      <text x={PLOT.right} y={PLOT.h - 6} fontSize={11} fontWeight={700} textAnchor="end" fill="#94a3b8">
+      <text x={PLOT.right} y={PLOT.h - 6} fontSize={13} fontWeight={700} textAnchor="end" fill="#94a3b8">
         {cs.xName}
       </text>
       {visited.map((v) => (
@@ -1140,10 +1140,10 @@ function LifePanel({
   return (
     <div className="space-y-2">
       <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-3">
-        <p className="text-[13px] font-bold text-slate-100">
+        <p className="text-sm font-bold text-slate-100">
           {cs.icon} {cs.title}
         </p>
-        <div className="mt-1 space-y-0.5 text-[12px] leading-6 text-slate-300">
+        <div className="mt-1 space-y-1 text-sm leading-6 text-slate-200">
           {cs.story.map((s) => (
             <p key={s}>{s}</p>
           ))}
@@ -1152,32 +1152,32 @@ function LifePanel({
 
       <Slider label={cs.xLabel + " ="} value={x} min={cs.min} max={cs.max} step={cs.step} onChange={onX} accent="accent-pink-400" show={`${x} ${cs.xUnit}`} />
 
-      <div className="grid gap-2 sm:grid-cols-5">
-        <div className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-3 sm:col-span-2">
+      <div className="grid gap-2 sm:grid-cols-11">
+        <div className="flex h-full min-h-[380px] flex-col items-center justify-center rounded-xl border border-white/10 bg-black/25 px-3 py-4 sm:col-span-5 sm:min-h-[440px]">
           {cs.id === "W1" ? <SwingViz x={x} period={v} /> : null}
           {cs.id === "W2" ? <HorizonViz x={x} xMax={cs.max} /> : null}
           {cs.id === "W3" ? <TentViz x={x} /> : null}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-[12px] font-bold text-pink-100">
-              {cs.yLabel} <span className="font-mono text-[14px] text-white">{fmt(v, cs.digits)}</span> {cs.yUnit}
+          <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+            <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-sm font-bold text-pink-100">
+              {cs.yLabel} <span className="font-mono text-base text-white">{fmt(v, cs.digits)}</span> {cs.yUnit}
             </span>
           </div>
         </div>
-        <div className="rounded-xl border border-white/10 bg-black/25 px-2 py-3 sm:col-span-3">
+        <div className="rounded-xl border border-white/10 bg-black/25 px-2 py-3 sm:col-span-6">
           <LifePlot cs={cs} x={x} visited={visited} />
-          <p className="mt-1 text-center text-[11px] leading-6 text-slate-500">움직인 자리마다 점이 찍혀요. 처음엔 가파르다가 점점 눕습니다.</p>
+          <p className="mt-1 text-center text-xs leading-6 text-slate-400">움직인 자리마다 점이 찍혀요. 처음엔 가파르다가 점점 눕습니다.</p>
         </div>
       </div>
 
       <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-        <p className="text-[13px] font-bold text-slate-100">{cs.qs[0].prompt}</p>
+        <p className="text-sm font-bold text-slate-100">{cs.qs[0].prompt}</p>
         <MixedChoices items={cs.qs[0].choices} pick={picks[`${cs.id}:0`]} answer={cs.qs[0].answer} onPick={(i) => onPick(0, i)} />
         {picks[`${cs.id}:0`] !== undefined ? <Verdict right={q0} why={cs.qs[0].why} hint={cs.qs[0].choiceWhy[picks[`${cs.id}:0`]]} /> : null}
       </div>
 
       {q0 ? (
         <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-          <p className="text-[13px] font-bold text-slate-100">{cs.qs[1].prompt}</p>
+          <p className="text-sm font-bold text-slate-100">{cs.qs[1].prompt}</p>
           <MixedChoices items={cs.qs[1].choices} pick={picks[`${cs.id}:1`]} answer={cs.qs[1].answer} onPick={(i) => onPick(1, i)} />
           {picks[`${cs.id}:1`] !== undefined ? <Verdict right={allDone} why={cs.qs[1].why} hint={cs.qs[1].choiceWhy[picks[`${cs.id}:1`]]} /> : null}
         </div>
@@ -1185,12 +1185,12 @@ function LifePanel({
 
       {allDone ? (
         <div className="rounded-xl border-2 border-emerald-400/45 bg-emerald-400/12 px-3 py-3">
-          <div className="flex justify-center py-1 text-[18px] text-emerald-100">
+          <div className="flex justify-center py-1 text-xl text-emerald-100">
             <span className="min-w-0">
               <Katex expr={cs.fnTex} />
             </span>
           </div>
-          <p className="mt-1 text-[12px] leading-7 text-slate-300">💡 {cs.insight}</p>
+          <p className="mt-1 text-sm leading-7 text-slate-200">💡 {cs.insight}</p>
         </div>
       ) : null}
     </div>
@@ -1231,7 +1231,7 @@ function LifeTab() {
                 type="button"
                 onClick={() => setCi(i)}
                 className={
-                  "rounded-lg border-2 px-2.5 py-1.5 text-[12px] font-bold transition " +
+                "rounded-lg border-2 px-3 py-2 text-sm font-bold transition " +
                   (i === ci
                     ? "border-pink-400/70 bg-pink-400/20 text-pink-100"
                     : doneIds.includes(c.id)
@@ -1269,7 +1269,7 @@ function LifeTab() {
       {doneIds.length === LIFE_CASES.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 세 상황을 모두 살펴봤어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             무리함수는 <b className="text-white">처음엔 빠르게 늘다가 점점 더디게</b> 늘어요. 그래서 값을 두 배로 만들려면 x 를 네 배로 키워야 합니다.
           </p>
         </div>
