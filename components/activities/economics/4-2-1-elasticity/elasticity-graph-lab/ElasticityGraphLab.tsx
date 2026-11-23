@@ -78,7 +78,7 @@ export default function ElasticityGraphLab() {
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
         <p className="text-sm font-semibold text-emerald-300">미니활동 · 경제수학</p>
-        <h3 className="mt-2 text-2xl font-bold">📐 그래프로 보는 탄력성</h3>
+        <h3 className="mt-2 text-3xl font-bold">📐 그래프로 보는 탄력성</h3>
         <p className="mt-2 leading-7 text-slate-300">
           <b className="text-rose-200">접선</b>과 <b className="text-amber-200">원점선</b> 가운데 어느 쪽이 더 가파른지만
           봐도 탄력성을 알 수 있어요. 단위 탄력점이 늘 <b className="text-sky-200">중점</b>인 것을 확인하고, 탄력성을{" "}
@@ -100,7 +100,7 @@ export default function ElasticityGraphLab() {
         {tab === "range" ? <RangeTab /> : null}
       </div>
 
-      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] leading-5 text-slate-400">
+      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-400">
         {REAL_NOTE}
       </p>
 
@@ -151,11 +151,11 @@ function PieceLine({ line }: { line: Piece[] }) {
 // ══════════════════════════════════════════════════════════════
 //  공용 — 그래프판
 // ══════════════════════════════════════════════════════════════
-const PS = 320;
-const PML = 46;
-const PMR = 14;
-const PMT = 16;
-const PMB = 30;
+const PS = 400;
+const PML = 58;
+const PMR = 18;
+const PMT = 20;
+const PMB = 38;
 
 type Stroke = "curve" | "tangent" | "ray" | "elastic" | "inelastic" | "trace" | "ghost";
 const STROKE_COLOR: Record<Stroke, string> = {
@@ -234,27 +234,27 @@ function Plot({
       <rect x={PML} y={PMT} width={pw} height={ph} fill="#0b1220" stroke="rgba(255,255,255,0.12)" />
 
       {gx.map((v) => (
-        <line key={`gx${v}`} x1={X(v)} y1={PMT} x2={X(v)} y2={PS - PMB} stroke="rgba(255,255,255,0.06)" />
+        <line key={`gx${v}`} x1={X(v)} y1={PMT} x2={X(v)} y2={PS - PMB} stroke="rgba(255,255,255,0.09)" />
       ))}
       {gy.map((v) => (
-        <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.06)" />
+        <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.09)" />
       ))}
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
+        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 17} textAnchor="middle" fontSize="13" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
+        <text key={`ty${v}`} x={PML - 6} y={Y(v) + 5} textAnchor="end" fontSize="13" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
+          <text x={PS - PMR} y={PS - 4} textAnchor="end" fontSize="12" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
+          <text x={2} y={PMT - 8} textAnchor="start" fontSize="12" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
@@ -291,7 +291,7 @@ function Plot({
             points={s.pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}
             fill="none"
             stroke={STROKE_COLOR[s.tone]}
-            strokeWidth={s.tone === "ghost" ? 1.6 : 2.6}
+            strokeWidth={s.tone === "ghost" ? 1.8 : 3.2}
             strokeDasharray={s.dash ? "5 4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -307,13 +307,13 @@ function Plot({
             <circle
               cx={X(d.x)}
               cy={Y(d.y)}
-              r={d.small ? 2.6 : 5}
+              r={d.small ? 3 : 6}
               fill={d.filled === false ? "#0b1220" : DOT_COLOR[d.tone]}
               stroke={DOT_COLOR[d.tone]}
               strokeWidth={d.small ? 0 : 2}
             />
             {d.label ? (
-              <text x={X(d.x)} y={Y(d.y) - 10} textAnchor="middle" fontSize="11" fill={DOT_COLOR[d.tone]}>
+              <text x={X(d.x)} y={Y(d.y) - 12} textAnchor="middle" fontSize="13" fill={DOT_COLOR[d.tone]}>
                 {d.label}
               </text>
             ) : null}
@@ -328,7 +328,7 @@ function Plot({
 // ══════════════════════════════════════════════════════════════
 function TipBox({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-400">
+    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm leading-6 text-slate-400">
       💡 {children}
     </p>
   );
@@ -337,7 +337,7 @@ function GoalList({ items, done }: { items: string[]; done: boolean[] }) {
   return (
     <ul className="space-y-1">
       {items.map((t, i) => (
-        <li key={i} className="flex gap-2 text-xs leading-6 text-slate-300">
+        <li key={i} className="flex gap-2 text-sm leading-6 text-slate-300">
           <span className={done[i] ? "text-emerald-300" : "text-slate-500"}>{done[i] ? "✅" : (ABC[i] ?? "·")}</span>
           <span className={done[i] ? "text-emerald-200" : undefined}>{t}</span>
         </li>
@@ -349,7 +349,7 @@ function Verdict({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <p
       className={
-        "rounded-xl border-l-4 px-3 py-2 text-xs leading-6 " +
+        "rounded-xl border-l-4 px-3 py-2 text-sm leading-6 " +
         (ok
           ? "border-emerald-400 bg-emerald-400/[0.08] text-emerald-100"
           : "border-amber-400 bg-amber-400/[0.08] text-amber-100")
@@ -453,7 +453,7 @@ function PickButton({
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3 py-2 text-left text-xs font-bold transition " +
+        "rounded-xl border-2 px-3 py-2 text-left text-sm font-bold transition " +
         (active ? ACC_CHIP[accent] : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -506,7 +506,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
                 disabled={!open}
                 onClick={() => setAt(i)}
                 className={
-                  "rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-35 " +
+                  "rounded-lg border px-2.5 py-1 text-sm font-bold transition disabled:opacity-35 " +
                   (i === at
                     ? ACC_CHIP[accent]
                     : cleared
@@ -520,7 +520,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
             );
           })}
         </div>
-        <span className="font-mono text-xs text-slate-400">
+        <span className="font-mono text-sm text-slate-400">
           해결 {clearedCount} / {steps.length}
         </span>
       </div>
@@ -563,7 +563,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           type="button"
           disabled={!canAnswer}
           onClick={() => setGraded((z) => ({ ...z, [s.id]: true }))}
-          className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN[accent]}
+          className={"rounded-lg border-2 px-4 py-1.5 text-sm font-bold transition disabled:opacity-40 " + ACC_BTN[accent]}
         >
           확인
         </button>
@@ -571,7 +571,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           <button
             type="button"
             onClick={() => setHints((z) => ({ ...z, [s.id]: !z[s.id] }))}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
           >
             💡 힌트
           </button>
@@ -579,7 +579,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
         <button
           type="button"
           onClick={() => setGraded((z) => ({ ...z, [s.id]: false }))}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
         >
           ↩️ 다시
         </button>
@@ -587,7 +587,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           <button
             type="button"
             onClick={() => setAt(at + 1)}
-            className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/25"
+            className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/25"
           >
             다음 단계 →
           </button>
@@ -609,7 +609,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
       {allClear && finale ? (
         <div className="rounded-2xl border-2 border-emerald-400/45 bg-emerald-400/[0.10] p-3 text-center">
           <p className="text-sm font-bold text-emerald-100">🎉 모두 해결했어요!</p>
-          <p className="mx-auto mt-1 max-w-2xl text-xs leading-6 text-slate-200">{finale}</p>
+          <p className="mx-auto mt-1 max-w-2xl text-sm leading-6 text-slate-200">{finale}</p>
         </div>
       ) : null}
     </div>
@@ -642,24 +642,24 @@ function EBadge({ e }: { e: number }) {
 /** 접선의 기울기와 원점선의 기울기를 막대로 견준다 */
 function SlopeBars({ tan, ray }: { tan: number; ray: number }) {
   const top = Math.max(tan, ray, 1e-9);
-  const w = (v: number) => Math.max(2, (v / top) * 170);
+  const w = (v: number) => Math.max(2, (v / top) * 126);
   return (
-    <svg viewBox="0 0 300 92" className="w-full" role="img" aria-label="두 기울기 견주기">
-      <text x="8" y="26" fontSize="10" fill="#fda4af">
+    <svg viewBox="0 0 300 78" className="mx-auto w-full max-w-[520px]" role="img" aria-label="두 기울기 견주기">
+      <text x="8" y="23" fontSize="11" fill="#fda4af">
         접선
       </text>
-      <rect x="54" y="14" width={w(tan)} height="18" rx="4" fill="#fb7185" />
-      <text x={58 + w(tan)} y="27" fontSize="11" fontWeight="bold" fill="#fda4af">
+      <rect x="54" y="12" width={w(tan)} height="11" rx="5.5" fill="#fb7185" />
+      <text x={58 + w(tan)} y="22" fontSize="12" fontWeight="bold" fill="#fda4af">
         {fmt(tan, 2)}
       </text>
-      <text x="8" y="60" fontSize="10" fill="#fcd34d">
+      <text x="8" y="53" fontSize="11" fill="#fcd34d">
         원점선
       </text>
-      <rect x="54" y="48" width={w(ray)} height="18" rx="4" fill="#fbbf24" />
-      <text x={58 + w(ray)} y="61" fontSize="11" fontWeight="bold" fill="#fcd34d">
+      <rect x="54" y="42" width={w(ray)} height="11" rx="5.5" fill="#fbbf24" />
+      <text x={58 + w(ray)} y="52" fontSize="12" fontWeight="bold" fill="#fcd34d">
         {fmt(ray, 2)}
       </text>
-      <text x="150" y="86" textAnchor="middle" fontSize="10" fill="#64748b">
+      <text x="150" y="74" textAnchor="middle" fontSize="10" fill="#64748b">
         {tan > ray + 1e-9
           ? "접선이 더 가파르다 → 탄력적"
           : tan < ray - 1e-9
@@ -733,7 +733,7 @@ function CurveTab() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-center text-sm font-bold text-sky-200">
             <Katex expr={g.tex} />
@@ -746,7 +746,7 @@ function CurveTab() {
             vlines={[{ at: x, tone: "guide" }]}
             axis={["가격 (천원)", "공급량 (개)"]}
           />
-          <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
             <span className="rounded-lg border border-rose-400/50 bg-rose-400/10 px-2 py-0.5 font-bold text-rose-200">
               분홍 = 접선
             </span>
@@ -758,7 +758,7 @@ function CurveTab() {
 
         <div className="space-y-3">
           <div className="space-y-3 rounded-2xl border border-rose-400/25 bg-rose-500/[0.06] p-4">
-            <p className="flex justify-between text-xs font-bold text-slate-300">
+            <p className="flex justify-between text-sm font-bold text-slate-300">
               <span>점 A 를 움직여 보세요</span>
               <span className="font-mono text-slate-100">x = {fmt(x)} 천원</span>
             </p>
@@ -789,19 +789,19 @@ function CurveTab() {
 
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">
+              <p className="text-sm text-slate-400">
                 <Katex expr="f'(x)" />
               </p>
               <p className="font-mono text-lg font-black text-rose-200">{fmt(tan, 2)}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">
+              <p className="text-sm text-slate-400">
                 <Katex expr="\dfrac{f(x)}{x}" />
               </p>
               <p className="font-mono text-lg font-black text-amber-200">{fmt(ray, 2)}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">공급량 f(x)</p>
+              <p className="text-sm text-slate-400">공급량 f(x)</p>
               <p className="font-mono text-lg font-black text-slate-100">{fmt(q, 1)}</p>
             </div>
           </div>
@@ -809,7 +809,7 @@ function CurveTab() {
           <TipBox>{g.note}</TipBox>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+            <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
             <GoalList items={CURVE_GOALS} done={goals} />
           </div>
         </div>
@@ -871,7 +871,7 @@ function MidTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-center text-sm font-bold text-sky-200">
             <Katex expr={`f(x) = -${a}x + ${b}`} />
@@ -884,7 +884,7 @@ function MidTab() {
             vlines={[{ at: x, tone: "guide" }]}
             axis={["가격 (천원)", "수요량 (개)"]}
           />
-          <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
             <span className="rounded-lg border border-sky-400/50 bg-sky-400/10 px-2 py-0.5 font-bold text-sky-200">
               왼쪽 절반 = 비탄력적
             </span>
@@ -897,7 +897,7 @@ function MidTab() {
         <div className="space-y-3">
           <div className="space-y-3 rounded-2xl border border-sky-400/25 bg-sky-500/[0.06] p-4">
             <div>
-              <p className="mb-1 flex justify-between text-xs font-bold text-slate-300">
+              <p className="mb-1 flex justify-between text-sm font-bold text-slate-300">
                 <span>기울기 a</span>
                 <span className="font-mono text-slate-100">{fmt(a)}</span>
               </p>
@@ -918,7 +918,7 @@ function MidTab() {
               />
             </div>
             <div>
-              <p className="mb-1 flex justify-between text-xs font-bold text-slate-300">
+              <p className="mb-1 flex justify-between text-sm font-bold text-slate-300">
                 <span>세로 절편 b</span>
                 <span className="font-mono text-slate-100">{fmt(b)}</span>
               </p>
@@ -937,7 +937,7 @@ function MidTab() {
               />
             </div>
             <div>
-              <p className="mb-1 flex justify-between text-xs font-bold text-slate-300">
+              <p className="mb-1 flex justify-between text-sm font-bold text-slate-300">
                 <span>가격 (x 절편 대비 t)</span>
                 <span className="font-mono text-slate-100">
                   t = {fmt(t, 2)} · x = {fmt(x)}
@@ -961,15 +961,15 @@ function MidTab() {
 
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">A (x 절편)</p>
+              <p className="text-sm text-slate-400">A (x 절편)</p>
               <p className="font-mono text-sm font-black text-slate-100">({fmt(xi)}, 0)</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">B (y 절편)</p>
+              <p className="text-sm text-slate-400">B (y 절편)</p>
               <p className="font-mono text-sm font-black text-slate-100">(0, {fmt(b)})</p>
             </div>
             <div className="rounded-xl border-2 border-amber-400/60 bg-amber-400/[0.12] p-2 text-center">
-              <p className="text-[11px] text-amber-200">C (AB 의 중점)</p>
+              <p className="text-sm text-amber-200">C (AB 의 중점)</p>
               <p className="font-mono text-sm font-black text-amber-100">
                 ({fmt(mx)}, {fmt(my)})
               </p>
@@ -984,7 +984,7 @@ function MidTab() {
             <div className="mt-1 flex justify-center">
               <EBadge e={e} />
             </div>
-            <p className={"mt-1 text-xs font-bold " + E_TEXT[k]}>
+            <p className={"mt-1 text-sm font-bold " + E_TEXT[k]}>
               {Math.abs(t - 0.5) < 1e-9
                 ? "t = 0.5 — 바로 중점이에요!"
                 : t < 0.5
@@ -998,7 +998,7 @@ function MidTab() {
           </TipBox>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 flex items-center justify-between text-xs font-bold text-slate-300">
+            <p className="mb-1 flex items-center justify-between text-sm font-bold text-slate-300">
               <span>🎯 미션</span>
               <span className="font-mono text-slate-400">중점 확인 {Object.keys(pairs).length} 가지</span>
             </p>
@@ -1092,7 +1092,7 @@ function TraceTab() {
       </div>
 
       <div className="space-y-3 rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] p-4">
-        <p className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-slate-300">
+        <p className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-slate-300">
           <span>가격 t 를 끌면 점 B(t, ε(t)) 가 자취를 남겨요</span>
           <span className="font-mono text-slate-100">
             t = {fmt(t)} · ε = {fmt(e, 3)}
@@ -1120,7 +1120,7 @@ function TraceTab() {
               }
               setPlaying(!playing);
             }}
-            className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition " + ACC_BTN.violet}
+            className={"rounded-lg border-2 px-4 py-1.5 text-sm font-bold transition " + ACC_BTN.violet}
           >
             {playing ? "⏸ 멈춤" : t >= g.to - 1e-9 ? "↩️ 처음부터" : "▶ 자동으로 그리기"}
           </button>
@@ -1132,14 +1132,14 @@ function TraceTab() {
               tRef.current = g.from;
               setReach((z) => ({ ...z, [g.id]: g.from }));
             }}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
           >
             🧽 자취 지우기
           </button>
-          <span className="font-mono text-xs text-slate-400">
+          <span className="font-mono text-sm text-slate-400">
             자취 {Math.round(((far - g.from) / (g.to - g.from)) * 100)}%
           </span>
-          {crossed ? <span className="text-xs font-bold text-amber-300">⚖️ 자취가 y = 1 을 지났어요</span> : null}
+          {crossed ? <span className="text-sm font-bold text-amber-300">⚖️ 자취가 y = 1 을 지났어요</span> : null}
         </div>
       </div>
 
@@ -1158,7 +1158,7 @@ function TraceTab() {
               axis={["가격", g.side === "demand" ? "수요량" : "공급량"]}
             />
           </div>
-          <p className="text-center text-[11px] text-slate-400">점 A 는 곡선 위를 움직여요</p>
+          <p className="text-center text-sm text-slate-400">점 A 는 곡선 위를 움직여요</p>
         </div>
         <div className="space-y-1 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-center text-sm font-bold text-violet-200">
@@ -1175,7 +1175,7 @@ function TraceTab() {
               axis={["가격", "탄력성"]}
             />
           </div>
-          <p className="text-center text-[11px] text-slate-400">점 B 가 남긴 자취 · 노란 선이 y = 1</p>
+          <p className="text-center text-sm text-slate-400">점 B 가 남긴 자취 · 노란 선이 y = 1</p>
         </div>
       </div>
 
@@ -1189,7 +1189,7 @@ function TraceTab() {
       <TipBox>{g.note}</TipBox>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-        <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+        <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
         <GoalList items={TRACE_GOALS} done={goals} />
       </div>
 
@@ -1257,13 +1257,13 @@ function RangeTab() {
             </PickButton>
           ))}
         </div>
-        <span className="font-mono text-xs text-slate-400">
+        <span className="font-mono text-sm text-slate-400">
           명중 {total} / {allN}
         </span>
       </div>
 
       <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] p-4">
-        <p className="mb-2 text-xs font-bold text-emerald-200">🎯 목표 탄력성을 고르고 그 가격을 맞혀 보세요</p>
+        <p className="mb-2 text-sm font-bold text-emerald-200">🎯 목표 탄력성을 고르고 그 가격을 맞혀 보세요</p>
         <div className="flex flex-wrap gap-2">
           {g.targets.map((z, i) => (
             <button
@@ -1318,12 +1318,12 @@ function RangeTab() {
               axis={["가격", "탄력성"]}
             />
           </div>
-          <p className="text-center text-[11px] text-slate-400">초록 선이 목표 · 노란 선이 y = 1</p>
+          <p className="text-center text-sm text-slate-400">초록 선이 목표 · 노란 선이 y = 1</p>
         </div>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-        <p className="flex flex-wrap justify-between gap-2 text-xs font-bold text-slate-300">
+        <p className="flex flex-wrap justify-between gap-2 text-sm font-bold text-slate-300">
           <span>가격을 움직여 목표에 맞춰 보세요</span>
           <span className="font-mono text-slate-100">x = {fmt(x)}</span>
         </p>
@@ -1342,11 +1342,11 @@ function RangeTab() {
         />
         <div className="grid gap-2 sm:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-            <p className="text-[11px] text-slate-400">목표</p>
+            <p className="text-sm text-slate-400">목표</p>
             <p className="font-mono text-lg font-black text-emerald-300">{fmt(target.e, 2)}</p>
           </div>
           <div className={"rounded-xl border-2 p-2 text-center " + E_CHIP[k]}>
-            <p className="text-[11px] opacity-80">지금</p>
+            <p className="text-sm opacity-80">지금</p>
             <p className="font-mono text-lg font-black">{fmt(e, 3)}</p>
           </div>
           <div
@@ -1355,7 +1355,7 @@ function RangeTab() {
               (hit ? "border-emerald-400/70 bg-emerald-400/[0.15]" : "border-white/10 bg-white/[0.03]")
             }
           >
-            <p className="text-[11px] text-slate-400">조준</p>
+            <p className="text-sm text-slate-400">조준</p>
             <p className={"text-lg font-black " + (hit ? "text-emerald-200" : "text-slate-300")}>
               {hit ? "🎯 명중!" : e < target.e ? "➡️ 올리기" : "⬅️ 내리기"}
             </p>
@@ -1373,7 +1373,7 @@ function RangeTab() {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-        <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+        <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
         <GoalList items={RANGE_GOALS} done={goals} />
       </div>
 
