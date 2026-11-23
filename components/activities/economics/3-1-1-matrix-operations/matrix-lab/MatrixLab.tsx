@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Katex from "@/components/activities/Katex";
 import ReflectionForm from "@/components/activities/ReflectionForm";
 import type { ReflectionQuestion } from "@/lib/activities/reflection";
@@ -1132,19 +1132,74 @@ function ShapeGame() {
   );
 }
 
+/** 칸 채우기 재생 — 짝 하나를 곱해 보여 주는 시간, 마지막 합을 보여 주고 칸에 넣기까지의 시간 */
+const MUL_TERM_MS = 750;
+const MUL_SETTLE_MS = 600;
+const factorTex = (v: number): string => (v < 0 ? `(${v})` : `${v}`);
+
 function VisualMul() {
   const [filled, setFilled] = useState<boolean[][]>(() => VIS_AB.map((row) => row.map(() => false)));
   const [sel, setSel] = useState<{ i: number; j: number } | null>(null);
+  // 재생 중이면 지금까지 곱한 짝의 개수(1 ~ 짝 수), 아니면 null
+  const [lit, setLit] = useState<number | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    },
+    [],
+  );
+
+  const stopRun = () => {
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setLit(null);
+  };
 
   const doneCount = filled.flat().filter(Boolean).length;
   const total = VIS_AB.length * VIS_AB[0].length;
-  const aTones: Tone[][] = VIS_A.map((row, i) => row.map(() => (sel && sel.i === i ? "row" : "a")));
-  const bTones: Tone[][] = VIS_B.map((row) => row.map((_, j) => (sel && sel.j === j ? "col" : "b")));
+  const terms = sel ? mulTerms(VIS_A, VIS_B, sel.i, sel.j) : [];
+  // 재생 중 지금 곱하고 있는 짝의 자리(A 의 열 = B 의 행)
+  const cur = lit !== null && lit <= terms.length ? lit - 1 : -1;
+  const aTones: Tone[][] = VIS_A.map((row, i) =>
+    row.map((_, t) => (sel && sel.i === i ? (t === cur ? "cross" : "row") : "a")),
+  );
+  const bTones: Tone[][] = VIS_B.map((row, t) =>
+    row.map((_, j) => (sel && sel.j === j ? (t === cur ? "cross" : "col") : "b")),
+  );
   const rTones: Tone[][] = VIS_AB.map((row, i) =>
     row.map((_, j) => (sel && sel.i === i && sel.j === j ? "cross" : filled[i][j] ? "hit" : "ghost")),
   );
   const hide = VIS_AB.map((row, i) => row.map((_, j) => !filled[i][j]));
-  const terms = sel ? mulTerms(VIS_A, VIS_B, sel.i, sel.j) : [];
+  const shownTerms = lit === null ? [] : terms.slice(0, lit);
+  const running = shownTerms.reduce((acc, z) => acc + z.x * z.y, 0);
+
+  const pick = (i: number, j: number) => {
+    stopRun();
+    setSel({ i, j });
+  };
+
+  const fillCell = () => {
+    if (!sel) return;
+    stopRun();
+    const { i, j } = sel;
+    const n = terms.length;
+    const put = () => {
+      timerRef.current = null;
+      setLit(null);
+      setFilled((z) => {
+        const next = z.map((row) => [...row]);
+        next[i][j] = true;
+        return next;
+      });
+    };
+    const step = (k: number) => {
+      setLit(k);
+      timerRef.current = window.setTimeout(() => (k < n ? step(k + 1) : put()), k < n ? MUL_TERM_MS : MUL_TERM_MS + MUL_SETTLE_MS);
+    };
+    step(1);
+  };
 
   return (
     <div className="rounded-2xl border border-sky-400/25 bg-gradient-to-br from-sky-500/[0.07] to-indigo-500/[0.04] p-4">
@@ -1160,40 +1215,60 @@ function VisualMul() {
         <span className="pb-3 text-xl font-bold text-slate-300">·</span>
         <MatrixView m={VIS_B} tones={bTones} label="B (3×2)" />
         <span className="pb-3 text-xl font-bold text-slate-300">=</span>
-        <MatrixView m={VIS_AB} tones={rTones} hideValues={hide} label="AB (2×2)" onCell={(i, j) => setSel({ i, j })} />
+        <MatrixView m={VIS_AB} tones={rTones} hideValues={hide} label="AB (2×2)" onCell={pick} />
       </div>
 
       <div className="mt-2 space-y-2 rounded-xl border border-white/10 bg-slate-900/50 p-3">
         {sel ? (
           <>
-            <p className="text-xs leading-6 text-slate-300">
+            <p className="text-sm leading-6 text-slate-300">
               A 의 <b className="text-sky-200">제{sel.i + 1}행</b> 과 B 의 <b className="text-amber-200">제{sel.j + 1}열</b> 을 차례로
               곱해서 더해요.
             </p>
-            <div className="overflow-x-auto overflow-y-hidden py-1">
-              <Katex
-                expr={filled[sel.i][sel.j] ? `${sumProdTex(terms)} = ${VIS_AB[sel.i][sel.j]}` : sumProdTex(terms)}
-                className="whitespace-nowrap text-base text-slate-100"
-              />
-            </div>
-            {!filled[sel.i][sel.j] ? (
+            {lit !== null ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {terms.map((z, t) => (
+                  <span
+                    key={t}
+                    className={
+                      "rounded-lg border px-2.5 py-1 transition " +
+                      (t === cur
+                        ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-50"
+                        : t < lit
+                          ? "border-white/15 bg-white/[0.06] text-slate-100"
+                          : "border-dashed border-white/15 text-slate-500")
+                    }
+                  >
+                    <Katex
+                      expr={t < lit ? `${factorTex(z.x)} \\cdot ${factorTex(z.y)} = ${z.x * z.y}` : `\\square \\cdot \\square`}
+                      className="text-sm"
+                    />
+                  </span>
+                ))}
+                <span className="ml-auto rounded-lg border border-violet-400/40 bg-violet-400/[0.12] px-3 py-1 font-mono text-sm font-bold tabular-nums text-violet-100">
+                  합 {running}
+                </span>
+              </div>
+            ) : (
+              <div className="overflow-x-auto overflow-y-hidden py-1">
+                <Katex
+                  expr={filled[sel.i][sel.j] ? `${sumProdTex(terms)} = ${VIS_AB[sel.i][sel.j]}` : sumProdTex(terms)}
+                  className="whitespace-nowrap text-base text-slate-100"
+                />
+              </div>
+            )}
+            {!filled[sel.i][sel.j] && lit === null ? (
               <button
                 type="button"
-                onClick={() =>
-                  setFilled((z) => {
-                    const next = z.map((row) => [...row]);
-                    next[sel.i][sel.j] = true;
-                    return next;
-                  })
-                }
+                onClick={fillCell}
                 className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition " + ACC_BTN.sky}
               >
-                이 칸 채우기
+                ▶ 이 칸 채우기
               </button>
             ) : null}
           </>
         ) : (
-          <p className="text-[11px] leading-5 text-slate-400">
+          <p className="text-sm leading-6 text-slate-300">
             오른쪽 결과 행렬의 물음표 칸을 눌러 보세요. 그 칸을 만드는 가로줄과 세로줄이 밝아져요.
           </p>
         )}
@@ -1210,10 +1285,11 @@ function VisualMul() {
         <button
           type="button"
           onClick={() => {
+            stopRun();
             setFilled(VIS_AB.map((row) => row.map(() => false)));
             setSel(null);
           }}
-          className="mt-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+          className="mt-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-white/10"
         >
           ↩️ 다시
         </button>
