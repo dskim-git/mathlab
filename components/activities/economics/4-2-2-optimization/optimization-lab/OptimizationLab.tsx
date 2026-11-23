@@ -77,7 +77,7 @@ export default function OptimizationLab() {
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
         <p className="text-sm font-semibold text-emerald-300">미니활동 · 경제수학</p>
-        <h3 className="mt-2 text-2xl font-bold">🎯 경제 현상의 최적화</h3>
+        <h3 className="mt-2 text-3xl font-bold">🎯 경제 현상의 최적화</h3>
         <p className="mt-2 leading-7 text-slate-300">
           한정된 자원 안에서 <b className="text-amber-200">효용 · 생산 · 이윤</b>을 가장 크게 만드는 자리를 찾아요.
           손잡이를 움직여 <b className="text-rose-200">도함수가 0 이 되는 자리</b>를 직접 찾고, 마지막에는{" "}
@@ -101,7 +101,7 @@ export default function OptimizationLab() {
         {tab === "mc" ? <McTab /> : null}
       </div>
 
-      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] leading-5 text-slate-400">
+      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-400">
         {REAL_NOTE}
       </p>
 
@@ -153,11 +153,11 @@ function PieceLine({ line }: { line: Piece[] }) {
 // ══════════════════════════════════════════════════════════════
 //  공용 — 좌표평면
 // ══════════════════════════════════════════════════════════════
-const PS = 320;
-const PML = 46;
-const PMR = 14;
-const PMT = 16;
-const PMB = 30;
+const PS = 400;
+const PML = 58;
+const PMR = 18;
+const PMT = 20;
+const PMB = 38;
 
 type Stroke = "curve" | "ghost" | "tangent" | "revenue" | "cost" | "marginal" | "profit";
 const STROKE_COLOR: Record<Stroke, string> = {
@@ -243,27 +243,27 @@ function Plot({
       <rect x={PML} y={PMT} width={pw} height={ph} fill="#0b1220" stroke="rgba(255,255,255,0.12)" />
 
       {gx.map((v) => (
-        <line key={`gx${v}`} x1={X(v)} y1={PMT} x2={X(v)} y2={PS - PMB} stroke="rgba(255,255,255,0.06)" />
+        <line key={`gx${v}`} x1={X(v)} y1={PMT} x2={X(v)} y2={PS - PMB} stroke="rgba(255,255,255,0.09)" />
       ))}
       {gy.map((v) => (
-        <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.06)" />
+        <line key={`gy${v}`} x1={PML} y1={Y(v)} x2={PS - PMR} y2={Y(v)} stroke="rgba(255,255,255,0.09)" />
       ))}
       {gx.map((v) => (
-        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 14} textAnchor="middle" fontSize="11" fill="#94a3b8">
+        <text key={`tx${v}`} x={X(v)} y={PS - PMB + 17} textAnchor="middle" fontSize="13" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {gy.map((v) => (
-        <text key={`ty${v}`} x={PML - 4} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
+        <text key={`ty${v}`} x={PML - 6} y={Y(v) + 5} textAnchor="end" fontSize="13" fill="#94a3b8">
           {fmt(v, 4)}
         </text>
       ))}
       {axis ? (
         <>
-          <text x={PS - PMR} y={PS - 3} textAnchor="end" fontSize="10" fill="#94a3b8">
+          <text x={PS - PMR} y={PS - 4} textAnchor="end" fontSize="12" fill="#94a3b8">
             {axis[0]}
           </text>
-          <text x={2} y={PMT - 7} textAnchor="start" fontSize="10" fill="#94a3b8">
+          <text x={2} y={PMT - 8} textAnchor="start" fontSize="12" fill="#94a3b8">
             {axis[1]}
           </text>
         </>
@@ -302,7 +302,7 @@ function Plot({
             x2={X(g.x)}
             y2={Y(g.y1)}
             stroke={GAP_COLOR[g.tone]}
-            strokeWidth="9"
+            strokeWidth="5"
             strokeLinecap="round"
             opacity="0.5"
           />
@@ -313,7 +313,7 @@ function Plot({
             points={s.pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}
             fill="none"
             stroke={STROKE_COLOR[s.tone]}
-            strokeWidth={s.tone === "ghost" ? 1.6 : 2.6}
+            strokeWidth={s.tone === "ghost" ? 1.8 : 3.2}
             strokeDasharray={s.dash ? "5 4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -329,13 +329,13 @@ function Plot({
             <circle
               cx={X(d.x)}
               cy={Y(d.y)}
-              r={d.small ? 2.8 : 5}
+              r={d.small ? 3 : 6}
               fill={d.filled === false ? "#0b1220" : DOT_COLOR[d.tone]}
               stroke={DOT_COLOR[d.tone]}
               strokeWidth={d.small ? 0 : 2}
             />
             {d.label ? (
-              <text x={X(d.x)} y={Y(d.y) - 10} textAnchor="middle" fontSize="11" fill={DOT_COLOR[d.tone]}>
+              <text x={X(d.x)} y={Y(d.y) - 12} textAnchor="middle" fontSize="13" fill={DOT_COLOR[d.tone]}>
                 {d.label}
               </text>
             ) : null}
@@ -354,7 +354,7 @@ function lines(paths: [number, number][][], tone: Stroke, dash = false): PlotSeg
 // ══════════════════════════════════════════════════════════════
 function TipBox({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-6 text-slate-400">
+    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm leading-6 text-slate-400">
       💡 {children}
     </p>
   );
@@ -364,7 +364,7 @@ function GoalList({ items, done }: { items: string[]; done: boolean[] }) {
   return (
     <ul className="space-y-1">
       {items.map((t, i) => (
-        <li key={i} className="flex gap-2 text-xs leading-6 text-slate-300">
+        <li key={i} className="flex gap-2 text-sm leading-6 text-slate-300">
           <span className={done[i] ? "text-emerald-300" : "text-slate-500"}>{done[i] ? "✅" : (ABC[i] ?? "·")}</span>
           <span className={done[i] ? "text-emerald-200" : undefined}>{t}</span>
         </li>
@@ -377,7 +377,7 @@ function Verdict({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <p
       className={
-        "rounded-xl border-l-4 px-3 py-2 text-xs leading-6 " +
+        "rounded-xl border-l-4 px-3 py-2 text-sm leading-6 " +
         (ok
           ? "border-emerald-400 bg-emerald-400/[0.08] text-emerald-100"
           : "border-amber-400 bg-amber-400/[0.08] text-amber-100")
@@ -481,7 +481,7 @@ function PickButton({
       type="button"
       onClick={onClick}
       className={
-        "rounded-xl border-2 px-3 py-2 text-left text-xs font-bold transition " +
+        "rounded-xl border-2 px-3 py-2 text-left text-sm font-bold transition " +
         (active ? ACC_CHIP[accent] : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
       }
     >
@@ -534,7 +534,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
                 disabled={!open}
                 onClick={() => setAt(i)}
                 className={
-                  "rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-35 " +
+                  "rounded-lg border px-2.5 py-1 text-sm font-bold transition disabled:opacity-35 " +
                   (i === at
                     ? ACC_CHIP[accent]
                     : cleared
@@ -548,7 +548,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
             );
           })}
         </div>
-        <span className="font-mono text-xs text-slate-400">
+        <span className="font-mono text-sm text-slate-400">
           해결 {clearedCount} / {steps.length}
         </span>
       </div>
@@ -591,7 +591,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           type="button"
           disabled={!canAnswer}
           onClick={() => setGraded((z) => ({ ...z, [s.id]: true }))}
-          className={"rounded-lg border-2 px-4 py-1.5 text-xs font-bold transition disabled:opacity-40 " + ACC_BTN[accent]}
+          className={"rounded-lg border-2 px-4 py-1.5 text-sm font-bold transition disabled:opacity-40 " + ACC_BTN[accent]}
         >
           확인
         </button>
@@ -599,7 +599,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           <button
             type="button"
             onClick={() => setHints((z) => ({ ...z, [s.id]: !z[s.id] }))}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
           >
             💡 힌트
           </button>
@@ -607,7 +607,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
         <button
           type="button"
           onClick={() => setGraded((z) => ({ ...z, [s.id]: false }))}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
         >
           ↩️ 다시
         </button>
@@ -615,7 +615,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
           <button
             type="button"
             onClick={() => setAt(at + 1)}
-            className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/25"
+            className="rounded-lg border-2 border-emerald-400/55 bg-emerald-400/15 px-4 py-1.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/25"
           >
             다음 단계 →
           </button>
@@ -637,7 +637,7 @@ function StepRunner({ steps, accent, finale }: { steps: Step[]; accent: Accent; 
       {allClear && finale ? (
         <div className="rounded-2xl border-2 border-emerald-400/45 bg-emerald-400/[0.10] p-3 text-center">
           <p className="text-sm font-bold text-emerald-100">🎉 모두 해결했어요!</p>
-          <p className="mx-auto mt-1 max-w-2xl text-xs leading-6 text-slate-200">{finale}</p>
+          <p className="mx-auto mt-1 max-w-2xl text-sm leading-6 text-slate-200">{finale}</p>
         </div>
       ) : null}
     </div>
@@ -671,11 +671,11 @@ function MarginalBadge({
   const t: MTone = Math.abs(v) < 1e-9 ? "zero" : v > 0 ? "up" : "down";
   return (
     <div className={"rounded-xl border-2 px-3 py-2 text-center " + M_CHIP[t]}>
-      <p className="text-[11px] font-bold opacity-80">{label}</p>
+      <p className="text-sm font-bold opacity-80">{label}</p>
       <p className="font-mono text-2xl font-black">
         {M_EMOJI[t]} {fmt(v, 1)}
       </p>
-      <p className="mt-0.5 text-xs leading-5">{t === "zero" ? zero : t === "up" ? up : down}</p>
+      <p className="mt-0.5 text-sm leading-5">{t === "zero" ? zero : t === "up" ? up : down}</p>
     </div>
   );
 }
@@ -698,9 +698,9 @@ function LevelBar({
   const w = Math.max(0, Math.min(1, ratio)) * 268;
   return (
     <svg viewBox="0 0 300 40" className="w-full" role="img" aria-label={text}>
-      <rect x="16" y="9" width="268" height="22" rx="7" fill="rgba(255,255,255,0.07)" />
-      <rect x="16" y="9" width={w} height="22" rx="7" fill={BAR_FILL[tone]} opacity="0.75" />
-      <text x="150" y="25" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#f8fafc">
+      <rect x="16" y="13" width="268" height="14" rx="6" fill="rgba(255,255,255,0.07)" />
+      <rect x="16" y="13" width={w} height="14" rx="6" fill={BAR_FILL[tone]} opacity="0.75" />
+      <text x="150" y="24" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#f8fafc">
         {text}
       </text>
     </svg>
@@ -712,7 +712,7 @@ function EmojiRow({ emoji, over, n, limit }: { emoji: string; over: string; n: n
   for (let i = 0; i < n; i++) items.push(i);
   return (
     <div className="flex min-h-[44px] flex-wrap items-center justify-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2">
-      {n === 0 ? <span className="text-xs text-slate-500">아직 하나도 없어요</span> : null}
+      {n === 0 ? <span className="text-sm text-slate-500">아직 하나도 없어요</span> : null}
       {items.map((i) =>
         i < limit ? (
           <span key={i} className="text-2xl">
@@ -757,15 +757,15 @@ function SignStrip({ m, b }: { m: Mountain; b: number }) {
         <g key={i}>
           <rect
             x={px(s.from) + 1}
-            y="12"
+            y="15"
             width={Math.max(2, px(s.to) - px(s.from) - 2)}
-            height="20"
+            height="14"
             rx="4"
             fill={s.up ? "rgba(52,211,153,0.3)" : "rgba(251,113,133,0.3)"}
           />
           <text
             x={px((s.from + s.to) / 2)}
-            y="27"
+            y="26"
             textAnchor="middle"
             fontSize="14"
             fontWeight="bold"
@@ -850,7 +850,7 @@ function MountTab() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-center text-sm font-bold text-sky-200">
             <Katex expr={m.tex} />
@@ -863,14 +863,14 @@ function MountTab() {
             vlines={[{ at: b, tone: "hot", solid: true }]}
             axis={["x", "f(x)"]}
           />
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-sm text-slate-400">
             노란 세로선이 범위의 오른쪽 끝 <b className="text-amber-200">b</b> 예요. 점선은 범위 밖이지요.
           </p>
         </div>
 
         <div className="space-y-3">
           <div className="space-y-3 rounded-2xl border border-rose-400/25 bg-rose-500/[0.06] p-4">
-            <p className="flex justify-between text-xs font-bold text-slate-300">
+            <p className="flex justify-between text-sm font-bold text-slate-300">
               <span>범위를 늘였다 줄였다 해 보세요</span>
               <span className="font-mono text-slate-100">0 ≤ x ≤ {fmt(b)}</span>
             </p>
@@ -888,9 +888,9 @@ function MountTab() {
               className={RANGE_BASE + ACC_RANGE.rose}
             />
             <div className="rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 p-3 text-center">
-              <p className="text-[11px] font-bold text-emerald-200">이 범위에서의 최댓값</p>
+              <p className="text-sm font-bold text-emerald-200">이 범위에서의 최댓값</p>
               <p className="font-mono text-3xl font-black text-emerald-100">{fmt(m.f(bx), 2)}</p>
-              <p className="mt-0.5 text-xs text-slate-300">
+              <p className="mt-0.5 text-sm text-slate-300">
                 {bx === 0 ? "왼쪽 끝" : m.peakX !== null && bx === m.peakX ? "봉우리(극대)" : "오른쪽 끝"} x ={" "}
                 {fmt(bx)} 에서
               </p>
@@ -898,8 +898,8 @@ function MountTab() {
           </div>
 
           <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="text-xs font-bold text-slate-300">📋 다섯 걸음</p>
-            <ol className="space-y-1 text-xs leading-6 text-slate-300">
+            <p className="text-sm font-bold text-slate-300">📋 다섯 걸음</p>
+            <ol className="space-y-1 text-sm leading-6 text-slate-300">
               <li>
                 <b className="text-slate-400">① 도함수</b>{" "}
                 <span className="text-amber-200">
@@ -923,10 +923,10 @@ function MountTab() {
               </li>
             </ol>
             <SignStrip m={m} b={b} />
-            <p className="text-xs leading-6 text-slate-300">
+            <p className="text-sm leading-6 text-slate-300">
               <b className="text-slate-400">④ 개형</b> ← 왼쪽 그림
             </p>
-            <p className="text-xs leading-6 text-slate-300">
+            <p className="text-sm leading-6 text-slate-300">
               <b className="text-slate-400">⑤ 양 끝과 극댓값 견주기</b>
             </p>
             <div className="grid gap-1">
@@ -936,7 +936,7 @@ function MountTab() {
                   <div
                     key={c.name}
                     className={
-                      "flex items-center justify-between rounded-lg border px-3 py-1.5 text-xs " +
+                      "flex items-center justify-between rounded-lg border px-3 py-1.5 text-sm " +
                       (top
                         ? "border-emerald-400/55 bg-emerald-400/15 text-emerald-100"
                         : "border-white/10 bg-white/[0.03] text-slate-300")
@@ -957,7 +957,7 @@ function MountTab() {
           <TipBox>{m.note}</TipBox>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+            <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
             <GoalList items={MOUNT_GOALS} done={goals} />
           </div>
         </div>
@@ -1019,7 +1019,7 @@ function UtilTab() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-center text-sm font-bold text-sky-200">
             <Katex expr={u.tex} />
@@ -1032,14 +1032,14 @@ function UtilTab() {
             vlines={[{ at: x, tone: "guide" }]}
             axis={["소비량", "효용"]}
           />
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-sm text-slate-400">
             노란 직선은 그 점에서의 <b className="text-amber-200">접선</b> — 기울기가 바로 한계효용이에요.
           </p>
         </div>
 
         <div className="space-y-3">
           <div className="space-y-3 rounded-2xl border border-amber-400/25 bg-amber-500/[0.06] p-4">
-            <p className="flex justify-between text-xs font-bold text-slate-300">
+            <p className="flex justify-between text-sm font-bold text-slate-300">
               <span>얼마나 소비해 볼까요?</span>
               <span className="font-mono text-slate-100">
                 {x} {u.unit}
@@ -1071,11 +1071,11 @@ function UtilTab() {
 
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">지금 효용</p>
+              <p className="text-sm text-slate-400">지금 효용</p>
               <p className="font-mono text-lg font-black text-slate-100">{fmt(val, 0)}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">
+              <p className="text-sm text-slate-400">
                 <Katex expr={u.dtex} />
               </p>
               <p className="font-mono text-lg font-black text-amber-200">{fmt(mu, 1)}</p>
@@ -1086,7 +1086,7 @@ function UtilTab() {
                 (x === u.best ? "border-emerald-400/55 bg-emerald-400/15" : "border-white/10 bg-white/[0.03]")
               }
             >
-              <p className="text-[11px] text-slate-400">최적소비량</p>
+              <p className="text-sm text-slate-400">최적소비량</p>
               <p className="font-mono text-lg font-black text-emerald-200">
                 {x === u.best ? `${u.best} ${u.unit} 🏆` : "???"}
               </p>
@@ -1096,7 +1096,7 @@ function UtilTab() {
           <TipBox>{u.note}</TipBox>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+            <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
             <GoalList items={UTIL_GOALS} done={goals} />
           </div>
         </div>
@@ -1159,7 +1159,7 @@ function ProdTab() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-center text-sm font-bold text-sky-200">
             <Katex expr={p.tex} />
@@ -1172,7 +1172,7 @@ function ProdTab() {
             vlines={[{ at: x, tone: "guide" }]}
             axis={["노동량", "생산량"]}
           />
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-sm text-slate-400">
             접선이 <b className="text-emerald-200">오른쪽 위</b>를 보면 아직 늘릴 때, <b className="text-rose-200">
             오른쪽 아래
             </b>
@@ -1182,7 +1182,7 @@ function ProdTab() {
 
         <div className="space-y-3">
           <div className="space-y-3 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] p-4">
-            <p className="flex justify-between text-xs font-bold text-slate-300">
+            <p className="flex justify-between text-sm font-bold text-slate-300">
               <span>{p.worker}를 몇 명 넣어 볼까요?</span>
               <span className="font-mono text-slate-100">{x} 명</span>
             </p>
@@ -1212,11 +1212,11 @@ function ProdTab() {
 
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">지금 생산량</p>
+              <p className="text-sm text-slate-400">지금 생산량</p>
               <p className="font-mono text-lg font-black text-slate-100">{fmt(val, 0)}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">한 명 더 넣으면</p>
+              <p className="text-sm text-slate-400">한 명 더 넣으면</p>
               <p
                 className={
                   "font-mono text-lg font-black " +
@@ -1232,7 +1232,7 @@ function ProdTab() {
                 (x === p.best ? "border-emerald-400/55 bg-emerald-400/15" : "border-white/10 bg-white/[0.03]")
               }
             >
-              <p className="text-[11px] text-slate-400">최적노동량</p>
+              <p className="text-sm text-slate-400">최적노동량</p>
               <p className="font-mono text-lg font-black text-emerald-200">
                 {x === p.best ? `${p.best} 명 🏆` : "???"}
               </p>
@@ -1242,7 +1242,7 @@ function ProdTab() {
           <TipBox>{p.note}</TipBox>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+            <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
             <GoalList items={PROD_GOALS} done={goals} />
           </div>
         </div>
@@ -1327,7 +1327,7 @@ function FirmTab() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-center text-xs font-bold text-slate-300">총수입과 총비용</p>
+          <p className="text-center text-sm font-bold text-slate-300">총수입과 총비용</p>
           <Plot
             box={f.boxRC}
             uid={`fr-${f.id}`}
@@ -1337,7 +1337,7 @@ function FirmTab() {
             vlines={[{ at: x, tone: "guide" }]}
             axis={["생산량", "금액"]}
           />
-          <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
             <span className="rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-2 py-0.5 font-bold text-emerald-200">
               초록 = 총수입 {f.p}x
             </span>
@@ -1345,11 +1345,11 @@ function FirmTab() {
               빨강 = 총비용
             </span>
           </div>
-          <p className="text-center text-[11px] text-slate-400">두 선 사이의 굵은 세로 막대가 바로 이윤이에요.</p>
+          <p className="text-center text-sm text-slate-400">두 선 사이의 굵은 세로 막대가 바로 이윤이에요.</p>
         </div>
 
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-center text-xs font-bold text-slate-300">이윤함수</p>
+          <p className="text-center text-sm font-bold text-slate-300">이윤함수</p>
           <Plot
             box={f.boxH}
             uid={`fh-${f.id}`}
@@ -1365,9 +1365,9 @@ function FirmTab() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         <div className="space-y-3 rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] p-4">
-          <p className="flex justify-between text-xs font-bold text-slate-300">
+          <p className="flex justify-between text-sm font-bold text-slate-300">
             <span>몇 {f.unit} 만들어 팔까요?</span>
             <span className="font-mono text-slate-100">
               {x} {f.unit}
@@ -1388,11 +1388,11 @@ function FirmTab() {
           />
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/[0.07] p-2 text-center">
-              <p className="text-[11px] text-slate-400">총수입 {f.p} × {x}</p>
+              <p className="text-sm text-slate-400">총수입 {f.p} × {x}</p>
               <p className="font-mono text-lg font-black text-emerald-200">{won(rev)}</p>
             </div>
             <div className="rounded-xl border border-rose-400/30 bg-rose-400/[0.07] p-2 text-center">
-              <p className="text-[11px] text-slate-400">총비용 g({x})</p>
+              <p className="text-sm text-slate-400">총비용 g({x})</p>
               <p className="font-mono text-lg font-black text-rose-200">{won(cost)}</p>
             </div>
             <div
@@ -1405,7 +1405,7 @@ function FirmTab() {
                     : "border-amber-400/60 bg-amber-400/20")
               }
             >
-              <p className="text-[11px] text-slate-300">
+              <p className="text-sm text-slate-300">
                 이윤 {profit > 1e-9 ? "흑자 😀" : profit < -1e-9 ? "적자 😣" : "본전 😐"}
               </p>
               <p className="font-mono text-xl font-black text-slate-50">{won(profit)}</p>
@@ -1417,7 +1417,7 @@ function FirmTab() {
               (x === f.best ? "border-emerald-400/60 bg-emerald-400/15" : "border-white/10 bg-white/[0.03]")
             }
           >
-            <p className="text-[11px] text-slate-400">최적생산량</p>
+            <p className="text-sm text-slate-400">최적생산량</p>
             <p className="font-mono text-2xl font-black text-emerald-200">
               {x === f.best ? `${f.best} ${f.unit} 🏆 (이윤 ${f.bestH})` : "???"}
             </p>
@@ -1426,7 +1426,7 @@ function FirmTab() {
         </div>
 
         <div className="space-y-3">
-          <div className="space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs leading-6 text-slate-300">
+          <div className="space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm leading-6 text-slate-300">
             <p className="font-bold text-slate-200">🧾 이 공방의 장부</p>
             <p>
               총수입 <Katex expr={f.ftex} />
@@ -1446,7 +1446,7 @@ function FirmTab() {
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+            <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
             <GoalList items={FIRM_GOALS} done={goals} />
           </div>
         </div>
@@ -1537,7 +1537,7 @@ function McTab() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-center text-xs font-bold text-slate-300">총수입과 총비용</p>
+          <p className="text-center text-sm font-bold text-slate-300">총수입과 총비용</p>
           <Plot
             box={c.boxRC}
             uid={`mr-${c.id}`}
@@ -1547,14 +1547,14 @@ function McTab() {
             vlines={[{ at: xs, tone: "goal", solid: true }]}
             axis={["생산량", "금액"]}
           />
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-sm text-slate-400">
             노란 <b className="text-amber-200">점선(접선)</b>이 초록 수입 직선과 나란해지는 자리예요. 거기서 두 선의
             간격이 가장 벌어지지요.
           </p>
         </div>
 
         <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-center text-xs font-bold text-slate-300">한계비용과 가격</p>
+          <p className="text-center text-sm font-bold text-slate-300">한계비용과 가격</p>
           <Plot
             box={c.boxMC}
             uid={`mm-${c.id}`}
@@ -1567,15 +1567,15 @@ function McTab() {
           <p className="text-center text-sm font-bold text-orange-200">
             <Katex expr={c.dgtex} />
           </p>
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-sm text-slate-400">
             모은 보라색 점이 모두 주황 한계비용 직선 위에 올라앉아요 — 그것이 곧 공급곡선이에요.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         <div className="space-y-3 rounded-2xl border border-sky-400/25 bg-sky-500/[0.06] p-4">
-          <p className="flex justify-between text-xs font-bold text-slate-300">
+          <p className="flex justify-between text-sm font-bold text-slate-300">
             <span>시장 가격을 움직여 보세요</span>
             <span className="font-mono text-slate-100">p = {p}</span>
           </p>
@@ -1594,13 +1594,13 @@ function McTab() {
           />
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-center">
-              <p className="text-[11px] text-slate-400">
+              <p className="text-sm text-slate-400">
                 <Katex expr={`g'(x) = ${p}`} />
               </p>
               <p className="font-mono text-lg font-black text-orange-200">풀면 x = {fmt(xs)}</p>
             </div>
             <div className="rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 p-2 text-center">
-              <p className="text-[11px] text-slate-400">최적생산량</p>
+              <p className="text-sm text-slate-400">최적생산량</p>
               <p className="font-mono text-lg font-black text-emerald-200">
                 {fmt(xs)} {c.unit}
               </p>
@@ -1615,26 +1615,26 @@ function McTab() {
                     : "border-amber-400/60 bg-amber-400/20")
               }
             >
-              <p className="text-[11px] text-slate-300">
+              <p className="text-sm text-slate-300">
                 가장 큰 이윤 {maxProfit > 1e-9 ? "😀" : maxProfit < -1e-9 ? "😣" : "본전 😐"}
               </p>
               <p className="font-mono text-xl font-black text-slate-50">{won(maxProfit)}</p>
             </div>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1.5 text-xs font-bold text-slate-300">
+            <p className="mb-1.5 text-sm font-bold text-slate-300">
               📍 모은 짝 (생산량, 가격) — {myPins.length} 개
             </p>
             <div className="flex flex-wrap gap-1.5">
               {myPins.length === 0 ? (
-                <span className="text-xs text-slate-500">손잡이를 움직이면 짝이 쌓여요</span>
+                <span className="text-sm text-slate-500">손잡이를 움직이면 짝이 쌓여요</span>
               ) : null}
               {[...myPins]
                 .sort((a, z) => a - z)
                 .map((pp) => (
                   <span
                     key={pp}
-                    className="rounded-lg border border-violet-400/50 bg-violet-400/15 px-2 py-0.5 font-mono text-[11px] font-bold text-violet-100"
+                    className="rounded-lg border border-violet-400/50 bg-violet-400/15 px-2 py-0.5 font-mono text-sm font-bold text-violet-100"
                   >
                     ({fmt(c.best(pp))}, {pp})
                   </span>
@@ -1645,7 +1645,7 @@ function McTab() {
         </div>
 
         <div className="space-y-3">
-          <div className="space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs leading-6 text-slate-300">
+          <div className="space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm leading-6 text-slate-300">
             <p className="font-bold text-slate-200">🧮 왜 그럴까요?</p>
             <p>
               <Katex expr="h(x) = px - g(x)" />
@@ -1665,7 +1665,7 @@ function McTab() {
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-xs font-bold text-slate-300">🎯 미션</p>
+            <p className="mb-1 text-sm font-bold text-slate-300">🎯 미션</p>
             <GoalList items={MC_GOALS} done={goals} />
           </div>
         </div>
