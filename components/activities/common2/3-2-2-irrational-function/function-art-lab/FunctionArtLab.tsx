@@ -91,7 +91,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           type="button"
           onClick={() => onPick(i)}
           className={
-            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-sm font-bold transition " +
             (i === cur
               ? "border-pink-400/70 bg-pink-400/20 text-pink-100"
               : done.includes(id)
@@ -102,7 +102,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           {done.includes(id) && i !== cur ? "✓" : i + 1}
         </button>
       ))}
-      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-sm font-bold text-slate-300">
         {done.length} / {ids.length}
       </span>
     </div>
@@ -140,14 +140,14 @@ function PieceText({ items }: { items: Piece[] }) {
 }
 
 function TipBox({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">{children}</p>;
+  return <p className="rounded-lg bg-black/25 px-3 py-2 text-sm leading-6 text-slate-400">{children}</p>;
 }
 
 function Verdict({ right, why, hint }: { right: boolean; why: string; hint: string }) {
   return right ? (
-    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {why}</p>
+    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-sm leading-6 text-emerald-100">✅ {why}</p>
   ) : (
-    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {hint}</p>
+    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-sm leading-6 text-rose-100">❌ {hint}</p>
   );
 }
 
@@ -171,9 +171,9 @@ function Slider({
   show?: string;
 }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400">
+    <label className="block text-sm font-bold text-slate-400">
       <span className="inline-flex items-center gap-1.5">
-        {label} <span className="font-mono text-[13px] text-slate-100">{show ?? value}</span>
+        {label} <span className="font-mono text-sm text-slate-100">{show ?? value}</span>
       </span>
       <input
         type="range"
@@ -191,8 +191,8 @@ function Slider({
 function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-      <p className="text-[11px] font-bold text-slate-400">해 볼 것 세 가지</p>
-      <div className="mt-1 space-y-1 text-[12px] leading-6">
+      <p className="text-sm font-bold text-slate-400">해 볼 것 세 가지</p>
+      <div className="mt-1 space-y-1 text-sm leading-6">
         {goals.map((g, i) => (
           <p key={g} className={seen.includes(String(i)) ? "text-emerald-200" : "text-slate-400"}>
             {seen.includes(String(i)) ? "✓" : "○"} {g}
@@ -227,7 +227,7 @@ function MixedChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-default " +
+              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -235,7 +235,7 @@ function MixedChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="shrink-0 text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="shrink-0 text-sm text-slate-400">{ABC[i]}</span>
             <span className="flex min-w-0 flex-wrap items-baseline gap-x-1">
               <PieceText items={row} />
             </span>
@@ -270,7 +270,7 @@ function TexChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex min-w-0 items-center gap-1.5 rounded-xl border-2 px-2.5 py-2.5 text-[15px] transition disabled:cursor-default " +
+              "flex min-w-0 items-center gap-1.5 rounded-xl border-2 px-2.5 py-2.5 text-base transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -278,7 +278,7 @@ function TexChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="text-sm text-slate-400">{ABC[i]}</span>
             <span className="min-w-0 py-0.5">
               <Katex expr={s} />
             </span>
@@ -292,7 +292,7 @@ function TexChoices({
 function QuizCard({ q, pick, onPick }: { q: Quiz; pick: number | undefined; onPick: (i: number) => void }) {
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-bold text-slate-100">{q.prompt}</p>
+      <p className="text-sm font-bold text-slate-100">{q.prompt}</p>
       <MixedChoices items={q.choices} pick={pick} answer={q.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={pick === q.answer} why={q.why} hint={q.choiceWhy[pick]} /> : null}
     </div>
@@ -311,7 +311,7 @@ function pathOf(pts: Pt[]): string {
 
 function Canvas({ arts, sel = -1, aria }: { arts: Art[]; sel?: number; aria: string }) {
   return (
-    <svg viewBox={`0 0 ${PLANE.w} ${PLANE.h}`} className="mx-auto block w-full max-w-[380px]" role="img" aria-label={aria}>
+    <svg viewBox={`0 0 ${PLANE.w} ${PLANE.h}`} className="mx-auto block w-full max-w-[480px]" role="img" aria-label={aria}>
       <rect x={0} y={0} width={PLANE.w} height={PLANE.h} fill="#020617" rx={12} />
       {GRID.map((t) => (
         <g key={"g" + t}>
@@ -319,14 +319,14 @@ function Canvas({ arts, sel = -1, aria }: { arts: Art[]; sel?: number; aria: str
           <line x1={PLANE.pad} y1={sy(VIEW, t)} x2={PLANE.w - PLANE.pad} y2={sy(VIEW, t)} stroke="#1e293b" strokeWidth={t === 0 ? 0 : 1} />
         </g>
       ))}
-      <line x1={PLANE.pad} y1={sy(VIEW, 0)} x2={PLANE.w - PLANE.pad} y2={sy(VIEW, 0)} stroke="#475569" strokeWidth={1.5} />
-      <line x1={sx(VIEW, 0)} y1={PLANE.pad} x2={sx(VIEW, 0)} y2={PLANE.h - PLANE.pad} stroke="#475569" strokeWidth={1.5} />
+      <line x1={PLANE.pad} y1={sy(VIEW, 0)} x2={PLANE.w - PLANE.pad} y2={sy(VIEW, 0)} stroke="#475569" strokeWidth={2} />
+      <line x1={sx(VIEW, 0)} y1={PLANE.pad} x2={sx(VIEW, 0)} y2={PLANE.h - PLANE.pad} stroke="#475569" strokeWidth={2} />
       {TICKS.map((t) => (
         <g key={"n" + t}>
-          <text x={sx(VIEW, t)} y={sy(VIEW, 0) + 12} fontSize={9} textAnchor="middle" fill="#475569" fontFamily="ui-monospace, monospace">
+          <text x={sx(VIEW, t)} y={sy(VIEW, 0) + 12} fontSize={12} textAnchor="middle" fill="#475569" fontFamily="ui-monospace, monospace">
             {t}
           </text>
-          <text x={sx(VIEW, 0) - 5} y={sy(VIEW, t) + 3.2} fontSize={9} textAnchor="end" fill="#475569" fontFamily="ui-monospace, monospace">
+          <text x={sx(VIEW, 0) - 5} y={sy(VIEW, t) + 3.2} fontSize={12} textAnchor="end" fill="#475569" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
@@ -340,7 +340,7 @@ function Canvas({ arts, sel = -1, aria }: { arts: Art[]; sel?: number; aria: str
               key={i}
               cx={sx(VIEW, pc.p)}
               cy={sy(VIEW, pc.q)}
-              r={on ? 6 : 4.5}
+              r={on ? 7.5 : 5.5}
               fill={pc.color}
               stroke={on ? "#fff" : "#020617"}
               strokeWidth={1.4}
@@ -368,7 +368,7 @@ export default function FunctionArtLab() {
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
         <p className="text-sm font-semibold text-pink-300">미니활동 · 공통수학2</p>
-        <h3 className="mt-2 text-2xl font-bold">🎨 함수로 그림 그리기</h3>
+        <h3 className="mt-2 text-3xl font-bold">🎨 함수로 그림 그리기</h3>
         <p className="mt-2 leading-7 text-slate-300">
           함수식에 <b className="text-pink-200">정의역</b>을 좁혀 주면 곡선이 그림의 한 획이 됩니다. 토막을 이어 붙여 토끼도, 나뭇잎도 그려 보세요.
         </p>
@@ -449,7 +449,7 @@ function TryTab() {
                       if (used.length >= 3 && !used.includes(k)) mark(2);
                     }}
                     className={
-                      "rounded-lg border-2 px-2 py-1.5 text-[12px] font-bold transition " +
+                      "rounded-lg border-2 px-2 py-1.5 text-sm font-bold transition " +
                       (pc.kind === k ? "border-pink-400/70 bg-pink-400/20 text-pink-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                     }
                   >
@@ -458,7 +458,7 @@ function TryTab() {
                 );
               })}
             </div>
-            <div className="flex justify-center rounded-xl border border-white/10 bg-black/25 px-2 py-2 text-[15px]">
+            <div className="flex justify-center rounded-xl border border-white/10 bg-black/25 px-2 py-2 text-base">
               <span className="min-w-0">
                 <Katex expr={artTexFull(pc)} />
               </span>
@@ -530,7 +530,7 @@ function TryTab() {
                 if (!pair) mark(1);
               }}
               className={
-                "w-full rounded-xl border-2 px-3 py-2 text-[12px] font-bold transition " +
+                "w-full rounded-xl border-2 px-3 py-2 text-sm font-bold transition " +
                 (pair ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
               }
             >
@@ -572,7 +572,7 @@ function TryTab() {
       {doneIds.length === TRY_QUIZ.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 조각 다루는 법을 익혔어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             이제 <b className="text-white">계수로 모양을, 정의역으로 길이를</b> 정할 수 있어요. 다음 탭에서 이 조각들로 그림을 그려 봅시다.
           </p>
         </div>
@@ -610,16 +610,16 @@ function BuildTab({ build }: { build: Build }) {
         <div className="mt-2 grid gap-2 sm:grid-cols-5">
           <div className="sm:col-span-3">
             <Canvas arts={arts} aria={`${build.title} 그리기`} />
-            <p className="mt-1 text-center text-[11px] leading-6 text-slate-500">
+            <p className="mt-1 text-center text-sm leading-6 text-slate-500">
               지금까지 얹은 획 {arts.length} 개 · {allDone ? "완성!" : `남은 단계 ${build.steps.length - doneIds.length}`}
             </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-              <p className="text-[12px] font-extrabold text-pink-200">
+              <p className="text-sm font-extrabold text-pink-200">
                 {si + 1}. {step.label}
               </p>
-              <p className="mt-1 text-[12px] leading-6 text-slate-300">{step.hint}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-300">{step.hint}</p>
             </div>
             {cleared ? (
               <div className="flex justify-center rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-2 py-2 text-[14px] text-emerald-100">
@@ -632,7 +632,7 @@ function BuildTab({ build }: { build: Build }) {
         </div>
 
         <div className="mt-2 space-y-2">
-          <p className="text-[13px] font-bold text-slate-100">어떤 식일까요?</p>
+          <p className="text-sm font-bold text-slate-100">어떤 식일까요?</p>
           <TexChoices items={step.choices} pick={pick[step.id]} answer={step.answer} onPick={(i) => setPick((m) => ({ ...m, [step.id]: i }))} />
           {pick[step.id] !== undefined ? <Verdict right={cleared} why={step.why} hint={step.choiceWhy[pick[step.id]]} /> : null}
         </div>
@@ -649,12 +649,12 @@ function BuildTab({ build }: { build: Build }) {
           <p className="text-center text-sm font-extrabold text-emerald-100">
             🎉 {build.title} 완성!
           </p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">{build.done}</p>
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">{build.done}</p>
           <div className="mt-2 space-y-1">
             {arts
               .filter((a) => a.kind !== "dot")
               .map((a, i) => (
-                <p key={i} className="flex justify-center py-0.5 text-[13px] text-slate-300">
+                <p key={i} className="flex justify-center py-0.5 text-sm text-slate-300">
                   <span className="min-w-0">
                     <Katex expr={artTexFull(a)} />
                   </span>
@@ -735,7 +735,7 @@ function AtelierTab() {
               key={p.id}
               type="button"
               onClick={() => loadPreset(i)}
-              className="rounded-lg border-2 border-white/10 bg-white/5 px-2.5 py-1.5 text-[12px] font-bold text-slate-300 transition hover:bg-white/10"
+              className="rounded-lg border-2 border-white/10 bg-white/5 px-2.5 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
             >
               {p.icon} {p.name} 불러오기
             </button>
@@ -746,7 +746,7 @@ function AtelierTab() {
               setArts([]);
               setSel(0);
             }}
-            className="rounded-lg border-2 border-rose-400/40 bg-rose-400/10 px-2.5 py-1.5 text-[12px] font-bold text-rose-100 transition hover:bg-rose-400/20"
+            className="rounded-lg border-2 border-rose-400/40 bg-rose-400/10 px-2.5 py-1.5 text-sm font-bold text-rose-100 transition hover:bg-rose-400/20"
           >
             ↺ 모두 지우기
           </button>
@@ -755,13 +755,13 @@ function AtelierTab() {
         <div className="mt-2 grid gap-2 sm:grid-cols-5">
           <div className="sm:col-span-3">
             <Canvas arts={arts} sel={sel} aria="자유 아틀리에 도화지" />
-            <p className="mt-1 text-center text-[11px] leading-6 text-slate-500">
+            <p className="mt-1 text-center text-sm leading-6 text-slate-500">
               조각 {arts.length} / {ART_MAX} · 굵게 그려진 것이 지금 고른 조각이에요
             </p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <div>
-              <p className="mb-1 text-[11px] font-bold text-slate-400">조각 더하기</p>
+              <p className="mb-1 text-sm font-bold text-slate-400">조각 더하기</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {KINDS.map((k) => (
                   <button
@@ -769,7 +769,7 @@ function AtelierTab() {
                     type="button"
                     onClick={() => add(k.id)}
                     disabled={arts.length >= ART_MAX}
-                    className="rounded-lg border-2 border-white/10 bg-white/5 px-1.5 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
+                    className="rounded-lg border-2 border-white/10 bg-white/5 px-1.5 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
                   >
                     + {k.name}
                   </button>
@@ -778,14 +778,14 @@ function AtelierTab() {
             </div>
             {arts.length ? (
               <div>
-                <p className="mb-1 text-[11px] font-bold text-slate-400">조각 고르기</p>
+                <p className="mb-1 text-sm font-bold text-slate-400">조각 고르기</p>
                 <div className="flex flex-wrap gap-1">
                   {arts.map((a, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => setSel(i)}
-                      className={"h-7 w-7 rounded-md border-2 text-[10px] font-bold transition " + (i === sel ? "border-white" : "border-white/20")}
+                      className={"h-7 w-7 rounded-md border-2 text-sm font-bold transition " + (i === sel ? "border-white" : "border-white/20")}
                       style={{ backgroundColor: a.color + (i === sel ? "" : "55"), color: "#020617" }}
                     >
                       {i + 1}
@@ -802,7 +802,7 @@ function AtelierTab() {
                     <Katex expr={artTexFull(cur)} />
                   </span>
                 </div>
-                <p className="text-[11px] font-bold text-slate-400">{kindInfo?.name}</p>
+                <p className="text-sm font-bold text-slate-400">{kindInfo?.name}</p>
                 <Slider
                   label={<Katex expr={cur.kind === "circle" ? "r=" : "a="} />}
                   value={A_VALS.indexOf(cur.a) < 0 ? 0 : A_VALS.indexOf(cur.a)}
@@ -878,14 +878,14 @@ function AtelierTab() {
                     type="button"
                     onClick={dup}
                     disabled={arts.length >= ART_MAX}
-                    className="rounded-lg border-2 border-cyan-400/50 bg-cyan-400/15 px-2 py-1.5 text-[11px] font-bold text-cyan-100 transition hover:bg-cyan-400/25 disabled:opacity-40"
+                    className="rounded-lg border-2 border-cyan-400/50 bg-cyan-400/15 px-2 py-1.5 text-sm font-bold text-cyan-100 transition hover:bg-cyan-400/25 disabled:opacity-40"
                   >
                     ↔ y축 대칭 짝
                   </button>
                   <button
                     type="button"
                     onClick={del}
-                    className="rounded-lg border-2 border-white/15 bg-white/5 px-2 py-1.5 text-[11px] font-bold text-slate-300 transition hover:bg-white/10"
+                    className="rounded-lg border-2 border-white/15 bg-white/5 px-2 py-1.5 text-sm font-bold text-slate-300 transition hover:bg-white/10"
                   >
                     ✕ 이 조각 지우기
                   </button>
@@ -907,7 +907,7 @@ function AtelierTab() {
           <p className="text-sm font-bold text-slate-100">📜 내 그림의 식</p>
           <div className="mt-2 space-y-1">
             {arts.map((a, i) => (
-              <p key={i} className="flex flex-wrap items-baseline gap-2 text-[13px] text-slate-300">
+              <p key={i} className="flex flex-wrap items-baseline gap-2 text-sm text-slate-300">
                 <span className="inline-block h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: a.color }} />
                 <span className="min-w-0">
                   <Katex expr={artTexFull(a)} />
@@ -921,7 +921,7 @@ function AtelierTab() {
       {seen.length === ART_GOALS.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 나만의 그림을 그렸어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             그리고 싶은 <b className="text-white">모양을 먼저 떠올린 뒤 그 모양을 내는 함수를 고르는 것</b>, 이것이 함수로 그림을 그리는 방법이에요.
           </p>
         </div>
