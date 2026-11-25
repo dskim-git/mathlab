@@ -100,7 +100,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           type="button"
           onClick={() => onPick(i)}
           className={
-            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-xs font-bold transition " +
+            "h-8 min-w-[2rem] rounded-lg border-2 px-1.5 font-mono text-sm font-bold transition " +
             (i === cur
               ? "border-amber-400/70 bg-amber-400/20 text-amber-100"
               : done.includes(id)
@@ -111,7 +111,7 @@ function Chips({ ids, cur, done, onPick }: { ids: string[]; cur: number; done: s
           {done.includes(id) && i !== cur ? "✓" : i + 1}
         </button>
       ))}
-      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-300">
+      <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-sm font-bold text-slate-300">
         {done.length} / {ids.length}
       </span>
     </div>
@@ -149,14 +149,14 @@ function PieceText({ items }: { items: Piece[] }) {
 }
 
 function TipBox({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-lg bg-black/25 px-3 py-2 text-[11px] leading-6 text-slate-400">{children}</p>;
+  return <p className="rounded-lg bg-black/25 px-3 py-2 text-sm leading-6 text-slate-400">{children}</p>;
 }
 
 function Verdict({ right, why, hint }: { right: boolean; why: string; hint: string }) {
   return right ? (
-    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-[12px] leading-6 text-emerald-100">✅ {why}</p>
+    <p className="rounded-lg bg-emerald-400/12 px-3 py-2 text-sm leading-6 text-emerald-100">✅ {why}</p>
   ) : (
-    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-[12px] leading-6 text-rose-100">❌ {hint}</p>
+    <p className="rounded-lg bg-rose-400/10 px-3 py-2 text-sm leading-6 text-rose-100">❌ {hint}</p>
   );
 }
 
@@ -180,9 +180,9 @@ function Slider({
   show?: string;
 }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400">
+    <label className="block text-sm font-bold text-slate-400">
       <span className="inline-flex items-center gap-1.5">
-        {label} <span className="font-mono text-[13px] text-slate-100">{show ?? value}</span>
+        {label} <span className="font-mono text-sm text-slate-100">{show ?? value}</span>
       </span>
       <input
         type="range"
@@ -200,8 +200,8 @@ function Slider({
 function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-      <p className="text-[11px] font-bold text-slate-400">해 볼 것 세 가지</p>
-      <div className="mt-1 space-y-1 text-[12px] leading-6">
+      <p className="text-sm font-bold text-slate-400">해 볼 것 세 가지</p>
+      <div className="mt-1 space-y-1 text-sm leading-6">
         {goals.map((g, i) => (
           <p key={g} className={seen.includes(String(i)) ? "text-emerald-200" : "text-slate-400"}>
             {seen.includes(String(i)) ? "✓" : "○"} {g}
@@ -214,8 +214,8 @@ function GoalList({ goals, seen }: { goals: string[]; seen: string[] }) {
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span className="inline-flex min-w-0 flex-wrap items-baseline gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[12px] font-bold text-slate-200">
-      <span className="text-[10px] text-slate-400">{label}</span>
+    <span className="inline-flex min-w-0 flex-wrap items-baseline gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm font-bold text-slate-200">
+      <span className="text-sm text-slate-400">{label}</span>
       {children}
     </span>
   );
@@ -245,7 +245,7 @@ function MixedChoices({
             onClick={() => onPick(i)}
             disabled={right}
             className={
-              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-default " +
+              "flex w-full min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm font-bold transition disabled:cursor-default " +
               (good
                 ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-100"
                 : bad
@@ -253,7 +253,7 @@ function MixedChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="shrink-0 text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="shrink-0 text-sm text-slate-400">{ABC[i]}</span>
             <span className="flex min-w-0 flex-wrap items-baseline gap-x-1">
               <PieceText items={row} />
             </span>
@@ -296,7 +296,7 @@ function TexChoices({
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10")
             }
           >
-            <span className="text-[11px] text-slate-400">{ABC[i]}</span>
+            <span className="text-sm text-slate-400">{ABC[i]}</span>
             <span className="min-w-0 py-0.5">
               <Katex expr={s} />
             </span>
@@ -310,7 +310,7 @@ function TexChoices({
 function QuizCard({ q, pick, onPick }: { q: Quiz; pick: number | undefined; onPick: (i: number) => void }) {
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-bold text-slate-100">{q.prompt}</p>
+      <p className="text-sm font-bold text-slate-100">{q.prompt}</p>
       <MixedChoices items={q.choices} pick={pick} answer={q.answer} onPick={onPick} />
       {pick !== undefined ? <Verdict right={pick === q.answer} why={q.why} hint={q.choiceWhy[pick]} /> : null}
     </div>
@@ -354,7 +354,7 @@ function Plot({
       {box.yTicks.map((t) => (
         <g key={"y" + t}>
           <line x1={PLOT.left} y1={py(box, t)} x2={PLOT.right} y2={py(box, t)} stroke="#1e293b" strokeWidth={1} />
-          <text x={PLOT.left - 6} y={py(box, t) + 4} fontSize={11} textAnchor="end" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={PLOT.left - 6} y={py(box, t) + 4} fontSize={13} textAnchor="end" fill="#64748b" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
@@ -362,24 +362,24 @@ function Plot({
       {box.xTicks.map((t) => (
         <g key={"x" + t}>
           <line x1={px(box, t)} y1={PLOT.top} x2={px(box, t)} y2={PLOT.bottom} stroke="#1e293b" strokeWidth={1} />
-          <text x={px(box, t)} y={PLOT.bottom + 16} fontSize={11} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
+          <text x={px(box, t)} y={PLOT.bottom + 16} fontSize={13} textAnchor="middle" fill="#64748b" fontFamily="ui-monospace, monospace">
             {t}
           </text>
         </g>
       ))}
       <line x1={PLOT.left} y1={PLOT.top - 6} x2={PLOT.left} y2={PLOT.bottom} stroke="#64748b" strokeWidth={1.6} />
       <line x1={PLOT.left} y1={PLOT.bottom} x2={PLOT.right + 6} y2={PLOT.bottom} stroke="#64748b" strokeWidth={1.6} />
-      <text x={4} y={14} fontSize={11} fontWeight={700} fill="#94a3b8">
+      <text x={4} y={14} fontSize={13} fontWeight={700} fill="#94a3b8">
         {box.yName}
       </text>
-      <text x={PLOT.right} y={PLOT.h - 6} fontSize={11} fontWeight={700} textAnchor="end" fill="#94a3b8">
+      <text x={PLOT.right} y={PLOT.h - 6} fontSize={13} fontWeight={700} textAnchor="end" fill="#94a3b8">
         {box.xName}
       </text>
 
       {marks.map((m) => (
         <g key={m.name}>
           <line x1={PLOT.left} y1={py(box, m.y)} x2={PLOT.right} y2={py(box, m.y)} stroke={m.color} strokeWidth={1.3} strokeDasharray="6 4" />
-          <text x={PLOT.right - 4} y={py(box, m.y) - 5} fontSize={10.5} fontWeight={700} textAnchor="end" fill={m.color}>
+          <text x={PLOT.right - 4} y={py(box, m.y) - 5} fontSize={12} fontWeight={700} textAnchor="end" fill={m.color}>
             {m.name}
           </text>
         </g>
@@ -402,7 +402,7 @@ function Plot({
       {readX !== null ? (
         <g>
           <circle cx={px(box, readX)} cy={PLOT.bottom} r={4.4} fill="#a3e635" stroke="#020617" strokeWidth={1.2} />
-          <text x={px(box, readX)} y={PLOT.bottom - 8} fontSize={11} fontWeight={700} textAnchor="middle" fill="#bef264">
+          <text x={px(box, readX)} y={PLOT.bottom - 8} fontSize={13} fontWeight={700} textAnchor="middle" fill="#bef264">
             {fmt(readX, readX >= 100 ? 0 : 1)}
           </text>
         </g>
@@ -421,7 +421,7 @@ export default function IrrationalLifeLab() {
     <section className="rounded-2xl border border-white/10 bg-slate-950 p-6">
       <div className="border-b border-white/10 pb-5">
         <p className="text-sm font-semibold text-amber-300">미니활동 · 공통수학2</p>
-        <h3 className="mt-2 text-2xl font-bold">🔍 무리함수의 활용</h3>
+        <h3 className="mt-2 text-3xl font-bold">🔍 무리함수의 활용</h3>
         <p className="mt-2 leading-7 text-slate-300">
           사고 현장의 <b className="text-amber-200">타이어 자국</b>, 몰아치는 <b className="text-sky-200">바람</b>, 바다를 건너는{" "}
           <b className="text-cyan-200">쓰나미</b> 까지. 근호 하나로 세상을 읽어 보세요.
@@ -450,7 +450,7 @@ export default function IrrationalLifeLab() {
         {tab === "back" ? <BackTab /> : null}
       </div>
 
-      <p className="mt-4 text-xs leading-5 text-slate-500">📌 {DATA_NOTE}</p>
+      <p className="mt-4 text-sm leading-5 text-slate-500">📌 {DATA_NOTE}</p>
 
       <ReflectionForm questions={REFLECTION_QUESTIONS} />
     </section>
@@ -469,17 +469,19 @@ function SkidViz({ d, roadName, roadColor }: { d: number; roadName: string; road
       <line x1={0} y1={26} x2={340} y2={26} stroke="#facc15" strokeWidth={2} />
       <line x1={0} y1={114} x2={340} y2={114} stroke="#facc15" strokeWidth={2} />
       <line x1={0} y1={70} x2={340} y2={70} stroke="#94a3b8" strokeWidth={1.6} strokeDasharray="14 12" />
-      <rect x={16} y={50} width={end - 16} height={6} rx={3} fill="#0f172a" />
-      <rect x={16} y={84} width={end - 16} height={6} rx={3} fill="#0f172a" />
+      <rect x={16} y={48} width={end - 16} height={10} rx={5} fill="#020617" stroke="#cbd5e1" strokeOpacity={0.8} strokeWidth={1.4} />
+      <line x1={20} y1={53} x2={end - 3} y2={53} stroke="#64748b" strokeWidth={2} strokeDasharray="5 5" />
+      <rect x={16} y={82} width={end - 16} height={10} rx={5} fill="#020617" stroke="#cbd5e1" strokeOpacity={0.8} strokeWidth={1.4} />
+      <line x1={20} y1={87} x2={end - 3} y2={87} stroke="#64748b" strokeWidth={2} strokeDasharray="5 5" />
       <g>
         <rect x={end} y={46} width={34} height={48} rx={7} fill="#b91c1c" stroke="#fca5a5" strokeWidth={1.4} />
         <rect x={end + 5} y={54} width={10} height={32} rx={3} fill="#1e293b" />
         <rect x={end + 22} y={56} width={8} height={28} rx={3} fill="#1e293b" />
       </g>
-      <text x={16 + (end - 16) / 2} y={106} fontSize={11} fontWeight={700} textAnchor="middle" fill="#e2e8f0">
+      <text x={16 + (end - 16) / 2} y={106} fontSize={13} fontWeight={700} textAnchor="middle" fill="#e2e8f0">
         {d} m
       </text>
-      <text x={10} y={16} fontSize={11} fontWeight={700} fill={roadColor}>
+      <text x={10} y={16} fontSize={13} fontWeight={700} fill={roadColor}>
         {roadName}
       </text>
     </svg>
@@ -537,7 +539,7 @@ function SkidTab() {
               show={`${di} m`}
             />
             <div>
-              <p className="mb-1 text-[11px] font-bold text-slate-400">노면</p>
+              <p className="mb-1 text-sm font-bold text-slate-400">노면</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {ROADS.map((r, i) => (
                   <button
@@ -549,7 +551,7 @@ function SkidTab() {
                       if (r.id === "ice") mark(1);
                     }}
                     className={
-                      "rounded-lg border-2 px-2 py-1.5 text-[11px] font-bold transition " +
+                      "rounded-lg border-2 px-2 py-1.5 text-sm font-bold transition " +
                       (i === ri ? "border-amber-400/70 bg-amber-400/20 text-amber-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                     }
                   >
@@ -559,7 +561,7 @@ function SkidTab() {
               </div>
             </div>
             <div>
-              <p className="mb-1 text-[11px] font-bold text-slate-400">제한속도</p>
+              <p className="mb-1 text-sm font-bold text-slate-400">제한속도</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {LIMITS.map((L, i) => (
                   <button
@@ -567,7 +569,7 @@ function SkidTab() {
                     type="button"
                     onClick={() => setLi(i)}
                     className={
-                      "rounded-lg border-2 px-2 py-1.5 text-[12px] font-bold transition " +
+                      "rounded-lg border-2 px-2 py-1.5 text-sm font-bold transition " +
                       (i === li ? "border-rose-400/60 bg-rose-400/15 text-rose-100" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10")
                     }
                   >
@@ -577,12 +579,12 @@ function SkidTab() {
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-[12px] font-bold text-pink-100">
+              <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-sm font-bold text-pink-100">
                 속력 <span className="font-mono text-[15px] text-white">{fmt(v)}</span> km/h
               </span>
               <span
                 className={
-                  "rounded-lg px-2.5 py-1.5 text-[12px] font-extrabold " + (over ? "bg-rose-400/20 text-rose-100" : "bg-emerald-400/20 text-emerald-100")
+                  "rounded-lg px-2.5 py-1.5 text-sm font-extrabold " + (over ? "bg-rose-400/20 text-rose-100" : "bg-emerald-400/20 text-emerald-100")
                 }
               >
                 {over ? "🚨 과속!" : "✅ 제한속도 안"}
@@ -597,7 +599,7 @@ function SkidTab() {
               marks={[{ y: limit, name: `제한속도 ${limit}`, color: "#fb7185" }]}
               aria="스키드 마크와 속력"
             />
-            <p className="mt-1 text-center text-[11px] leading-6 text-slate-500">회색 점선은 다른 노면의 곡선이에요. 노면이 미끄러울수록 곡선이 내려앉습니다.</p>
+            <p className="mt-1 text-center text-sm leading-6 text-slate-500">회색 점선은 다른 노면의 곡선이에요. 노면이 미끄러울수록 곡선이 내려앉습니다.</p>
           </div>
         </div>
         <div className="mt-2">
@@ -623,7 +625,7 @@ function SkidTab() {
       {doneIds.length === SKID_QUIZ.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 사고 조사를 모두 마쳤어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             속력이 두 배가 되면 멈추는 데 <b className="text-white">네 배의 거리</b>가 필요해요. 빙판에서는 같은 속력이라도 자국이{" "}
             <b className="text-white">여덟 배</b> 길어집니다.
           </p>
@@ -641,7 +643,7 @@ function WindViz({ level, color }: { level: number; color: string }) {
   const topX = 100 + bend;
   const lines = Math.min(5, Math.ceil(level / 2.4));
   return (
-    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[200px]" role="img" aria-label="바람에 휘는 나무">
+    <svg viewBox="0 0 200 170" className="mx-auto block w-full max-w-[240px]" role="img" aria-label="바람에 휘는 나무">
       <rect x={0} y={0} width={200} height={170} fill="#020617" rx={12} />
       <line x1={10} y1={150} x2={190} y2={150} stroke="#334155" strokeWidth={3} />
       {Array.from({ length: lines }, (_, i) => (
@@ -664,7 +666,7 @@ function WindViz({ level, color }: { level: number; color: string }) {
       <text x={100} y={18} fontSize={13} fontWeight={800} textAnchor="middle" fill={color}>
         {level} 급
       </text>
-      <text x={100} y={166} fontSize={10} textAnchor="middle" fill="#64748b">
+      <text x={100} y={166} fontSize={12} textAnchor="middle" fill="#64748b">
         바람이 셀수록 크게 휘어요
       </text>
     </svg>
@@ -713,11 +715,11 @@ function WindTab() {
               show={`${x} km/h`}
             />
             <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
-              <p className="flex flex-wrap items-baseline gap-2 text-[13px] font-bold" style={{ color: info.color }}>
+              <p className="flex flex-wrap items-baseline gap-2 text-sm font-bold" style={{ color: info.color }}>
                 <span className="text-[16px]">{level} 급</span>
                 <span className="text-slate-100">{info.name}</span>
               </p>
-              <p className="mt-1 text-[12px] leading-6 text-slate-300">{info.land}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-300">{info.land}</p>
             </div>
             <div className="flex flex-wrap gap-1.5">
               <Info label="식의 값">
@@ -741,14 +743,14 @@ function WindTab() {
               {BEAUFORT.map((v) => (
                 <span
                   key={v.level}
-                  className={"h-5 flex-1 rounded-[3px] text-center text-[9px] font-bold leading-5 " + (v.level === level ? "text-white" : "text-slate-900")}
+                  className={"h-5 flex-1 rounded-[3px] text-center text-sm font-bold leading-5 " + (v.level === level ? "text-white" : "text-slate-900")}
                   style={{ backgroundColor: v.color, opacity: v.level === level ? 1 : 0.35 }}
                 >
                   {v.level}
                 </span>
               ))}
             </div>
-            <p className="mt-1 text-center text-[11px] leading-6 text-slate-500">칸 하나가 한 계급이에요. 오른쪽으로 갈수록 칸이 넓어집니다.</p>
+            <p className="mt-1 text-center text-sm leading-6 text-slate-500">칸 하나가 한 계급이에요. 오른쪽으로 갈수록 칸이 넓어집니다.</p>
           </div>
         </div>
         <div className="mt-2">
@@ -774,7 +776,7 @@ function WindTab() {
       {doneIds.length === WIND_QUIZ.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 바람을 계급으로 읽어 냈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             무리함수는 뒤로 갈수록 완만해져서, 한 계급을 올리는 데 필요한 풍속이 <b className="text-white">5.2 → 6.1 → 7.0 …</b> 처럼 점점 커집니다.
           </p>
         </div>
@@ -803,15 +805,15 @@ function SeaViz({ d, v }: { d: number; v: number }) {
       <rect x={0} y={floor} width={340} height={170 - floor} fill="#1c1917" />
       <line x1={0} y1={floor} x2={340} y2={floor} stroke="#78716c" strokeWidth={2} />
       <line x1={26} y1={46} x2={26} y2={floor} stroke="#facc15" strokeWidth={1.4} strokeDasharray="4 3" />
-      <text x={32} y={(46 + floor) / 2 + 4} fontSize={11} fontWeight={700} fill="#fcd34d">
+      <text x={32} y={(46 + floor) / 2 + 4} fontSize={13} fontWeight={700} fill="#fcd34d">
         {fmt(d, 0)} m
       </text>
       <line x1={170} y1={26} x2={170 + arrow} y2={26} stroke="#f472b6" strokeWidth={2.6} />
       <path d={`M ${170 + arrow} 26 l -9 -5 l 0 10 z`} fill="#f472b6" />
-      <text x={170} y={18} fontSize={11} fontWeight={700} fill="#f9a8d4">
+      <text x={170} y={18} fontSize={13} fontWeight={700} fill="#f9a8d4">
         {fmt(v)} km/h
       </text>
-      <text x={100} y={164} fontSize={10} textAnchor="middle" fill="#94a3b8">
+      <text x={100} y={164} fontSize={12} textAnchor="middle" fill="#94a3b8">
         수심이 얕을수록 느리고 파고가 높아요
       </text>
     </svg>
@@ -859,7 +861,7 @@ function SeaTab() {
               show={`${fmt(d, 0)} m`}
             />
             <div className="flex flex-wrap gap-1.5">
-              <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-[12px] font-bold text-pink-100">
+              <span className="rounded-lg border border-pink-400/40 bg-pink-400/15 px-2.5 py-1.5 text-sm font-bold text-pink-100">
                 속력 <span className="font-mono text-[15px] text-white">{fmt(v)}</span> km/h
               </span>
               <Info label="견주면">
@@ -905,7 +907,7 @@ function SeaTab() {
       {doneIds.length === SEA_QUIZ.length ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 쓰나미의 비밀을 알아냈어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             먼바다에서는 <b className="text-white">제트 여객기만큼 빠르지만 파도는 낮고</b>, 해안에 가까워지면 <b className="text-white">느려지면서 높아집니다</b>.
           </p>
         </div>
@@ -936,10 +938,10 @@ function BackCard({
   return (
     <div className="space-y-2">
       <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-3">
-        <p className="text-[13px] font-bold text-slate-100">
+        <p className="text-sm font-bold text-slate-100">
           {task.icon} {task.title}
         </p>
-        <div className="mt-1 space-y-0.5 text-[12px] leading-6 text-slate-300">
+        <div className="mt-1 space-y-0.5 text-sm leading-6 text-slate-300">
           {task.story.map((s) => (
             <p key={s}>{s}</p>
           ))}
@@ -953,8 +955,8 @@ function BackCard({
 
       <div className="space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
         <div className="flex flex-wrap items-baseline gap-2">
-          <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-100">거꾸로</span>
-          <p className="text-[13px] font-bold text-slate-100">이 식을 거꾸로 풀면?</p>
+          <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-1.5 py-0.5 text-sm font-bold text-amber-100">거꾸로</span>
+          <p className="text-sm font-bold text-slate-100">이 식을 거꾸로 풀면?</p>
         </div>
         <TexChoices items={task.invChoices} pick={invPick} answer={task.invAnswer} onPick={onInv} />
         {invPick !== undefined ? <Verdict right={invOk} why={task.invNote} hint={task.invWhy[invPick]} /> : null}
@@ -962,7 +964,7 @@ function BackCard({
 
       {invOk ? (
         <div className="space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-          <p className="text-[13px] font-bold text-slate-100">그러면 값은 얼마일까요?</p>
+          <p className="text-sm font-bold text-slate-100">그러면 값은 얼마일까요?</p>
           <MixedChoices items={task.valChoices} pick={valPick} answer={task.valAnswer} onPick={onVal} />
           {valPick !== undefined ? <Verdict right={valOk} why={task.valNote} hint={task.valWhy[valPick]} /> : null}
         </div>
@@ -978,7 +980,7 @@ function BackCard({
             readX={task.readX}
             aria="거꾸로 읽은 그래프"
           />
-          <p className="mt-1 text-center text-[11px] leading-6 text-slate-400">
+          <p className="mt-1 text-center text-sm leading-6 text-slate-400">
             노란 가로선에서 곡선을 만나 아래로 내려오면 초록 점이 답이에요. 그래프를 거꾸로 읽은 셈입니다.
           </p>
         </div>
@@ -1016,7 +1018,7 @@ function BackTab() {
               type="button"
               onClick={() => setTi(i)}
               className={
-                "rounded-lg border-2 px-2.5 py-1.5 text-[12px] font-bold transition " +
+                "rounded-lg border-2 px-2.5 py-1.5 text-sm font-bold transition " +
                 (i === ti
                   ? "border-amber-400/70 bg-amber-400/20 text-amber-100"
                   : doneIds.includes(t.id)
@@ -1056,7 +1058,7 @@ function BackTab() {
       {allDone ? (
         <div className="rounded-2xl border-2 border-emerald-400/50 bg-emerald-400/12 p-4">
           <p className="text-center text-sm font-extrabold text-emerald-100">🎉 거꾸로도 자유자재로 풀었어요!</p>
-          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-[12px] leading-7 text-slate-300">
+          <p className="mt-2 rounded-lg bg-black/25 px-3 py-2.5 text-center text-sm leading-7 text-slate-300">
             무리함수로 값을 구하고 <b className="text-white">그 역함수인 제곱함수로 조건을 되찾는 것</b>, 이것이 실생활에서 무리함수를 쓰는 두 방향이에요.
           </p>
         </div>

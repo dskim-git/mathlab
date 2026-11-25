@@ -33,7 +33,7 @@ export type Piece = { pre?: string; tex?: string; post?: string };
 // 좌표평면과 곡선
 // ══════════════════════════════════════════════════════════════
 
-export const PLOT = { w: 340, h: 250, left: 56, right: 326, top: 22, bottom: 196 };
+export const PLOT = { w: 340, h: 280, left: 56, right: 326, top: 24, bottom: 222 };
 
 export type Pt = { x: number; y: number };
 export type PlotBox = { xMax: number; yMin: number; yMax: number; xTicks: number[]; yTicks: number[]; xName: string; yName: string };
